@@ -804,8 +804,7 @@ export function updateNPCSchedules(): string[] {
           if (exitFound) break;
         }
         if (!exitFound) {
-          events.push(`${name}: ${npc.currentRoom}无出口通往${matchedRoom}，留在原地`);
-          continue;
+          // 无直连出口 → 允许瞬移（学校走廊连通，不在此校验多步路径）
         }
       }
     }

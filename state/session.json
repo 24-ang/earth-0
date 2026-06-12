@@ -3,6 +3,7 @@
     "game_date": "2008-04-07",
     "day_of_week": "月",
     "time_of_day": "morning",
+    "minute_of_day": 480,
     "player_age": 16,
     "player_stage": "high_school",
     "timeline_origin": {
@@ -51,17 +52,15 @@
     "gridPos": null,
     "reputation": {},
     "known_locations": [
-      "千叶",
-      "总武高校"
+      "千叶_住宅区",
+      "校门"
     ]
   },
   "npcs": {},
   "mode": "gal",
   "layer1Enabled": false,
   "auMode": false,
-  "flags": {
-    "playerCreated": true
-  },
+  "flags": {},
   "weather": {
     "type": "晴",
     "temp": 16
