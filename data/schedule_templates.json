@@ -1,0 +1,106 @@
+{
+  "小学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "小学校",
+    "weekday_lunch": "小学校",
+    "weekday_afternoon": "小学校 / 下校",
+    "weekday_evening": "自宅",
+    "weekend": "自宅 / 公园 / 图书馆"
+  },
+  "中学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "中学校",
+    "weekday_lunch": "中学校",
+    "weekday_afternoon": "中学校 / 社团",
+    "weekday_evening": "自宅",
+    "weekend": "自宅 / 购物 / 图书馆 / 公园"
+  },
+  "高校生": {
+    "reputation_group": "学生",
+    "weekday_morning": "高校",
+    "weekday_lunch": "高校 / 中庭",
+    "weekday_afternoon": "高校 / 社团",
+    "weekday_evening": "自宅",
+    "weekend": "自宅 / 购物 / 图书馆 / 打工"
+  },
+  "总武高学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "教室",
+    "weekday_lunch": "教室 / 中庭 / 走廊",
+    "weekday_afternoon": "教室 / 社团",
+    "weekday_evening": "自宅",
+    "weekend": "自由"
+  },
+  "总武高教师": {
+    "reputation_group": "教师",
+    "weekday_morning": "职员室 / 教室",
+    "weekday_lunch": "职员室 / 中庭",
+    "weekday_afternoon": "职员室 / 社团指导",
+    "weekday_evening": "自宅",
+    "weekend": "自宅 / 购物"
+  },
+  "运动部员": {
+    "weekday_morning": "教室",
+    "weekday_lunch": "教室 / 中庭",
+    "weekday_afternoon": "操场 / 体育馆",
+    "weekday_evening": "自宅",
+    "weekend": "操场 / 自由",
+    "reputation_group": "学生"
+  },
+  "自由人": {
+    "weekday_morning": "自由",
+    "weekday_lunch": "自由",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自由",
+    "weekend": "自由",
+    "reputation_group": "路人"
+  },
+  "不良": {
+    "reputation_group": "不良",
+    "weekday_morning": "自由",
+    "weekday_lunch": "走廊 / 中庭",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "后巷 / 商店街",
+    "weekend": "后巷 / 游戏厅"
+  },
+  "店员": {
+    "reputation_group": "路人",
+    "weekday_morning": "商店街",
+    "weekday_lunch": "商店街",
+    "weekday_afternoon": "商店街",
+    "weekday_evening": "商店街",
+    "weekend": "商店街"
+  },
+  "社团部员": {
+    "reputation_group": "学生",
+    "weekday_morning": "教室",
+    "weekday_lunch": "教室 / 中庭",
+    "weekday_afternoon": "社团",
+    "weekday_evening": "自宅",
+    "weekend": "自由"
+  },
+  "大学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "大学",
+    "weekday_lunch": "大学 / 学生食堂",
+    "weekday_afternoon": "大学 / 打工",
+    "weekday_evening": "自宅",
+    "weekend": "自宅 / 购物 / 打工"
+  },
+  "海外留学": {
+    "reputation_group": "学生",
+    "weekday_morning": "不在日本",
+    "weekday_lunch": "不在日本",
+    "weekday_afternoon": "不在日本",
+    "weekday_evening": "不在日本",
+    "weekend": "不在日本"
+  },
+  "上班族": {
+    "reputation_group": "社会人",
+    "weekday_morning": "会社",
+    "weekday_lunch": "会社 / 外食",
+    "weekday_afternoon": "会社",
+    "weekday_evening": "自宅 / 居酒屋",
+    "weekend": "自宅 / 购物 / 公园"
+  }
+}

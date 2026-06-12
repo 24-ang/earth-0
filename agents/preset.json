@@ -1,0 +1,41 @@
+{
+  "description": "earth-0 prompt 模块组装配置。按 mode 动态拼接 agent/*.md 文件。",
+  "version": 1,
+  
+  "presets": {
+    "default": {
+      "label": "标准",
+      "desc": "完整系统提示，含规则+输出+状态+模式"
+    },
+    "lite": {
+      "label": "轻量",
+      "desc": "省略硬规则，用于简单日常场景节省 token"
+    }
+  },
+
+  "layers": {
+    "pre":       { "file": "agents/gm-pre.md",       "desc": "世界观 + 核心原则" },
+    "rules":     { "file": "agents/gm-rules.md",      "desc": "硬规则（骰子/战斗/HP/负重等）" },
+    "contract":  { "file": "agents/gm-contract.md",    "desc": "输出闸门（禁止/必须/格式）" },
+    "state":     { "file": "agents/gm-state.md",       "desc": "状态简报（模板，engine 填入实时数据）", "template": true },
+    "mode_gal":  { "file": "agents/gm-mode-gal.md",    "desc": "日常/GAL 叙事规则", "mode": "gal" },
+    "mode_rpg":  { "file": "agents/gm-mode-rpg.md",    "desc": "检定/探索叙事规则", "mode": "rpg" },
+    "mode_sex":  { "file": "agents/gm-mode-sex.md",    "desc": "亲密叙事规则", "mode": "sex" }
+  },
+
+  "assembly": {
+    "default": ["pre", "rules", "contract", "state", "mode_{mode}"],
+    "lite":    ["pre", "contract", "state", "mode_{mode}"]
+  },
+
+  "layer1": {
+    "enabled": false,
+    "desc": "性欲模块开关。启用后Sex模式可使用 Layer1 全部功能（欲望/高潮/心里话/体位）。关闭时 Sex 模式降级为仅叙事、不触发引擎计算。"
+  },
+
+  "mode_switch": {
+    "trigger": "engine 或玩家主动切换",
+    "default": "gal",
+    "notes": "战斗强制切 rpg；Sex 场景切 sex；结束后恢复。不受 preset 切换影响。"
+  }
+}
