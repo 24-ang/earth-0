@@ -255,6 +255,9 @@
       "13": "海外留学",
       "15": "总武高学生",
       "18": "自由人"
+    },
+    "schedule_overrides": {
+      "weekday_afternoon": "侍奉部"
     }
   },
   {

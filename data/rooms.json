@@ -1245,7 +1245,7 @@
         },
         {
           "type": "exit",
-          "exitTo": "走廊",
+          "exitTo": "1F南走廊",
           "block": false,
           "label": "DR"
         },
@@ -1806,13 +1806,13 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "走廊",
+          "exitTo": "1F南走廊",
           "label": "DR"
         },
         {
           "type": "exit",
           "block": false,
-          "exitTo": "走廊",
+          "exitTo": "1F南走廊",
           "label": "DR"
         },
         {
