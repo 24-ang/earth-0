@@ -1754,9 +1754,10 @@
           "label": "WL"
         },
         {
-          "type": "wall",
-          "block": true,
-          "label": "WL"
+          "type": "exit",
+          "block": false,
+          "exitTo": "侍奉部",
+          "label": "DR"
         },
         {
           "type": "wall",
