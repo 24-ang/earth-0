@@ -143,15 +143,17 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({ minutes: Type.Number() }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState, updateNPCSchedules, refreshWeather } = await import("./engine/state.ts");
-      const { advanceTime } = await import("./engine/time.ts");
+      const { advanceMinutes } = await import("./engine/time.ts");
       const mins = params.minutes;
-      const days = Math.floor(mins / 1440);
-      if (days > 0) gameState.time = advanceTime(gameState.time, days);
+      // 初始化 legacy session 没有 minute_of_day
+      if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
+      const result = advanceMinutes(gameState.time, mins);
       gameState.turn++;
       if (gameState.turn % 4 === 0) refreshWeather();
       const events = updateNPCSchedules();
       saveState();
-      return { content: [{ type: "text", text: `时间推进 ${mins}分钟。${gameState.time.game_date} ${gameState.time.time_of_day}。${events.length > 0 ? events.join("; ") : ""}` }], details: { time: gameState.time, events } };
+      const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
+      return { content: [{ type: "text", text: `时间推进 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。${events.length > 0 ? events.join("; ") : "无特殊事件"}` }], details: { time: gameState.time, events } };
     },
   });
 
@@ -694,13 +696,52 @@ export default function (pi: ExtensionAPI) {
 
   // ── Lifecycle ──
   pi.on("session_start", async (_event, ctx) => {
-    const { loadState, gameState } = await import("./engine/state.ts");
+    const { loadState, buildStatePrompt, saveState } = await import("./engine/state.ts");
     const restored = loadState();
-    ctx.ui.notify(restored ? `earth-0 ${gameState.time.game_date}` : `earth-0 新游戏`, "info");
+    if (restored) {
+      // 确保 NPC 懒初始化（恢复旧存档时补上）
+      buildStatePrompt();
+      saveState();
+      ctx.ui.notify(`earth-0 ${(await import("./engine/state.ts")).gameState.time.game_date}`, "info");
+    } else {
+      ctx.ui.notify("earth-0 新游戏", "info");
+    }
   });
 
   pi.on("session_shutdown", async () => {
     const { saveState } = await import("./engine/state.ts");
     saveState();
+  });
+
+  // 每轮组装 GM 系统提示词
+  pi.on("before_agent_start", async (event) => {
+    const { buildStatePrompt, gameState } = await import("./engine/state.ts");
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const agentsDir = path.resolve(process.cwd(), "agents");
+
+    const read = (name: string) => {
+      const p = path.join(agentsDir, name);
+      return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+    };
+
+    // 状态简报（含 NPC 懒初始化）
+    const statePrompt = buildStatePrompt();
+
+    // 按 mode 选叙事规则
+    const modeFile = gameState.layer1Enabled ? "gm-mode-sex.md"
+      : gameState.mode === "rpg" ? "gm-mode-rpg.md"
+      : "gm-mode-gal.md";
+
+    // 组装完整 GM 提示词
+    const gmPrompt = [
+      read("gm-pre.md"),
+      read("gm-rules.md"),
+      read("gm-contract.md"),
+      statePrompt,
+      read(modeFile),
+    ].filter(Boolean).join("\n\n---\n\n");
+
+    return { systemPrompt: gmPrompt };
   });
 }

@@ -13,20 +13,24 @@ import cityMap from "../data/city_map.json" with { type: "json" };
 export const allChars = characters as any[];
 
 // 学校房间→学校名映射（路由用）
-const SCHOOL_ROOMS = new Set<string>();
-const addRoom = (r: string) => {
-  const clean = r.replace(/[（(].*[）)]/, "").trim().toLowerCase();
-  if (clean) SCHOOL_ROOMS.add(clean);
-};
-for (const [bname, bld] of Object.entries(schoolMap.buildings)) {
-  addRoom(bname); // 建筑名也加入
-  const b = bld as any;
-  for (const rooms of Object.values(b.rooms || {})) {
-    for (const r of (rooms as string[])) addRoom(r);
+// 改为函数动态构建，避免 school_map.json 更新后缓存不一致
+function getSchoolRooms(): Set<string> {
+  const rooms = new Set<string>();
+  const addRoom = (r: string) => {
+    const clean = r.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+    if (clean) rooms.add(clean);
+  };
+  for (const [bname, bld] of Object.entries(schoolMap.buildings)) {
+    addRoom(bname);
+    const b = bld as any;
+    for (const roomList of Object.values(b.rooms || {})) {
+      for (const r of (roomList as string[])) addRoom(r);
+    }
+    if (b.stairs) for (const s of b.stairs as string[]) addRoom(s);
+    if (b.bathrooms) for (const brs of Object.values(b.bathrooms||{}) as string[][]) for (const r of brs) addRoom(r);
+    if (Array.isArray(b)) for (const r of (b as string[])) addRoom(r);
   }
-  if (b.stairs) for (const s of b.stairs as string[]) addRoom(s);
-  if (b.bathrooms) for (const brs of Object.values(b.bathrooms||{}) as string[][]) for (const r of brs) addRoom(r);
-  if (Array.isArray(b)) for (const r of (b as string[])) addRoom(r);
+  return rooms;
 }
 
 export interface RegionEntry {
@@ -52,7 +56,8 @@ export function lookupRegion(location: string): RouterResult {
   
   // 学校内房间 → 精确匹配学校名，不扩散到城市
   let expandedLoc = lowerLoc;
-  if (SCHOOL_ROOMS.has(lowerLoc) || [...SCHOOL_ROOMS].some(r => lowerLoc.includes(r))) {
+  const schoolRooms = getSchoolRooms();
+  if (schoolRooms.has(lowerLoc) || [...schoolRooms].some(r => lowerLoc.includes(r))) {
     expandedLoc = schoolMap.school.toLowerCase(); // 只用学校名，不加房间名
   }
   
