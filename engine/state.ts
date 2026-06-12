@@ -121,6 +121,7 @@ export function buildStatePrompt(): string {
   const p = s.player;
   
   // 周边角色：首次触发时懒初始化 NPC
+  let context = "";
   const r = lookupRegion(p.location);
   if (r.all_characters.length > 0) {
     for (const c of r.all_characters) {
@@ -149,7 +150,6 @@ export function buildStatePrompt(): string {
   const gridCtx = getGridContext();
   if (gridCtx) tpl += `\n${gridCtx}`;
   // 附加周边角色（通过地区路由器）
-  const r = lookupRegion(p.location);
   if (r.all_characters.length > 0) {
     const nearby = r.all_characters.slice(0, 8);
     if (nearby.length > 0) tpl += `\n[周边] ${nearby.join(", ")}`;
