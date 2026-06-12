@@ -120,17 +120,14 @@ export function buildStatePrompt(): string {
   const s = gameState;
   const p = s.player;
   
-  // 周边动态：根据玩家位置查关联角色（内联，避免循环依赖）
-  let context = "";
-  try {
-    const chars = (characters as any[]).filter((c: any) => {
-      const loc = c.default_location || "";
-      return loc.includes(p.location) || p.location.includes(loc);
-    });
-    if (chars.length > 0) {
-      context = chars.slice(0, 8).map((c: any) => c.name).join("、") + " 在附近";
+  // 周边角色：首次触发时懒初始化 NPC
+  const r = lookupRegion(p.location);
+  if (r.all_characters.length > 0) {
+    for (const c of r.all_characters) {
+      if (!gameState.npcs[c]) getOrCreateNPC(c);
     }
-  } catch {}
+    context = r.all_characters.slice(0, 8).join("、") + " 在附近";
+  }
   
   const vars: Record<string, string> = {
     game_date: s.time.game_date,
@@ -154,8 +151,8 @@ export function buildStatePrompt(): string {
   // 附加周边角色（通过地区路由器）
   const r = lookupRegion(p.location);
   if (r.all_characters.length > 0) {
-    const nearby = r.all_characters.filter((c: string) => !gameState.npcs[c]).slice(0, 8);
-    if (nearby.length > 0) tpl += `\n[周边] 可能出场: ${nearby.join(", ")}`;
+    const nearby = r.all_characters.slice(0, 8);
+    if (nearby.length > 0) tpl += `\n[周边] ${nearby.join(", ")}`;
   }
   // 碰面检测：当前房间内已存在的NPC
   const inRoom = Object.entries(gameState.npcs)

@@ -3,23 +3,23 @@
     "game_date": "2008-04-07",
     "day_of_week": "月",
     "time_of_day": "morning",
-    "player_age": 6,
-    "player_stage": "child",
+    "player_age": 16,
+    "player_stage": "high_school",
     "timeline_origin": {
-      "year": 2008,
+      "year": 1998,
       "age": 6
     }
   },
   "player": {
     "name": "玩家",
     "gender": "男",
-    "age": 6,
+    "age": 16,
     "location": "校门",
     "body": {
-      "height_cm": 115,
-      "weight_kg": 20,
+      "height_cm": 170,
+      "weight_kg": 60,
       "build": "标准",
-      "leg_type": "纤细",
+      "leg_type": "结实",
       "skin": {
         "base_tone": "普通",
         "tan": 0,
@@ -27,17 +27,17 @@
       }
     },
     "attributes": {
-      "力量": 2,
-      "敏捷": 3,
-      "体质": 3,
-      "智力": 4,
-      "感知": 5,
-      "魅力": 5
+      "力量": 6,
+      "敏捷": 7,
+      "体质": 6,
+      "智力": 8,
+      "感知": 7,
+      "魅力": 8
     },
     "skills": {},
     "hp": {
-      "current": 7,
-      "max": 7
+      "current": 14,
+      "max": 14
     },
     "ac": 10,
     "equipment": {},
@@ -51,7 +51,7 @@
     "gridPos": null,
     "reputation": {},
     "known_locations": [
-      "千叶_住宅区",
+      "千叶",
       "总武高校"
     ]
   },
