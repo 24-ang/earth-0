@@ -144,14 +144,14 @@ export function advanceMinutes(state: TimeState, minutes: number): { newDate: st
 
 /** 初始时间状态 */
 export const INITIAL_TIME_STATE: TimeState = {
-  game_date: "2008-04-07",
-  day_of_week: "月",
+  game_date: "2018-04-07",
+  day_of_week: "土",
   time_of_day: "morning",
   minute_of_day: 480,
-  player_age: 6,
-  player_stage: "child",
+  player_age: 16,
+  player_stage: "youth",
   timeline_origin: {
-    year: 2008,
-    age: 6
+    year: 2018,
+    age: 16
   }
 };

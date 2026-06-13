@@ -181,6 +181,28 @@ export interface PlayerState {
   known_locations: string[];           // 已探索地点
 }
 
+// --- 静态角色数据结构 ---
+export interface StaticCharacter {
+  name: string;
+  source: string;
+  base_age?: number;
+  gender: string;
+  appearance_brief: string;
+  body: BodyMeasurements;
+  body_by_age?: Record<string, Partial<BodyMeasurements>>;
+  attributes?: Attributes;
+  skills?: Record<string, number>;
+  hp?: { current: number; max: number };
+  equipment?: EquipmentSlots;
+  inventory?: Item[];
+  tags?: string[];
+  default_location?: string;
+  grid_pos?: [number, number];
+  schedule_group?: string;
+  schedule_overrides?: Record<string, string>;
+  schedule_group_by_age?: Record<string, string>;
+}
+
 // --- NPC运行时状态（lazy init，只存被修改过的NPC） ---
 export interface NPCRuntimeState {
   inventory: Item[];
@@ -223,6 +245,7 @@ export interface RoomGrid {
   atmosphere?: string;
   horizon?: Record<string, string>;
   ambient?: { audio?: string; visual?: string };  // 外部环境渗透
+  capacity?: number;      // 房间最大承载NPC容量，超出分流
 }
 
 export interface MoveResult {
@@ -256,4 +279,5 @@ export interface GameState {
   auMode: boolean;
   flags: Record<string, boolean>;
   turn: number;
+  preset?: "default" | "lite";
 }

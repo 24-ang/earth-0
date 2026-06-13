@@ -1,0 +1,15 @@
+{
+  "name": "earth-0",
+  "version": "0.2.0",
+  "private": true,
+  "description": "LLM 驱动文字 RPG 引擎 — 引擎算数字，LLM 叙事",
+  "scripts": {
+    "test": "npx tsx test.ts",
+    "start": "bash start.sh"
+  },
+  "dependencies": {
+    "tsx": "^4.0.0"
+  },
+  "keywords": ["rpg", "llm", "text-game", "pi-mono"],
+  "license": "MIT"
+}
