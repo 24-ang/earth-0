@@ -55,6 +55,14 @@
           }
         ],
         "state": "intact"
+      },
+      {
+        "name": "橡皮",
+        "type": "tool",
+        "slot": "acc",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
       }
     ],
     "wounds": [],
@@ -106,14 +114,6 @@
           "type": "consumable",
           "slot": "back",
           "weight": 0.2,
-          "effects": [],
-          "state": "intact"
-        },
-        {
-          "name": "橡皮",
-          "type": "tool",
-          "slot": "acc",
-          "weight": 0.05,
           "effects": [],
           "state": "intact"
         }
@@ -270,10 +270,10 @@
           "state": "intact"
         }
       },
-      "currentRoom": "千叶市立稻毛小学校",
+      "currentRoom": "自宅（千叶市高级公寓）",
       "gridPos": [
-        3,
-        5
+        2,
+        3
       ],
       "action": "",
       "scheduleGroup": "小学生",
@@ -586,8 +586,8 @@
   "auMode": false,
   "flags": {},
   "weather": {
-    "type": "多云",
-    "temp": 19
+    "type": "小雨",
+    "temp": 16
   },
   "turn": 0
 }
