@@ -305,6 +305,38 @@ test("buildStatePrompt 无崩溃", async () => {
   gameState.player.hp.current = gameState.player.hp.max;
 });
 
+test("Layer1: affection to desire, body language injection, and masturbate", async () => {
+  const { getOrCreateSexState } = await import("./engine/state.ts");
+  const { masturbate } = await import("./engine/sex.ts");
+  
+  // 1. Initial sexState should be null until created
+  const char = "由比滨结衣";
+  const sState = await getOrCreateSexState(char);
+  if (!sState) throw new Error("SexState creation failed");
+  if (sState.desire !== 40) throw new Error("Baseline desire mismatch");
+  
+  // 2. Affection to Desire check
+  updateRelation(gameState.player.relationships, char, 10);
+  const delta = 10;
+  const desireDelta = Math.max(1, Math.round(delta * 0.5));
+  sState.desire = Math.min(100, sState.desire + desireDelta);
+  if (sState.desire !== 45) throw new Error("Desire accumulation failed");
+  
+  // 3. Gal mode body language injection check
+  gameState.layer1Enabled = false;
+  const npc = getOrCreateNPC(char);
+  npc.currentRoom = gameState.player.location;
+  
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[由比滨结衣·身体语言]")) {
+    throw new Error("Missing body language injection in gal mode");
+  }
+  
+  // 4. Masturbation check
+  const r = masturbate(sState, 30);
+  if (sState.arousal <= 0) throw new Error("Masturbation did not increase arousal");
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);
