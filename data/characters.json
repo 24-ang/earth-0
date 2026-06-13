@@ -2,7 +2,7 @@
   {
     "name": "雪之下雪乃",
     "source": "我的青春恋爱物语果然有问题。",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "female",
     "appearance_brief": "黑长直、蓝色眼睛、冰美人。两侧红色蝴蝶结丝带。",
     "body": {
@@ -263,7 +263,7 @@
   {
     "name": "由比滨结衣",
     "source": "我的青春恋爱物语果然有问题。",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "female",
     "appearance_brief": "茶色波浪卷发、团子头、开朗笑容。",
     "body": {
@@ -414,7 +414,7 @@
   {
     "name": "比企谷八幡",
     "source": "我的青春恋爱物语果然有问题。",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "male",
     "appearance_brief": "死鱼眼、不修边幅的黑发。",
     "body": {
@@ -522,7 +522,7 @@
   {
     "name": "喜多川海梦",
     "source": "更衣人偶坠入爱河",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "female",
     "appearance_brief": "金发辣妹系、开朗外向、热爱cosplay。",
     "body": {
@@ -868,7 +868,7 @@
   {
     "name": "比企谷小町",
     "source": "我的青春恋爱物语果然有问题。",
-    "base_age": 5,
+    "base_age": 15,
     "gender": "female",
     "appearance_brief": "和八幡相似的黑发，笑容明亮。比哥哥会来事。",
     "body": {
@@ -942,7 +942,7 @@
   {
     "name": "户塚彩加",
     "source": "我的青春恋爱物语果然有问题。",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "male",
     "appearance_brief": "银色短发，面容精致到常被误认成女生。网球部。",
     "body": {
@@ -1016,7 +1016,7 @@
   {
     "name": "如月真绫",
     "source": "如月真绫的诱惑",
-    "base_age": 7,
+    "base_age": 17,
     "gender": "female",
     "appearance_brief": "栗色及腰长发，发尾微卷。知性成熟，身材丰满。游泳部。",
     "body": {
@@ -1193,7 +1193,7 @@
   {
     "name": "如月佑",
     "source": "如月真绫的诱惑",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "male",
     "appearance_brief": "普通高中男生，略显邋遢。宅男，爱打游戏。",
     "body": {
@@ -1472,7 +1472,7 @@
   {
     "name": "雪之下阳乃",
     "source": "我的青春恋爱物语果然有问题。",
-    "base_age": 8,
+    "base_age": 19,
     "gender": "female",
     "appearance_brief": "和雪乃相似的完美超人。黑长发，阳光笑容。姿容端丽，在雪乃以上。",
     "body": {
@@ -1676,7 +1676,7 @@
   {
     "name": "雪之下大志",
     "source": "我的青春恋爱物语果然有问题。（魔改）",
-    "base_age": 7,
+    "base_age": 17,
     "gender": "male",
     "appearance_brief": "小胖子，长得老实中带点猥琐。",
     "tags": [
@@ -2097,7 +2097,7 @@
   {
     "name": "樋口円香",
     "source": "偶像大师 闪耀色彩",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "female",
     "appearance_brief": "茶色齐颈短发（河童头），紫色眼睛。左眼下泪痣。冷静沉着的美人。",
     "body": {
@@ -2234,7 +2234,7 @@
   {
     "name": "浅仓透",
     "source": "偶像大师 闪耀色彩",
-    "base_age": 6,
+    "base_age": 16,
     "gender": "female",
     "appearance_brief": "褐色短发带蓝色挑染，有呆毛。蓝色眼睛。中性气质的美少女。",
     "body": {

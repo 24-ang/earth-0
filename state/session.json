@@ -176,9 +176,9 @@
           "state": "intact"
         }
       },
-      "currentRoom": "千叶_住宅区",
+      "currentRoom": "自宅（千叶市高级公寓）",
       "gridPos": [
-        5,
+        2,
         3
       ],
       "action": "",
@@ -270,10 +270,10 @@
           "state": "intact"
         }
       },
-      "currentRoom": "自宅（千叶市高级公寓）",
+      "currentRoom": "千叶市立稻毛小学校",
       "gridPos": [
-        2,
-        3
+        3,
+        5
       ],
       "action": "",
       "scheduleGroup": "小学生",
@@ -586,8 +586,8 @@
   "auMode": false,
   "flags": {},
   "weather": {
-    "type": "小雨",
-    "temp": 16
+    "type": "多云",
+    "temp": 18
   },
   "turn": 0
 }
