@@ -131,6 +131,25 @@ export interface Thought {
   context: string;      // "climax_after" | "scene_end"
 }
 
+// 性里程碑 — 模仿恋活，独立跟踪每项初体验
+export interface SexualMilestones {
+  virginity: {
+    isVirgin: boolean;
+    lostTo: string | null;     // 对方 NPC 名
+    lostAt: string | null;     // game_date
+  };
+  firstKiss: {
+    given: boolean;
+    partner: string | null;
+    date: string | null;
+  };
+  analVirginity: {
+    isVirgin: boolean;
+    lostTo: string | null;
+    lostAt: string | null;
+  };
+}
+
 // 事后结算报告
 export interface SettlementReport {
   duration_minutes: number;
@@ -139,6 +158,7 @@ export interface SettlementReport {
   partsGrowth: Record<string, number>;
   rating: "SSS" | "SS" | "S" | "A" | "B" | "C";
   thoughts: Thought[];
+  milestonesChanged?: string[];  // 本次结算触发的里程碑变化描述
 }
 
 export interface SexState {
@@ -151,6 +171,7 @@ export interface SexState {
   climaxCount: number;
   squirtCount: number;
   thoughts: Thought[];  // 心里话历史
+  milestones?: SexualMilestones;  // 初体验追踪
 }
 
 // --- 装备槽 ---

@@ -854,9 +854,12 @@ export default function (pi: ExtensionAPI) {
       // 自动校正 time.player_age 和 timeline_origin
       gameState.time.player_age = params.age;
       gameState.time.timeline_origin.age = params.age;
-      gameState.time.timeline_origin.year = 2018 - (16 - params.age); // 例如 6岁时是 2008年，16岁时是 2018年
-      // 根据年龄段设置阶段
-      gameState.time.player_stage = params.age <= 6 ? "小学生" : params.age <= 12 ? "小学生" : params.age <= 15 ? "中学生" : "高中生";
+      gameState.time.timeline_origin.year = 2018 - (16 - params.age); // 出生年恒为 2002；例 age=6→year=2008，age=16→year=2018
+      // 校准游戏日期与时间线年份一致（否则 age=6 时 game_date 仍是 2018，时间推进即跳龄）
+      gameState.time.game_date = `${gameState.time.timeline_origin.year}-04-07`;
+      // 用 getLifeStage 统一计算（不用硬编码中文标签）
+      const { getLifeStage } = await import("./engine/time.ts");
+      gameState.time.player_stage = getLifeStage(params.age);
       
       // 重置起始地点
       setPlayerLocation("千叶_住宅区");
@@ -974,7 +977,8 @@ export default function (pi: ExtensionAPI) {
         textResult += `\n检测到高潮！${params.char}达到了高潮！`;
         
         // Settle sex session
-        const report = settleAfterSex(gameState.player.sex, gameState.time.game_date, 30, touchedParts, []);
+        // 记录在 NPC 的 SexState 上，partner 是玩家名
+        const report = settleAfterSex(gameState.player.sex, gameState.time.game_date, 30, touchedParts, [], gameState.player.name);
         settlementReport = report;
         
         // Format report and append to output
@@ -1030,6 +1034,7 @@ export default function (pi: ExtensionAPI) {
         if (!touchedParts.includes("秘部")) {
           touchedParts.push("秘部");
         }
+        // 自慰不传 partnerName，不计入初体验
         const report = settleAfterSex(gameState.player.sex, gameState.time.game_date, params.minutes, touchedParts, []);
         settlementReport = report;
         const formatted = formatSettlement(report, params.char);
@@ -1558,10 +1563,22 @@ export default function (pi: ExtensionAPI) {
           `态度: ${p.attitude}  经验: ${p.experience}`,
           `周期: 第${s.cycleDay}天 ${s.cyclePhase}  高潮阈值: ${p.climaxThreshold}`,
           `高潮: ${s.climaxCount}次  潮吹: ${s.squirtCount}次`,
-          ``,
-          `喜欢: ${p.likes.join("、")}`,
-          `排斥: ${p.dislikes.join("、")}`,
         ];
+        // 初体验里程碑
+        if (s.milestones) {
+          const ml: string[] = [];
+          const m = s.milestones;
+          if (m.firstKiss.given) ml.push(`初吻: ${m.firstKiss.partner} (${m.firstKiss.date})`);
+          else ml.push(`初吻: 未`);
+          if (!m.virginity.isVirgin) ml.push(`初夜: ${m.virginity.lostTo} (${m.virginity.lostAt})`);
+          else ml.push(`初夜: 未`);
+          if (!m.analVirginity.isVirgin) ml.push(`菊初: ${m.analVirginity.lostTo} (${m.analVirginity.lostAt})`);
+          lines.push(`💝 初体验: ${ml.join(" | ")}`);
+        }
+        lines.push(``);
+        lines.push(`喜欢: ${p.likes.join("、")}`,
+          `排斥: ${p.dislikes.join("、")}`,
+        );
         if (p.female) {
           lines.push(``);
           lines.push(`胸: ${p.female.breast.cup}cup ${p.female.breast.shape} ${p.female.breast.feel}`);
