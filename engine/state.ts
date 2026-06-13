@@ -137,6 +137,15 @@ export function loadState(filepath?: string): boolean {
       if (ss.squirtCount == null) ss.squirtCount = 0;
       if (ss.climaxed == null) ss.climaxed = false;
       if (!ss.thoughts) ss.thoughts = [];
+      // 迁移：无 milestones 的旧存档 → 按 experience 推断初始状态
+      if (!ss.milestones) {
+        const isDev = ss.profile.experience === "熟练" || ss.profile.experience === "深度开发";
+        ss.milestones = {
+          virginity: { isVirgin: !isDev, lostTo: isDev ? "?" : null, lostAt: null },
+          firstKiss: { given: isDev, partner: isDev ? "?" : null, date: null },
+          analVirginity: { isVirgin: true, lostTo: null, lostAt: null },
+        };
+      }
     }
   }
 
@@ -144,8 +153,9 @@ export function loadState(filepath?: string): boolean {
   if (gameState.time?.player_age && gameState.player.age !== gameState.time.player_age) {
     gameState.player.age = gameState.time.player_age;
   }
-  // 迁移：timeline_origin.age 过旧 → 与 player_age 对齐
-  if (gameState.time?.timeline_origin && gameState.time.timeline_origin.age !== gameState.time.player_age) {
+  // 迁移：旧 bug 存档（timeline_origin.age === 0 → 原为 {year:1992, age:0} 导致 NPC 年龄偏移 16 岁）
+  // 仅修复 age===0 的破档；正常存档的 timeline_origin 必须保持不变（否则 NPC 年龄 delta 清零）
+  if (gameState.time?.timeline_origin && gameState.time.timeline_origin.age === 0) {
     gameState.time.timeline_origin.age = gameState.time.player_age;
     gameState.time.timeline_origin.year = Number(gameState.time.game_date.split("-")[0]);
   }
@@ -349,6 +359,17 @@ export async function buildStatePrompt(): Promise<string> {
       const prof = sx.profile;
       const devHint = getDevNarrative(prof);
       tpl += `\n[印记] ${prof.attitude} | ${prof.experience} | ${devHint}`;
+      // 初体验里程碑
+      if (sx.milestones) {
+        const m = sx.milestones;
+        const mkParts: string[] = [];
+        if (m.firstKiss.given) mkParts.push(`初吻: ${m.firstKiss.partner}`);
+        else mkParts.push("初吻: 未");
+        if (!m.virginity.isVirgin) mkParts.push(`初夜: ${m.virginity.lostTo}`);
+        else mkParts.push("初夜: 未");
+        if (!m.analVirginity.isVirgin) mkParts.push(`菊初: ${m.analVirginity.lostTo}`);
+        tpl += ` | ${mkParts.join(" | ")}`;
+      }
       // [实时] 仅 sex 模式
       if (gameState.layer1Enabled) {
         const phase = getCyclePhase(sx.cycleDay);

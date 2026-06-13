@@ -288,6 +288,63 @@ test("saveState + loadState", () => {
   if (gameState.player.funds !== before) throw new Error("存档/读档数据不一致");
 });
 
+test("loadState 不改正常存档的 timeline_origin.age（防止 NPC 年龄 delta 清零）", () => {
+  // 模拟正常游玩 2 年后的存档
+  gameState.time.player_age = 18;
+  gameState.time.timeline_origin = { year: 2018, age: 16 };
+  gameState.player.age = 18;
+  saveState();
+  loadState();
+  // timeline_origin.age 必须保持 16（不应与 player_age 对齐）
+  if (gameState.time.timeline_origin.age !== 16) {
+    throw new Error(`timeline_origin.age 应为 16，被错改为 ${gameState.time.timeline_origin.age}——迁移条件过宽`);
+  }
+  // 出生年不变
+  const birthYear = gameState.time.timeline_origin.year - gameState.time.timeline_origin.age;
+  if (birthYear !== 2002) throw new Error(`出生年应为 2002，得 ${birthYear}`);
+});
+
+test("loadState 修复旧 bug 存档 timeline_origin.age===0", () => {
+  // 模拟旧 bug 存档：timeline_origin = {year: 1992, age: 0}
+  gameState.time.player_age = 16;
+  gameState.time.timeline_origin = { year: 1992, age: 0 };
+  gameState.player.age = 16;
+  gameState.time.game_date = "2018-04-07";
+  saveState();
+  loadState();
+  // 旧存档应被修复：age 从 0 纠正为 player_age
+  if (gameState.time.timeline_origin.age !== 16) {
+    throw new Error(`旧存档 timeline_origin.age 应被修复为 16，实际 ${gameState.time.timeline_origin.age}`);
+  }
+  // 修复后出生年应对齐为 2002
+  const birthYear = gameState.time.timeline_origin.year - gameState.time.timeline_origin.age;
+  if (birthYear !== 2002) throw new Error(`修复后出生年应为 2002，得 ${birthYear}`);
+});
+
+test("getNpcCurrentAge 在时间推进后 NPC 年龄跟随增长", () => {
+  // 重置到正常状态
+  gameState.time.player_age = 16;
+  gameState.time.timeline_origin = { year: 2018, age: 16 };
+  gameState.player.age = 16;
+
+  const npcBaseAge = 17;
+  // 初始：玩家 16，NPC 基龄 17，年龄差 = 0 → NPC 仍是 17
+  let npcAge = getNpcCurrentAge(npcBaseAge);
+  if (npcAge !== 17) throw new Error(`初始 NPC 年龄应为 17，得 ${npcAge}`);
+
+  // 推进 2 年：玩家 18
+  gameState.player.age = 18;
+  gameState.time.player_age = 18;
+  npcAge = getNpcCurrentAge(npcBaseAge);
+  if (npcAge !== 19) throw new Error(`2年后 NPC 年龄应为 19，得 ${npcAge}`);
+
+  // 推进 10 年：玩家 28
+  gameState.player.age = 28;
+  gameState.time.player_age = 28;
+  npcAge = getNpcCurrentAge(npcBaseAge);
+  if (npcAge !== 29) throw new Error(`10年后 NPC 年龄应为 29，得 ${npcAge}`);
+});
+
 // ── buildStatePrompt ──
 test("buildStatePrompt 无崩溃", async () => {
   const prompt = await buildStatePrompt();
@@ -345,6 +402,101 @@ test("getNamelessNPCs helper and LLM prompt integration", async () => {
   
   const prompt = await buildStatePrompt();
   if (!prompt.includes("[在场路人]")) throw new Error("Nameless NPCs should be injected into the system prompt");
+});
+
+// ── 性里程碑 ──
+console.log("\n── 性里程碑 ──");
+test("createSexState 初始化全员为初", async () => {
+  const { createSexState } = await import("./engine/sex.ts");
+  const { SEX_PROFILES } = await import("./engine/sex.ts");
+  const s = createSexState("测试角色", SEX_PROFILES["由比滨结衣"]);
+  if (!s.milestones) throw new Error("缺少 milestones");
+  if (!s.milestones.virginity.isVirgin) throw new Error("应为处女");
+  if (s.milestones.firstKiss.given) throw new Error("初吻应为未");
+  if (!s.milestones.analVirginity.isVirgin) throw new Error("菊应为未");
+});
+
+test("loadState 迁移旧存档补 milestones", async () => {
+  // 模拟旧存档：无 milestones 字段
+  gameState.sexStates ??= {};
+  gameState.sexStates["测试"] = {
+    profile: { baselineDesire: 40, attitude: "顺从" as any, experience: "未开发" as any, bodyParts: {}, cycleDay: 7, climaxThreshold: 35, likes: [], dislikes: [] },
+    desire: 40, arousal: 0, cycleDay: 7, cyclePhase: "安全期", climaxed: false, climaxCount: 0, squirtCount: 0, thoughts: [],
+  };
+  saveState();
+  loadState();
+  const ss = gameState.sexStates?.["测试"];
+  if (!ss?.milestones) throw new Error("迁移后应补上 milestones");
+  if (!ss.milestones.virginity.isVirgin) throw new Error("未开发→应推断为处女");
+});
+
+test("loadState 迁移熟練角色推断为非处", async () => {
+  gameState.sexStates!["测试2"] = {
+    profile: { baselineDesire: 50, attitude: "主动" as any, experience: "熟练" as any, bodyParts: {}, cycleDay: 8, climaxThreshold: 50, likes: [], dislikes: [] },
+    desire: 50, arousal: 0, cycleDay: 8, cyclePhase: "安全期", climaxed: false, climaxCount: 0, squirtCount: 0, thoughts: [],
+  };
+  saveState();
+  loadState();
+  const ss = gameState.sexStates?.["测试2"];
+  if (!ss?.milestones) throw new Error("缺少 milestones");
+  if (ss.milestones.virginity.isVirgin) throw new Error("熟练→应推断为非处");
+  if (!ss.milestones.firstKiss.given) throw new Error("熟练→初吻应为已");
+  if (ss.milestones.virginity.lostTo !== "?") throw new Error("旧存档无法确定对象，应为 ?");
+});
+
+test("settleAfterSex 检测初吻+初夜+菊初", async () => {
+  const { createSexState, settleAfterSex } = await import("./engine/sex.ts");
+  const { SEX_PROFILES } = await import("./engine/sex.ts");
+  const s = createSexState("测试3", SEX_PROFILES["由比滨结衣"]);
+
+  // 第一次：只碰唇 → 记录初吻
+  const r1 = settleAfterSex(s, "2018-05-01", 10, ["唇"], [], "维");
+  if (!r1.milestonesChanged) throw new Error("应触发里程碑变化");
+  if (!r1.milestonesChanged.some(m => m.includes("初吻"))) throw new Error("触碰唇应记录初吻");
+
+  // 第二次：碰秘部 → 记录初夜（但初吻已给，不再重复）
+  const r2 = settleAfterSex(s, "2018-06-01", 30, ["秘部"], [], "维");
+  if (!r2.milestonesChanged) throw new Error("应触发第二个里程碑");
+  if (!r2.milestonesChanged.some(m => m.includes("初体验"))) throw new Error("触碰秘部应记录初体验");
+
+  // 验证 state
+  if (s.milestones!.virginity.isVirgin) throw new Error("处女应为 false");
+  if (s.milestones!.virginity.lostTo !== "维") throw new Error("初夜对象应为维");
+
+  // 第三次：碰肛 → 菊初
+  const r3 = settleAfterSex(s, "2018-07-01", 20, ["肛"], [], "维");
+  if (!r3.milestonesChanged?.some(m => m.includes("菊初"))) throw new Error("触碰肛应记录菊初");
+
+  // 第四次：再碰这些部位 → 不再触发
+  const r4 = settleAfterSex(s, "2018-08-01", 30, ["唇", "秘部", "肛"], [], "维");
+  if (r4.milestonesChanged && r4.milestonesChanged.length > 0) throw new Error("已非初不应再触发");
+});
+
+test("自慰不计入初体验", async () => {
+  const { createSexState, settleAfterSex } = await import("./engine/sex.ts");
+  const { SEX_PROFILES } = await import("./engine/sex.ts");
+  const s = createSexState("测试4", SEX_PROFILES["由比滨结衣"]);
+
+  // 自慰 → 不传 partnerName
+  const r = settleAfterSex(s, "2018-05-01", 10, ["秘部", "唇"], [], undefined);
+  if (r.milestonesChanged && r.milestonesChanged.length > 0) throw new Error("自慰不应计入初体验");
+  if (!s.milestones!.virginity.isVirgin) throw new Error("自慰后处女应仍为 true");
+  if (s.milestones!.firstKiss.given) throw new Error("自慰后初吻应仍为未");
+});
+
+test("buildStatePrompt 注入里程碑信息", async () => {
+  const { SEX_PROFILES } = await import("./engine/sex.ts");
+  const { getOrCreateSexState } = await import("./engine/state.ts");
+  const sState = await getOrCreateSexState("由比滨结衣");
+  // 设置一些里程碑
+  sState!.milestones!.firstKiss = { given: true, partner: "维", date: "2018-05-01" };
+  sState!.milestones!.virginity = { isVirgin: true, lostTo: null, lostAt: null };
+  gameState.player.sex = sState;
+
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("初吻: 维")) throw new Error("应显示初吻对象");
+  if (!prompt.includes("初夜: 未")) throw new Error("应显示初夜未");
+  gameState.player.sex = undefined;
 });
 
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);

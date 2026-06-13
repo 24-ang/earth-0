@@ -6,7 +6,7 @@
  * 原则: engine算数字，LLM只收描述，玩家永远看不到数值面板
  */
 
-import type { SexProfile, SexState, Thought, SettlementReport } from "./types.ts";
+import type { SexProfile, SexState, Thought, SettlementReport, SexualMilestones } from "./types.ts";
 
 export type CyclePhase = "生理期" | "安全期" | "排卵期";
 export type SexPhase = "caress" | "service" | "insertion";
@@ -377,12 +377,42 @@ export function settleAfterSex(
   gameDate: string,
   durationMinutes: number,
   partsTouched: string[],
-  thoughtsTexts: string[]
+  thoughtsTexts: string[],
+  partnerName?: string  // 对方名字，用于记录初体验对象
 ): SettlementReport {
   // 心里话
   state.thoughts ??= [];
   for (const t of thoughtsTexts) {
     state.thoughts.push({ text: t.slice(0, 60), timestamp: gameDate, context: "scene_end" });
+  }
+
+  // 初体验检测（仅在有对方时记录；自慰不计入）
+  state.milestones ??= {
+    virginity: { isVirgin: true, lostTo: null, lostAt: null },
+    firstKiss: { given: false, partner: null, date: null },
+    analVirginity: { isVirgin: true, lostTo: null, lostAt: null },
+  };
+  const milestonesChanged: string[] = [];
+
+  if (partnerName) {
+    if (partsTouched.includes("唇") && !state.milestones.firstKiss.given) {
+      state.milestones.firstKiss.given = true;
+      state.milestones.firstKiss.partner = partnerName;
+      state.milestones.firstKiss.date = gameDate;
+      milestonesChanged.push(`初吻: ${partnerName}`);
+    }
+    if (partsTouched.includes("秘部") && state.milestones.virginity.isVirgin) {
+      state.milestones.virginity.isVirgin = false;
+      state.milestones.virginity.lostTo = partnerName;
+      state.milestones.virginity.lostAt = gameDate;
+      milestonesChanged.push(`初体验: ${partnerName}`);
+    }
+    if (partsTouched.includes("肛") && state.milestones.analVirginity.isVirgin) {
+      state.milestones.analVirginity.isVirgin = false;
+      state.milestones.analVirginity.lostTo = partnerName;
+      state.milestones.analVirginity.lostAt = gameDate;
+      milestonesChanged.push(`菊初: ${partnerName}`);
+    }
   }
 
   // 部位成长记录
@@ -415,6 +445,7 @@ export function settleAfterSex(
     partsGrowth,
     rating,
     thoughts: [...(state.thoughts ?? [])],
+    milestonesChanged: milestonesChanged.length > 0 ? milestonesChanged : undefined,
   };
 
   // 重置本轮状态，保留欲望值
@@ -434,6 +465,12 @@ export function formatSettlement(report: SettlementReport, charName: string): st
 
   let out = `\n══ 事后结算 ══\n`;
   out += `${charName}\n`;
+  // 初体验高亮
+  if (report.milestonesChanged && report.milestonesChanged.length > 0) {
+    for (const m of report.milestonesChanged) {
+      out += `💝 ${m}\n`;
+    }
+  }
   out += `用时: ${report.duration_minutes}分钟 | 高潮: ${report.climaxCount}次`;
   if (report.squirtCount > 0) out += ` | 潮吹: ${report.squirtCount}次`;
   out += `\n评级: ${emoji} ${report.rating}`;
@@ -460,6 +497,12 @@ export function createSexState(name: string, profile: SexProfile): SexState {
   const day = profile.cycleDay || 1 + Math.floor(Math.random() * 28);
   // 为 profile 注入 name 字段以利于还原引用
   (profile as any).name = name;
+  // 初始化里程碑：全员默认为初（角色数据约定后续可覆盖）
+  const milestones: SexualMilestones = {
+    virginity: { isVirgin: true, lostTo: null, lostAt: null },
+    firstKiss: { given: false, partner: null, date: null },
+    analVirginity: { isVirgin: true, lostTo: null, lostAt: null },
+  };
   return {
     profile,
     desire: profile.baselineDesire,
@@ -470,5 +513,20 @@ export function createSexState(name: string, profile: SexProfile): SexState {
     climaxCount: 0,
     squirtCount: 0,
     thoughts: [],
+    milestones,
   };
+}
+
+// --- 初吻记录（gal 模式下 LLM 可通过 patch_state 触发，或直接调用） ---
+export function recordFirstKiss(state: SexState, partnerName: string, gameDate: string): boolean {
+  state.milestones ??= {
+    virginity: { isVirgin: true, lostTo: null, lostAt: null },
+    firstKiss: { given: false, partner: null, date: null },
+    analVirginity: { isVirgin: true, lostTo: null, lostAt: null },
+  };
+  if (state.milestones.firstKiss.given) return false; // 已有初吻
+  state.milestones.firstKiss.given = true;
+  state.milestones.firstKiss.partner = partnerName;
+  state.milestones.firstKiss.date = gameDate;
+  return true;
 }
