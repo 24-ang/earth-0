@@ -289,7 +289,7 @@ export async function buildStatePrompt(): Promise<string> {
     
     // 阶段性格：按 NPC 当前年龄取 stage，IF 线优先
     if (cs) {
-      const curAge = getNpcCurrentAge(src.base_age || 6);
+      const curAge = getNpcCurrentAge(src.base_age || 16);
       const stageKey = curAge <= 5 ? "幼儿_小学" : curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
       // IF 线：检查是否有 {name}_if 版本且对应 flag 激活
       const ifKey = nname + "_if";
@@ -304,7 +304,7 @@ export async function buildStatePrompt(): Promise<string> {
     }
     
     // 实时身体数据：年龄分层，只用当前年龄档位
-    const curAgeBody = getNpcCurrentAge(src.base_age || 6);
+    const curAgeBody = getNpcCurrentAge(src.base_age || 16);
     const body = getBodyForAge(src, curAgeBody);
     if (body) {
       let bodyStr = `${body.height_cm}cm ${body.build}`;
@@ -598,6 +598,60 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
   return { success: true, newX: nx, newY: ny, blocked: false, reason: "", distance: cellDist, seconds };
 }
 
+export function createRoom(roomName: string, width: number, height: number, floor: number): { success: boolean; reason: string } {
+  const cleanName = roomName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+  if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
+  
+  const cells: any[][] = [];
+  for (let y = 0; y < height; y++) {
+    const row: any[] = [];
+    for (let x = 0; x < width; x++) {
+      row.push({
+        type: "floor",
+        block: false,
+        furniture: null,
+        label: "  "
+      });
+    }
+    cells.push(row);
+  }
+  
+  ROOMS[roomName] = {
+    width, height,
+    cellSize: 1,
+    floor,
+    origin: [Math.floor(width/2), Math.floor(height/2)],
+    cells,
+    capacity: undefined
+  };
+  saveState();
+  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})` };
+}
+
+export function editCellType(x: number, y: number, type: "floor" | "wall" | "door" | "exit" | "stairs", exitTo?: string): { success: boolean; reason: string } {
+  const room = ROOMS[gameState.player.location];
+  if (!room) return { success: false, reason: "当前位置没有地图" };
+  if (x < 0 || x >= room.width || y < 0 || y >= room.height) return { success: false, reason: "坐标超出房间范围" };
+  
+  const cell = room.cells[y][x];
+  cell.type = type;
+  if (type === "wall") {
+    cell.block = true;
+    cell.label = "WL";
+    cell.furniture = null;
+  } else if (type === "floor" || type === "stairs") {
+    cell.block = !!cell.furniture;
+    cell.label = cell.furniture ? cell.furniture.slice(0, 4) : "  ";
+  } else if (type === "door" || type === "exit") {
+    cell.block = !(cell.isOpen !== false);
+    cell.label = "DR";
+    if (exitTo) cell.exitTo = exitTo;
+  }
+  
+  saveState();
+  return { success: true, reason: `在(${x},${y})建造了${type}${exitTo ? ` 通往${exitTo}` : ""}` };
+}
+
 export function placeFurniture(x: number, y: number, itemName: string): { success: boolean; reason: string } {
   if (!gameState.player.gridPos) return { success: false, reason: "当前位置不可建造" };
   const room = ROOMS[gameState.player.location];
@@ -826,12 +880,21 @@ export function getRoomCapacity(roomName: string): number {
   const room = ROOMS[roomName];
   if (!room) return 999;
   if (room.capacity !== undefined) return room.capacity;
-  if (roomName.includes("班")) return 40;
-  if (roomName.includes("走廊") || roomName.includes("楼梯")) return 15;
-  if (roomName === "侍奉部") return 6;
-  if (roomName.includes("家") || roomName.includes("自宅")) return 10;
-  if (roomName === "操场" || roomName === "中庭" || roomName === "体育馆" || roomName === "校门" || roomName === "天台") return 100;
-  return Math.max(6, Math.floor(room.width * room.height / 3));
+  
+  let traversableCount = 0;
+  for (let y = 0; y < room.height; y++) {
+    const row = room.cells[y];
+    if (!row) continue;
+    for (let x = 0; x < room.width; x++) {
+      const cell = row[x];
+      // 地板或出入口类格子作为可通行空间计算容量
+      if (cell && (cell.type === "floor" || cell.type === "door" || cell.type === "exit" || cell.type === "stairs") && !cell.block) {
+        traversableCount++;
+      }
+    }
+  }
+  
+  return Math.max(1, traversableCount);
 }
 
 export function updateNPCSchedules(): string[] {
@@ -901,7 +964,7 @@ export function updateNPCSchedules(): string[] {
       // 按年龄解析 schedule_group（schedule_group_by_age 优先于 scheduleGroup）
       let effectiveGroup = npc.scheduleGroup;
       if (src?.schedule_group_by_age) {
-        const curAge = getNpcCurrentAge(src.base_age || 6);
+        const curAge = getNpcCurrentAge(src.base_age || 16);
         const keys = Object.keys(src.schedule_group_by_age).map(Number).sort((a,b) => a - b);
         let best = keys[0];
         for (const k of keys) {

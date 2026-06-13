@@ -706,7 +706,7 @@ export default function (pi: ExtensionAPI) {
       const { getBodyForAge, getNpcCurrentAge } = await import("./engine/state.ts");
       const c = allChars.find((x: any) => x.name === params.name);
       if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
-      const age = getNpcCurrentAge(c.base_age || 6);
+      const age = getNpcCurrentAge(c.base_age || 16);
       const aged = { ...c, body: getBodyForAge(c, age) };
       return { content: [{ type: "text", text: JSON.stringify(aged, null, 2) }], details: { character: aged } };
     },
@@ -746,7 +746,7 @@ export default function (pi: ExtensionAPI) {
       const { allChars } = await import("./engine/router.ts");
       const c = allChars.find((x: any) => x.name === params.name);
       if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
-      const age = getNpcCurrentAge(c.base_age || 6);
+      const age = getNpcCurrentAge(c.base_age || 16);
       const body = getBodyForAge(c, age);
       return { content: [{ type: "text", text: JSON.stringify({ name: c.name, location: c.default_location, attributes: c.attributes, skills: c.skills, hp: c.hp, body: body ? `${body.height_cm}cm ${body.cup||""}` : "" }, null, 2) }], details: {} };
     },
@@ -1385,7 +1385,7 @@ export default function (pi: ExtensionAPI) {
 
       const char = allChars.find((c: any) => c.name === name || c.name.includes(name));
       if (char) {
-        const age = getNpcCurrentAge(char.base_age || 6);
+        const age = getNpcCurrentAge(char.base_age || 16);
         const body = getBodyForAge(char, age);
         const lines = [
           `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁 (基础:${char.base_age})`,
@@ -1679,7 +1679,7 @@ export default function (pi: ExtensionAPI) {
           const char = allChars.find((c: any) => c.name === name);
           let heightStr = "未知";
           if (char) {
-            const curAge = getNpcCurrentAge(char.base_age || 6);
+            const curAge = getNpcCurrentAge(char.base_age || 16);
             const body = getBodyForAge(char, curAge);
             if (body?.height_cm) heightStr = `${body.height_cm}cm`;
           }
@@ -1740,6 +1740,72 @@ export default function (pi: ExtensionAPI) {
         await showMenu(ctx, "系统提示词预设", items);
       }
     },
+  });
+
+  pi.registerCommand("build_room", {
+    description: "创建新房间 /build_room <名字> <宽> <高> <楼层>",
+    handler: async (args, ctx) => {
+      const parts = args.trim().split(/\s+/);
+      if (parts.length < 4) { ctx.ui.notify("用法: /build_room <名字> <宽> <高> <楼层>", "warning"); return; }
+      const { createRoom } = await import("./engine/state.ts");
+      const r = createRoom(parts[0], parseInt(parts[1]), parseInt(parts[2]), parseInt(parts[3]));
+      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
+    }
+  });
+
+  pi.registerCommand("dig_wall", {
+    description: "将指定坐标变为地板 /dig_wall <x> <y>",
+    handler: async (args, ctx) => {
+      const parts = args.trim().split(/\s+/);
+      if (parts.length < 2) { ctx.ui.notify("用法: /dig_wall <x> <y>", "warning"); return; }
+      const { editCellType } = await import("./engine/state.ts");
+      const r = editCellType(parseInt(parts[0]), parseInt(parts[1]), "floor");
+      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
+    }
+  });
+
+  pi.registerCommand("build_wall", {
+    description: "将指定坐标变为墙壁 /build_wall <x> <y>",
+    handler: async (args, ctx) => {
+      const parts = args.trim().split(/\s+/);
+      if (parts.length < 2) { ctx.ui.notify("用法: /build_wall <x> <y>", "warning"); return; }
+      const { editCellType } = await import("./engine/state.ts");
+      const r = editCellType(parseInt(parts[0]), parseInt(parts[1]), "wall");
+      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
+    }
+  });
+
+  pi.registerCommand("place_door", {
+    description: "将指定坐标变为门或出口 /place_door <x> <y> [目标房间]",
+    handler: async (args, ctx) => {
+      const parts = args.trim().split(/\s+/);
+      if (parts.length < 2) { ctx.ui.notify("用法: /place_door <x> <y> [目标房间]", "warning"); return; }
+      const { editCellType } = await import("./engine/state.ts");
+      const r = editCellType(parseInt(parts[0]), parseInt(parts[1]), parts[2] ? "exit" : "door", parts[2]);
+      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
+    }
+  });
+
+  pi.registerCommand("place_furniture", {
+    description: "放置家具 /place_furniture <x> <y> <家具名>",
+    handler: async (args, ctx) => {
+      const parts = args.trim().split(/\s+/);
+      if (parts.length < 3) { ctx.ui.notify("用法: /place_furniture <x> <y> <家具名>", "warning"); return; }
+      const { placeFurniture } = await import("./engine/state.ts");
+      const r = placeFurniture(parseInt(parts[0]), parseInt(parts[1]), parts.slice(2).join(" "));
+      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
+    }
+  });
+
+  pi.registerCommand("remove_furniture", {
+    description: "拆除家具 /remove_furniture <x> <y>",
+    handler: async (args, ctx) => {
+      const parts = args.trim().split(/\s+/);
+      if (parts.length < 2) { ctx.ui.notify("用法: /remove_furniture <x> <y>", "warning"); return; }
+      const { removeFurniture } = await import("./engine/state.ts");
+      const r = removeFurniture(parseInt(parts[0]), parseInt(parts[1]));
+      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
+    }
   });
 
   // ── Lifecycle ──
