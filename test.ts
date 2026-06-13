@@ -8,7 +8,7 @@
 import {
   gameState, saveState, loadState, resetState,
   movePlayer, placeFurniture, removeFurniture, toggleDoor,
-  getRoom, initPlayerGrid, getGridContext,
+  editCellType, createRoom, getRoom, initPlayerGrid, getGridContext,
   buyItem, sellItem, workJob, stealItem,
   monthlyGrowth, refreshWeather, updateNPCSchedules,
   buildStatePrompt, getBodyForAge, getNpcCurrentAge,
@@ -92,7 +92,8 @@ test("getGridContext 有内容", () => {
 });
 
 test("placeFurniture 在空位", () => {
-  // 在玩家旁边的空地放东西
+  // 在玩家旁边的空地放东西。必须先有物品在背包
+  gameState.player.inventory.push({ name: "台灯", type: "tool", weight: 0.5, effects: [], state: "intact" });
   const room = getRoom("侍奉部")!;
   const [px, py] = gameState.player.gridPos || [0, 0];
   // 找相邻空地
@@ -103,12 +104,21 @@ test("placeFurniture 在空位", () => {
     if (c.type === "floor" && !c.furniture) {
       const r = placeFurniture(nx, ny, "台灯");
       if (!r.success) throw new Error(`放置失败: ${r.reason}`);
+      if (gameState.player.inventory.some((i: any) => i.name === "台灯")) throw new Error("放置后应从背包扣除台灯");
       // 清理
       removeFurniture(nx, ny);
       return;
     }
   }
   // 没有空地也通过（房间可能很小）
+});
+
+test("placeFurniture 拒绝无物品", () => {
+  // 背包没东西不能凭空放置
+  const before = gameState.player.inventory.length;
+  const r = placeFurniture(3, 3, "黄金马桶");
+  if (r.success) throw new Error("无物品应拒绝");
+  if (gameState.player.inventory.length !== before) throw new Error("拒绝后背包不应变化");
 });
 
 test("placeFurniture 拒绝墙上", () => {
@@ -120,6 +130,66 @@ test("toggleDoor 非门窗拒绝", () => {
   const [px, py] = gameState.player.gridPos || [0, 0];
   const r = toggleDoor(px, py); // 玩家站在地板格上
   // 如果没有门/窗，应该返回失败
+});
+
+test("editCellType 造墙需要材料", () => {
+  // 无材料拒绝
+  const r = editCellType(2, 2, "wall", undefined, undefined);
+  if (r.success) throw new Error("无材料造墙应拒绝");
+  // 材料名不在背包拒绝
+  gameState.player.inventory.push({ name: "砖", type: "tool", weight: 2, effects: [], state: "intact" });
+  const r2 = editCellType(2, 2, "wall", undefined, "砖");
+  if (!r2.success) throw new Error(`有砖应可造墙: ${r2.reason}`);
+  // 应扣除材料
+  if (gameState.player.inventory.some((i: any) => i.name === "砖")) throw new Error("造墙后应扣除砖");
+  // 恢复
+  editCellType(2, 2, "floor", undefined, "锤子");  // 拆墙需工具
+});
+
+test("editCellType 拆墙STR不足无工具拒绝", () => {
+  // 先造一堵墙（需要材料）
+  gameState.player.inventory.push({ name: "废铁板", type: "tool", weight: 3, effects: [], state: "intact" });
+  editCellType(5, 5, "wall", undefined, "废铁板");
+  // 设力量为4
+  const origStr = gameState.player.attributes.力量;
+  gameState.player.attributes.力量 = 4;
+  const r = editCellType(5, 5, "floor", undefined, undefined);
+  if (r.success) throw new Error("STR=4且无工具拆墙应拒绝");
+  gameState.player.attributes.力量 = origStr;
+  // 清理
+  editCellType(5, 5, "floor", undefined, "锤子");
+});
+
+test("editCellType 废土材料造墙", () => {
+  const room = getRoom("侍奉部")!;
+  const [px, py] = gameState.player.gridPos || [0, 0];
+  // 找空地
+  let tx = 1, ty = 1;
+  for (let y = 1; y < room.height - 1; y++) {
+    for (let x = 1; x < room.width - 1; x++) {
+      if (room.cells[y][x].type === "floor" && !room.cells[y][x].furniture) {
+        tx = x; ty = y; break;
+      }
+    }
+  }
+  gameState.player.inventory.push({ name: "魔法石", type: "tool", weight: 1, effects: [], state: "intact" });
+  const r = editCellType(tx, ty, "wall", undefined, "魔法石");
+  if (!r.success) throw new Error(`魔法石应可造墙: ${r.reason}`);
+  if (gameState.player.inventory.some((i: any) => i.name === "魔法石")) throw new Error("应扣除魔法石");
+  // 恢复
+  editCellType(tx, ty, "floor", undefined, "魔法石");  // 用魔法石当工具拆
+});
+
+test("createRoom 拒绝重名", async () => {
+  const r = await createRoom("侍奉部", 5, 5, 1);
+  if (r.success) throw new Error("重名应拒绝");
+});
+
+test("createRoom 正常创建", async () => {
+  const origDate = gameState.time.game_date;
+  const r = await createRoom("测试房间", 3, 3, 1);
+  if (!r.success) throw new Error(`创建失败: ${r.reason}`);
+  if (!r.reason.includes("施工")) throw new Error("应包含施工时间信息");
 });
 
 // ── 骰子 ──
