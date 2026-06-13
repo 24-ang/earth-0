@@ -6,7 +6,7 @@ import { Type } from "typebox";
 
 export default function (pi: ExtensionAPI) {
   // ── 辅助 ──
-  interface MenuItem { label: string; detail?: string; action?: () => void | Promise<void>; }
+  interface MenuItem { label: string; detail?: string; action?: (done: () => void) => void | Promise<void>; }
 
   function getStringWidth(str: string): number {
     return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);
@@ -24,6 +24,25 @@ export default function (pi: ExtensionAPI) {
     return res;
   }
 
+  function wrapLine(text: string, maxW: number): string[] {
+    const res: string[] = [];
+    let cur = "";
+    let curW = 0;
+    for (const c of text) {
+      const cw = c.charCodeAt(0) > 0x7f ? 2 : 1;
+      if (curW + cw > maxW) {
+        res.push(cur);
+        cur = c;
+        curW = cw;
+      } else {
+        cur += c;
+        curW += cw;
+      }
+    }
+    if (cur) res.push(cur);
+    return res;
+  }
+
   async function moveTo(loc: string, ctx: any, gs: any, save: any) {
     gs.player.location = loc;
     if (!gs.player.known_locations) gs.player.known_locations = ["千叶_住宅区"];
@@ -34,7 +53,11 @@ export default function (pi: ExtensionAPI) {
   }
 
   function showPanel(ctx: any, title: string, lines: string[]): Promise<void> {
-    const items: MenuItem[] = lines.map(l => ({ label: l, detail: "", action: undefined }));
+    const finalLines: string[] = [];
+    for (const line of lines) {
+      finalLines.push(...wrapLine(line, 65));
+    }
+    const items: MenuItem[] = finalLines.map(l => ({ label: l, detail: "", action: undefined }));
     return showMenu(ctx, title, items);
   }
 
@@ -68,7 +91,7 @@ export default function (pi: ExtensionAPI) {
             else if (d === "\x1b[B" || d === "\x1bOB" || d === "j" || d === "s") sel = Math.min(items.length - 1, sel + 1);
             else if (d === "\r" || d === "\n") {
               const it = items[sel];
-              if (it?.action) Promise.resolve(it.action()).then(() => { items = getItems(); sel = Math.min(sel, items.length-1); });
+              if (it?.action) Promise.resolve(it.action(done)).then(() => { items = getItems(); sel = Math.min(sel, items.length-1); });
               else done();
             }
           },
@@ -78,6 +101,506 @@ export default function (pi: ExtensionAPI) {
       },
       { overlay: true }
     );
+  }
+
+  async function advanceTimeMinutes(mins: number, ctx: any, gs: any, save: any) {
+    const { advanceMinutes } = await import("./engine/time.ts");
+    const { updateNPCSchedules, refreshWeather } = await import("./engine/state.ts");
+    if (gs.time.minute_of_day === undefined) gs.time.minute_of_day = 480;
+    const result = advanceMinutes(gs.time, mins);
+    gs.player.age = gs.time.player_age;
+    gs.turn++;
+    if (gs.turn % 4 === 0) refreshWeather();
+    const events = updateNPCSchedules();
+    save();
+    
+    const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
+    ctx.ui.notify(`⏱️ 时间推进了 ${mins} 分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}`, "info");
+    if (events.length > 0) {
+      ctx.ui.notify(`📢 事件: ${events.join("; ")}`, "info");
+    }
+  }
+
+  async function runNavigation(ctx: any) {
+    const { gameState, saveState, isSameLocation } = await import("./engine/state.ts");
+    const roomsData = (await import("./data/rooms.json", { with: { type: "json" } })).default as any;
+    
+    let schoolMap: any = null;
+    try {
+      schoolMap = (await import("./data/school_map.json", { with: { type: "json" } })).default;
+    } catch (_) {}
+
+    let cityMap: any = null;
+    try {
+      cityMap = (await import("./data/city_map.json", { with: { type: "json" } })).default;
+    } catch (_) {}
+
+    const loc = gameState.player.location;
+    const curRoom = roomsData[loc];
+
+    const getRegion = (l: string) => {
+      if (!cityMap || !cityMap.regions) return "";
+      for (const [rn, r] of Object.entries(cityMap.regions) as [string, any][]) {
+        if (r.landmarks?.some((lm: string) => isSameLocation(l, lm) || l.includes(lm) || lm.includes(l))) return rn;
+        if (r.stations && Object.keys(r.stations).some(s => isSameLocation(l, s) || l.includes(s) || s.includes(l))) return rn;
+      }
+      return "";
+    };
+
+    const getTravelTime = (from: string, to: string) => {
+      const curRoomFrom = roomsData[from];
+      const destRoomTo = roomsData[to];
+      if (curRoomFrom && destRoomTo && curRoomFrom.floor === destRoomTo.floor) {
+        return 2;
+      }
+      const isSchool = (l: string) => {
+        return l.includes("班") || l.includes("校") || l.includes("侍奉部") || l.includes("楼") || l.includes("中庭") || l.includes("操场") || l.includes("体育馆");
+      };
+      if (isSchool(from) && isSchool(to)) {
+        return 5;
+      }
+      const fromReg = getRegion(from);
+      const toReg = getRegion(to);
+      if (fromReg && toReg) {
+        if (fromReg === toReg) return 15;
+        return 30;
+      }
+      return 15;
+    };
+
+    const buildSameFloorMenu = (parentDone: () => void) => {
+      const sameFloorItems: MenuItem[] = [];
+      const floor = curRoom?.floor ?? 0;
+      
+      for (const [name, room] of Object.entries(roomsData)) {
+        if ((room as any).floor !== floor) continue;
+        const here = isSameLocation(loc, name);
+        const npcs = Object.entries(gameState.npcs)
+          .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, name))
+          .map(([n]) => n);
+        
+        sameFloorItems.push({
+          label: `  🚪 ${name}`,
+          detail: (here ? "📍当前 " : "") + (npcs.length > 0 ? "👥 " + npcs.join(" ") : ""),
+          action: here ? undefined : async (subDone) => {
+            await moveTo(name, ctx, gameState, saveState);
+            await advanceTimeMinutes(2, ctx, gameState, saveState);
+            subDone();
+            parentDone();
+          }
+        });
+      }
+      if (sameFloorItems.length === 0) {
+        sameFloorItems.push({ label: "  （无同楼层可用房间）" });
+      }
+      return sameFloorItems;
+    };
+
+    const buildSchoolMenu = (parentDone: () => void) => {
+      const schoolItems: MenuItem[] = [];
+      if (!schoolMap) {
+        schoolItems.push({ label: "  （无学校地图数据）" });
+        return schoolItems;
+      }
+      
+      const added = new Set<string>();
+
+      for (const [bname, bld] of Object.entries(schoolMap.buildings)) {
+        const b = bld as any;
+        if (b.rooms) {
+          for (const [fName, rl] of Object.entries(b.rooms)) {
+            for (const r of rl as string[]) {
+              if (added.has(r)) continue;
+              added.add(r);
+              const here = isSameLocation(loc, r);
+              const npcs = Object.entries(gameState.npcs)
+                .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, r))
+                .map(([n]) => n);
+              
+              schoolItems.push({
+                label: `  🏫 ${r}`,
+                detail: `${bname} ${fName}` + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
+                action: here ? undefined : async (subDone) => {
+                  await moveTo(r, ctx, gameState, saveState);
+                  await advanceTimeMinutes(5, ctx, gameState, saveState);
+                  subDone();
+                  parentDone();
+                }
+              });
+            }
+          }
+        }
+      }
+      
+      if (schoolMap.buildings["运动设施"]) {
+        for (const r of schoolMap.buildings["运动设施"] as string[]) {
+          if (added.has(r)) continue;
+          added.add(r);
+          const here = isSameLocation(loc, r);
+          const npcs = Object.entries(gameState.npcs)
+            .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, r))
+            .map(([n]) => n);
+          
+          schoolItems.push({
+            label: `  🏃 ${r}`,
+            detail: "运动设施" + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
+            action: here ? undefined : async (subDone) => {
+              await moveTo(r, ctx, gameState, saveState);
+              await advanceTimeMinutes(5, ctx, gameState, saveState);
+              subDone();
+              parentDone();
+            }
+          });
+        }
+      }
+      if (schoolMap.buildings["其他建筑"]) {
+        for (const r of schoolMap.buildings["其他建筑"] as string[]) {
+          if (added.has(r)) continue;
+          added.add(r);
+          const here = isSameLocation(loc, r);
+          const npcs = Object.entries(gameState.npcs)
+            .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, r))
+            .map(([n]) => n);
+          
+          schoolItems.push({
+            label: `  🏫 ${r}`,
+            detail: "其他区域" + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
+            action: here ? undefined : async (subDone) => {
+              await moveTo(r, ctx, gameState, saveState);
+              await advanceTimeMinutes(5, ctx, gameState, saveState);
+              subDone();
+              parentDone();
+            }
+          });
+        }
+      }
+      
+      if (schoolItems.length === 0) {
+        schoolItems.push({ label: "  （无可用校园地点）" });
+      }
+      return schoolItems;
+    };
+
+    const buildCityMenu = (parentDone: () => void) => {
+      const cityItems: MenuItem[] = [];
+      if (!cityMap) {
+        cityItems.push({ label: "  （无城市地图数据）" });
+        return cityItems;
+      }
+
+      const currentLoc = gameState.player.location;
+      const regions = cityMap.regions || {};
+      
+      const stations: string[] = [];
+      for (const reg of Object.values(regions) as any[]) {
+        if (reg.stations) {
+          stations.push(...Object.keys(reg.stations));
+        }
+      }
+      
+      const hubList = [
+        ...stations,
+        "校门",
+        "千叶市立总武高等学校_校门",
+        "住宅区",
+        "千叶_住宅区",
+        "自宅",
+        "千叶_自宅",
+        "高级公寓群"
+      ];
+      
+      const isAtHub = hubList.some(hub => isSameLocation(currentLoc, hub));
+      const hasVehicle = gameState.player.inventory.some((i: any) => i.name.includes("自行车") || i.name.includes("汽车"));
+      const currentRegion = getRegion(currentLoc);
+
+      for (const [rname, reg] of Object.entries(regions) as [string, any][]) {
+        for (const l of (reg.landmarks || [])) {
+          const here = isSameLocation(currentLoc, l);
+          const npcs = Object.entries(gameState.npcs)
+            .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, l))
+            .map(([n]) => n);
+
+          cityItems.push({
+            label: `  🚶 ${l}`,
+            detail: `${rname}` + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
+            action: here ? undefined : async (subDone) => {
+              const toRegion = rname;
+              const isCrossRegion = currentRegion && toRegion && currentRegion !== toRegion;
+              if (isCrossRegion && !isAtHub && !hasVehicle) {
+                ctx.ui.notify("❌ 无法远行: 必须处于交通枢纽(车站、大门、自宅)或拥有交通工具", "warning");
+                return;
+              }
+              const mins = isCrossRegion ? 30 : 15;
+              await moveTo(l, ctx, gameState, saveState);
+              await advanceTimeMinutes(mins, ctx, gameState, saveState);
+              subDone();
+              parentDone();
+            }
+          });
+        }
+
+        if (reg.stations) {
+          for (const [sn, sd] of Object.entries(reg.stations) as [string, any][]) {
+            const here = isSameLocation(currentLoc, sn);
+            const npcs = Object.entries(gameState.npcs)
+              .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, sn))
+              .map(([n]) => n);
+
+            cityItems.push({
+              label: `  🚉 ${sn}`,
+              detail: `${sd.lines?.join("/") || ""} ${rname}` + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
+              action: here ? undefined : async (subDone) => {
+                const toRegion = rname;
+                const isCrossRegion = currentRegion && toRegion && currentRegion !== toRegion;
+                if (isCrossRegion && !isAtHub && !hasVehicle) {
+                  ctx.ui.notify("❌ 无法远行: 必须处于交通枢纽(车站、大门、自宅)或拥有交通工具", "warning");
+                  return;
+                }
+                const mins = isCrossRegion ? 30 : 15;
+                await moveTo(sn, ctx, gameState, saveState);
+                await advanceTimeMinutes(mins, ctx, gameState, saveState);
+                subDone();
+                parentDone();
+              }
+            });
+          }
+        }
+      }
+      
+      if (cityItems.length === 0) {
+        cityItems.push({ label: "  （无可用城市地点）" });
+      }
+      return cityItems;
+    };
+
+    const buildHistoryMenu = (parentDone: () => void) => {
+      const historyItems: MenuItem[] = [];
+      const known = gameState.player.known_locations || [];
+      const currentLoc = gameState.player.location;
+
+      const filteredKnown = known.filter(k => !isSameLocation(k, currentLoc));
+
+      const regions = cityMap?.regions || {};
+      const stations: string[] = [];
+      for (const reg of Object.values(regions) as any[]) {
+        if (reg.stations) {
+          stations.push(...Object.keys(reg.stations));
+        }
+      }
+      const hubList = [
+        ...stations,
+        "校门",
+        "千叶市立总武高等学校_校门",
+        "住宅区",
+        "千叶_住宅区",
+        "自宅",
+        "千叶_自宅",
+        "高级公寓群"
+      ];
+      const isAtHub = hubList.some(hub => isSameLocation(currentLoc, hub));
+      const hasVehicle = gameState.player.inventory.some((i: any) => i.name.includes("自行车") || i.name.includes("汽车"));
+      const currentRegion = getRegion(currentLoc);
+
+      for (const k of filteredKnown) {
+        const npcs = Object.entries(gameState.npcs)
+          .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, k))
+          .map(([n]) => n);
+
+        historyItems.push({
+          label: `  📌 ${k}`,
+          detail: (npcs.length > 0 ? "👥 " + npcs.join(" ") : "已探索"),
+          action: async (subDone) => {
+            const toRegion = getRegion(k);
+            const isCrossRegion = currentRegion && toRegion && currentRegion !== toRegion;
+            if (isCrossRegion && !isAtHub && !hasVehicle) {
+              ctx.ui.notify("❌ 无法远行: 必须处于交通枢纽(车站、大门、自宅)或拥有交通工具", "warning");
+              return;
+            }
+            
+            const mins = getTravelTime(currentLoc, k);
+            await moveTo(k, ctx, gameState, saveState);
+            await advanceTimeMinutes(mins, ctx, gameState, saveState);
+            subDone();
+            parentDone();
+          }
+        });
+      }
+
+      if (historyItems.length === 0) {
+        historyItems.push({ label: "  （暂无其他已知探索历史）" });
+      }
+      return historyItems;
+    };
+
+    const categories: MenuItem[] = [
+      {
+        label: "🏢 同层区域",
+        detail: `楼层: F${curRoom?.floor ?? 0}`,
+        action: async (parentDone) => {
+          await showMenu(ctx, "🏢 选择同层房间", () => buildSameFloorMenu(parentDone));
+        }
+      },
+      {
+        label: "🏫 学校区域",
+        detail: "校园建筑与运动设施",
+        action: async (parentDone) => {
+          await showMenu(ctx, "🏫 选择校园建筑", () => buildSchoolMenu(parentDone));
+        }
+      },
+      {
+        label: "🚉 城市远途",
+        detail: "跨区商业与交通地标",
+        action: async (parentDone) => {
+          await showMenu(ctx, "🚉 选择城市远途", () => buildCityMenu(parentDone));
+        }
+      },
+      {
+        label: "📌 探索历史",
+        detail: "已去过的历史地点",
+        action: async (parentDone) => {
+          await showMenu(ctx, "📌 选择探索历史", () => buildHistoryMenu(parentDone));
+        }
+      }
+    ];
+
+    await showMenu(ctx, "🗺️ 导航地图 (当前: " + gameState.player.location + ")", categories);
+  }
+
+  async function runStatus(ctx: any) {
+    const { gameState, saveState } = await import("./engine/state.ts");
+    const p = gameState.player;
+
+    const SLOT_NAMES: Record<string, string> = {
+      inner_top: "内衣上",
+      inner_bot: "内衣下",
+      top: "外套上衣",
+      bottom: "下装",
+      legs: "袜子/丝袜",
+      feet: "鞋子",
+      head: "头部/发饰",
+      acc: "配饰/挂件",
+      left_hand: "副手/左手",
+      right_hand: "主手/右手",
+      back: "背部/背包"
+    };
+
+    const buildMenu = () => {
+      const items: MenuItem[] = [];
+      
+      // 1. 玩家基本状态
+      items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁`, detail: "" });
+      items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ¥${p.funds}`, detail: "" });
+      items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
+      
+      // 2. 装备槽位
+      items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
+      for (const [slotKey, slotName] of Object.entries(SLOT_NAMES)) {
+        const item = p.equipment[slotKey as any];
+        if (item) {
+          items.push({
+            label: `  [${slotName}] ${item.name}`,
+            detail: `🛡️ 卸下`,
+            action: (_done) => {
+              p.inventory.push(item);
+              p.equipment[slotKey as any] = null;
+              saveState();
+              ctx.ui.notify(`卸下了 ${item.name}`, "info");
+            }
+          });
+        } else {
+          items.push({
+            label: `  [${slotName}] (空)`,
+            detail: `➕ 穿戴`,
+            action: async (_done) => {
+              const fitItems = p.inventory.filter(it => it.slot === slotKey);
+              if (fitItems.length === 0) {
+                ctx.ui.notify(`背包中没有适合该槽位的装备`, "warning");
+                return;
+              }
+              await showMenu(ctx, `装备到 [${slotName}]`, fitItems.map(it => ({
+                label: it.name,
+                detail: `${it.type} ${it.weight}kg`,
+                action: (subDone) => {
+                  p.equipment[slotKey as any] = it;
+                  p.inventory.splice(p.inventory.indexOf(it), 1);
+                  saveState();
+                  ctx.ui.notify(`装备了 ${it.name}`, "info");
+                  subDone();
+                }
+              })));
+            }
+          });
+        }
+      }
+
+      // 3. 背包物品
+      items.push({ label: "── 背包物品 (点击查看/操作) ──", detail: "" });
+      if (p.inventory.length > 0) {
+        p.inventory.forEach(it => {
+          items.push({
+            label: `  ${it.name}`,
+            detail: `${it.type} ${it.weight}kg`,
+            action: async (_done) => {
+              const subItems: MenuItem[] = [
+                {
+                  label: "🔍 查看详情",
+                  action: (subDone) => {
+                    const lines = [
+                      `名称: ${it.name}`,
+                      `类型: ${it.type} | 重量: ${it.weight}kg | 状态: ${it.state}`,
+                      it.flavor ? `描述: ${it.flavor}` : "",
+                      it.damage ? `伤害: ${it.damage.dice} (${it.damage.damageType})` : "",
+                    ].filter(Boolean);
+                    if (it.effects && it.effects.length > 0) {
+                      lines.push("效果:");
+                      it.effects.forEach((eff: any) => {
+                        lines.push(`  - ${eff.type}: ${eff.value}${eff.group ? ` (${eff.group})` : ""}`);
+                      });
+                    }
+                    showPanel(ctx, it.name, lines);
+                    subDone();
+                  }
+                }
+              ];
+
+              if (it.slot) {
+                const slotName = SLOT_NAMES[it.slot] || it.slot;
+                subItems.push({
+                  label: `🛡️ 装备到 [${slotName}]`,
+                  action: (subDone) => {
+                    const slot = it.slot as any;
+                    if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
+                    p.equipment[slot] = it;
+                    p.inventory.splice(p.inventory.indexOf(it), 1);
+                    saveState();
+                    ctx.ui.notify(`装备了 ${it.name}`, "info");
+                    subDone();
+                  }
+                });
+              }
+
+              subItems.push({
+                label: "❌ 丢弃物品",
+                action: (subDone) => {
+                  p.inventory.splice(p.inventory.indexOf(it), 1);
+                  saveState();
+                  ctx.ui.notify(`丢弃了 ${it.name}`, "info");
+                  subDone();
+                }
+              });
+
+              await showMenu(ctx, it.name, subItems);
+            }
+          });
+        });
+      } else {
+        items.push({ label: "  （背包空空如也）", detail: "" });
+      }
+
+      return items;
+    };
+
+    await showMenu(ctx, `👤 状态与装备`, buildMenu);
   }
 
   // ── Tools ──
@@ -141,12 +664,21 @@ export default function (pi: ExtensionAPI) {
     description: "改好感/移物品/换位置/加技能/给或取物品。target=NPC名, action=add_affection|add_skill_exp|move|give_item|take_item, value=数值/地点/物品名",
     parameters: Type.Object({ target: Type.String(), action: Type.String(), value: Type.Optional(Type.String()) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { updateRelation, addSkillExp, gameState, saveState, setPlayerLocation, getOrCreateNPC } = await import("./engine/state.ts");
+      const { updateRelation, addSkillExp, gameState, saveState, setPlayerLocation, getOrCreateNPC, getOrCreateSexState } = await import("./engine/state.ts");
       const p = gameState.player;
       let r = "";
       if (params.action === "add_affection" && params.value) {
-        updateRelation(p.relationships, params.target, Number(params.value));
-        r = `${params.target} 好感${params.value > "0" ? "+" : ""}${params.value}`;
+        const delta = Number(params.value);
+        updateRelation(p.relationships, params.target, delta);
+        r = `${params.target} 好感${delta > 0 ? "+" : ""}${delta}`;
+        if (delta > 0) {
+          const sState = await getOrCreateSexState(params.target);
+          if (sState) {
+            const desireDelta = Math.max(1, Math.round(delta * 0.5));
+            sState.desire = Math.min(100, sState.desire + desireDelta);
+            r += `，欲望+${desireDelta} (当前欲望: ${sState.desire}/100)`;
+          }
+        }
       } else if (params.action === "add_skill_exp" && params.value) {
         const [sk, exp] = params.value.split(":");
         addSkillExp(p.skills, sk, Number(exp));
@@ -318,7 +850,12 @@ export default function (pi: ExtensionAPI) {
       if (!p) return { content: [{ type: "text", text: "无该角色sex档案" }], details: {} };
       
       const r = touchBodyPart(p, gameState.player.sex, params.part, params.intensity as any);
-      
+
+      // 防御旧存档 null 值
+      if (gameState.player.sex.arousal == null) gameState.player.sex.arousal = 0;
+      if (gameState.player.sex.climaxCount == null) gameState.player.sex.climaxCount = 0;
+      if (gameState.player.sex.squirtCount == null) gameState.player.sex.squirtCount = 0;
+
       // Apply arousal change
       gameState.player.sex.arousal = Math.min(100, gameState.player.sex.arousal + r.arousalChange);
       
@@ -357,6 +894,58 @@ export default function (pi: ExtensionAPI) {
 
       saveState();
       return { content: [{ type: "text", text: textResult }], details: { touchResult: r, settlementReport } };
+    },
+  });
+
+  pi.registerTool({
+    name: "masturbate", label: "自慰",
+    description: "自慰以增加兴奋度，甚至达到高潮。",
+    parameters: Type.Object({
+      char: Type.String({ description: "角色名" }),
+      minutes: Type.Number({ description: "持续时间(分钟)" })
+    }),
+    async execute(_id, params, _signal, _onUpdate, _ctx) {
+      const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
+      
+      // 自动对齐或懒加载当前 SexState
+      if (!gameState.player.sex || (gameState.player.sex.profile as any).name !== params.char) {
+        const sState = await getOrCreateSexState(params.char);
+        if (!sState) return { content: [{ type: "text", text: `无该角色sex档案: ${params.char}` }], details: {} };
+        gameState.player.sex = sState;
+      }
+
+      const { masturbate, settleAfterSex, formatSettlement } = await import("./engine/sex.ts");
+      const r = masturbate(gameState.player.sex, params.minutes);
+
+      // 防御旧存档 null 值
+      if (gameState.player.sex.arousal == null) gameState.player.sex.arousal = 0;
+      if (gameState.player.sex.climaxCount == null) gameState.player.sex.climaxCount = 0;
+      if (gameState.player.sex.squirtCount == null) gameState.player.sex.squirtCount = 0;
+
+      let textResult = `${params.char}进行了 ${params.minutes} 分钟的自慰。兴奋度 +${r.arousalChange} (当前兴奋度: ${gameState.player.sex.arousal}/100)`;
+      let settlementReport: any = null;
+
+      if (r.climaxed) {
+        textResult += `\n检测到高潮！${params.char}达到了高潮！`;
+        const flagKey = `sex_parts_touched_${params.char}`;
+        let touchedParts: string[] = ["秘部"];
+        if (gameState.flags[flagKey]) {
+          try {
+            touchedParts = JSON.parse(gameState.flags[flagKey] as string);
+          } catch (_) {}
+        }
+        if (!touchedParts.includes("秘部")) {
+          touchedParts.push("秘部");
+        }
+        const report = settleAfterSex(gameState.player.sex, gameState.time.game_date, params.minutes, touchedParts, []);
+        settlementReport = report;
+        const formatted = formatSettlement(report, params.char);
+        textResult += formatted;
+        delete gameState.flags[flagKey];
+      }
+
+      saveState();
+      return { content: [{ type: "text", text: textResult }], details: { masturbateResult: r, settlementReport } };
     },
   });
 
@@ -606,27 +1195,16 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("status", {
-    description: "查看玩家完整状态",
+    description: "查看/管理玩家状态与装备",
     handler: async (_args, ctx) => {
-      const { gameState } = await import("./engine/state.ts");
-      const p = gameState.player, w = gameState.weather;
-      const lines = [
-        `${p.name}  ${p.gender}  ${p.age}岁  ${gameState.time.player_stage}`,
-        `位置: ${p.location}  ${w.type} ${w.temp}°C`,
-        `资金: ¥${p.funds}  HP: ${p.hp.current}/${p.hp.max}  AC: ${p.ac}`,
-        `属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`,
-      ];
-      if (Object.keys(p.skills).length > 0) lines.push(`技能: ${Object.entries(p.skills).map(([k,v]:any) => `${k} Lv${v.level}`).join(" ")}`);
-      if (p.body) {
-        const b = p.body;
-        let bl = `${b.height_cm}cm ${b.build}`;
-        if (b.cup) bl += ` ${b.cup}cup`;
-        if (b.measurements) bl += ` ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
-        lines.push(`身体: ${bl}`);
-      }
-      const eq = Object.entries(p.equipment).filter(([_,v]) => v);
-      if (eq.length > 0) lines.push(`装备: ${eq.map(([s,it]) => `${s}:${it!.name}`).join(" ")}`);
-      await showPanel(ctx, p.name, lines);
+      await runStatus(ctx);
+    },
+  });
+
+  pi.registerCommand("menu", {
+    description: "查看/管理玩家状态与装备 (主菜单)",
+    handler: async (_args, ctx) => {
+      await runStatus(ctx);
     },
   });
 
@@ -744,160 +1322,12 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  pi.registerCommand("inventory", {
-    description: "查看背包和装备，可选择装备/卸下",
-    handler: async (_args, ctx) => {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      const p = gameState.player;
-      
-      const buildMenu = () => {
-        const items: MenuItem[] = [];
-        items.push({ label: `💰 ¥${p.funds}`, detail: "" });
-        items.push({ label: "── 装备 ──", detail: "" });
-        const eq = Object.entries(p.equipment).filter(([_, v]) => v);
-        if (eq.length > 0) {
-          eq.forEach(([s, it]) => items.push({
-            label: `  [${s}] ${it!.name}`,
-            detail: `${it!.type} ${it!.weight}kg`,
-            action: () => {
-              p.inventory.push(it!);
-              p.equipment[s as any] = null;
-              saveState();
-              ctx.ui.notify(`卸下了${it!.name}`, "info");
-            }
-          }));
-        } else {
-          items.push({ label: "  （无装备）", detail: "" });
-        }
-        
-        items.push({ label: "── 背包 ──", detail: "" });
-        if (p.inventory.length > 0) {
-          p.inventory.forEach((it: any) => {
-            items.push({
-              label: `  ${it.name}`,
-              detail: `${it.type} ${it.weight}kg ${it.state}`,
-              action: () => {
-                const slot = it.slot as any;
-                if (slot && ["inner_top","inner_bot","top","bottom","legs","feet","head","acc","left_hand","right_hand","back"].includes(slot)) {
-                  const curIdx = p.inventory.indexOf(it);
-                  if (curIdx >= 0) {
-                    if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
-                    p.equipment[slot] = it;
-                    p.inventory.splice(curIdx, 1);
-                    saveState();
-                    ctx.ui.notify(`装备了${it.name} → ${slot}`, "info");
-                  } else {
-                    ctx.ui.notify(`未在背包中找到物品 ${it.name}`, "warning");
-                  }
-                } else {
-                  ctx.ui.notify(`${it.name} 无法装备（槽位:${slot}）`, "warning");
-                }
-              }
-            });
-          });
-        } else {
-          items.push({ label: "  （空）", detail: "" });
-        }
-        return items;
-      };
-      
-      await showMenu(ctx, "🎒 物品", buildMenu);
-    },
-  });
 
-  pi.registerCommand("map", {
-    description: "楼层房间，↑↓选择 Enter前往",
-    handler: async (_args, ctx) => {
-      const { gameState, saveState, initPlayerGrid } = await import("./engine/state.ts");
-      const rooms = await import("../data/rooms.json", { with: { type: "json" } });
-      const cur = (rooms.default as any)[gameState.player.location];
-      const f = cur?.floor ?? 0;
-      const buildMenu = () => {
-        const items: MenuItem[] = [];
-        for (const [name, room] of Object.entries(rooms.default as any)) {
-          if ((room as any).floor !== f) continue;
-          const here = gameState.player.location === name || gameState.player.location.includes(name);
-          const npcs = Object.entries(gameState.npcs).filter(([_,n]:[string,any]) => n.currentRoom === name).map(([n]) => n);
-          items.push({ label: name, detail: (here ? "📍" : "") + (npcs.length > 0 ? " " + npcs.join(" ") : ""),
-            action: here ? undefined : () => { gameState.player.location = name; initPlayerGrid(); if (!gameState.player.known_locations.includes(name)) gameState.player.known_locations.push(name); saveState(); ctx.ui.notify("→ "+name, "info"); } });
-        }
-        return items;
-      };
-      await showMenu(ctx, `📌 F${f}`, buildMenu());
-    },
-  });
 
   pi.registerCommand("go", {
-    description: "前往可到达的地点（自动整合地图/区域/已探索/出行）",
+    description: "旅行与探索导航系统",
     handler: async (_args, ctx) => {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      const loc = gameState.player.location;
-      const items: MenuItem[] = [];
-
-      // ── 同楼层房间（/map） ──
-      const rooms = await import("../data/rooms.json", { with: { type: "json" } });
-      const curRoom = (rooms.default as any)[loc];
-      const floor = curRoom?.floor ?? 0;
-      let hasSection = false;
-      for (const [name, room] of Object.entries(rooms.default as any)) {
-        if ((room as any).floor !== floor) continue;
-        if (loc === name || loc.includes(name)) continue;
-        const npcs = Object.entries(gameState.npcs).filter(([_,n]:[string,any]) => n.currentRoom === name).map(([n]) => n);
-        items.push({ label: "🚪 " + name, detail: npcs.length > 0 ? npcs.join(" ") : "",
-          action: () => moveTo(name, ctx, gameState, saveState) });
-        hasSection = true;
-      }
-
-      // ── 校园建筑（/area） ──
-      try {
-        const sm = (await import("../data/school_map.json", { with: { type: "json" } })).default as any;
-        for (const [bname, bld] of Object.entries(sm.buildings)) {
-          const b = bld as any;
-          for (const rl of Object.values(b.rooms || {}) as string[][]) {
-            for (const r of rl) {
-              if (loc.includes(r) || r.includes(loc)) continue;
-              if (items.some(it => it.label.includes(r))) continue; // 去重
-              items.push({ label: "🏫 " + r, detail: bname,
-                action: () => moveTo(r, ctx, gameState, saveState) });
-            }
-          }
-        }
-      } catch (_) {}
-
-      // ── 已探索（/known） ──
-      const known = gameState.player.known_locations || [];
-      for (const k of known) {
-        if (k === loc || loc.includes(k) || k.includes(loc)) continue;
-        if (items.some(it => it.label.includes(k))) continue;
-        items.push({ label: "📌 " + k, detail: "已探索",
-          action: () => moveTo(k, ctx, gameState, saveState) });
-      }
-
-      // ── 城市交通（原 /go） ──
-      try {
-        const cm = await import("../data/city_map.json", { with: { type: "json" } });
-        const regions = (cm.default as any).regions || {};
-        const hasBike = gameState.player.inventory.some((i: any) => i.name.includes("自行车"));
-        for (const [rname, reg] of Object.entries(regions) as [string,any][]) {
-          for (const l of (reg.landmarks || [])) {
-            if (loc.includes(l) || l.includes(loc)) continue;
-            if (items.some(it => it.label.includes(l))) continue;
-            items.push({ label: "🚶 " + l, detail: rname,
-              action: () => moveTo(l, ctx, gameState, saveState) });
-            if (hasBike && reg.stations) {
-              for (const [sn, sd] of Object.entries(reg.stations) as [string,any][]) {
-                for (const [d, m] of Object.entries(sd.time_to || {}) as [string,number][]) {
-                  items.push({ label: "🚉 " + d, detail: `${sd.lines?.join("/") || ""} ${m}分`,
-                    action: () => moveTo(d, ctx, gameState, saveState) });
-                }
-              }
-            }
-          }
-        }
-      } catch (_) {}
-
-      if (items.length === 0) items.push({ label: "（无处可去）", detail: "" });
-      await showMenu(ctx, "前往 " + loc, items);
+      await runNavigation(ctx);
     },
   });
 
@@ -940,93 +1370,63 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("sex", {
-    description: "Layer1 状态面板：欲望/兴奋/周期/心里话",
+    description: "Layer1 状态面板：查看所有NPC的性欲/兴奋/心里话",
     handler: async (_args, ctx) => {
       const { gameState } = await import("./engine/state.ts");
-      if (!gameState.player.sex) { ctx.ui.notify("无活跃 SexState。进入亲密场景后自动创建。", "info"); return; }
-      const s = gameState.player.sex;
-      if (!s) { ctx.ui.notify("无活跃 SexState。进入亲密场景后自动创建。", "info"); return; }
-      const p = s.profile;
-      const lines = [
-        `欲望: ${s.desire}/100  兴奋: ${s.arousal}/100`,
-        `态度: ${p.attitude}  经验: ${p.experience}`,
-        `周期: 第${s.cycleDay}天 ${s.cyclePhase}  高潮阈值: ${p.climaxThreshold}`,
-        `高潮: ${s.climaxCount}次  潮吹: ${s.squirtCount}次`,
-        ``,
-        `喜欢: ${p.likes.join("、")}`,
-        `排斥: ${p.dislikes.join("、")}`,
-      ];
-      if (p.female) {
-        lines.push(``);
-        lines.push(`胸: ${p.female.breast.cup}cup ${p.female.breast.shape} ${p.female.breast.feel}`);
-        lines.push(`秘部: ${p.female.vagina.type} ${p.female.vagina.tightness} ${p.female.vagina.depth_cm}cm`);
-      }
-      if (s.thoughts && s.thoughts.length > 0) {
-        lines.push(``);
-        lines.push(`心里话:`);
-        s.thoughts.slice(-3).forEach((t: any) => lines.push(`  「${t.text}」`));
-      }
-      await showPanel(ctx, "🔞 Layer1", lines);
-    },
-  });
+      const sexStates = gameState.sexStates || {};
+      const keys = Object.keys(sexStates);
 
-  pi.registerCommand("known", {
-    description: "已探索地点，选择前往",
-    handler: async (_args, ctx) => {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      const known = gameState.player.known_locations || [];
-      if (known.length === 0) { ctx.ui.notify("还没有探索过任何地点", "info"); return; }
-      await showMenu(ctx, `已探索(${known.length})`, known.map((l: string) => ({
-        label: l, detail: l === gameState.player.location ? "📍" : "", action: l === gameState.player.location ? undefined : () => moveTo(l, ctx, gameState, saveState)
-      })));
-    },
-  });
-
-  pi.registerCommand("city", {
-    description: "千叶市地图（仅显示已探索）",
-    handler: async (_args, ctx) => {
-      const cm = await import("../data/city_map.json", { with: { type: "json" } });
-      const c = cm.default as any;
-      const { gameState, saveState } = await import("./engine/state.ts");
-      const known = new Set(gameState.player.known_locations || []);
-      const buildMenu = () => {
-        const items: MenuItem[] = [];
-        for (const [name, reg] of Object.entries(c.regions)) {
-          const r = reg as any;
-          const visible = r.landmarks.some((l: string) => known.has(l));
-          if (!visible) continue;
-          const here = r.landmarks.some((l: string) => gameState.player.location.includes(l));
-          items.push({ label: (here ? "📍 " : "  ") + name + " [" + (r.label||"") + "]", detail: "" });
-          for (const l of r.landmarks) { if (known.has(l)) items.push({ label: "  → " + l, detail: "", action: () => moveTo(l, ctx, gameState, saveState) }); }
+      const renderSexCard = async (s: SexState) => {
+        const p = s.profile;
+        const charName = (p as any).name || "未知";
+        const lines = [
+          `欲望: ${s.desire}/100  兴奋: ${s.arousal}/100`,
+          `态度: ${p.attitude}  经验: ${p.experience}`,
+          `周期: 第${s.cycleDay}天 ${s.cyclePhase}  高潮阈值: ${p.climaxThreshold}`,
+          `高潮: ${s.climaxCount}次  潮吹: ${s.squirtCount}次`,
+          ``,
+          `喜欢: ${p.likes.join("、")}`,
+          `排斥: ${p.dislikes.join("、")}`,
+        ];
+        if (p.female) {
+          lines.push(``);
+          lines.push(`胸: ${p.female.breast.cup}cup ${p.female.breast.shape} ${p.female.breast.feel}`);
+          lines.push(`秘部: ${p.female.vagina.type} ${p.female.vagina.tightness} ${p.female.vagina.depth_cm}cm`);
         }
-        if (items.length === 0) items.push({ label: "（尚未探索）", detail: "" });
-        return items;
+        if (s.thoughts && s.thoughts.length > 0) {
+          lines.push(``);
+          lines.push(`心里话:`);
+          s.thoughts.slice(-3).forEach((t: any) => lines.push(`  「${t.text}」`));
+        }
+        await showPanel(ctx, `🔞 Layer1 - ${charName}`, lines);
       };
-      await showMenu(ctx, "🗺️ 千叶市", buildMenu());
+
+      if (keys.length === 0) {
+        if (gameState.player.sex) {
+          await renderSexCard(gameState.player.sex);
+        } else {
+          ctx.ui.notify("无活跃的 SexState。进入亲密场景后自动创建。", "info");
+        }
+      } else if (keys.length === 1) {
+        await renderSexCard(sexStates[keys[0]]);
+      } else {
+        const menuItems: MenuItem[] = keys.map(k => {
+          const s = sexStates[k];
+          return {
+            label: `👤 ${k}`,
+            detail: `欲望:${s.desire} 兴奋:${s.arousal}`,
+            action: async (done) => {
+              await renderSexCard(s);
+              done();
+            }
+          };
+        });
+        await showMenu(ctx, "🔞 Layer1 角色选择", menuItems);
+      }
     },
   });
 
-  pi.registerCommand("area", {
-    description: "校园地图，选择前往",
-    handler: async (_args, ctx) => {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      const sm = (await import("../data/school_map.json", { with: { type: "json" } })).default as any;
-      const buildMenu = () => {
-        const items: MenuItem[] = [];
-        items.push({ label: "📍 " + sm.school, detail: "" });
-        for (const [name, bld] of Object.entries(sm.buildings)) {
-          const b = bld as any;
-          const here = gameState.player.location.includes(name) || Object.values(b.rooms||{}).flat().some((r: string) => gameState.player.location.includes(r));
-          items.push({ label: (here ? "📍 " : "  ") + name + (b.floors ? " F1-F"+b.floors : ""), detail: "" });
-          if (b.rooms) for (const [fn, rl] of Object.entries(b.rooms)) for (const r of rl as string[]) {
-            items.push({ label: "  → " + r, detail: fn, action: () => moveTo(r, ctx, gameState, saveState) });
-          }
-        }
-        return items;
-      };
-      await showMenu(ctx, "🏫 " + sm.school, buildMenu());
-    },
-  });
+
 
   pi.registerCommand("room", {
     description: "查看当前房间：位置/出口/NPC/引擎约束",

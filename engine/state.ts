@@ -128,6 +128,18 @@ export function loadState(filepath?: string): boolean {
     }
   }
 
+  // 迁移：旧存档 sexStates 中 null 数值字段 → 初始化为 0
+  if (gameState.sexStates) {
+    for (const ss of Object.values(gameState.sexStates)) {
+      if (ss.arousal == null) ss.arousal = 0;
+      if (ss.desire == null) ss.desire = ss.profile.baselineDesire;
+      if (ss.climaxCount == null) ss.climaxCount = 0;
+      if (ss.squirtCount == null) ss.squirtCount = 0;
+      if (ss.climaxed == null) ss.climaxed = false;
+      if (!ss.thoughts) ss.thoughts = [];
+    }
+  }
+
   // 迁移：旧存档 player.age 与 time.player_age 不同步 → 用 time 覆盖 player
   if (gameState.time?.player_age && gameState.player.age !== gameState.time.player_age) {
     gameState.player.age = gameState.time.player_age;
@@ -346,6 +358,20 @@ export async function buildStatePrompt(): Promise<string> {
       if (gameState.layer1Enabled) {
         const npcPhase = getCyclePhase(sp.cycleDay);
         if (npcPhase !== "安全期") tpl += ` | ${npcPhase}`;
+      }
+    }
+
+    if (!gameState.layer1Enabled) {
+      // 在 gal 模式下，对在场且在 gameState.sexStates 中有记录的 NPC，注入其身体语言描述（无具体数值）
+      for (const [nname, npc] of Object.entries(gameState.npcs)) {
+        if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
+        const sState = gameState.sexStates?.[nname];
+        if (sState) {
+          const dh = getDesireNarrative(sState);
+          if (dh) {
+            tpl += `\n[${nname}·身体语言] ${dh}`;
+          }
+        }
       }
     }
   } catch (_) {}

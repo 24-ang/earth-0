@@ -55,14 +55,6 @@
           }
         ],
         "state": "intact"
-      },
-      {
-        "name": "橡皮",
-        "type": "tool",
-        "slot": "acc",
-        "weight": 0.05,
-        "effects": [],
-        "state": "intact"
       }
     ],
     "wounds": [],
@@ -114,6 +106,14 @@
           "type": "consumable",
           "slot": "back",
           "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "橡皮",
+          "type": "tool",
+          "slot": "acc",
+          "weight": 0.05,
           "effects": [],
           "state": "intact"
         }
@@ -587,7 +587,7 @@
   "flags": {},
   "weather": {
     "type": "多云",
-    "temp": 10
+    "temp": 19
   },
   "turn": 0
 }
