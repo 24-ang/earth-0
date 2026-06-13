@@ -2,7 +2,7 @@
  * 状态引擎 - 角色状态 + HP + 负重 + 物品操作 + 持久化
  */
 
-import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill } from "./types.ts";
+import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid } from "./types.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import characters from "../data/characters.json" with { type: "json" };
 import rooms from "../data/rooms.json" with { type: "json" };
@@ -10,6 +10,35 @@ import { lookupRegion } from "./router.ts";
 import charStages from "../data/character_stages.json" with { type: "json" };
 import fs from "node:fs";
 import path from "node:path";
+
+// --- 空间数据定义 ---
+const ROOMS_BASE = rooms as Record<string, RoomGrid>;
+export let ROOMS = structuredClone(ROOMS_BASE);
+
+export function getRoomKey(roomName: string): string | null {
+  if (!roomName) return null;
+  if (ROOMS[roomName]) return roomName;
+  const cleanName = roomName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+  if (ROOMS[cleanName]) return cleanName;
+  for (const key of Object.keys(ROOMS)) {
+    const cleanKey = key.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+    if (cleanKey === cleanName || cleanKey.includes(cleanName) || cleanName.includes(cleanKey)) {
+      return key;
+    }
+  }
+  return null;
+}
+
+export function isSameLocation(loc1: string, loc2: string): boolean {
+  if (!loc1 || !loc2) return false;
+  if (loc1 === loc2) return true;
+  const k1 = getRoomKey(loc1);
+  const k2 = getRoomKey(loc2);
+  if (k1 && k2) return k1 === k2;
+  
+  const clean = (s: string) => s.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+  return clean(loc1) === clean(loc2);
+}
 
 // --- 模块级游戏状态（单例，整个 session 一份） ---
 const STATE_DIR = path.resolve(process.cwd(), "state");
@@ -36,15 +65,15 @@ function createDefaultPlayer(): PlayerState {
   return {
     name: "维",
     gender: "男",
-    age: 6,
+    age: 16,
     location: "千叶_住宅区",
     body: {
-      height_cm: 115, weight_kg: 20, build: "标准", leg_type: "纤细",
+      height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
       skin: { base_tone: "普通", tan: 0, texture: "普通" },
     },
-    attributes: { 力量: 2, 敏捷: 3, 体质: 3, 智力: 4, 感知: 5, 魅力: 5 },
+    attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 12, 感知: 10, 魅力: 10 },
     skills: {},
-    hp: { current: 7, max: 7 },
+    hp: { current: 18, max: 18 },
     ac: 10,
     equipment: {},
     inventory: [],
@@ -64,9 +93,11 @@ function createDefaultPlayer(): PlayerState {
 export function saveState(filepath?: string): void {
   const fp = filepath ?? STATE_FILE;
   fs.mkdirSync(path.dirname(fp), { recursive: true });
-  // 房间修改也持久化
-  const ROOMS_PATH = path.resolve(process.cwd(), "data", "rooms.json");
-  fs.writeFileSync(ROOMS_PATH, JSON.stringify(ROOMS, null, 2));
+  
+  // 房间修改也持久化，保存到 session 目录下的 rooms_delta.json，而不覆写 data/rooms.json
+  const roomsDeltaPath = path.join(path.dirname(fp), "rooms_delta.json");
+  fs.writeFileSync(roomsDeltaPath, JSON.stringify(ROOMS, null, 2));
+  
   fs.writeFileSync(fp, JSON.stringify(gameState, null, 2));
 }
 
@@ -75,17 +106,45 @@ export function loadState(filepath?: string): boolean {
   if (!fs.existsSync(fp)) return false;
   const raw = fs.readFileSync(fp, "utf-8");
   gameState = JSON.parse(raw) as GameState;
+  
+  // 读取 rooms_delta.json 并覆盖 ROOMS
+  const roomsDeltaPath = path.join(path.dirname(fp), "rooms_delta.json");
+  if (fs.existsSync(roomsDeltaPath)) {
+    try {
+      ROOMS = JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8"));
+    } catch (_) {
+      ROOMS = structuredClone(ROOMS_BASE);
+    }
+  } else {
+    ROOMS = structuredClone(ROOMS_BASE);
+  }
+
+  // 迁移：旧存档 player.age 与 time.player_age 不同步 → 用 time 覆盖 player
+  if (gameState.time?.player_age && gameState.player.age !== gameState.time.player_age) {
+    gameState.player.age = gameState.time.player_age;
+  }
+  // 迁移：timeline_origin.age 过旧 → 与 player_age 对齐
+  if (gameState.time?.timeline_origin && gameState.time.timeline_origin.age !== gameState.time.player_age) {
+    gameState.time.timeline_origin.age = gameState.time.player_age;
+    gameState.time.timeline_origin.year = Number(gameState.time.game_date.split("-")[0]);
+  }
   return true;
 }
 
 export function resetState(): void {
   gameState = createInitialState();
+  ROOMS = structuredClone(ROOMS_BASE);
+  // 删除默认 session 对应的 rooms_delta.json
+  const roomsDeltaPath = path.join(STATE_DIR, "rooms_delta.json");
+  if (fs.existsSync(roomsDeltaPath)) {
+    try { fs.unlinkSync(roomsDeltaPath); } catch (_) {}
+  }
   saveState();
 }
 
 // --- 状态简报模板注入（填充 gm-state.md 的 {{}} 变量） ---
 /** 按年龄取身体数据：优先 body_by_age（找 ≤ targetAge 的最大键），否则 fallback body */
-export function getBodyForAge(char: any, targetAge: number): any {
+export function getBodyForAge(char: StaticCharacter | any, targetAge: number): BodyMeasurements {
   if (char.body_by_age) {
     const keys = Object.keys(char.body_by_age).map(Number).sort((a,b) => a - b);
     let best = keys[0];
@@ -93,9 +152,9 @@ export function getBodyForAge(char: any, targetAge: number): any {
       if (k <= targetAge) best = k;
       else break;
     }
-    return char.body_by_age[String(best)] || char.body;
+    return (char.body_by_age[String(best)] || char.body) as BodyMeasurements;
   }
-  return char.body;
+  return char.body as BodyMeasurements;
 }
 
 /** 计算 NPC 当前年龄（base_age + 游戏时间流逝） */
@@ -113,7 +172,7 @@ export function setPlayerLocation(loc: string): void {
   }
 }
 
-export function buildStatePrompt(): string {
+export async function buildStatePrompt(): Promise<string> {
   const tplPath = path.join(AGENTS_DIR, "gm-state.md");
   if (!fs.existsSync(tplPath)) return "";
   let tpl = fs.readFileSync(tplPath, "utf-8");
@@ -156,12 +215,12 @@ export function buildStatePrompt(): string {
   }
   // 碰面检测：当前房间内已存在的NPC
   const inRoom = Object.entries(gameState.npcs)
-    .filter(([_, n]) => n.currentRoom === p.location || n.currentRoom.includes(p.location) || p.location.includes(n.currentRoom))
+    .filter(([_, n]) => isSameLocation(n.currentRoom, p.location))
     .map(([name, n]) => `${name}${n.action ? "("+n.action+")" : ""}`);
   if (inRoom.length > 0) tpl += `\n[在场] ${inRoom.join(", ")}`;
   // NPC阶段描述 + 实时身材
   for (const [nname, npc] of Object.entries(gameState.npcs)) {
-    if (npc.currentRoom !== p.location && !npc.currentRoom.includes(p.location) && !p.location.includes(npc.currentRoom)) continue;
+    if (!isSameLocation(npc.currentRoom, p.location)) continue;
     const cs = (charStages as any)[nname];
     const src = (characters as any[]).find((c: any) => c.name === nname);
     if (!src) continue;
@@ -204,6 +263,57 @@ export function buildStatePrompt(): string {
     }).join(" ");
     tpl += `\n[声誉] ${repStr}`;
   }
+  // 附加关系（室内 NPC 的玩家关系，LLM 需要知道才能正确叙事）
+  const rels = gameState.player.relationships;
+  for (const [nname, rel] of Object.entries(rels)) {
+    // 只注在室内的，跟 NPC 阶段描述同一过滤
+    const npc = gameState.npcs[nname];
+    if (!npc || !isSameLocation(npc.currentRoom, gameState.player.location)) continue;
+    if ((rel as any).affection === 0) continue;
+    let relStr = `${(rel as any).stage}(好感${(rel as any).affection})`;
+    if ((rel as any).romance) relStr += ` ${(rel as any).romance}`;
+    if ((rel as any).notes) relStr += ` — ${(rel as any).notes}`;
+    tpl += `\n[${nname}·关系] ${relStr}`;
+  }
+
+  // 附加 Layer1 — 分两层：
+  //   [印记] 永久属性（态度/经验/开发度），gal/sex 都注入——这是身体记忆
+  //   [实时] 欲望/兴奋/周期，仅 sex 模式注入——这是瞬时状态
+  try {
+    const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, SEX_PROFILES } = await import("./sex.ts");
+    const profiles = SEX_PROFILES as Record<string, any>;
+
+    // [印记] 玩家当前 partner（如有）
+    if (gameState.player.sex) {
+      const sx = gameState.player.sex;
+      const prof = sx.profile;
+      const devHint = getDevNarrative(prof);
+      tpl += `\n[印记] ${prof.attitude} | ${prof.experience} | ${devHint}`;
+      // [实时] 仅 sex 模式
+      if (gameState.layer1Enabled) {
+        const phase = getCyclePhase(sx.cycleDay);
+        if (phase !== "安全期") tpl += ` | ${phase}`;
+        const dh = getDesireNarrative(sx);
+        const ah = getArousalNarrative(sx);
+        if (dh) tpl += `\n  欲望: ${dh}`;
+        if (ah) tpl += `\n  兴奋: ${ah}`;
+      }
+    }
+
+    // [印记] 室内 NPC 永久档案
+    for (const [nname, npc] of Object.entries(gameState.npcs)) {
+      if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
+      const sp = profiles[nname];
+      if (!sp) continue;
+      const devHint = getDevNarrative(sp);
+      tpl += `\n[${nname}·印记] ${sp.attitude} | ${sp.experience} | ${devHint}`;
+      if (gameState.layer1Enabled) {
+        const npcPhase = getCyclePhase(sp.cycleDay);
+        if (npcPhase !== "安全期") tpl += ` | ${npcPhase}`;
+      }
+    }
+  } catch (_) {}
+
   return tpl;
 }
 
@@ -319,118 +429,36 @@ export function listNPCItems(name: string): Item[] {
 }
 
 // --- 空间系统（棋盘格） ---
-const ROOMS = rooms as Record<string, RoomGrid>;
 const DIRS: Record<string, [number, number]> = {
   "北": [0, -1], "南": [0, 1], "东": [1, 0], "西": [-1, 0],
   "上": [0, -1], "下": [0, 1], "左": [-1, 0], "右": [1, 0],
 };
 
-// 初始化时注册保留字
-const RESERVED: Record<string, string> = {
-  "墙壁": "WL", "墙": "WL", "门": "DR", "出口": "DR",
-  "窗户": "WD", "落地窗": "WD", "窗": "WD",
-  "课桌": "DK", "书桌": "DK", "讲台": "PD", "黑板": "BB",
-  "柱": "CL", "储物柜": "LK", "沙发": "SF", "茶几": "TB",
-  "床": "BD",
-};
-
-const usedLabels = new Set<string>();
-const labelRegistry = new Map<string, string>();
-
-// 注册保留字标签
-for (const [name, label] of Object.entries(RESERVED)) {
-  usedLabels.add(label);
-  labelRegistry.set(label, name);
-}
-usedLabels.add("PL"); // 玩家始终保留
-usedLabels.add("  "); // 空地
-
-/** 四级降级：给物品生成双字母缩写 */
-export function registerLabel(name: string): string {
-  // 先查保留字
-  for (const [kw, lbl] of Object.entries(RESERVED)) {
-    if (name.includes(kw)) return lbl;
-  }
-  
-  // 二级：英文首字母+首辅音
-  const en = toEnglish(name);
-  const abbr = extractAbbr(en);
-  if (!usedLabels.has(abbr)) {
-    usedLabels.add(abbr);
-    labelRegistry.set(abbr, name);
-    return abbr;
-  }
-  
-  // 三级：错位辅音
-  const alt = shiftConsonant(en);
-  if (alt && !usedLabels.has(alt)) {
-    usedLabels.add(alt);
-    labelRegistry.set(alt, name);
-    return alt;
-  }
-  
-  // 四级：首字母+数字
-  const first = en[0]?.toUpperCase() || "X";
-  for (let i = 1; i <= 99; i++) {
-    const num = `${first}${i}`;
-    if (!usedLabels.has(num)) {
-      usedLabels.add(num);
-      labelRegistry.set(num, name);
-      return num;
-    }
-  }
-  
-  return "??";
-}
-
-function toEnglish(name: string): string {
-  // 简单的中→英映射，覆盖常见建造物品
-  const map: Record<string, string> = {
-    "帐篷": "Tent", "猫窝": "Catbed", "猫爬架": "Cattree",
-    "桌子": "Table", "椅子": "Chair", "床": "Bed",
-    "沙发": "Sofa", "茶几": "Table", "柜子": "Cabinet",
-    "书架": "Bookshelf", "灯": "Lamp", "地毯": "Rug",
-    "电视": "TV", "冰箱": "Fridge", "洗衣机": "Washer",
-    "马桶": "Toilet", "浴缸": "Bathtub", "镜子": "Mirror",
-    "花盆": "Flowerpot", "垃圾桶": "Trashcan", "纸箱": "Carton",
-    "垫子": "Cushion", "枕头": "Pillow", "毯子": "Blanket",
-  };
-  return map[name] || name;
-}
-
-function extractAbbr(en: string): string {
-  const upper = en.toUpperCase().replace(/[^A-Z]/g, "");
-  if (upper.length >= 2) return upper.slice(0, 2);
-  if (upper.length === 1) return upper + "0";
-  return "??";
-}
-
-function shiftConsonant(en: string): string | null {
-  const upper = en.toUpperCase().replace(/[^A-Z]/g, "");
-  if (upper.length < 2) return null;
-  const first = upper[0];
-  // 找第二个辅音
-  for (let i = 2; i < upper.length; i++) {
-    const ch = upper[i];
-    if (!"AEIOU".includes(ch)) {
-      return first + ch;
-    }
-  }
-  return null;
-}
-
 export function getRoom(roomName: string): RoomGrid | null {
-  return ROOMS[roomName] || null;
+  const key = getRoomKey(roomName);
+  return key ? ROOMS[key] : null;
 }
 
 export function initPlayerGrid(): void {
   const roomName = gameState.player.location;
   const grid = ROOMS[roomName];
-  if (grid) {
-    gameState.player.gridPos = [...grid.origin];
-  } else {
+  if (!grid) {
     gameState.player.gridPos = null;
+    return;
   }
+  // 扫描找入口/门，其次找地板；避免把玩家放在墙壁上
+  for (const priority of ["exit", "door", "floor"]) {
+    for (let y = 0; y < grid.height; y++) {
+      for (let x = 0; x < grid.width; x++) {
+        if (grid.cells[y]?.[x]?.type === priority) {
+          gameState.player.gridPos = [x, y];
+          return;
+        }
+      }
+    }
+  }
+  // 全室无可行走格（极端情况），fallback 到 origin
+  gameState.player.gridPos = [...grid.origin];
 }
 
 export function movePlayer(direction: string, running: boolean = false): MoveResult {
@@ -497,12 +525,11 @@ export function placeFurniture(x: number, y: number, itemName: string): { succes
   if (cell.type === "exit" || cell.type === "door") return { success: false, reason: "不能堵住门口" };
   if (cell.furniture) return { success: false, reason: `这里已经有${cell.furniture}了` };
   
-  const label = registerLabel(itemName);
   cell.furniture = itemName;
-  cell.label = label;
+  cell.label = itemName.slice(0, 4);  // 简单缩写，用于棋盘格显示
   cell.block = true;
   saveState();
-  return { success: true, reason: `放置了${itemName} [${label}]` };
+  return { success: true, reason: `放置了${itemName}` };
 }
 
 export function removeFurniture(x: number, y: number): { success: boolean; reason: string; item?: string } {
@@ -702,6 +729,26 @@ export function refreshWeather(): string {
 import scheduleTemplates from "../data/schedule_templates.json" with { type: "json" };
 const TEMPLATES = scheduleTemplates as any;
 
+const FALLBACK_ROOMS: Record<string, string> = {
+  "2年J班": "2F南走廊-J班前",
+  "2年F班": "2F南走廊-F班前",
+  "侍奉部": "社团楼1F走廊",
+  "如月家_浴室": "如月家",
+  "如月家_2F": "如月家",
+};
+
+export function getRoomCapacity(roomName: string): number {
+  const room = ROOMS[roomName];
+  if (!room) return 999;
+  if (room.capacity !== undefined) return room.capacity;
+  if (roomName.includes("班")) return 40;
+  if (roomName.includes("走廊") || roomName.includes("楼梯")) return 15;
+  if (roomName === "侍奉部") return 6;
+  if (roomName.includes("家") || roomName.includes("自宅")) return 10;
+  if (roomName === "操场" || roomName === "中庭" || roomName === "体育馆" || roomName === "校门" || roomName === "天台") return 100;
+  return Math.max(6, Math.floor(room.width * room.height / 3));
+}
+
 export function updateNPCSchedules(): string[] {
   const events: string[] = [];
   const { time_of_day, day_of_week } = gameState.time;
@@ -717,6 +764,13 @@ export function updateNPCSchedules(): string[] {
   };
   const timeKey = isWeekend ? "weekend" : (slotMap[time_of_day] || "weekday_morning");
   
+  // 房间容量计数器，初始化玩家所在位置人数
+  const roomCounts: Record<string, number> = {};
+  if (gameState.player.location) {
+    const pLocKey = getRoomKey(gameState.player.location) || gameState.player.location;
+    roomCounts[pLocKey] = 1;
+  }
+
   for (const [name, npc] of Object.entries(gameState.npcs)) {
     // Tier 1: 一次性覆盖（生病/约定/紧急事件）
     if (npc.pendingOverride) {
@@ -725,15 +779,24 @@ export function updateNPCSchedules(): string[] {
       if (ov.expiresAt && ov.expiresAt < gameState.time.game_date) {
         npc.pendingOverride = null;
       } else {
-        const matchedRoom = [...Object.keys(ROOMS)].find(rn => 
-          rn.includes(ov.location) || ov.location.includes(rn)
-        ) || ov.location;
-        if (npc.currentRoom !== matchedRoom) {
+        const matchedRoom = getRoomKey(ov.location) || ov.location;
+        let finalRoom = matchedRoom;
+        const cap = getRoomCapacity(finalRoom);
+        roomCounts[finalRoom] ??= 0;
+        if (roomCounts[finalRoom] >= cap) {
+          const fallback = FALLBACK_ROOMS[finalRoom] || "1F南走廊";
+          events.push(`${name}: 因 ${finalRoom} 人数已满(${roomCounts[finalRoom]}/${cap})，分流至 ${fallback}`);
+          finalRoom = fallback;
+        }
+        roomCounts[finalRoom] ??= 0;
+        roomCounts[finalRoom]++;
+
+        if (npc.currentRoom !== finalRoom) {
           const old = npc.currentRoom;
-          npc.currentRoom = matchedRoom;
-          npc.gridPos = ROOMS[matchedRoom]?.origin || null;
+          npc.currentRoom = finalRoom;
+          npc.gridPos = ROOMS[finalRoom]?.origin || null;
           npc.action = ov.action;
-          events.push(`${name}: ${old} → ${matchedRoom}（${ov.reason}）`);
+          events.push(`${name}: ${old} → ${finalRoom}（${ov.reason}）`);
         }
         continue; // 跳过后续模板查询
       }
@@ -771,18 +834,24 @@ export function updateNPCSchedules(): string[] {
     
     if (!targetRoom || targetRoom === "自由") continue;
     
-    // 模糊匹配房间名
-    let matchedRoom: string | null = null;
-    for (const rn of Object.keys(ROOMS)) {
-      if (rn.includes(targetRoom) || targetRoom.includes(rn)) {
-        matchedRoom = rn;
-        break;
-      }
-    }
+    // 匹配房间名
+    const matchedRoom = getRoomKey(targetRoom);
     if (!matchedRoom) continue;
     
+    // 检查容量并分流
+    let finalRoom = matchedRoom;
+    const cap = getRoomCapacity(finalRoom);
+    roomCounts[finalRoom] ??= 0;
+    if (roomCounts[finalRoom] >= cap) {
+      const fallback = FALLBACK_ROOMS[finalRoom] || "1F南走廊";
+      events.push(`${name}: 因 ${finalRoom} 人数已满(${roomCounts[finalRoom]}/${cap})，分流至 ${fallback}`);
+      finalRoom = fallback;
+    }
+    roomCounts[finalRoom] ??= 0;
+    roomCounts[finalRoom]++;
+
     // 物理优先：当前房间有网格时才检查出口
-    if (npc.currentRoom !== matchedRoom && npc.gridPos) {
+    if (npc.currentRoom !== finalRoom && npc.gridPos) {
       const curRoom = ROOMS[npc.currentRoom];
       if (curRoom) {
         // 找通往目标方向的出口
@@ -790,9 +859,11 @@ export function updateNPCSchedules(): string[] {
         for (const row of curRoom.cells) {
           for (const cell of row) {
             if ((cell.type === "exit" || cell.type === "door") && cell.exitTo) {
-              if (cell.exitTo === matchedRoom || cell.exitTo.includes(matchedRoom) || matchedRoom.includes(cell.exitTo)) {
+              const exitKey = getRoomKey(cell.exitTo);
+              const finalKey = getRoomKey(finalRoom);
+              if (exitKey && finalKey && exitKey === finalKey) {
                 if (cell.isOpen === false) {
-                  events.push(`${name}: 门关着，无法离开${npc.currentRoom}前往${matchedRoom}`);
+                  events.push(`${name}: 门关着，无法离开${npc.currentRoom}前往${finalRoom}`);
                   exitFound = true;
                   break;
                 }
@@ -803,18 +874,15 @@ export function updateNPCSchedules(): string[] {
           }
           if (exitFound) break;
         }
-        if (!exitFound) {
-          // 无直连出口 → 允许瞬移（学校走廊连通，不在此校验多步路径）
-        }
       }
     }
     
     // 移动
-    if (npc.currentRoom !== matchedRoom) {
+    if (npc.currentRoom !== finalRoom) {
       const oldRoom = npc.currentRoom;
-      npc.currentRoom = matchedRoom;
-      npc.gridPos = ROOMS[matchedRoom]?.origin || null;
-      events.push(`${name}: ${oldRoom} → ${matchedRoom}`);
+      npc.currentRoom = finalRoom;
+      npc.gridPos = ROOMS[finalRoom]?.origin || null;
+      events.push(`${name}: ${oldRoom} → ${finalRoom}`);
     }
   }
   
@@ -853,8 +921,8 @@ export function updateNPCSchedules(): string[] {
           const daysSince = (Date.now() - new Date(t.since).getTime()) / 86400000;
           return daysSince < t.expires;
         });
-        a.memoryTags = newTags;
-        b.memoryTags = newTags;
+        a.memoryTags = [...newTags];
+        b.memoryTags = [...newTags];
         // 生成碰面事件
         const rel = gameState.player.relationships[names[i]];
         const knowA = rel && rel.affection > 0;
@@ -869,91 +937,13 @@ export function updateNPCSchedules(): string[] {
   return events;
 }
 
-// --- 路径与移动判��（引擎做，LLM不碰） ---
-function isWalkable(room: RoomGrid, x: number, y: number): boolean {
-  if (x < 0 || x >= room.width || y < 0 || y >= room.height) return false;
-  const cell = room.cells[y][x];
-  if (cell.type === "wall") return false;
-  if (cell.block) return false;
-  return true;
-}
-
-export interface PathResult {
-  reached: boolean;
-  path: [number, number][];      // 走过的格子
-  blockedAt?: [number, number];   // 在哪被挡住
-  blockedBy?: string;            // 被什么挡住
-  walked: [number, number][];    // 实际走到的路径（不含起点）
-}
-
-/** 从 (fx,fy) 直线移动向 (tx,ty)，逐个检查碰撞 */
-export function moveTo(
-  roomName: string,
-  from: [number, number],
-  to: [number, number]
-): PathResult {
-  const room = ROOMS[roomName];
-  if (!room) return { reached: false, path: [], walked: [] };
-  
-  const [fx, fy] = from;
-  const [tx, ty] = to;
-  const path: [number, number][] = [];
-  const walked: [number, number][] = [];
-  
-  let cx = fx, cy = fy;
-  
-  // 简单直线逼近：每次选离目标更近的一步
-  while (cx !== tx || cy !== ty) {
-    const dx = tx - cx;
-    const dy = ty - cy;
-    
-    // 优先水平还是垂直，选差值大的方向
-    let nx = cx, ny = cy;
-    if (Math.abs(dx) >= Math.abs(dy)) {
-      nx = cx + (dx > 0 ? 1 : -1);
-    } else {
-      ny = cy + (dy > 0 ? 1 : -1);
-    }
-    
-    // 如果首选方向不通，试另一方向
-    if (!isWalkable(room, nx, ny)) {
-      const cell = room.cells[ny]?.[nx];
-      const blockedBy = cell?.furniture || "墙壁";
-      
-      // 尝试另一轴
-      if (Math.abs(dx) >= Math.abs(dy)) {
-        ny = cy + (dy > 0 ? 1 : -1);
-        nx = cx;
-      } else {
-        nx = cx + (dx > 0 ? 1 : -1);
-        ny = cy;
-      }
-      
-      if (!isWalkable(room, nx, ny)) {
-        // 两个方向都堵了
-        return { reached: false, path, blockedAt: [cx, cy], blockedBy, walked };
-      }
-    }
-    
-    cx = nx;
-    cy = ny;
-    path.push([cx, cy]);
-    walked.push([cx, cy]);
-    
-    // 防死循环：最多走 100 步
-    if (path.length > 100) break;
-  }
-  
-  return { reached: cx === tx && cy === ty, path, walked };
-}
-
-// --- 空间统计注�LLM上下文 ---
+// --- 空间统计注入 LLM 上下文 ---
 export function getGridContext(): string {
   const room = ROOMS[gameState.player.location];
   if (!room || !gameState.player.gridPos) return "";
-  
+
   const [px, py] = gameState.player.gridPos;
-  
+
   // 出口列表
   const exits: string[] = [];
   const furniture: string[] = [];
@@ -964,8 +954,8 @@ export function getGridContext(): string {
       if (c.furniture) furniture.push(`${c.furniture}(${x},${y})`);
     }
   }
-  
-  // 四周一�
+
+  // 四周一格：LLM 知道邻格有什么，但不知道邻格之外
   const around: string[] = [];
   for (const [d, [dx, dy]] of Object.entries(DIRS).slice(0, 4)) {
     const nx = px + dx, ny = py + dy;
@@ -976,69 +966,15 @@ export function getGridContext(): string {
     else if (c.type === "exit" || c.type === "door") around.push(`${d}:出口→${c.exitTo || "?"}`);
     else around.push(`${d}:空`);
   }
-  
+
   let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py})`;
   if ((room as any).atmosphere) ctx += ` | ${(room as any).atmosphere}`;
-  // 远景
-  const hz = (room as any).horizon;
-  if (hz) {
-    const dirs = Object.entries(hz).map(([d, v]) => `${d}:${v}`).join("; ");
-    ctx += ` | 远景: ${dirs}`;
-  }
-  // 窗外景色（房间级：只要房间有窗就注入，不靠邻格）
-  let outsideView = "";
-  for (const row of room.cells) {
-    for (const c of row) {
-      if (c.outsideView) { outsideView = c.outsideView; break; }
-    }
-    if (outsideView) break;
-  }
-  if (outsideView) ctx += ` | 窗外: ${outsideView}`;
-  // 跨节点感官渗透：读目标房间实时ambient
-  let bleed = "";
-  for (const row of room.cells) {
-    for (const c of row) {
-      if (!c.faces) continue;
-      const target = ROOMS[c.faces] as any;
-      if (!target?.ambient) continue;
-      const isClosed = c.isOpen === false;
-      const v = target.ambient.visual || "";
-      const a = target.ambient.audio || "";
-      bleed = isClosed ? `窗外隐约可见${v}，声音模糊` : `窗外${v}，${a}传进来`;
-      break;
-    }
-    if (bleed) break;
-  }
-  if (bleed) ctx += ` | ${bleed}`;
-  // 外部环境音（房间级）
   const amb = (room as any).ambient;
   if (amb) ctx += ` | 环境: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`;
   if (exits.length > 0) ctx += ` | 出口:${exits.join(",")}`;
   if (furniture.length > 0) ctx += ` | 家具:${furniture.join(",")}`;
   ctx += ` | 四周:${around.join(" ")}`;
   return ctx;
-}
-
-export function getRoomState(roomName: string): { grid: RoomGrid | null; playerPos: [number, number] | null; nearby: string } | null {
-  const grid = ROOMS[roomName];
-  if (!grid) return null;
-  const pos = gameState.player.gridPos;
-  let nearby = "";
-  if (pos) {
-    const [px, py] = pos;
-    const parts: string[] = [];
-    for (const [dir, [dx, dy]] of Object.entries(DIRS).slice(0, 4)) {
-      const nx = px + dx;
-      const ny = py + dy;
-      if (nx >= 0 && nx < grid.width && ny >= 0 && ny < grid.height) {
-        const cell = grid.cells[ny][nx];
-        if (cell.furniture) parts.push(`${dir}边：${cell.furniture}`);
-        if (cell.type === "exit" || cell.type === "door") parts.push(`${dir}边：通往${cell.exitTo || "出口"}`);
-      }
-    }
-    nearby = parts.join(" | ");
-  }
-  return { grid, playerPos: pos, nearby };
 }
 
 // --- 偷窃 ---

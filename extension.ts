@@ -8,10 +8,12 @@ export default function (pi: ExtensionAPI) {
   // ── 辅助 ──
   interface MenuItem { label: string; detail?: string; action?: () => void | Promise<void>; }
 
-  function moveTo(loc: string, ctx: any, gs: any, save: any) {
+  async function moveTo(loc: string, ctx: any, gs: any, save: any) {
     gs.player.location = loc;
     if (!gs.player.known_locations) gs.player.known_locations = ["千叶_住宅区"];
     if (!gs.player.known_locations.includes(loc)) gs.player.known_locations.push(loc);
+    const { initPlayerGrid } = await import("./engine/state.ts");
+    initPlayerGrid();
     save(); ctx.ui.notify("📍 " + loc, "info");
   }
 
@@ -104,8 +106,11 @@ export default function (pi: ExtensionAPI) {
     description: "获取玩家或NPC的HP/属性/位置。",
     parameters: Type.Object({ name: Type.String() }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
+      const { gameState, getBodyForAge, getNpcCurrentAge } = await import("./engine/state.ts");
+      if (params.name === gameState.player.name || params.name === "玩家") {
+        return { content: [{ type: "text", text: JSON.stringify(gameState.player, null, 2) }], details: { character: gameState.player } };
+      }
       const { allChars } = await import("./engine/router.ts");
-      const { getBodyForAge, getNpcCurrentAge } = await import("./engine/state.ts");
       const c = allChars.find((x: any) => x.name === params.name);
       if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
       const age = getNpcCurrentAge(c.base_age || 6);
@@ -116,25 +121,108 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "patch_state", label: "修改状态",
-    description: "改好感/移物品/换位置/加技能。move时value=地点名。",
+    description: "改好感/移物品/换位置/加技能/给或取物品。target=NPC名, action=add_affection|add_skill_exp|move|give_item|take_item, value=数值/地点/物品名",
     parameters: Type.Object({ target: Type.String(), action: Type.String(), value: Type.Optional(Type.String()) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { updateRelation, addSkillExp, gameState, saveState, setPlayerLocation } = await import("./engine/state.ts");
+      const { updateRelation, addSkillExp, gameState, saveState, setPlayerLocation, getOrCreateNPC } = await import("./engine/state.ts");
+      const p = gameState.player;
       let r = "";
       if (params.action === "add_affection" && params.value) {
-        updateRelation(gameState.player.relationships, params.target, Number(params.value));
-        r = `${params.target} 好感${params.value}`;
+        updateRelation(p.relationships, params.target, Number(params.value));
+        r = `${params.target} 好感${params.value > "0" ? "+" : ""}${params.value}`;
       } else if (params.action === "add_skill_exp" && params.value) {
         const [sk, exp] = params.value.split(":");
-        addSkillExp(gameState.player.skills, sk, Number(exp));
+        addSkillExp(p.skills, sk, Number(exp));
         r = `${sk} +${exp}EXP`;
       } else if (params.action === "move" && params.value) {
         setPlayerLocation(params.value);
         r = `移动到 ${params.value}`;
-      } else { r = `操作 ${params.action} → ${params.target}`; }
+      } else if (params.action === "give_item" && params.value) {
+        // 玩家给 NPC 物品
+        const idx = p.inventory.findIndex((i: any) => i.name === params.value);
+        if (idx < 0) { r = `背包里没有${params.value}`; }
+        else {
+          const item = p.inventory.splice(idx, 1)[0];
+          const npc = getOrCreateNPC(params.target);
+          npc.inventory.push(item);
+          r = `把${params.value}给了${params.target}`;
+        }
+      } else if (params.action === "take_item" && params.value) {
+        // 玩家从 NPC 拿物品（背包或装备）
+        const npc = getOrCreateNPC(params.target);
+        // 先查背包
+        let idx = npc.inventory.findIndex((i: any) => i.name === params.value);
+        if (idx >= 0) {
+          const item = npc.inventory.splice(idx, 1)[0];
+          p.inventory.push(item);
+          r = `从${params.target}的背包拿到了${params.value}`;
+        } else {
+          // 再查装备槽
+          let found = false;
+          for (const [slot, item] of Object.entries(npc.equipment)) {
+            if (item && item.name === params.value) {
+              p.inventory.push(item);
+              npc.equipment[slot as any] = null;
+              found = true;
+              r = `从${params.target}身上取下了${params.value}`;
+              break;
+            }
+          }
+          if (!found) r = `${params.target}身上没有${params.value}`;
+        }
+      } else { r = `未知操作: ${params.action}`; }
       saveState();
       return { content: [{ type: "text", text: r }], details: {} };
     },
+  });
+
+  pi.registerTool({
+    name: "init_game", label: "初始化游戏",
+    description: "新开局或重新开始时初始化玩家数据。重置除玩家设定外的所有状态。",
+    parameters: Type.Object({
+      name: Type.String({ description: "玩家姓名" }),
+      gender: Type.String({ description: "玩家性别，男/女" }),
+      age: Type.Number({ description: "起始年龄，例如6" }),
+    }),
+    async execute(_id, params, _signal, _onUpdate, _ctx) {
+      const { gameState, resetState, saveState, setPlayerLocation, initPlayerGrid } = await import("./engine/state.ts");
+      // 重置状态
+      resetState();
+      
+      // 设置玩家属性
+      gameState.player.name = params.name;
+      gameState.player.gender = params.gender;
+      gameState.player.age = params.age;
+      
+      // 根据年龄初始化属性 (如果是6岁，属性较低；如果是16岁，属性为默认值)
+      if (params.age <= 6) {
+        gameState.player.attributes = { 力量: 3, 敏捷: 4, 体质: 3, 智力: 3, 感知: 3, 魅力: 4 };
+        gameState.player.body = {
+          height_cm: 115, weight_kg: 20, build: "纤细", leg_type: "纤细",
+          skin: { base_tone: "普通", tan: 0, texture: "细腻" },
+        };
+      } else {
+        gameState.player.attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 12, 感知: 10, 魅力: 10 };
+        gameState.player.body = {
+          height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
+          skin: { base_tone: "普通", tan: 0, texture: "普通" },
+        };
+      }
+      
+      // 自动校正 time.player_age 和 timeline_origin
+      gameState.time.player_age = params.age;
+      gameState.time.timeline_origin.age = params.age;
+      gameState.time.timeline_origin.year = 2018 - (16 - params.age); // 例如 6岁时是 2008年，16岁时是 2018年
+      // 根据年龄段设置阶段
+      gameState.time.player_stage = params.age <= 6 ? "小学生" : params.age <= 12 ? "小学生" : params.age <= 15 ? "中学生" : "高中生";
+      
+      // 重置起始地点
+      setPlayerLocation("千叶_住宅区");
+      initPlayerGrid();
+      
+      saveState();
+      return { content: [{ type: "text", text: `游戏已初始化：玩家 ${params.name}（${params.gender}，${params.age}岁）` }], details: {} };
+    }
   });
 
   pi.registerTool({
@@ -148,6 +236,8 @@ export default function (pi: ExtensionAPI) {
       // 初始化 legacy session 没有 minute_of_day
       if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
       const result = advanceMinutes(gameState.time, mins);
+      // 同步玩家年龄（time.player_age → player.age），确保 NPC 年龄同步
+      gameState.player.age = gameState.time.player_age;
       gameState.turn++;
       if (gameState.turn % 4 === 0) refreshWeather();
       const events = updateNPCSchedules();
@@ -208,21 +298,59 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  // combat, steal, equip, build, move, door_toggle, reputation, schedule, economy — keep existing
+  // combat, steal, equip, build, move, door_toggle, reputation, schedule, economy
   pi.registerTool({
     name: "combat_action", label: "战斗",
-    description: "攻击/防御/逃跑。action: attack/defend/flee",
+    description: "攻击/防御/逃跑。action: attack/defend/flee。target 为 NPC 名。",
     parameters: Type.Object({ action: Type.String(), target: Type.Optional(Type.String()) }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState } = await import("./engine/state.ts");
+      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
       const { resolveAttack, defend, attemptFlee } = await import("./engine/combat.ts");
+      const p = gameState.player;
+      const playerCombatant = { name: p.name, state: p, cover: "无掩体" as any };
+
       let r = "";
       if (params.action === "attack" && params.target) {
-        r = resolveAttack(gameState.player, params.target);
+        const npc = getOrCreateNPC(params.target);
+        const allChars = (await import("./engine/router.ts")).allChars;
+        const src = allChars.find((c: any) => c.name === params.target);
+        // 用 NPC 数据构造最小 Combatant
+        const npcState = {
+          ...structuredClone(p), // fallback 结构
+          name: params.target,
+          attributes: src?.attributes || { 力量:5,敏捷:5,体质:5,智力:5,感知:5,魅力:5 },
+          skills: src?.skills || {},
+          hp: src?.hp ? { ...src.hp } : { current: 10, max: 10 },
+          ac: src?.ac || 10,
+          equipment: npc.equipment || {},
+        };
+        const npcCombatant = { name: params.target, state: npcState, cover: "无掩体" as any };
+        // 取玩家装备的武器，否则拳头
+        const weapon = Object.values(p.equipment).find((w: any) => w?.damage)
+          || { name: "拳头", damage: { dice: "1d2", damageType: "钝击" }, type: "weapon", slot: "right_hand", weight: 0, effects: [], state: "intact" };
+        const result = resolveAttack(playerCombatant, npcCombatant, weapon as any);
+        r = result.narrative;
       } else if (params.action === "defend") {
-        r = defend(gameState.player);
+        r = defend(playerCombatant);
       } else if (params.action === "flee") {
-        r = attemptFlee(gameState.player);
+        const npcName = params.target || Object.keys(gameState.npcs)[0];
+        if (!npcName) { r = "没有敌人可逃跑"; }
+        else {
+          const npc = getOrCreateNPC(npcName);
+          const allChars = (await import("./engine/router.ts")).allChars;
+          const src = allChars.find((c: any) => c.name === npcName);
+          const npcState = {
+            ...structuredClone(p),
+            name: npcName,
+            attributes: src?.attributes || { 力量:5,敏捷:5,体质:5,智力:5,感知:5,魅力:5 },
+            skills: src?.skills || {},
+            hp: src?.hp ? { ...src.hp } : { current: 10, max: 10 },
+            ac: src?.ac || 10,
+            equipment: npc.equipment || {},
+          };
+          const npcCombatant = { name: npcName, state: npcState, cover: "无掩体" as any };
+          r = attemptFlee(playerCombatant, npcCombatant).narrative;
+        }
       } else r = "无效战斗动作";
       saveState();
       return { content: [{ type: "text", text: r }], details: {} };
@@ -234,8 +362,8 @@ export default function (pi: ExtensionAPI) {
     description: "从NPC偷物品。",
     parameters: Type.Object({ target: Type.String(), item: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, stealFromNPC, saveState } = await import("./engine/state.ts");
-      const r = stealFromNPC(params.target, params.item);
+      const { gameState, stealItem, saveState } = await import("./engine/state.ts");
+      const r = stealItem(gameState.player, params.target, params.item);
       saveState();
       return { content: [{ type: "text", text: r.narrative }], details: r };
     },
@@ -243,13 +371,35 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "equip_item", label: "装备",
-    description: "装备/卸下物品。",
+    description: "装备物品到指定槽位，或卸下物品。",
     parameters: Type.Object({ item: Type.String(), slot: Type.Optional(Type.String()) }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState } = await import("./engine/state.ts");
-      const r = params.slot ? `装备 ${params.item} → ${params.slot}` : `卸下 ${params.item}`;
-      saveState();
-      return { content: [{ type: "text", text: r }], details: {} };
+      const p = gameState.player;
+      if (params.slot) {
+        // 装备：从背包找到物品 → 放到指定槽位
+        const idx = p.inventory.findIndex((i: any) => i.name === params.item);
+        if (idx < 0) return { content: [{ type: "text", text: `背包里没有${params.item}` }], details: {} };
+        const item = p.inventory[idx];
+        const slot = params.slot as any;
+        // 如果槽位已有装备，先卸到背包
+        if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
+        p.equipment[slot] = item;
+        p.inventory.splice(idx, 1);
+        saveState();
+        return { content: [{ type: "text", text: `装备了${params.item} → ${params.slot}` }], details: {} };
+      } else {
+        // 卸下：从装备槽找到物品 → 放回背包
+        for (const [s, it] of Object.entries(p.equipment)) {
+          if (it && it.name === params.item) {
+            p.inventory.push(it);
+            p.equipment[s as any] = null;
+            saveState();
+            return { content: [{ type: "text", text: `卸下了${params.item}` }], details: {} };
+          }
+        }
+        return { content: [{ type: "text", text: `没有装备${params.item}` }], details: {} };
+      }
     },
   });
 
@@ -267,24 +417,32 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "move_to", label: "前往",
-    description: "移动到棋盘坐标。",
+    description: "直接移动到棋盘坐标（同一房间内）。",
     parameters: Type.Object({ x: Type.Number(), y: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { moveTo, gameState, saveState } = await import("./engine/state.ts");
-      const r = moveTo(gameState.player.location, gameState.player.gridPos || [0,0], [params.x, params.y]);
+      const { getRoom, gameState, saveState } = await import("./engine/state.ts");
+      const room = getRoom(gameState.player.location);
+      if (!room) return { content: [{ type: "text", text: "当前位置没有地图" }], details: {} };
+      const { x, y } = params;
+      if (x < 0 || x >= room.width || y < 0 || y >= room.height)
+        return { content: [{ type: "text", text: "坐标超出房间范围" }], details: {} };
+      const cell = room.cells[y][x];
+      if (cell.type === "wall") return { content: [{ type: "text", text: "那是墙壁" }], details: {} };
+      if (cell.block) return { content: [{ type: "text", text: cell.furniture ? `被${cell.furniture}挡住了` : "过不去" }], details: {} };
+      gameState.player.gridPos = [x, y];
       saveState();
-      return { content: [{ type: "text", text: r.reason }], details: r };
+      return { content: [{ type: "text", text: `移动到 (${x},${y})` }], details: {} };
     },
   });
 
   pi.registerTool({
     name: "build_add", label: "建造",
-    description: "在棋盘格建造物品。",
+    description: "在棋盘格建造物品。需要指定放置的格子坐标。",
     parameters: Type.Object({ item: Type.String(), x: Type.Number(), y: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      saveState();
-      return { content: [{ type: "text", text: `建造 ${params.item} 于 (${params.x},${params.y})` }], details: {} };
+      const { placeFurniture } = await import("./engine/state.ts");
+      const r = placeFurniture(params.x, params.y, params.item);
+      return { content: [{ type: "text", text: r.reason }], details: r };
     },
   });
 
@@ -293,20 +451,20 @@ export default function (pi: ExtensionAPI) {
     description: "拆除棋盘格物品。",
     parameters: Type.Object({ x: Type.Number(), y: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      saveState();
-      return { content: [{ type: "text", text: `拆除 (${params.x},${params.y})` }], details: {} };
+      const { removeFurniture } = await import("./engine/state.ts");
+      const r = removeFurniture(params.x, params.y);
+      return { content: [{ type: "text", text: r.reason }], details: r };
     },
   });
 
   pi.registerTool({
     name: "door_toggle", label: "开关门",
-    description: "开关当前位置的门。",
-    parameters: Type.Object({}),
-    async execute(_id, _p, _s, _o, _ctx) {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      saveState();
-      return { content: [{ type: "text", text: "门状态切换" }], details: {} };
+    description: "开关指定坐标的门/窗。",
+    parameters: Type.Object({ x: Type.Number(), y: Type.Number() }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { toggleDoor } = await import("./engine/state.ts");
+      const r = toggleDoor(params.x, params.y);
+      return { content: [{ type: "text", text: r.reason }], details: r };
     },
   });
 
@@ -339,23 +497,23 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "buy_item", label: "购买",
-    description: "从商店购买物品。",
-    parameters: Type.Object({ item: Type.String(), shop: Type.String() }),
+    description: "从商店购买物品。LLM 根据市场常识定价，引擎校验价格范围。",
+    parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      saveState();
-      return { content: [{ type: "text", text: `购买 ${params.item}` }], details: {} };
+      const { buyItem } = await import("./engine/state.ts");
+      const r = buyItem(params.item, params.price);
+      return { content: [{ type: "text", text: r }], details: {} };
     },
   });
 
   pi.registerTool({
     name: "sell_item", label: "出售",
-    description: "出售物品。",
-    parameters: Type.Object({ item: Type.String() }),
+    description: "出售物品。LLM 根据市场常识定价，引擎校验价格范围。",
+    parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      saveState();
-      return { content: [{ type: "text", text: `出售 ${params.item}` }], details: {} };
+      const { sellItem } = await import("./engine/state.ts");
+      const r = sellItem(params.item, params.price);
+      return { content: [{ type: "text", text: r }], details: {} };
     },
   });
 
@@ -439,26 +597,42 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("inventory", {
-    description: "查看背包和装备",
+    description: "查看背包和装备，可选择装备/卸下",
     handler: async (_args, ctx) => {
-      const { gameState } = await import("./engine/state.ts");
+      const { gameState, saveState } = await import("./engine/state.ts");
       const p = gameState.player;
-      const lines: string[] = [`💰 ¥${p.funds}`, ""];
+      const items: MenuItem[] = [];
+      items.push({ label: `💰 ¥${p.funds}`, detail: "" });
+      items.push({ label: "── 装备 ──", detail: "" });
       const eq = Object.entries(p.equipment).filter(([_,v]) => v);
-      if (eq.length > 0) { lines.push("【装备】"); eq.forEach(([s, it]) => lines.push(`  [${s}] ${it!.name}`)); }
+      if (eq.length > 0) {
+        eq.forEach(([s, it]) => items.push({ label: `  [${s}] ${it!.name}`, detail: `${it!.type} ${it!.weight}kg`,
+          action: () => { p.inventory.push(it!); p.equipment[s as any] = null; saveState(); ctx.ui.notify(`卸下了${it!.name}`, "info"); } }));
+      } else items.push({ label: "  （无装备）", detail: "" });
+      items.push({ label: "── 背包 ──", detail: "" });
       if (p.inventory.length > 0) {
-        if (eq.length > 0) lines.push("");
-        lines.push("【背包】"); p.inventory.forEach((it: any) => lines.push(`  ${it.name}  ${it.type}  ${it.weight}kg`));
-      }
-      if (eq.length === 0 && p.inventory.length === 0) lines.push("（空）");
-      await showPanel(ctx, "🎒 物品", lines);
+        p.inventory.forEach((it: any, idx: number) => items.push({ label: `  ${it.name}`, detail: `${it.type} ${it.weight}kg ${it.state}`,
+          action: () => {
+            // 装备到对应槽位
+            const slot = it.slot as any;
+            if (slot && ["inner_top","inner_bot","top","bottom","legs","feet","head","acc","left_hand","right_hand","back"].includes(slot)) {
+              if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
+              p.equipment[slot] = it;
+              p.inventory.splice(idx, 1);
+              saveState(); ctx.ui.notify(`装备了${it.name} → ${slot}`, "info");
+            } else {
+              ctx.ui.notify(`${it.name} 无法装备（槽位:${slot}）`, "warning");
+            }
+          } }));
+      } else items.push({ label: "  （空）", detail: "" });
+      await showMenu(ctx, "🎒 物品", items);
     },
   });
 
   pi.registerCommand("map", {
     description: "楼层房间，↑↓选择 Enter前往",
     handler: async (_args, ctx) => {
-      const { gameState, movePlayer, saveState } = await import("./engine/state.ts");
+      const { gameState, saveState, initPlayerGrid } = await import("./engine/state.ts");
       const rooms = await import("../data/rooms.json", { with: { type: "json" } });
       const cur = (rooms.default as any)[gameState.player.location];
       const f = cur?.floor ?? 0;
@@ -469,7 +643,7 @@ export default function (pi: ExtensionAPI) {
           const here = gameState.player.location === name || gameState.player.location.includes(name);
           const npcs = Object.entries(gameState.npcs).filter(([_,n]:[string,any]) => n.currentRoom === name).map(([n]) => n);
           items.push({ label: name, detail: (here ? "📍" : "") + (npcs.length > 0 ? " " + npcs.join(" ") : ""),
-            action: here ? undefined : () => { movePlayer(name); saveState(); ctx.ui.notify("→ "+name, "info"); } });
+            action: here ? undefined : () => { gameState.player.location = name; initPlayerGrid(); if (!gameState.player.known_locations.includes(name)) gameState.player.known_locations.push(name); saveState(); ctx.ui.notify("→ "+name, "info"); } });
         }
         return items;
       };
@@ -478,38 +652,76 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("go", {
-    description: "出行：步行/骑车/电车",
+    description: "前往可到达的地点（自动整合地图/区域/已探索/出行）",
     handler: async (_args, ctx) => {
       const { gameState, saveState } = await import("./engine/state.ts");
-      const cm = await import("../data/city_map.json", { with: { type: "json" } });
-      const regions = (cm.default as any).regions || {};
-      let curR: any = null, curName = "";
-      for (const [n, r] of Object.entries(regions) as [string,any][]) {
-        if (r.landmarks?.some((l:string) => gameState.player.location.includes(l) || l.includes(gameState.player.location))) { curR = r; curName = n; break; }
+      const loc = gameState.player.location;
+      const items: MenuItem[] = [];
+
+      // ── 同楼层房间（/map） ──
+      const rooms = await import("../data/rooms.json", { with: { type: "json" } });
+      const curRoom = (rooms.default as any)[loc];
+      const floor = curRoom?.floor ?? 0;
+      let hasSection = false;
+      for (const [name, room] of Object.entries(rooms.default as any)) {
+        if ((room as any).floor !== floor) continue;
+        if (loc === name || loc.includes(name)) continue;
+        const npcs = Object.entries(gameState.npcs).filter(([_,n]:[string,any]) => n.currentRoom === name).map(([n]) => n);
+        items.push({ label: "🚪 " + name, detail: npcs.length > 0 ? npcs.join(" ") : "",
+          action: () => moveTo(name, ctx, gameState, saveState) });
+        hasSection = true;
       }
-      if (!curR) {
-        for (const [n, r] of Object.entries(regions) as [string,any][]) {
-          if (gameState.player.location.includes(n) || n.includes(gameState.player.location)) { curR = r; curName = n; break; }
+
+      // ── 校园建筑（/area） ──
+      try {
+        const sm = (await import("../data/school_map.json", { with: { type: "json" } })).default as any;
+        for (const [bname, bld] of Object.entries(sm.buildings)) {
+          const b = bld as any;
+          for (const rl of Object.values(b.rooms || {}) as string[][]) {
+            for (const r of rl) {
+              if (loc.includes(r) || r.includes(loc)) continue;
+              if (items.some(it => it.label.includes(r))) continue; // 去重
+              items.push({ label: "🏫 " + r, detail: bname,
+                action: () => moveTo(r, ctx, gameState, saveState) });
+            }
+          }
         }
+      } catch (_) {}
+
+      // ── 已探索（/known） ──
+      const known = gameState.player.known_locations || [];
+      for (const k of known) {
+        if (k === loc || loc.includes(k) || k.includes(loc)) continue;
+        if (items.some(it => it.label.includes(k))) continue;
+        items.push({ label: "📌 " + k, detail: "已探索",
+          action: () => moveTo(k, ctx, gameState, saveState) });
       }
-      const hasBike = gameState.player.inventory.some((i: any) => i.name.includes("自行车"));
-      const atStation = curR?.stations && Object.keys(curR.stations).some((s: string) => gameState.player.location.includes(s));
-      const buildMenu = () => {
-        const items: MenuItem[] = [];
-        if (curR) for (const l of (curR.landmarks||[]).filter((l:string) => !gameState.player.location.includes(l))) {
-          items.push({ label: "🚶 " + l, detail: curName, action: () => moveTo(l, ctx, gameState, saveState) });
+
+      // ── 城市交通（原 /go） ──
+      try {
+        const cm = await import("../data/city_map.json", { with: { type: "json" } });
+        const regions = (cm.default as any).regions || {};
+        const hasBike = gameState.player.inventory.some((i: any) => i.name.includes("自行车"));
+        for (const [rname, reg] of Object.entries(regions) as [string,any][]) {
+          for (const l of (reg.landmarks || [])) {
+            if (loc.includes(l) || l.includes(loc)) continue;
+            if (items.some(it => it.label.includes(l))) continue;
+            items.push({ label: "🚶 " + l, detail: rname,
+              action: () => moveTo(l, ctx, gameState, saveState) });
+            if (hasBike && reg.stations) {
+              for (const [sn, sd] of Object.entries(reg.stations) as [string,any][]) {
+                for (const [d, m] of Object.entries(sd.time_to || {}) as [string,number][]) {
+                  items.push({ label: "🚉 " + d, detail: `${sd.lines?.join("/") || ""} ${m}分`,
+                    action: () => moveTo(d, ctx, gameState, saveState) });
+                }
+              }
+            }
+          }
         }
-        if (hasBike && curR) for (const [n, r] of Object.entries(regions) as [string,any][]) {
-          if (n === curName) continue;
-          for (const l of r.landmarks||[]) items.push({ label: "🚲 " + l, detail: n, action: () => moveTo(l, ctx, gameState, saveState) });
-        }
-        if (atStation && curR?.stations) for (const [sn, sd] of Object.entries(curR.stations) as [string,any][]) {
-          if (!gameState.player.location.includes(sn)) continue;
-          for (const [d, m] of Object.entries(sd.time_to||{}) as [string,number][]) items.push({ label: "🚉 " + d, detail: `${sd.lines?.join("/")||""} ${m}分`, action: () => moveTo(d, ctx, gameState, saveState) });
-        }
-        return items.length > 0 ? items : [{ label: "（无可用交通）", detail: "" }];
-      };
-      await showMenu(ctx, "出行 " + gameState.player.location, buildMenu());
+      } catch (_) {}
+
+      if (items.length === 0) items.push({ label: "（无处可去）", detail: "" });
+      await showMenu(ctx, "前往 " + loc, items);
     },
   });
 
@@ -540,6 +752,48 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  pi.registerCommand("layer1", {
+    description: "切换模式：gal ↔ sex（自动注入对应规则）",
+    handler: async (_args, ctx) => {
+      const { gameState, saveState } = await import("./engine/state.ts");
+      gameState.mode = gameState.mode === "sex" ? "gal" : "sex";
+      gameState.layer1Enabled = gameState.mode === "sex";
+      saveState();
+      ctx.ui.notify(gameState.mode === "sex" ? "🔞 Sex 模式（Layer1 自动启用）" : "GAL 模式（Layer1 关闭）", "info");
+    },
+  });
+
+  pi.registerCommand("sex", {
+    description: "Layer1 状态面板：欲望/兴奋/周期/心里话",
+    handler: async (_args, ctx) => {
+      const { gameState } = await import("./engine/state.ts");
+      if (!gameState.player.sex) { ctx.ui.notify("无活跃 SexState。进入亲密场景后自动创建。", "info"); return; }
+      const s = gameState.player.sex;
+      if (!s) { ctx.ui.notify("无活跃 SexState。进入亲密场景后自动创建。", "info"); return; }
+      const p = s.profile;
+      const lines = [
+        `欲望: ${s.desire}/100  兴奋: ${s.arousal}/100`,
+        `态度: ${p.attitude}  经验: ${p.experience}`,
+        `周期: 第${s.cycleDay}天 ${s.cyclePhase}  高潮阈值: ${p.climaxThreshold}`,
+        `高潮: ${s.climaxCount}次  潮吹: ${s.squirtCount}次`,
+        ``,
+        `喜欢: ${p.likes.join("、")}`,
+        `排斥: ${p.dislikes.join("、")}`,
+      ];
+      if (p.female) {
+        lines.push(``);
+        lines.push(`胸: ${p.female.breast.cup}cup ${p.female.breast.shape} ${p.female.breast.feel}`);
+        lines.push(`秘部: ${p.female.vagina.type} ${p.female.vagina.tightness} ${p.female.vagina.depth_cm}cm`);
+      }
+      if (s.thoughts && s.thoughts.length > 0) {
+        lines.push(``);
+        lines.push(`心里话:`);
+        s.thoughts.slice(-3).forEach((t: any) => lines.push(`  「${t.text}」`));
+      }
+      await showPanel(ctx, "🔞 Layer1", lines);
+    },
+  });
+
   pi.registerCommand("known", {
     description: "已探索地点，选择前往",
     handler: async (_args, ctx) => {
@@ -549,33 +803,6 @@ export default function (pi: ExtensionAPI) {
       await showMenu(ctx, `已探索(${known.length})`, known.map((l: string) => ({
         label: l, detail: l === gameState.player.location ? "📍" : "", action: l === gameState.player.location ? undefined : () => moveTo(l, ctx, gameState, saveState)
       })));
-    },
-  });
-
-  pi.registerCommand("shop", {
-    description: "商店，↑↓选择 Enter购买",
-    handler: async (_args, ctx) => {
-      const { gameState, saveState } = await import("./engine/state.ts");
-      const shops = await import("../data/shops.json", { with: { type: "json" } });
-      const buildMenu = () => {
-        const items: MenuItem[] = [];
-        items.push({ label: `💰 ¥${gameState.player.funds}`, detail: "" });
-        for (const [sname, pool] of Object.entries(shops.default as any)) {
-          const loc = (pool as any).location || "";
-          if (loc && !gameState.player.location.includes(loc)) continue;
-          const all = Object.entries((pool as any).items).sort(() => Math.random()-0.5).slice(0, (pool as any).daily||6);
-          if (all.length === 0) continue;
-          items.push({ label: "── " + sname + " ──", detail: "" });
-          for (const [name, spec] of all) {
-            const price = (spec as any).base + Math.floor((Math.random()-0.5)*(spec as any).range*2);
-            const can = gameState.player.funds >= price;
-            items.push({ label: (can ? "🛒" : "💸") + " " + name, detail: "¥"+price,
-              action: can ? () => { gameState.player.funds -= price; gameState.player.inventory.push({ name, type:"consumable", slot:"back", weight:0.5, effects:[], state:"intact" }); saveState(); ctx.ui.notify(`购买 ${name} ¥${price}`, "info"); } : undefined });
-          }
-        }
-        return items.length > 1 ? items : [{ label: "（此处没有商店）", detail: "" }];
-      };
-      await showMenu(ctx, "🛍️ 商店", buildMenu());
     },
   });
 
@@ -626,84 +853,105 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("room", {
-    description: "方向键走格子",
+    description: "查看当前房间：位置/出口/NPC/引擎约束",
     handler: async (_args, ctx) => {
-      const { gameState, getRoomState, saveState } = await import("./engine/state.ts");
-      const state = getRoomState(gameState.player.location);
-      if (!state?.grid) { ctx.ui.notify("无地图数据", "warning"); return; }
-      const g = state.grid;
-      let px = state.playerPos?.[0] ?? g.origin?.[0] ?? 0;
-      let py = state.playerPos?.[1] ?? g.origin?.[1] ?? 0;
-      const chars = await import("../data/characters.json", { with: { type: "json" } });
-      const dirs: Record<string,[number,number]> = { "\x1b[A": [0,-1], "\x1b[B": [0,1], "\x1b[D": [-1,0], "\x1b[C": [1,0], k: [0,-1], j: [0,1], h: [-1,0], l: [1,0] };
-      ctx.ui.custom(
-        (tui: any, _t: any, _k: any, done: any) => ({
-          render(w: number): string[] {
-            const out: string[] = [];
-            const mw = Math.min(w, tui.visibleWidth?.()??w) - 1;
-            const cols = "ABCDEFGHIJK";
-            out.push(("┌ " + gameState.player.location + " F" + g.floor).padEnd(mw).slice(0,mw) + "┐");
-            const npcs: Record<string,string> = {};
-            for (const c of chars.default as any[]) {
-              const n = gameState.npcs[c.name]; if (!n?.gridPos) continue;
-              if (n.currentRoom === gameState.player.location || n.currentRoom?.includes(gameState.player.location))
-                npcs[n.gridPos[0]+","+n.gridPos[1]] = c.name.slice(0,2).toUpperCase();
-            }
-            let hdr = "   "; for (let x=0;x<g.width;x++) hdr += "["+cols[x]+"]"; out.push(hdr.slice(0,mw));
-            for (let y=0;y<g.height;y++) {
-              let row = String(y).padStart(2,"0")+" ";
-              for (let x=0;x<g.width;x++) {
-                const isP = x===px&&y===py, npc = npcs[x+","+y];
-                if (isP) row += "[PL]";
-                else if (npc) row += "["+npc+"]";
-                else { const cell = g.cells[y][x];
-                  if ((cell.type==="door"||cell.type==="exit")&&cell.isOpen===false) row += "["+cell.label+"]";
-                  else if (cell.type==="door"||cell.type==="exit") row += "["+(cell.label||"dr").toLowerCase()+"]";
-                  else row += "["+(cell.label||"  ")+"]";
-                }
-              }
-              out.push(row.slice(0,mw));
-            }
-            const cell = g.cells[py]?.[px], npcH = npcs[px+","+py];
-            let info = "·";
-            if (cell?.type==="wall") info = "墙";
-            else if (cell?.type==="door"||cell?.type==="exit") info = (cell.isOpen?"门(开)":"门(关)")+(cell.exitTo?"→"+cell.exitTo:"");
-            else if (cell?.type==="stairs") info = "楼梯→"+(cell.exitTo||"");
-            else if (cell?.furniture) info = cell.furniture;
-            if (npcH) info += " ["+npcH+"]";
-            out.push(("│ "+info).padEnd(mw).slice(0,mw)+"│");
-            out.push(("└"+"─".repeat(mw-2)+"┘").slice(0,mw));
-            out.push("方向键移动 q退出".slice(0,mw));
-            return out;
-          },
-          handleInput(d: string) {
-            if (d==="\x1b"||d==="q") { done(); return; }
-            const dir = dirs[d]; if (!dir) return;
-            const nx=px+dir[0], ny=py+dir[1];
-            if (nx<0||nx>=g.width||ny<0||ny>=g.height) return;
-            const cell = g.cells[ny][nx];
-            if (cell.block && cell.type!=="door"&&cell.type!=="exit") return;
-            if ((cell.type==="door"||cell.type==="exit") && cell.isOpen===false) { ctx.ui.notify("门关着","warning"); return; }
-            px=nx; py=ny; gameState.player.gridPos=[px,py];
-            if (cell.type==="exit" && cell.exitTo) { gameState.player.location=cell.exitTo; saveState(); done(); ctx.ui.notify("→ "+cell.exitTo,"info"); }
-          },
-          invalidate() {},
-        }),
-        { overlay: true }
-      );
+      const { gameState, getRoom, getGridContext, isSameLocation } = await import("./engine/state.ts");
+      const loc = gameState.player.location;
+      const room = getRoom(loc);
+      const lines: string[] = [];
+
+      if (room) {
+        // 房间基本信息
+        const w = room.width, h = room.height, cs = room.cellSize;
+        lines.push(`${loc}  F${room.floor}  ${w*(cs||1)}m×${h*(cs||1)}m  ${w}×${h}格  ${cs||1}m/格`);
+        if ((room as any).atmosphere) lines.push((room as any).atmosphere);
+
+        // 玩家位置
+        if (gameState.player.gridPos) {
+          const [px, py] = gameState.player.gridPos;
+          lines.push(`你在 (${px},${py})`);
+          // 四周
+          const parts: string[] = [];
+          const dirs: Record<string, [number, number]> = {"北":[0,-1],"南":[0,1],"东":[1,0],"西":[-1,0]};
+          for (const [d, [dx, dy]] of Object.entries(dirs)) {
+            const nx = px + dx, ny = py + dy;
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h) { parts.push(`${d}:边界`); continue; }
+            const c = room.cells[ny][nx];
+            if (c.type === "wall") parts.push(`${d}:墙`);
+            else if (c.furniture) parts.push(`${d}:${c.furniture}`);
+            else if (c.type === "exit" || c.type === "door") parts.push(`${d}:🚪${c.exitTo || "出口"}${c.isOpen===false?"🔒":""}`);
+            else parts.push(`${d}:空`);
+          }
+          lines.push(`四周: ${parts.join("  ")}`);
+        }
+
+        // 出口
+        const exits: string[] = [];
+        const furniture: string[] = [];
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const c = room.cells[y][x];
+            if (c.type === "exit" || c.type === "door") exits.push(`${c.exitTo || "?"}(${x},${y})${c.isOpen===false?"🔒":""}`);
+            if (c.furniture) furniture.push(`${c.furniture}(${x},${y})`);
+          }
+        }
+        if (exits.length > 0) lines.push(`出口: ${exits.join("  ")}`);
+        if (furniture.length > 0) lines.push(`家具: ${furniture.join("  ")}`);
+
+        // 环境
+        const amb = (room as any).ambient;
+        if (amb) lines.push(`环境: ${[amb.visual, amb.audio].filter(Boolean).join("，") || "—"}`);
+      } else {
+        lines.push(`${loc}（无房间数据）`);
+      }
+
+      // 在场 NPC
+      const npcsHere = Object.entries(gameState.npcs)
+        .filter(([_, n]) => isSameLocation(n.currentRoom, loc))
+        .map(([name, n]) => `${name}${n.action ? "("+n.action+")" : ""}`);
+      if (npcsHere.length > 0) lines.push(`在场: ${npcsHere.join("  ")}`);
+
+      // 引擎过滤概览（证明反上帝视角在工作）
+      const npcsElsewhere = Object.entries(gameState.npcs)
+        .filter(([_, n]) => !isSameLocation(n.currentRoom, loc));
+      if (npcsElsewhere.length > 0) {
+        lines.push(`[引擎过滤] LLM看不到的NPC: ${npcsElsewhere.map(([n, s]) => `${n}@${s.currentRoom}`).join(", ")}`);
+      }
+
+      await showPanel(ctx, loc, lines);
+    },
+  });
+
+  pi.registerCommand("preset", {
+    description: "切换系统提示词组装配置（标准 default / 轻量 lite）。",
+    handler: async (args, ctx) => {
+      const { gameState, saveState } = await import("./engine/state.ts");
+      if (args && (args[0] === "default" || args[0] === "lite")) {
+        gameState.preset = args[0] as "default" | "lite";
+        saveState();
+        ctx.ui.notify(`已切换提示词模式为: ${args[0]}`, "info");
+      } else {
+        // 弹窗菜单选择
+        const items: MenuItem[] = [
+          { label: "default (标准)", detail: "完整系统提示，含规则+输出+状态+模式", action: () => { gameState.preset = "default"; saveState(); ctx.ui.notify("模式切换为: default", "info"); } },
+          { label: "lite (轻量)", detail: "省略硬规则，日常场景节省 Token", action: () => { gameState.preset = "lite"; saveState(); ctx.ui.notify("模式切换为: lite", "info"); } },
+        ];
+        await showMenu(ctx, "系统提示词预设", items);
+      }
     },
   });
 
   // ── Lifecycle ──
   pi.on("session_start", async (_event, ctx) => {
-    const { loadState, buildStatePrompt, saveState } = await import("./engine/state.ts");
+    const { loadState, buildStatePrompt, saveState, resetState } = await import("./engine/state.ts");
     const restored = loadState();
     if (restored) {
       // 确保 NPC 懒初始化（恢复旧存档时补上）
-      buildStatePrompt();
+      await buildStatePrompt();
       saveState();
       ctx.ui.notify(`earth-0 ${(await import("./engine/state.ts")).gameState.time.game_date}`, "info");
     } else {
+      resetState();
       ctx.ui.notify("earth-0 新游戏", "info");
     }
   });
@@ -720,27 +968,69 @@ export default function (pi: ExtensionAPI) {
     const path = await import("node:path");
     const agentsDir = path.resolve(process.cwd(), "agents");
 
-    const read = (name: string) => {
-      const p = path.join(agentsDir, name);
-      return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
-    };
-
     // 状态简报（含 NPC 懒初始化）
-    const statePrompt = buildStatePrompt();
+    const statePrompt = await buildStatePrompt();
 
-    // 按 mode 选叙事规则
-    const modeFile = gameState.layer1Enabled ? "gm-mode-sex.md"
-      : gameState.mode === "rpg" ? "gm-mode-rpg.md"
-      : "gm-mode-gal.md";
+    // 按 mode 选叙事规则 — mode=sex 自动启用 Layer1
+    if (gameState.mode === "sex") gameState.layer1Enabled = true;
 
-    // 组装完整 GM 提示词
-    const gmPrompt = [
-      read("gm-pre.md"),
-      read("gm-rules.md"),
-      read("gm-contract.md"),
-      statePrompt,
-      read(modeFile),
-    ].filter(Boolean).join("\n\n---\n\n");
+    // 读取 preset.json，动态组装
+    let gmPrompt = "";
+    const presetPath = path.join(agentsDir, "preset.json");
+    if (fs.existsSync(presetPath)) {
+      try {
+        const presetData = JSON.parse(fs.readFileSync(presetPath, "utf-8"));
+        const presetName = gameState.preset || "default";
+        const layers = presetData.assembly[presetName] || presetData.assembly["default"];
+        const parts: string[] = [];
+        
+        for (const key of layers) {
+          const layerKey = key.replace("{mode}", gameState.mode);
+          const layerConfig = presetData.layers[layerKey];
+          if (!layerConfig) continue;
+          
+          if (layerKey === "state") {
+            parts.push(statePrompt);
+          } else {
+            const filePath = path.resolve(process.cwd(), layerConfig.file);
+            const content = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8").trim() : "";
+            if (content) parts.push(content);
+          }
+        }
+        gmPrompt = parts.filter(Boolean).join("\n\n---\n\n");
+      } catch (e) {
+        // fallback to default hardcoded assembly if parsing preset.json fails
+        const read = (name: string) => {
+          const p = path.join(agentsDir, name);
+          return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+        };
+        const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
+          : gameState.mode === "rpg" ? "gm-mode-rpg.md"
+          : "gm-mode-gal.md";
+        gmPrompt = [
+          read("gm-pre.md"),
+          read("gm-rules.md"),
+          read("gm-contract.md"),
+          statePrompt,
+          read(modeFile),
+        ].filter(Boolean).join("\n\n---\n\n");
+      }
+    } else {
+      const read = (name: string) => {
+        const p = path.join(agentsDir, name);
+        return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+      };
+      const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
+        : gameState.mode === "rpg" ? "gm-mode-rpg.md"
+        : "gm-mode-gal.md";
+      gmPrompt = [
+        read("gm-pre.md"),
+        read("gm-rules.md"),
+        read("gm-contract.md"),
+        statePrompt,
+        read(modeFile),
+      ].filter(Boolean).join("\n\n---\n\n");
+    }
 
     return { systemPrompt: gmPrompt };
   });
