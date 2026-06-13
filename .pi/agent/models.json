@@ -1,0 +1,28 @@
+{
+  "providers": {
+    "deepseek": {
+      "baseUrl": "https://api.deepseek.com/v1",
+      "api": "openai-completions",
+      "apiKey": "sk-12e7c01e332a42ffa196a7cfdc2e7462",
+      "models": [
+        {
+          "id": "deepseek-reasoner",
+          "name": "DeepSeek Reasoner",
+          "reasoning": true,
+          "input": ["text"],
+          "contextWindow": 131072,
+          "maxTokens": 8192,
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": "high",
+            "xhigh": "max"
+          }
+        }
+      ]
+    }
+  },
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-reasoner"
+}

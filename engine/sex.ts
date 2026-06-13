@@ -434,7 +434,7 @@ export function formatSettlement(report: SettlementReport, charName: string): st
 
   let out = `\n══ 事后结算 ══\n`;
   out += `${charName}\n`;
-  out += `用时: ${report.durationMinutes}分钟 | 高潮: ${report.climaxCount}次`;
+  out += `用时: ${report.duration_minutes}分钟 | 高潮: ${report.climaxCount}次`;
   if (report.squirtCount > 0) out += ` | 潮吹: ${report.squirtCount}次`;
   out += `\n评级: ${emoji} ${report.rating}`;
 
@@ -453,4 +453,22 @@ export function formatSettlement(report: SettlementReport, charName: string): st
   }
 
   return out;
+}
+
+// --- 创建 SexState 实例 ---
+export function createSexState(name: string, profile: SexProfile): SexState {
+  const day = profile.cycleDay || 1 + Math.floor(Math.random() * 28);
+  // 为 profile 注入 name 字段以利于还原引用
+  (profile as any).name = name;
+  return {
+    profile,
+    desire: profile.baselineDesire,
+    arousal: 0,
+    cycleDay: day,
+    cyclePhase: getCyclePhase(day),
+    climaxed: false,
+    climaxCount: 0,
+    squirtCount: 0,
+    thoughts: [],
+  };
 }

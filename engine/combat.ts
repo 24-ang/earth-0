@@ -102,13 +102,20 @@ export function resolveAttack(
   const afterHP = defender.state.hp.current;
   const killed = afterHP <= 0;
 
-  // 叙事
+  // 叙事与伤势记录
   let narrative = "";
   if (roll.crit) narrative += `重击！`;
   if (defender.cover === "半掩体") narrative += `${defender.name}在掩体后，但${attacker.name}的攻击还是穿透了。`;
   narrative += `${attacker.name}用${weapon.name}造成${finalDmg}点伤害。`;
-  if (defender.state.hp.current <= 3 && defender.state.hp.current > 0) narrative += `${defender.name}摇摇欲坠。`;
-  if (killed) narrative += `${defender.name}倒下了。`;
+  
+  if (finalDmg > 0 && defender.state.wounds) {
+    const wound = describeWound(finalDmg, weapon.damage?.damageType || "钝击");
+    defender.state.wounds.push(wound);
+    narrative += ` 造成伤势: ${wound.text} (${wound.severity})。`;
+  }
+  
+  if (defender.state.hp.current <= 3 && defender.state.hp.current > 0) narrative += ` ${defender.name}摇摇欲坠。`;
+  if (killed) narrative += ` ${defender.name}倒下了。`;
 
   return {
     hit: true, crit: roll.crit ?? false, fumble: false,
