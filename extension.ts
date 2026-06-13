@@ -1212,7 +1212,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "build_add", label: "建造",
-    description: "在棋盘格建造物品。需要指定放置的格子坐标。",
+    description: "在棋盘格放置家具/物品。引擎强制要求：玩家背包必须有同名物品（需先通过 buy_item 或剧情获取），放置后从背包扣除。无实物 → 引擎拒绝。",
     parameters: Type.Object({ item: Type.String(), x: Type.Number(), y: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { placeFurniture } = await import("./engine/state.ts");
@@ -1239,6 +1239,28 @@ export default function (pi: ExtensionAPI) {
     async execute(_id, params, _s, _o, _ctx) {
       const { toggleDoor } = await import("./engine/state.ts");
       const r = toggleDoor(params.x, params.y);
+      return { content: [{ type: "text", text: r.reason }], details: r };
+    },
+  });
+
+  pi.registerTool({
+    name: "edit_map_cell", label: "编辑网格",
+    description: "修改房间的墙壁/门/出口状态。type: 'wall'|'floor'|'door'|'exit'。造墙/门/出口时必须传 material（材料物品名，如'砖'/'木板'/'门框'/'废铁板'等，引擎会从背包扣除）。拆墙（wall→floor）时可传 material 指定工具（如'锤子'/'撬棍'），不传则需玩家力量≥5。",
+    parameters: Type.Object({ x: Type.Number(), y: Type.Number(), type: Type.String(), targetRoom: Type.Optional(Type.String()), material: Type.Optional(Type.String()) }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { editCellType } = await import("./engine/state.ts");
+      const r = editCellType(params.x, params.y, params.type as any, params.targetRoom, params.material);
+      return { content: [{ type: "text", text: r.reason }], details: r };
+    },
+  });
+
+  pi.registerTool({
+    name: "create_room", label: "创建房间",
+    description: "在地图中创建一个新的房间区域。",
+    parameters: Type.Object({ name: Type.String(), width: Type.Number(), height: Type.Number(), floor: Type.Number() }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { createRoom } = await import("./engine/state.ts");
+      const r = await createRoom(params.name, params.width, params.height, params.floor);
       return { content: [{ type: "text", text: r.reason }], details: r };
     },
   });
@@ -1759,71 +1781,7 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  pi.registerCommand("build_room", {
-    description: "创建新房间 /build_room <名字> <宽> <高> <楼层>",
-    handler: async (args, ctx) => {
-      const parts = args.trim().split(/\s+/);
-      if (parts.length < 4) { ctx.ui.notify("用法: /build_room <名字> <宽> <高> <楼层>", "warning"); return; }
-      const { createRoom } = await import("./engine/state.ts");
-      const r = createRoom(parts[0], parseInt(parts[1]), parseInt(parts[2]), parseInt(parts[3]));
-      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
-    }
-  });
 
-  pi.registerCommand("dig_wall", {
-    description: "将指定坐标变为地板 /dig_wall <x> <y>",
-    handler: async (args, ctx) => {
-      const parts = args.trim().split(/\s+/);
-      if (parts.length < 2) { ctx.ui.notify("用法: /dig_wall <x> <y>", "warning"); return; }
-      const { editCellType } = await import("./engine/state.ts");
-      const r = editCellType(parseInt(parts[0]), parseInt(parts[1]), "floor");
-      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
-    }
-  });
-
-  pi.registerCommand("build_wall", {
-    description: "将指定坐标变为墙壁 /build_wall <x> <y>",
-    handler: async (args, ctx) => {
-      const parts = args.trim().split(/\s+/);
-      if (parts.length < 2) { ctx.ui.notify("用法: /build_wall <x> <y>", "warning"); return; }
-      const { editCellType } = await import("./engine/state.ts");
-      const r = editCellType(parseInt(parts[0]), parseInt(parts[1]), "wall");
-      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
-    }
-  });
-
-  pi.registerCommand("place_door", {
-    description: "将指定坐标变为门或出口 /place_door <x> <y> [目标房间]",
-    handler: async (args, ctx) => {
-      const parts = args.trim().split(/\s+/);
-      if (parts.length < 2) { ctx.ui.notify("用法: /place_door <x> <y> [目标房间]", "warning"); return; }
-      const { editCellType } = await import("./engine/state.ts");
-      const r = editCellType(parseInt(parts[0]), parseInt(parts[1]), parts[2] ? "exit" : "door", parts[2]);
-      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
-    }
-  });
-
-  pi.registerCommand("place_furniture", {
-    description: "放置家具 /place_furniture <x> <y> <家具名>",
-    handler: async (args, ctx) => {
-      const parts = args.trim().split(/\s+/);
-      if (parts.length < 3) { ctx.ui.notify("用法: /place_furniture <x> <y> <家具名>", "warning"); return; }
-      const { placeFurniture } = await import("./engine/state.ts");
-      const r = placeFurniture(parseInt(parts[0]), parseInt(parts[1]), parts.slice(2).join(" "));
-      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
-    }
-  });
-
-  pi.registerCommand("remove_furniture", {
-    description: "拆除家具 /remove_furniture <x> <y>",
-    handler: async (args, ctx) => {
-      const parts = args.trim().split(/\s+/);
-      if (parts.length < 2) { ctx.ui.notify("用法: /remove_furniture <x> <y>", "warning"); return; }
-      const { removeFurniture } = await import("./engine/state.ts");
-      const r = removeFurniture(parseInt(parts[0]), parseInt(parts[1]));
-      ctx.ui.notify(r.reason, r.success ? "success" : "warning");
-    }
-  });
 
   // ── Lifecycle ──
   pi.on("session_start", async (_event, ctx) => {

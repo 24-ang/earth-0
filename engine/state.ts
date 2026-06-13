@@ -619,10 +619,12 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
   return { success: true, newX: nx, newY: ny, blocked: false, reason: "", distance: cellDist, seconds };
 }
 
-export function createRoom(roomName: string, width: number, height: number, floor: number): { success: boolean; reason: string } {
+export async function createRoom(roomName: string, width: number, height: number, floor: number): Promise<{ success: boolean; reason: string }> {
   const cleanName = roomName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
   if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
-  
+  if (width < 1 || height < 1) return { success: false, reason: "房间尺寸无效" };
+  if (width * height > 10000) return { success: false, reason: `房间面积过大（${width*height}m²，上限10000m²）` };  // 防 LLM 恶意巨型房间
+
   const cells: any[][] = [];
   for (let y = 0; y < height; y++) {
     const row: any[] = [];
@@ -636,7 +638,7 @@ export function createRoom(roomName: string, width: number, height: number, floo
     }
     cells.push(row);
   }
-  
+
   ROOMS[roomName] = {
     width, height,
     cellSize: 1,
@@ -645,16 +647,49 @@ export function createRoom(roomName: string, width: number, height: number, floo
     cells,
     capacity: undefined
   };
+
+  // 物理约束：施工需要时间（引擎不查钱——GM判断经济）
+  const constructionMinutes = width * height * 5;
+  const { advanceMinutes } = await import("./time.ts");
+  // 确保 minute_of_day 存在
+  if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
+  advanceMinutes(gameState.time, constructionMinutes);
   saveState();
-  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})` };
+  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})，施工耗时${constructionMinutes}分钟。` };
 }
 
-export function editCellType(x: number, y: number, type: "floor" | "wall" | "door" | "exit" | "stairs", exitTo?: string): { success: boolean; reason: string } {
+export function editCellType(x: number, y: number, type: "floor" | "wall" | "door" | "exit" | "stairs", exitTo?: string, material?: string): { success: boolean; reason: string } {
   const room = ROOMS[gameState.player.location];
   if (!room) return { success: false, reason: "当前位置没有地图" };
   if (x < 0 || x >= room.width || y < 0 || y >= room.height) return { success: false, reason: "坐标超出房间范围" };
-  
+
   const cell = room.cells[y][x];
+
+  // 物理约束：建造墙体/门/出口需要材料
+  if (type === "wall" || type === "door" || type === "exit") {
+    if (!material) {
+      return { success: false, reason: `建造${type}需要指定材料。请通过 material 参数传入材料物品名（如"砖"、"木板"、"门框"）。` };
+    }
+    const idx = gameState.player.inventory.findIndex((i: any) => i.name === material);
+    if (idx < 0) {
+      return { success: false, reason: `背包里没有${material}。需要先获取该材料。` };
+    }
+    gameState.player.inventory.splice(idx, 1);  // 扣除材料
+  }
+
+  // 物理约束：拆墙需要力量或工具
+  if (type === "floor" && cell.type === "wall") {
+    const hasTool = material && gameState.player.inventory.some((i: any) => i.name === material);
+    if (!hasTool && gameState.player.attributes.力量 < 5) {
+      return { success: false, reason: `力量不足（需要≥5），且背包里没有合适的工具。请指定 material 参数传入工具名（如"锤子"、"撬棍"）。` };
+    }
+    if (hasTool) {
+      // 扣除工具（耐久消耗）
+      const idx = gameState.player.inventory.findIndex((i: any) => i.name === material);
+      if (idx >= 0) gameState.player.inventory.splice(idx, 1);
+    }
+  }
+
   cell.type = type;
   if (type === "wall") {
     cell.block = true;
@@ -668,28 +703,33 @@ export function editCellType(x: number, y: number, type: "floor" | "wall" | "doo
     cell.label = "DR";
     if (exitTo) cell.exitTo = exitTo;
   }
-  
+
   saveState();
-  return { success: true, reason: `在(${x},${y})建造了${type}${exitTo ? ` 通往${exitTo}` : ""}` };
+  return { success: true, reason: `在(${x},${y})建造了${type}${exitTo ? ` 通往${exitTo}` : ""}${material ? `（消耗${material}）` : ""}` };
 }
 
 export function placeFurniture(x: number, y: number, itemName: string): { success: boolean; reason: string } {
   if (!gameState.player.gridPos) return { success: false, reason: "当前位置不可建造" };
   const room = ROOMS[gameState.player.location];
   if (!room) return { success: false, reason: "当前位置没有地图" };
-  
+
   if (x < 0 || x >= room.width || y < 0 || y >= room.height) return { success: false, reason: "坐标超出房间范围" };
-  
+
   const cell = room.cells[y][x];
   if (cell.type === "wall") return { success: false, reason: "不能放在墙上" };
   if (cell.type === "exit" || cell.type === "door") return { success: false, reason: "不能堵住门口" };
   if (cell.furniture) return { success: false, reason: `这里已经有${cell.furniture}了` };
-  
+
+  // 物理约束：背包必须有该物品
+  const idx = gameState.player.inventory.findIndex((i: any) => i.name === itemName);
+  if (idx < 0) return { success: false, reason: `背包里没有${itemName}。需要先获取该物品（购买/拾荒/偷窃等）。` };
+  gameState.player.inventory.splice(idx, 1);  // 从背包扣除
+
   cell.furniture = itemName;
   cell.label = itemName.slice(0, 4);  // 简单缩写，用于棋盘格显示
   cell.block = true;
   saveState();
-  return { success: true, reason: `放置了${itemName}` };
+  return { success: true, reason: `放置了${itemName}（已从背包扣除）` };
 }
 
 export function removeFurniture(x: number, y: number): { success: boolean; reason: string; item?: string } {

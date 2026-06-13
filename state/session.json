@@ -1,10 +1,10 @@
 {
   "time": {
-    "game_date": "2018-04-08",
+    "game_date": "2018-04-07",
     "day_of_week": "日",
     "time_of_day": "night",
     "minute_of_day": 80,
-    "player_age": 16,
+    "player_age": 28,
     "player_stage": "youth",
     "timeline_origin": {
       "year": 2018,
@@ -14,7 +14,7 @@
   "player": {
     "name": "维",
     "gender": "男",
-    "age": 16,
+    "age": 28,
     "location": "侍奉部",
     "body": {
       "height_cm": 170.4,
@@ -43,6 +43,13 @@
     "ac": 10,
     "equipment": {},
     "inventory": [
+      {
+        "name": "废铁板",
+        "type": "tool",
+        "weight": 3,
+        "effects": [],
+        "state": "intact"
+      },
       {
         "name": "绷带",
         "type": "tool",
@@ -580,14 +587,89 @@
       "scheduleOverrides": {}
     }
   },
-  "sexStates": {},
+  "sexStates": {
+    "测试": {
+      "profile": {
+        "baselineDesire": 40,
+        "attitude": "顺从",
+        "experience": "未开发",
+        "bodyParts": {},
+        "cycleDay": 7,
+        "climaxThreshold": 35,
+        "likes": [],
+        "dislikes": []
+      },
+      "desire": 40,
+      "arousal": 0,
+      "cycleDay": 7,
+      "cyclePhase": "安全期",
+      "climaxed": false,
+      "climaxCount": 0,
+      "squirtCount": 0,
+      "thoughts": [],
+      "milestones": {
+        "virginity": {
+          "isVirgin": true,
+          "lostTo": null,
+          "lostAt": null
+        },
+        "firstKiss": {
+          "given": false,
+          "partner": null,
+          "date": null
+        },
+        "analVirginity": {
+          "isVirgin": true,
+          "lostTo": null,
+          "lostAt": null
+        }
+      }
+    },
+    "测试2": {
+      "profile": {
+        "baselineDesire": 50,
+        "attitude": "主动",
+        "experience": "熟练",
+        "bodyParts": {},
+        "cycleDay": 8,
+        "climaxThreshold": 50,
+        "likes": [],
+        "dislikes": []
+      },
+      "desire": 50,
+      "arousal": 0,
+      "cycleDay": 8,
+      "cyclePhase": "安全期",
+      "climaxed": false,
+      "climaxCount": 0,
+      "squirtCount": 0,
+      "thoughts": [],
+      "milestones": {
+        "virginity": {
+          "isVirgin": false,
+          "lostTo": "?",
+          "lostAt": null
+        },
+        "firstKiss": {
+          "given": true,
+          "partner": "?",
+          "date": null
+        },
+        "analVirginity": {
+          "isVirgin": true,
+          "lostTo": null,
+          "lostAt": null
+        }
+      }
+    }
+  },
   "mode": "gal",
   "layer1Enabled": false,
   "auMode": false,
   "flags": {},
   "weather": {
-    "type": "多云",
-    "temp": 18
+    "type": "小雨",
+    "temp": 15
   },
   "turn": 0
 }
