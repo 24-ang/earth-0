@@ -3,10 +3,34 @@
  */
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { Type } from "typebox";
+import { gameState, getNamelessNPCs } from "./engine/state.ts";
 
 export default function (pi: ExtensionAPI) {
   // ── 辅助 ──
   interface MenuItem { label: string; detail?: string; action?: (done: () => void) => void | Promise<void>; }
+
+  function updateChatHUD(ctx: any) {
+    try {
+      if (gameState && gameState.time && gameState.player) {
+        const timeOfDayZH: Record<string, string> = {
+          morning: "午前",
+          lunch: "昼",
+          afternoon: "午後",
+          evening: "夕方",
+          night: "夜"
+        };
+        const loc = gameState.player.location;
+        const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
+        const cLoc = clean(loc);
+        const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
+        const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
+        const totalCount = npcsHereCount + namelessCount;
+        
+        const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
+        ctx.ui.setWidget("hud-status-bar", [statusBarText]);
+      }
+    } catch (_) {}
+  }
 
   function getStringWidth(str: string): number {
     return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);
@@ -50,6 +74,7 @@ export default function (pi: ExtensionAPI) {
     const { initPlayerGrid } = await import("./engine/state.ts");
     initPlayerGrid();
     save(); ctx.ui.notify("📍 " + loc, "info");
+    updateChatHUD(ctx);
   }
 
   function showPanel(ctx: any, title: string, lines: string[]): Promise<void> {
@@ -73,6 +98,31 @@ export default function (pi: ExtensionAPI) {
             const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
             const titleW = getStringWidth(title);
             out.push("┌─" + title + " " + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐");
+            
+            // TUI HUD Status Bar
+            try {
+              if (gameState && gameState.time && gameState.player) {
+                const timeOfDayZH: Record<string, string> = {
+                  morning: "午前",
+                  lunch: "昼",
+                  afternoon: "午後",
+                  evening: "夕方",
+                  night: "夜"
+                };
+                const loc = gameState.player.location;
+                const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
+                const cLoc = clean(loc);
+                const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
+                const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
+                const totalCount = npcsHereCount + namelessCount;
+                const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
+                const barTrunc = truncateToWidth(statusBarText, w - 4);
+                const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
+                out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
+                out.push("├" + "─".repeat(w - 2) + "┤");
+              }
+            } catch (_) {}
+
             const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
             for (let i = start; i < end; i++) {
               const it = items[i];
@@ -119,6 +169,7 @@ export default function (pi: ExtensionAPI) {
     if (events.length > 0) {
       ctx.ui.notify(`📢 事件: ${events.join("; ")}`, "info");
     }
+    updateChatHUD(ctx);
   }
 
   async function runNavigation(ctx: any) {
@@ -467,8 +518,12 @@ export default function (pi: ExtensionAPI) {
   }
 
   async function runStatus(ctx: any) {
-    const { gameState, saveState } = await import("./engine/state.ts");
+    const { gameState, saveState, calcMaxCarry, calcCurrentWeight, isOverburdened } = await import("./engine/state.ts");
     const p = gameState.player;
+
+    const maxC = calcMaxCarry(p.attributes.力量);
+    const curW = calcCurrentWeight(p.inventory, p.equipment);
+    const burden = isOverburdened(curW, maxC);
 
     const SLOT_NAMES: Record<string, string> = {
       inner_top: "内衣上",
@@ -490,7 +545,12 @@ export default function (pi: ExtensionAPI) {
       // 1. 玩家基本状态
       items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁`, detail: "" });
       items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ¥${p.funds}`, detail: "" });
+      items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""}`, detail: "" });
       items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
+      const woundStr = p.wounds && p.wounds.length > 0 
+        ? p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")
+        : "健康";
+      items.push({ label: `🩸 伤势: ${woundStr}`, detail: "" });
       
       // 2. 装备槽位
       items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
@@ -596,6 +656,39 @@ export default function (pi: ExtensionAPI) {
       } else {
         items.push({ label: "  （背包空空如也）", detail: "" });
       }
+
+      // 4. 系统标志与引擎状态
+      items.push({ label: "── ⚙️ 系统与引擎状态 ──", detail: "" });
+      const activeFlags = Object.entries(gameState.flags)
+        .filter(([_, v]) => v)
+        .map(([k]) => k);
+      items.push({
+        label: `  [状态] 模式:${gameState.mode} | Layer1:${gameState.layer1Enabled ? "启用" : "禁用"} | 魔改:${gameState.auMode ? "启用" : "禁用"}`,
+        detail: `回合:${gameState.turn}`
+      });
+      items.push({
+        label: `  [天气] ${gameState.weather.type} (${gameState.weather.temp}°C)`,
+        detail: `时间:${gameState.time.game_date}`
+      });
+      items.push({
+        label: `  [标记] ${activeFlags.length > 0 ? activeFlags.join(", ") : "(空)"}`,
+        detail: "🔍 查看详情",
+        action: async (_done) => {
+          const lines = [
+            `当前世界模式: ${gameState.mode}`,
+            `Layer1 亲密引擎: ${gameState.layer1Enabled ? "ON" : "OFF"}`,
+            `魔改模式 (AU): ${gameState.auMode ? "ON" : "OFF"}`,
+            `游戏总回合数: ${gameState.turn}`,
+            `游戏当前时间: ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${gameState.time.time_of_day}`,
+            `当前天气状况: ${gameState.weather.type} (${gameState.weather.temp}°C)`,
+            ``,
+            `所有已记录的世界/事件标记 (gameState.flags):`,
+            ...Object.entries(gameState.flags).map(([k, v]) => `  - ${k}: ${v}`),
+            Object.keys(gameState.flags).length === 0 ? "  （目前无任何事件标记）" : ""
+          ].filter(Boolean);
+          await showPanel(ctx, "⚙️ 系统与标记详情", lines);
+        }
+      });
 
       return items;
     };
@@ -952,11 +1045,11 @@ export default function (pi: ExtensionAPI) {
   // combat, steal, equip, build, move, door_toggle, reputation, schedule, economy
   pi.registerTool({
     name: "combat_action", label: "战斗",
-    description: "攻击/防御/逃跑。action: attack/defend/flee。target 为 NPC 名。",
+    description: "攻击/防御/逃跑/死亡豁免。action: attack/defend/flee/death_save。target 为 NPC 名。",
     parameters: Type.Object({ action: Type.String(), target: Type.Optional(Type.String()) }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
-      const { resolveAttack, defend, attemptFlee } = await import("./engine/combat.ts");
+      const { gameState, saveState, getOrCreateNPC, damageItem } = await import("./engine/state.ts");
+      const { resolveAttack, defend, attemptFlee, makeDeathSave, getRoundSummary } = await import("./engine/combat.ts");
       const p = gameState.player;
       const playerCombatant = { name: p.name, state: p, cover: "无掩体" as any };
 
@@ -965,9 +1058,8 @@ export default function (pi: ExtensionAPI) {
         const npc = getOrCreateNPC(params.target);
         const allChars = (await import("./engine/router.ts")).allChars;
         const src = allChars.find((c: any) => c.name === params.target);
-        // 用 NPC 数据构造最小 Combatant
         const npcState = {
-          ...structuredClone(p), // fallback 结构
+          ...structuredClone(p),
           name: params.target,
           attributes: src?.attributes || { 力量:5,敏捷:5,体质:5,智力:5,感知:5,魅力:5 },
           skills: src?.skills || {},
@@ -976,13 +1068,40 @@ export default function (pi: ExtensionAPI) {
           equipment: npc.equipment || {},
         };
         const npcCombatant = { name: params.target, state: npcState, cover: "无掩体" as any };
-        // 取玩家装备的武器，否则拳头
         const weapon = Object.values(p.equipment).find((w: any) => w?.damage)
           || { name: "拳头", damage: { dice: "1d2", damageType: "钝击" }, type: "weapon", slot: "right_hand", weight: 0, effects: [], state: "intact" };
         const result = resolveAttack(playerCombatant, npcCombatant, weapon as any);
         r = result.narrative;
+
+        // 物品损坏：攻击命中后武器有 10% 几率受损
+        if (result.hit && weapon.state === "intact" && Math.random() < 0.1) {
+          damageItem(weapon);
+          r += ` ${weapon.name}出现了损伤。`;
+        }
+
+        // 战斗摘要
+        const summary = getRoundSummary(
+          [playerCombatant, npcCombatant],
+          [{ actor: p.name, narrative: `攻击${params.target}` }]
+        );
+        r += `\n[HP] ${summary.stateSnapshots.map(s => `${s.name}:${s.hp.current}/${s.hp.max}`).join(" | ")}`;
+
+        // 死亡豁免检查
+        if (p.hp.current <= 0) {
+          p.alive = false;
+          r += `\n⚠️ ${p.name}倒下了！需要死亡豁免检定（使用 death_save 行动）。3次成功=稳定，3次失败=死亡。`;
+        }
+      } else if (params.action === "death_save") {
+        if (p.alive) { r = "你还活着，不需要死亡豁免。"; }
+        else {
+          const ds = makeDeathSave(p);
+          r = ds.narrative;
+          if (ds.nat20) { p.alive = true; p.hp.current = 1; r += ` ${p.name}恢复了意识！HP=1。`; }
+          else if (ds.nat1) { r += ` 这是第1次失败……`; }
+        }
       } else if (params.action === "defend") {
         r = defend(playerCombatant);
+        r += `\n[HP] ${p.name}:${p.hp.current}/${p.hp.max}`;
       } else if (params.action === "flee") {
         const npcName = params.target || Object.keys(gameState.npcs)[0];
         if (!npcName) { r = "没有敌人可逃跑"; }
@@ -1181,16 +1300,37 @@ export default function (pi: ExtensionAPI) {
 
   // ── Commands ──
   pi.registerCommand("relations", {
-    description: "查看所有NPC关系",
+    description: "查看所有NPC关系与恋爱阶段",
     handler: async (_args, ctx) => {
       const { gameState } = await import("./engine/state.ts");
       const lines: string[] = [];
       const rels = gameState.player.relationships;
+      
+      lines.push("👤 关系与恋爱状态概览");
+      lines.push("────────────────────────────────────────");
+
+      const buildBar = (val: number) => {
+        const filled = Math.round(val / 20);
+        return "■".repeat(filled) + "□".repeat(5 - filled);
+      };
+
       for (const [n, r] of Object.entries(rels)) {
-        lines.push(`${n}: ${(r as any).stage} (好感${(r as any).affection})${(r as any).notes ? " - " + (r as any).notes : ""}`);
+        const rel = r as any;
+        lines.push(`👥 ${n}`);
+        let stageStr = `  |-[好感阶段-${rel.stage}]: ${buildBar(rel.affection)} (${rel.affection}/100)`;
+        if (rel.romance) {
+          stageStr += ` | [关系: 💕${rel.romance}]`;
+        }
+        lines.push(stageStr);
+        if (rel.notes) {
+          lines.push(`  |-[评价/便签]: ${rel.notes}`);
+        }
+        lines.push("────────────────────────────────────────");
       }
-      if (lines.length === 0) lines.push("（暂无关系）");
-      await showPanel(ctx, "关系", lines);
+      if (Object.keys(rels).length === 0) {
+        lines.push("（目前尚未结识任何角色）");
+      }
+      await showPanel(ctx, "👥 关系谱", lines);
     },
   });
 
@@ -1314,11 +1454,44 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("party", {
-    description: "查看队伍成员",
+    description: "查看当前队伍成员状态",
     handler: async (_args, ctx) => {
-      const { gameState } = await import("./engine/state.ts");
-      const lines = gameState.player.party.length > 0 ? gameState.player.party.map((n: string) => `- ${n}`) : ["（独自一人）"];
-      await showPanel(ctx, "👥 队伍", lines);
+      const { gameState, getOrCreateNPC } = await import("./engine/state.ts");
+      const { allChars } = await import("./engine/router.ts");
+      const p = gameState.player;
+      const lines: string[] = [];
+      
+      lines.push(`🛡️ 当前队伍状态 (队长: ${p.name})`);
+      lines.push("────────────────────────────────────────");
+      
+      // 主角卡
+      lines.push(`👤 [主角] ${p.name} (${p.gender}) | ${p.age}岁`);
+      lines.push(`   HP: ${p.hp.current}/${p.hp.max} | AC: ${p.ac} | 位置: ${p.location}`);
+      lines.push("────────────────────────────────────────");
+
+      // 队友卡
+      if (p.party && p.party.length > 0) {
+        for (const name of p.party) {
+          const char = allChars.find((c: any) => c.name === name);
+          const npcState = getOrCreateNPC(name);
+          if (char) {
+            lines.push(`👥 [队友] ${char.name} (${char.gender === "female" ? "女" : "男"})`);
+            lines.push(`   位置: ${npcState.currentRoom || char.default_location}`);
+            if (char.attributes) {
+              const a = char.attributes;
+              lines.push(`   属性: 力${a.力量} 敏${a.敏捷} 体${a.体质} 智${a.智力} 感${a.感知} 魅${a.魅力}`);
+            }
+            if (char.appearance_brief) {
+              lines.push(`   外貌: ${char.appearance_brief}`);
+            }
+            lines.push("────────────────────────────────────────");
+          }
+        }
+      } else {
+        lines.push("ℹ️ （队伍目前没有其他成员，你正独自一人前行）");
+      }
+      
+      await showPanel(ctx, "👥 我的队伍", lines);
     },
   });
 
@@ -1355,6 +1528,7 @@ export default function (pi: ExtensionAPI) {
       gameState.player.hp.current = gameState.player.hp.max;
       saveState();
       ctx.ui.notify(`😴 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日。HP恢复。`, "info");
+      updateChatHUD(ctx);
     },
   });
 
@@ -1429,72 +1603,123 @@ export default function (pi: ExtensionAPI) {
 
 
   pi.registerCommand("room", {
-    description: "查看当前房间：位置/出口/NPC/引擎约束",
+    description: "视觉观察当前场景：提取空间感、周边NPC大致高度与距离",
     handler: async (_args, ctx) => {
-      const { gameState, getRoom, getGridContext, isSameLocation } = await import("./engine/state.ts");
+      const { gameState, getRoom, isSameLocation, getNpcCurrentAge, getBodyForAge } = await import("./engine/state.ts");
+      const { allChars } = await import("./engine/router.ts");
       const loc = gameState.player.location;
       const room = getRoom(loc);
       const lines: string[] = [];
 
-      if (room) {
-        // 房间基本信息
-        const w = room.width, h = room.height, cs = room.cellSize;
-        lines.push(`${loc}  F${room.floor}  ${w*(cs||1)}m×${h*(cs||1)}m  ${w}×${h}格  ${cs||1}m/格`);
-        if ((room as any).atmosphere) lines.push((room as any).atmosphere);
+      lines.push(`📍 当前场景: ${loc}`);
+      lines.push("────────────────────────────────────────");
 
-        // 玩家位置
+      if (room) {
+        // 1. 空间与微观网格
+        const w = room.width;
+        const h = room.height;
+        const cs = room.cellSize || 1;
+        let gridDesc = `📏 空间规格: ${w * cs}米 × ${h * cs}米 (${w} × ${h} 格，${cs}m/格)`;
         if (gameState.player.gridPos) {
           const [px, py] = gameState.player.gridPos;
-          lines.push(`你在 (${px},${py})`);
-          // 四周
-          const parts: string[] = [];
-          const dirs: Record<string, [number, number]> = {"北":[0,-1],"南":[0,1],"东":[1,0],"西":[-1,0]};
-          for (const [d, [dx, dy]] of Object.entries(dirs)) {
-            const nx = px + dx, ny = py + dy;
-            if (nx < 0 || nx >= w || ny < 0 || ny >= h) { parts.push(`${d}:边界`); continue; }
-            const c = room.cells[ny][nx];
-            if (c.type === "wall") parts.push(`${d}:墙`);
-            else if (c.furniture) parts.push(`${d}:${c.furniture}`);
-            else if (c.type === "exit" || c.type === "door") parts.push(`${d}:🚪${c.exitTo || "出口"}${c.isOpen===false?"🔒":""}`);
-            else parts.push(`${d}:空`);
-          }
-          lines.push(`四周: ${parts.join("  ")}`);
+          gridDesc += ` | 你的坐标: (${px}, ${py})`;
         }
+        lines.push(gridDesc);
+        
+        if ((room as any).atmosphere) {
+          lines.push(`✨ 氛围感知: ${(room as any).atmosphere}`);
+        }
+        
+        const amb = (room as any).ambient;
+        if (amb) {
+          lines.push(`🔊 环境渗透: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`);
+        }
+        lines.push("────────────────────────────────────────");
 
-        // 出口
+        // 2. 出口与家具 (玩家一瞥能看到的显著地标)
         const exits: string[] = [];
         const furniture: string[] = [];
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
-            const c = room.cells[y][x];
-            if (c.type === "exit" || c.type === "door") exits.push(`${c.exitTo || "?"}(${x},${y})${c.isOpen===false?"🔒":""}`);
-            if (c.furniture) furniture.push(`${c.furniture}(${x},${y})`);
+            const cell = room.cells[y]?.[x];
+            if (!cell) continue;
+            if (cell.type === "exit" || cell.type === "door") {
+              exits.push(`${cell.exitTo || "出口"}(${x},${y})${cell.isOpen === false ? "🔒" : ""}`);
+            }
+            if (cell.furniture) {
+              furniture.push(`${cell.furniture}(${x},${y})`);
+            }
           }
         }
-        if (exits.length > 0) lines.push(`出口: ${exits.join("  ")}`);
-        if (furniture.length > 0) lines.push(`家具: ${furniture.join("  ")}`);
-
-        // 环境
-        const amb = (room as any).ambient;
-        if (amb) lines.push(`环境: ${[amb.visual, amb.audio].filter(Boolean).join("，") || "—"}`);
-      } else {
-        lines.push(`${loc}（无房间数据）`);
+        if (exits.length > 0) lines.push(`🚪 显著出口: ${exits.join("  ")}`);
+        if (furniture.length > 0) lines.push(`🪑 场景物件: ${furniture.join("  ")}`);
+        lines.push("────────────────────────────────────────");
       }
 
-      // 在场 NPC
-      const npcsHere = Object.entries(gameState.npcs)
-        .filter(([_, n]) => isSameLocation(n.currentRoom, loc))
-        .map(([name, n]) => `${name}${n.action ? "("+n.action+")" : ""}`);
-      if (npcsHere.length > 0) lines.push(`在场: ${npcsHere.join("  ")}`);
+      // 3. 👥 周边动态 (Surrounding Dynamics)
+      lines.push("👥 周边动态 [场景视野]");
+      
+      const getRelativeDir = (px: number, py: number, nx: number, ny: number) => {
+        if (nx === px && ny === py) return "身旁";
+        let dir = "";
+        if (ny < py) dir += "前";
+        else if (ny > py) dir += "后";
+        if (nx < px) dir += "左";
+        else if (nx > px) dir += "右";
+        return dir + "方";
+      };
 
-      // 引擎过滤概览（证明反上帝视角在工作）
-      const npcsElsewhere = Object.entries(gameState.npcs)
-        .filter(([_, n]) => !isSameLocation(n.currentRoom, loc));
-      if (npcsElsewhere.length > 0) {
-        lines.push(`[引擎过滤] LLM看不到的NPC: ${npcsElsewhere.map(([n, s]) => `${n}@${s.currentRoom}`).join(", ")}`);
+      const inRoomNPCs = Object.entries(gameState.npcs)
+        .filter(([_, n]) => isSameLocation(n.currentRoom, loc));
+
+      let totalNPCsCount = 0;
+
+      if (inRoomNPCs.length > 0) {
+        for (const [name, npc] of inRoomNPCs) {
+          const char = allChars.find((c: any) => c.name === name);
+          let heightStr = "未知";
+          if (char) {
+            const curAge = getNpcCurrentAge(char.base_age || 6);
+            const body = getBodyForAge(char, curAge);
+            if (body?.height_cm) heightStr = `${body.height_cm}cm`;
+          }
+
+          let positionStr = "处于场景中";
+          if (gameState.player.gridPos && npc.gridPos) {
+            const [px, py] = gameState.player.gridPos;
+            const [nx, ny] = npc.gridPos;
+            const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
+            const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
+            positionStr = `位于你的 ${getRelativeDir(px, py, nx, ny)} 约 ${dist}米 (约 ${gridDist}格)`;
+          }
+
+          lines.push(`  |-[${name}: *${heightStr}*] ${positionStr} - *${npc.action || "目前正站立着"}*`);
+          totalNPCsCount++;
+        }
       }
 
-      await showPanel(ctx, loc, lines);
+      // Public room nameless NPCs seeding (on the fly for visual TUI)
+      const namelessNPCs = getNamelessNPCs(loc, gameState.turn);
+      for (const item of namelessNPCs) {
+        let positionStr = "处于场景中";
+        if (gameState.player.gridPos) {
+          const [px, py] = gameState.player.gridPos;
+          const [nx, ny] = item.gridPos;
+          const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
+          const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
+          positionStr = `位于你的 ${getRelativeDir(px, py, nx, ny)} 约 ${dist}米 (约 ${gridDist}格)`;
+        }
+        lines.push(`  |-[${item.name}: *${item.height}*] ${positionStr} - *${item.act}*`);
+        totalNPCsCount++;
+      }
+
+      if (totalNPCsCount === 0) {
+        lines.push("  |-[视野内]: 没有发现其他活动角色");
+      }
+      
+      lines.push("────────────────────────────────────────");
+
+      await showPanel(ctx, "👁️ 场景视觉观察", lines);
     },
   });
 
@@ -1530,6 +1755,11 @@ export default function (pi: ExtensionAPI) {
       resetState();
       ctx.ui.notify("earth-0 新游戏", "info");
     }
+    updateChatHUD(ctx);
+  });
+
+  pi.on("turn_end", async (event, ctx) => {
+    updateChatHUD(ctx);
   });
 
   pi.on("session_shutdown", async () => {

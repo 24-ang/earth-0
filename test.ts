@@ -337,6 +337,16 @@ test("Layer1: affection to desire, body language injection, and masturbate", asy
   if (sState.arousal <= 0) throw new Error("Masturbation did not increase arousal");
 });
 
+test("getNamelessNPCs helper and LLM prompt integration", async () => {
+  const { getNamelessNPCs } = await import("./engine/state.ts");
+  setPlayerLocation("千叶_住宅区");
+  const list = getNamelessNPCs("千叶_住宅区", gameState.turn);
+  if (list.length === 0) throw new Error("Should seed nameless NPCs in public areas");
+  
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[在场路人]")) throw new Error("Nameless NPCs should be injected into the system prompt");
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);

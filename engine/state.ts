@@ -253,6 +253,12 @@ export async function buildStatePrompt(): Promise<string> {
   if (p.inventory.length > 0) {
     tpl += `\n[玩家背包] ${p.inventory.map(it => it.name).join(", ")}`;
   }
+  // 负重状态
+  const maxCarry = calcMaxCarry(p.attributes.力量);
+  const curWeight = calcCurrentWeight(p.inventory, p.equipment);
+  const burden = isOverburdened(curWeight, maxCarry);
+  if (burden.overloaded) tpl += `\n[负重] 超重！(${curWeight}/${maxCarry}kg) 无法奔跑，行动迟缓`;
+  else if (burden.encumbered) tpl += `\n[负重] 负重较高(${curWeight}/${maxCarry}kg) 移动速度减半`;
   // 附加空间上下文
   const gridCtx = getGridContext();
   if (gridCtx) tpl += `\n${gridCtx}`;
@@ -266,6 +272,12 @@ export async function buildStatePrompt(): Promise<string> {
     .filter(([_, n]) => isSameLocation(n.currentRoom, p.location))
     .map(([name, n]) => `${name}${n.action ? "("+n.action+")" : ""}`);
   if (inRoom.length > 0) tpl += `\n[在场] ${inRoom.join(", ")}`;
+
+  // 注入在场路人 (nameless NPCs)
+  const namelessNPCs = getNamelessNPCs(p.location, s.turn);
+  if (namelessNPCs.length > 0) {
+    tpl += `\n[在场路人] ${namelessNPCs.map(n => `${n.name}(正在${n.act})`).join(", ")}`;
+  }
   // NPC阶段描述 + 实时身材
   for (const [nname, npc] of Object.entries(gameState.npcs)) {
     if (!isSameLocation(npc.currentRoom, p.location)) continue;
@@ -1147,4 +1159,45 @@ export function toggleLayer1(state: GameState): boolean {
 // --- 全状态快照（给 /status /look 用） ---
 export function getStateSnapshot(state: GameState): GameState {
   return structuredClone(state);
+}
+
+// --- 无名路人生成逻辑 (TUI / LLM 共用) ---
+export interface NamelessNPC {
+  name: string;
+  act: string;
+  height: string;
+  gridPos: [number, number];
+}
+
+export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
+  const publicRooms = ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前", "操场", "校门", "自行车棚", "便利店街", "商店街", "住宅区", "千叶_住宅区"];
+  const isPublic = publicRooms.some(pr => isSameLocation(loc, pr)) || loc.includes("街") || loc.includes("公园") || loc.includes("站");
+  if (!isPublic) return [];
+
+  const rKey = getRoomKey(loc);
+  const room = rKey ? ROOMS[rKey] : null;
+  const seed = turn + loc.length;
+  const count = 1 + (seed % 3); // 1 to 3 nameless NPCs
+  const traits = [
+    { name: "路人(戴耳机)", act: "戴着耳机闭目听歌", height: "168cm" },
+    { name: "路人(低头看书)", act: "边走路边低头看书", height: "172cm" },
+    { name: "路人(学生)", act: "背着书包急匆匆赶路", height: "162cm" },
+    { name: "路人(职员)", act: "一边大声打电话一边赶路", height: "175cm" },
+    { name: "路人(情侣二人组)", act: "牵着手小声说笑", height: "165/178cm" },
+    { name: "路人(发呆的女生)", act: "靠在路灯旁吃零食发呆", height: "160cm" }
+  ];
+  
+  const npcs: NamelessNPC[] = [];
+  for (let i = 0; i < count; i++) {
+    const item = traits[(seed + i * 7) % traits.length];
+    let nx = 2 + ((seed + i * 13) % (room?.width ? Math.max(1, room.width - 4) : 4));
+    let ny = 2 + ((seed + i * 17) % (room?.height ? Math.max(1, room.height - 4) : 4));
+    npcs.push({
+      name: item.name,
+      act: item.act,
+      height: item.height,
+      gridPos: [nx, ny]
+    });
+  }
+  return npcs;
 }
