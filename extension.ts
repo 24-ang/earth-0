@@ -8,6 +8,22 @@ export default function (pi: ExtensionAPI) {
   // ── 辅助 ──
   interface MenuItem { label: string; detail?: string; action?: () => void | Promise<void>; }
 
+  function getStringWidth(str: string): number {
+    return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);
+  }
+
+  function truncateToWidth(str: string, maxWidth: number): string {
+    let w = 0;
+    let res = "";
+    for (const c of str) {
+      const charW = c.charCodeAt(0) > 0x7f ? 2 : 1;
+      if (w + charW > maxWidth) break;
+      res += c;
+      w += charW;
+    }
+    return res;
+  }
+
   async function moveTo(loc: string, ctx: any, gs: any, save: any) {
     gs.player.location = loc;
     if (!gs.player.known_locations) gs.player.known_locations = ["千叶_住宅区"];
@@ -32,23 +48,24 @@ export default function (pi: ExtensionAPI) {
           render(width: number): string[] {
             const out: string[] = [];
             const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
-            out.push(("┌─" + title + " " + "─".repeat(Math.max(0,w-4-title.length))).slice(0,w) + "┐");
+            const titleW = getStringWidth(title);
+            out.push("┌─" + title + " " + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐");
             const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
             for (let i = start; i < end; i++) {
               const it = items[i];
               const line = (i === sel ? "▶ " : "  ") + it.label + (it.detail ? "  " + it.detail : "");
-              const t = tui.truncateToWidth ? tui.truncateToWidth(line, w-2) : line.slice(0, w-2);
-              const pad = Math.max(0, (w-4) - [...t].length);
-              out.push(("│ " + t + " ".repeat(pad) + " │").slice(0, w));
+              const t = tui.truncateToWidth ? tui.truncateToWidth(line, w - 2) : truncateToWidth(line, w - 2);
+              const pad = Math.max(0, (w - 4) - getStringWidth(t));
+              out.push("│ " + t + " ".repeat(pad) + " │");
             }
-            out.push(("└" + "─".repeat(w-2) + "┘").slice(0, w));
+            out.push("└" + "─".repeat(w - 2) + "┘");
             out.push((sel+1 + "/" + items.length + " 方向键选择 Enter确认 q退出").slice(0, w));
             return out;
           },
           handleInput(d: string) {
             if (d === "\x1b" || d === "q") { done(); return; }
-            if (d === "\x1b[A" || d === "k") sel = Math.max(0, sel-1);
-            else if (d === "\x1b[B" || d === "j") sel = Math.min(items.length-1, sel+1);
+            if (d === "\x1b[A" || d === "\x1bOA" || d === "k" || d === "w") sel = Math.max(0, sel - 1);
+            else if (d === "\x1b[B" || d === "\x1bOB" || d === "j" || d === "s") sel = Math.min(items.length - 1, sel + 1);
             else if (d === "\r" || d === "\n") {
               const it = items[sel];
               if (it?.action) Promise.resolve(it.action()).then(() => { items = getItems(); sel = Math.min(sel, items.length-1); });
@@ -286,15 +303,60 @@ export default function (pi: ExtensionAPI) {
     description: "sex模式触碰部位：唇/颈/胸/腰/腿/秘部/肛。",
     parameters: Type.Object({ char: Type.String(), part: Type.String(), intensity: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState } = await import("./engine/state.ts");
+      const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
       if (!gameState.layer1Enabled) return { content: [{ type: "text", text: "Layer1未启用" }], details: {} };
-      if (!gameState.player.sex) return { content: [{ type: "text", text: "无活跃SexState" }], details: {} };
-      const { SEX_PROFILES, touchBodyPart } = await import("./engine/sex.ts");
+      
+      // 自动对齐或懒加载当前 SexState
+      if (!gameState.player.sex || (gameState.player.sex.profile as any).name !== params.char) {
+        const sState = await getOrCreateSexState(params.char);
+        if (!sState) return { content: [{ type: "text", text: `无该角色sex档案: ${params.char}` }], details: {} };
+        gameState.player.sex = sState;
+      }
+
+      const { SEX_PROFILES, touchBodyPart, checkClimax, triggerClimax, settleAfterSex, formatSettlement } = await import("./engine/sex.ts");
       const p = SEX_PROFILES[params.char];
       if (!p) return { content: [{ type: "text", text: "无该角色sex档案" }], details: {} };
+      
       const r = touchBodyPart(p, gameState.player.sex, params.part, params.intensity as any);
+      
+      // Apply arousal change
+      gameState.player.sex.arousal = Math.min(100, gameState.player.sex.arousal + r.arousalChange);
+      
+      // Track touched parts in gameState.flags
+      const flagKey = `sex_parts_touched_${params.char}`;
+      let touchedParts: string[] = [];
+      if (gameState.flags[flagKey]) {
+        try {
+          touchedParts = JSON.parse(gameState.flags[flagKey] as string);
+        } catch (_) {}
+      }
+      if (!touchedParts.includes(params.part)) {
+        touchedParts.push(params.part);
+      }
+      gameState.flags[flagKey] = JSON.stringify(touchedParts);
+
+      let textResult = `[${params.part}] ${r.reaction} arousal ${r.arousalChange >= 0 ? "+" : ""}${r.arousalChange} (当前兴奋度: ${gameState.player.sex.arousal}/100)`;
+      let settlementReport: any = null;
+
+      // Check climax
+      if (checkClimax(gameState.player.sex)) {
+        triggerClimax(gameState.player.sex);
+        textResult += `\n检测到高潮！${params.char}达到了高潮！`;
+        
+        // Settle sex session
+        const report = settleAfterSex(gameState.player.sex, gameState.time.game_date, 30, touchedParts, []);
+        settlementReport = report;
+        
+        // Format report and append to output
+        const formatted = formatSettlement(report, params.char);
+        textResult += formatted;
+        
+        // Clean up touched parts flag
+        delete gameState.flags[flagKey];
+      }
+
       saveState();
-      return { content: [{ type: "text", text: `[${params.part}] ${r.reaction} arousal ${r.arousalChange >= 0 ? "+" : ""}${r.arousalChange}` }], details: r };
+      return { content: [{ type: "text", text: textResult }], details: { touchResult: r, settlementReport } };
     },
   });
 
@@ -573,16 +635,102 @@ export default function (pi: ExtensionAPI) {
     handler: async (args, ctx) => {
       const name = args.trim();
       if (!name) { ctx.ui.notify("用法: /look <角色名或物品名>", "warning"); return; }
-      const { gameState } = await import("./engine/state.ts");
+      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateNPC } = await import("./engine/state.ts");
       const { allChars } = await import("./engine/router.ts");
+      
+      const isPlayer = name === gameState.player.name || name === "玩家" || name === "我";
+      if (isPlayer) {
+        const p = gameState.player;
+        const lines = [
+          `${p.name}  ${p.gender}  ${p.age}岁  ${gameState.time.player_stage}`,
+          `位置: ${p.location}  资金: ¥${p.funds}`,
+          `HP: ${p.hp.current}/${p.hp.max}  AC: ${p.ac}`,
+        ];
+        if (p.body) {
+          const b = p.body;
+          let bodyStr = `身体: ${b.height_cm}cm ${b.weight_kg ? b.weight_kg + "kg " : ""}${b.build}`;
+          if (b.cup) bodyStr += ` ${b.cup}cup`;
+          if (b.measurements) bodyStr += ` ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
+          lines.push(bodyStr);
+        }
+        if (p.attributes) {
+          const a = p.attributes;
+          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+        }
+        const eq = Object.entries(p.equipment).filter(([_, v]) => v);
+        if (eq.length > 0) {
+          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+        }
+        await showPanel(ctx, p.name, lines);
+        return;
+      }
+
       const char = allChars.find((c: any) => c.name === name || c.name.includes(name));
       if (char) {
-        const lines = [`${char.name}  ${char.gender}  base_age:${char.base_age}`, `来源: ${char.source}`, char.appearance_brief || ""];
-        if (char.anchors?.private) lines.push(char.anchors.private.slice(0, 120));
-        await showPanel(ctx, char.name, lines); return;
+        const age = getNpcCurrentAge(char.base_age || 6);
+        const body = getBodyForAge(char, age);
+        const lines = [
+          `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁 (基础:${char.base_age})`,
+          `作品: ${char.source}`,
+          `外观: ${char.appearance_brief || "无描述"}`
+        ];
+        
+        if (body) {
+          let bodyStr = `身体: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
+          if (body.cup) bodyStr += ` ${body.cup}cup`;
+          if (body.measurements) bodyStr += ` ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
+          lines.push(bodyStr);
+        }
+        
+        if (char.attributes) {
+          const a = char.attributes;
+          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+        }
+        
+        const npcState = getOrCreateNPC(char.name);
+        const eq = Object.entries(npcState.equipment).filter(([_, v]) => v);
+        if (eq.length > 0) {
+          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+        }
+        
+        if (char.anchors?.private) {
+          lines.push(`设定: ${char.anchors.private.slice(0, 120)}`);
+        }
+        await showPanel(ctx, char.name, lines);
+        return;
       }
-      const item = gameState.player.inventory.find((i: any) => i.name.includes(name));
-      if (item) { await showPanel(ctx, item.name, [`${item.type} ${item.slot} ${item.weight}kg ${item.state}`]); return; }
+      
+      let item = gameState.player.inventory.find((i: any) => i.name.includes(name) || name.includes(i.name));
+      if (!item) {
+        for (const [_, eqItem] of Object.entries(gameState.player.equipment)) {
+          if (eqItem && (eqItem.name.includes(name) || name.includes(eqItem.name))) {
+            item = eqItem;
+            break;
+          }
+        }
+      }
+      
+      if (item) {
+        const lines = [
+          `类型: ${item.type} | 槽位: ${item.slot} | 重量: ${item.weight}kg | 状态: ${item.state}`,
+        ];
+        if (item.flavor) {
+          lines.push(`描述: ${item.flavor}`);
+        }
+        if (item.damage) {
+          lines.push(`伤害: ${item.damage.dice} (${item.damage.damageType})`);
+        }
+        if (item.effects && item.effects.length > 0) {
+          lines.push("效果:");
+          item.effects.forEach((eff: any) => {
+            const groupStr = eff.group ? ` (${eff.group})` : "";
+            lines.push(`  - ${eff.type}: ${eff.value}${groupStr}`);
+          });
+        }
+        await showPanel(ctx, item.name, lines);
+        return;
+      }
+      
       ctx.ui.notify(`未找到: ${name}`, "warning");
     },
   });
@@ -601,31 +749,59 @@ export default function (pi: ExtensionAPI) {
     handler: async (_args, ctx) => {
       const { gameState, saveState } = await import("./engine/state.ts");
       const p = gameState.player;
-      const items: MenuItem[] = [];
-      items.push({ label: `💰 ¥${p.funds}`, detail: "" });
-      items.push({ label: "── 装备 ──", detail: "" });
-      const eq = Object.entries(p.equipment).filter(([_,v]) => v);
-      if (eq.length > 0) {
-        eq.forEach(([s, it]) => items.push({ label: `  [${s}] ${it!.name}`, detail: `${it!.type} ${it!.weight}kg`,
-          action: () => { p.inventory.push(it!); p.equipment[s as any] = null; saveState(); ctx.ui.notify(`卸下了${it!.name}`, "info"); } }));
-      } else items.push({ label: "  （无装备）", detail: "" });
-      items.push({ label: "── 背包 ──", detail: "" });
-      if (p.inventory.length > 0) {
-        p.inventory.forEach((it: any, idx: number) => items.push({ label: `  ${it.name}`, detail: `${it.type} ${it.weight}kg ${it.state}`,
-          action: () => {
-            // 装备到对应槽位
-            const slot = it.slot as any;
-            if (slot && ["inner_top","inner_bot","top","bottom","legs","feet","head","acc","left_hand","right_hand","back"].includes(slot)) {
-              if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
-              p.equipment[slot] = it;
-              p.inventory.splice(idx, 1);
-              saveState(); ctx.ui.notify(`装备了${it.name} → ${slot}`, "info");
-            } else {
-              ctx.ui.notify(`${it.name} 无法装备（槽位:${slot}）`, "warning");
+      
+      const buildMenu = () => {
+        const items: MenuItem[] = [];
+        items.push({ label: `💰 ¥${p.funds}`, detail: "" });
+        items.push({ label: "── 装备 ──", detail: "" });
+        const eq = Object.entries(p.equipment).filter(([_, v]) => v);
+        if (eq.length > 0) {
+          eq.forEach(([s, it]) => items.push({
+            label: `  [${s}] ${it!.name}`,
+            detail: `${it!.type} ${it!.weight}kg`,
+            action: () => {
+              p.inventory.push(it!);
+              p.equipment[s as any] = null;
+              saveState();
+              ctx.ui.notify(`卸下了${it!.name}`, "info");
             }
-          } }));
-      } else items.push({ label: "  （空）", detail: "" });
-      await showMenu(ctx, "🎒 物品", items);
+          }));
+        } else {
+          items.push({ label: "  （无装备）", detail: "" });
+        }
+        
+        items.push({ label: "── 背包 ──", detail: "" });
+        if (p.inventory.length > 0) {
+          p.inventory.forEach((it: any) => {
+            items.push({
+              label: `  ${it.name}`,
+              detail: `${it.type} ${it.weight}kg ${it.state}`,
+              action: () => {
+                const slot = it.slot as any;
+                if (slot && ["inner_top","inner_bot","top","bottom","legs","feet","head","acc","left_hand","right_hand","back"].includes(slot)) {
+                  const curIdx = p.inventory.indexOf(it);
+                  if (curIdx >= 0) {
+                    if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
+                    p.equipment[slot] = it;
+                    p.inventory.splice(curIdx, 1);
+                    saveState();
+                    ctx.ui.notify(`装备了${it.name} → ${slot}`, "info");
+                  } else {
+                    ctx.ui.notify(`未在背包中找到物品 ${it.name}`, "warning");
+                  }
+                } else {
+                  ctx.ui.notify(`${it.name} 无法装备（槽位:${slot}）`, "warning");
+                }
+              }
+            });
+          });
+        } else {
+          items.push({ label: "  （空）", detail: "" });
+        }
+        return items;
+      };
+      
+      await showMenu(ctx, "🎒 物品", buildMenu);
     },
   });
 

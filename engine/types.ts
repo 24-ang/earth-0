@@ -274,6 +274,7 @@ export interface GameState {
   weather: { type: string; temp: number };  // 天气+温度
   player: PlayerState;
   npcs: Record<string, NPCRuntimeState>;
+  sexStates?: Record<string, SexState>;      // 记录各个 NPC 的运行时 SexState，支持持久化
   mode: "gal" | "rpg" | "sex";
   layer1Enabled: boolean;
   auMode: boolean;

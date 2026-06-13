@@ -3317,9 +3317,10 @@
         },
         {
           "type": "exit",
-          "block": false,
+          "block": true,
           "exitTo": "2F南走廊-F班前",
-          "label": "DR"
+          "label": "DR",
+          "isOpen": false
         },
         {
           "type": "wall",
@@ -3341,7 +3342,8 @@
         {
           "type": "floor",
           "block": false,
-          "label": "  "
+          "label": "台灯",
+          "furniture": null
         },
         {
           "type": "wall",

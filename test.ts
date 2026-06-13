@@ -295,6 +295,14 @@ test("buildStatePrompt 无崩溃", async () => {
   // 关键变量都应该已替换
   if (prompt.includes("{{game_date}}")) throw new Error("game_date 未替换");
   if (prompt.includes("{{player_name}}")) throw new Error("player_name 未替换");
+  if (!prompt.includes("[玩家状态] 维 | 身体状况: 健康")) throw new Error("缺少健康状态描述");
+  
+  // 模拟重伤
+  gameState.player.hp.current = 2;
+  const hurtPrompt = await buildStatePrompt();
+  if (!hurtPrompt.includes("重伤")) throw new Error("HP过低应该显示重伤描述");
+  // 恢复
+  gameState.player.hp.current = gameState.player.hp.max;
 });
 
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);

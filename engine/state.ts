@@ -2,7 +2,7 @@
  * 状态引擎 - 角色状态 + HP + 负重 + 物品操作 + 持久化
  */
 
-import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid } from "./types.ts";
+import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState } from "./types.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import characters from "../data/characters.json" with { type: "json" };
 import rooms from "../data/rooms.json" with { type: "json" };
@@ -52,6 +52,7 @@ function createInitialState(): GameState {
     time: { ...INITIAL_TIME_STATE },
     player: createDefaultPlayer(),
     npcs: {},
+    sexStates: {},
     mode: "gal",
     layer1Enabled: false,
     auMode: false,
@@ -119,6 +120,14 @@ export function loadState(filepath?: string): boolean {
     ROOMS = structuredClone(ROOMS_BASE);
   }
 
+  // 还原 player.sex 引用，保障跨会话内存修改同步
+  if (gameState.player.sex && gameState.sexStates) {
+    const partnerName = (gameState.player.sex.profile as any).name;
+    if (partnerName && gameState.sexStates[partnerName]) {
+      gameState.player.sex = gameState.sexStates[partnerName];
+    }
+  }
+
   // 迁移：旧存档 player.age 与 time.player_age 不同步 → 用 time 覆盖 player
   if (gameState.time?.player_age && gameState.player.age !== gameState.time.player_age) {
     gameState.player.age = gameState.time.player_age;
@@ -172,6 +181,22 @@ export function setPlayerLocation(loc: string): void {
   }
 }
 
+export function getPlayerStatusNarrative(p: PlayerState): string {
+  const hpPct = p.hp.current / p.hp.max;
+  let status = "完好";
+  if (hpPct <= 0) status = "濒死 / 死亡豁免中";
+  else if (hpPct < 0.2) status = "重伤 (极度虚弱，动作迟缓，意识模糊)";
+  else if (hpPct < 0.5) status = "受伤 (伤口流血，呼吸急促，动作受限)";
+  else if (hpPct < 0.8) status = "轻伤 (有些许擦伤或疼痛)";
+  else status = "健康 (精神饱满)";
+  
+  let desc = `[玩家状态] ${p.name} | 身体状况: ${status}`;
+  if (p.wounds && p.wounds.length > 0) {
+    desc += ` | 伤势描述: ${p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")}`;
+  }
+  return desc;
+}
+
 export async function buildStatePrompt(): Promise<string> {
   const tplPath = path.join(AGENTS_DIR, "gm-state.md");
   if (!fs.existsSync(tplPath)) return "";
@@ -204,6 +229,17 @@ export async function buildStatePrompt(): Promise<string> {
   
   for (const [k, v] of Object.entries(vars)) {
     tpl = tpl.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
+  }
+  
+  // 附加玩家自身身体状况描述
+  tpl += `\n${getPlayerStatusNarrative(p)}`;
+  // 附加玩家装备与背包物品
+  const eq = Object.entries(p.equipment).filter(([_, v]) => v);
+  if (eq.length > 0) {
+    tpl += `\n[玩家装备] ${eq.map(([s, it]) => `${s}:${it!.name}`).join(", ")}`;
+  }
+  if (p.inventory.length > 0) {
+    tpl += `\n[玩家背包] ${p.inventory.map(it => it.name).join(", ")}`;
   }
   // 附加空间上下文
   const gridCtx = getGridContext();
@@ -420,6 +456,17 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
     };
   }
   return gameState.npcs[name];
+}
+
+export async function getOrCreateSexState(npcName: string): Promise<SexState | null> {
+  gameState.sexStates ??= {};
+  if (!gameState.sexStates[npcName]) {
+    const { SEX_PROFILES, createSexState } = await import("./sex.ts");
+    const profile = SEX_PROFILES[npcName];
+    if (!profile) return null;
+    gameState.sexStates[npcName] = createSexState(npcName, profile);
+  }
+  return gameState.sexStates[npcName];
 }
 
 export function listNPCItems(name: string): Item[] {
