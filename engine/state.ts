@@ -98,6 +98,96 @@ function createDefaultPlayer(): PlayerState {
 }
 
 // --- 持久化 ---
+const TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
+const SAVES_DIR = path.join(STATE_DIR, "saves");
+const MAX_BACKUPS = 5;
+
+// ── 手动存档槽位 ──
+
+/** 创建手动存档 */
+export function createSave(name: string): string {
+  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50) || "quick";
+  fs.mkdirSync(SAVES_DIR, { recursive: true });
+  const fp = path.join(SAVES_DIR, `${safeName}.json`);
+  const ts = gameState.time.game_date;
+  saveState(fp);
+  // 写入元数据头
+  const data = JSON.parse(fs.readFileSync(fp, "utf-8"));
+  data._save_meta = { name: safeName, date: ts, turn: gameState.turn, location: gameState.player.location, created: new Date().toISOString() };
+  fs.writeFileSync(fp, JSON.stringify(data, null, 2));
+  return safeName;
+}
+
+/** 载入手动存档 */
+export function loadSave(name: string): boolean {
+  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
+  const fp = path.join(SAVES_DIR, `${safeName}.json`);
+  if (!fs.existsSync(fp)) return false;
+  const ok = loadState(fp);
+  if (ok) {
+    // 恢复后自动创建恢复前备份
+    backupBeforeTurn();
+    saveState();
+  }
+  return ok;
+}
+
+/** 删除手动存档 */
+export function deleteSave(name: string): boolean {
+  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
+  const fp = path.join(SAVES_DIR, `${safeName}.json`);
+  if (!fs.existsSync(fp)) return false;
+  fs.unlinkSync(fp);
+  return true;
+}
+
+/** 列出所有手动存档 */
+export function listSaves(): { name: string; date: string; turn: number; location: string }[] {
+  const result: { name: string; date: string; turn: number; location: string }[] = [];
+  if (!fs.existsSync(SAVES_DIR)) return result;
+  for (const f of fs.readdirSync(SAVES_DIR)) {
+    if (!f.endsWith(".json")) continue;
+    try {
+      const raw = fs.readFileSync(path.join(SAVES_DIR, f), "utf-8");
+      const meta = JSON.parse(raw)._save_meta;
+      if (meta) result.push(meta);
+    } catch (_) {}
+  }
+  result.sort((a, b) => b.turn - a.turn);
+  return result;
+}
+
+/** 备份当前存档（commit_turn 前自动调用），保留最近 N 个 */
+export function backupBeforeTurn(): void {
+  fs.mkdirSync(TURN_BACKUP_DIR, { recursive: true });
+  // 滚动备份：turn_5 ← turn_4 ← ... ← turn_1，最新的存 turn_1
+  for (let i = MAX_BACKUPS - 1; i >= 1; i--) {
+    const older = path.join(TURN_BACKUP_DIR, `turn_${i}.json`);
+    const newer = path.join(TURN_BACKUP_DIR, `turn_${i + 1}.json`);
+    if (fs.existsSync(older)) {
+      try { fs.renameSync(older, newer); } catch (_) { try { fs.copyFileSync(older, newer); fs.unlinkSync(older); } catch (_) {} }
+    }
+  }
+  saveState(path.join(TURN_BACKUP_DIR, "turn_1.json"));
+}
+
+/** 还原到倒数第 N 回合的存档（1=上一回合） */
+export function restoreLastTurn(n: number = 1): boolean {
+  const safeN = Math.max(1, Math.min(n, MAX_BACKUPS));
+  const fp = path.join(TURN_BACKUP_DIR, `turn_${safeN}.json`);
+  if (!fs.existsSync(fp)) return false;
+  return loadState(fp);
+}
+
+/** 列出可用的备份 */
+export function listBackups(): number[] {
+  const result: number[] = [];
+  for (let i = 1; i <= MAX_BACKUPS; i++) {
+    if (fs.existsSync(path.join(TURN_BACKUP_DIR, `turn_${i}.json`))) result.push(i);
+  }
+  return result;
+}
+
 export function saveState(filepath?: string): void {
   const fp = filepath ?? STATE_FILE;
   fs.mkdirSync(path.dirname(fp), { recursive: true });
@@ -498,7 +588,7 @@ export async function buildStatePrompt(): Promise<string> {
 
   // ── 剧情钩子（来自 data/timelines/）──
   try {
-    const { getActiveHooks, getActiveQuests } = await import("./timeline.ts");
+    const { getActiveHooks, getActiveQuests, getHookNoveltyHint } = await import("./timeline.ts");
     const hooks = getActiveHooks();
     if (hooks.length > 0) {
       // 计算今日天数（与 timeline.ts 中 currentDay 公式一致）
@@ -514,7 +604,8 @@ export async function buildStatePrompt(): Promise<string> {
         if (h.seen_count === 0) {
           tpl += `\n- ${h.event_id} (来自${h.source_npc}，${daysLeft}): ${h.hook_text}`;
         } else {
-          tpl += `\n- ${h.event_id} (来自${h.source_npc}，${daysLeft}，第${h.seen_count+1}次提醒): ${h.novelty || "这个事件仍在等待回应。"}`;
+          const novelty = getHookNoveltyHint(h);
+          tpl += `\n- ${h.event_id} (来自${h.source_npc}，${daysLeft}，第${h.seen_count+1}次出现): ${novelty}`;
         }
         h.seen_count++;
       }

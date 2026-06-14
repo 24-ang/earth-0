@@ -204,6 +204,23 @@ export function getActiveHooks(): Hook[] {
   return gameState.active_hooks;
 }
 
+/** 为重复出现的钩子生成 novelty 提示 — 避免机械重复同一句话 */
+export function getHookNoveltyHint(hook: Hook): string {
+  const daysAgo = currentDay() - hook.created_day;
+  const elapsed = daysAgo > 0 ? `${daysAgo}天过去了。` : "";
+  // 基础模板：告知 LLM 该换角度了
+  let hint = `${elapsed}${hook.source_npc}的那个事件仍未解决。`;
+  // 根据紧迫度给不同的语气
+  if (hook.urgency === "high") {
+    hint += ` 这件事非常紧迫——请让NPC表现出明显的焦虑或主动催促，不要再重复初次提及的方式。`;
+  } else if (hook.urgency === "medium") {
+    hint += ` 请从一个新的细微角度提及它——比如NPC看了一眼日历、或叹了口气提到还没解决。`;
+  } else {
+    hint += ` 请轻描淡写地提及——比如NPC路过时瞥了一眼、或不经意间提起，不要重复初次邀请的措辞。`;
+  }
+  return hint;
+}
+
 /** 获取活跃 quest 列表 */
 export function getActiveQuests(): QuestState[] {
   gameState.quests ??= {};
