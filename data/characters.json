@@ -1619,61 +1619,6 @@
     }
   },
   {
-    "name": "平冢静",
-    "source": "我的青春恋爱物语果然有问题。",
-    "base_age": 23,
-    "gender": "female",
-    "appearance_brief": "黑色长发，总是穿着白衣和长裤的职业装。擅长格斗技。",
-    "body": {
-      "height_cm": 168,
-      "weight_kg": 54,
-      "build": "标准",
-      "cup": "D",
-      "measurements": {
-        "bust": 88,
-        "waist": 60,
-        "hips": 90
-      },
-      "leg_type": "修长",
-      "body_shape": {
-        "chest": "半球",
-        "hips": "圆润",
-        "waist": "细腰"
-      },
-      "skin": {
-        "base_tone": "普通",
-        "tan": 10,
-        "texture": "普通"
-      },
-      "diet": "正常",
-      "exercise": "日常活动"
-    },
-    "attributes": {
-      "力量": 7,
-      "敏捷": 6,
-      "体质": 7,
-      "智力": 12,
-      "感知": 16,
-      "魅力": 13
-    },
-    "skills": {
-      "格斗": 8,
-      "口才": 6
-    },
-    "hp": {
-      "current": 15,
-      "max": 15
-    },
-    "equipment": {},
-    "inventory": [],
-    "default_location": "千叶市立总武高等学校",
-    "schedule_group": "总武高教师",
-    "schedule_overrides": {},
-    "anchors": {
-      "private": "总武高教师。爱看热血漫画，开昂贵跑车兜风。年龄和未婚是禁忌——常去相亲但性格问题总失败。擅长格斗技，常用来教训八幡。看似暴力实则非常关心学生，是八幡尊敬的大姐姐。曾是阳乃的老师，不喜欢阳乃的面具。观察力极强，多次在侍奉部危机中给予关键提示。"
-    }
-  },
-  {
     "name": "雪之下大志",
     "source": "我的青春恋爱物语果然有问题。（魔改）",
     "base_age": 17,
@@ -2366,5 +2311,164 @@
     "anchors": {
       "private": "悠闲自在的少女。不太在意他人眼光，随性而为却总能吸引视线。说话简洁到有时让人困惑——习惯先「嗯」一声再开口。天然呆，会忘记带钱包。和樋口円香是好朋友，从小一起长大。与母亲同住。小时候常被误认成男孩子。"
     }
+  },
+  {
+    "name": "平冢静",
+    "source": "我的青春恋爱物语果然有问题。",
+    "base_age": 29,
+    "gender": "female",
+    "appearance_brief": "黑色长发，常穿白大褂和西装，身材丰满，透露着成熟大人的魅力与疲惫。",
+    "body": {
+      "height_cm": 168,
+      "weight_kg": 54,
+      "build": "匀称",
+      "measurements": {
+        "bust": 90,
+        "waist": 62,
+        "hips": 92
+      },
+      "cup": "E",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "丰满",
+        "hips": "挺翘",
+        "waist": "适中"
+      },
+      "skin": {
+        "base_tone": "自然",
+        "tan": 5,
+        "texture": "成熟"
+      },
+      "diet": "随意",
+      "exercise": "偶尔锻炼"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 120,
+        "weight_kg": 22,
+        "build": "匀称",
+        "leg_type": "普通",
+        "diet": "正常",
+        "exercise": "正常",
+        "skin": {
+          "base_tone": "自然",
+          "tan": 10,
+          "texture": "娇嫩"
+        },
+        "measurements": {
+          "bust": 55,
+          "waist": 50,
+          "hips": 55
+        },
+        "cup": "AA"
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 40,
+        "build": "匀称",
+        "leg_type": "结实",
+        "diet": "正常",
+        "exercise": "多动",
+        "skin": {
+          "base_tone": "自然",
+          "tan": 15,
+          "texture": "活力"
+        },
+        "measurements": {
+          "bust": 72,
+          "waist": 55,
+          "hips": 75
+        },
+        "cup": "B"
+      },
+      "16": {
+        "height_cm": 162,
+        "weight_kg": 50,
+        "build": "丰满",
+        "leg_type": "修长",
+        "diet": "正常",
+        "exercise": "正常",
+        "skin": {
+          "base_tone": "自然",
+          "tan": 5,
+          "texture": "细腻"
+        },
+        "measurements": {
+          "bust": 85,
+          "waist": 60,
+          "hips": 88
+        },
+        "cup": "D"
+      },
+      "29": {
+        "height_cm": 168,
+        "weight_kg": 54,
+        "build": "丰满",
+        "leg_type": "修长",
+        "diet": "随意",
+        "exercise": "偶尔锻炼",
+        "skin": {
+          "base_tone": "自然",
+          "tan": 5,
+          "texture": "成熟"
+        },
+        "measurements": {
+          "bust": 90,
+          "waist": 62,
+          "hips": 92
+        },
+        "cup": "E"
+      }
+    },
+    "attributes": {
+      "力量": 14,
+      "敏捷": 12,
+      "体质": 12,
+      "智力": 14,
+      "感知": 14,
+      "魅力": 16
+    },
+    "anchors": [
+      "总武高_职员室",
+      "千叶_餐厅"
+    ],
+    "schedule": [
+      {
+        "start": "08:00",
+        "end": "12:00",
+        "location": "总武高_职员室",
+        "activity": "办公/备课"
+      },
+      {
+        "start": "12:00",
+        "end": "13:00",
+        "location": "总武高_食堂",
+        "activity": "午餐"
+      },
+      {
+        "start": "13:00",
+        "end": "17:00",
+        "location": "总武高_职员室",
+        "activity": "办公/处理问题学生"
+      },
+      {
+        "start": "17:00",
+        "end": "18:00",
+        "location": "总武高_侍奉部",
+        "activity": "巡视侍奉部"
+      },
+      {
+        "start": "18:00",
+        "end": "20:00",
+        "location": "千叶_餐厅",
+        "activity": "吃拉面"
+      },
+      {
+        "start": "20:00",
+        "end": "24:00",
+        "location": "千叶_住宅区",
+        "activity": "喝啤酒、看漫画"
+      }
+    ]
   }
 ]

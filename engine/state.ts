@@ -1147,7 +1147,11 @@ export function updateNPCSchedules(): string[] {
   
   // 公共区域填充：带属性的随机路人
   const publicRooms = ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前"];
-  const traits = ["情侣，牵着手", "戴耳机听歌", "边走路边看书", "似乎在赶时间", "和朋友大声聊天", "一个人发呆", "在打电话", "偷偷打量周围", "拎着便利店袋子", "穿着运动服刚训练完"];
+  const traits = [
+    "戴耳机听歌", "低头看书", "背着书包赶路", "大声打电话", 
+    "情侣二人组", "发呆的女生", "角落里抽烟的不良", "提着购物袋的主妇", 
+    "互相追逐的小学生", "睡觉的流浪汉", "四处巡视的巡警", "飞驰而过的外卖员"
+  ];
   for (const rn of publicRooms) {
     const room = ROOMS[rn];
     if (!room) continue;
@@ -1358,7 +1362,13 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
     { name: "路人(学生)", act: "背着书包急匆匆赶路", height: "162cm" },
     { name: "路人(职员)", act: "一边大声打电话一边赶路", height: "175cm" },
     { name: "路人(情侣二人组)", act: "牵着手小声说笑", height: "165/178cm" },
-    { name: "路人(发呆的女生)", act: "靠在路灯旁吃零食发呆", height: "160cm" }
+    { name: "路人(发呆的女生)", act: "靠在路灯旁吃零食发呆", height: "160cm" },
+    { name: "路人(不良少年)", act: "蹲在角落抽烟", height: "170cm" },
+    { name: "路人(主妇)", act: "提着购物袋匆忙走过", height: "158cm" },
+    { name: "路人(小学生)", act: "背着红蓝书包互相追逐", height: "135cm" },
+    { name: "路人(流浪汉)", act: "躺在纸箱上睡觉", height: "165cm" },
+    { name: "路人(巡警)", act: "四处张望巡视", height: "178cm" },
+    { name: "路人(外卖员)", act: "骑着电动车飞驰而过", height: "172cm" }
   ];
   
   const npcs: NamelessNPC[] = [];
