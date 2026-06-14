@@ -1660,20 +1660,21 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "create_room", label: "创建房间",
-    description: "在地图中创建一个新的房间区域。建议先调用 list_room_templates 查看推荐尺寸。可传入 template 参数套用模板（模板名如'便利店'），或手动指定 width/height/floor。",
+    description: "在地图中创建一个新的房间区域。建议先调用 list_room_templates 查看推荐尺寸。template 套用模板尺寸（如'便利店'）；atmosphere 写场景氛围（1-2句话）；directions 写四向描述。家具用 world_interact 放置。",
     parameters: Type.Object({
       name: Type.String(),
       width: Type.Optional(Type.Number()),
       height: Type.Optional(Type.Number()),
       floor: Type.Optional(Type.Number()),
       template: Type.Optional(Type.String()),
+      atmosphere: Type.Optional(Type.String()),
+      directions: Type.Optional(Type.Record(Type.String(), Type.String())),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { createRoom } = await import("./engine/state.ts");
       let w = params.width;
       let h = params.height;
       let f = params.floor;
-      // 如果传了 template，从模板读取尺寸
       if (params.template && (!w || !h)) {
         try {
           const templates = await import("../data/room_templates.json", { with: { type: "json" } });
@@ -1691,7 +1692,7 @@ export default function (pi: ExtensionAPI) {
         } catch (_) {}
       }
       if (!w || !h) return { content: [{ type: "text", text: "请提供 width/height 或有效的 template 名称。可先调用 list_room_templates 查看可用模板。" }], details: {} };
-      const r = await createRoom(params.name, w, h, f ?? 1);
+      const r = await createRoom(params.name, w, h, f ?? 1, params.atmosphere, params.directions as Record<string, string> | undefined);
       return { content: [{ type: "text", text: r.reason }], details: r };
     },
   });

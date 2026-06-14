@@ -843,7 +843,7 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
   return { success: true, newX: nx, newY: ny, blocked: false, reason: "", distance: cellDist, seconds };
 }
 
-export async function createRoom(roomName: string, width: number, height: number, floor: number): Promise<{ success: boolean; reason: string }> {
+export async function createRoom(roomName: string, width: number, height: number, floor: number, atmosphere?: string, directions?: Record<string, string>): Promise<{ success: boolean; reason: string }> {
   const cleanName = roomName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
   if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
   if (width < 1 || height < 1) return { success: false, reason: "房间尺寸无效" };
@@ -869,7 +869,9 @@ export async function createRoom(roomName: string, width: number, height: number
     floor,
     origin: [Math.floor(width/2), Math.floor(height/2)],
     cells,
-    capacity: undefined
+    capacity: undefined,
+    ...(atmosphere ? { atmosphere } : {}),
+    ...(directions ? { directions } : {}),
   };
 
   // 物理约束：施工需要时间（引擎不查钱——GM判断经济）
