@@ -752,69 +752,103 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  // ── 物品转移（替换 patch_state give_item/take_item）──
   pi.registerTool({
-    name: "patch_state", label: "修改状态",
-    description: "改好感/移物品/换位置/加技能/给或取物品。target=NPC名, action=add_affection|add_skill_exp|move|give_item|take_item, value=数值/地点/物品名",
-    parameters: Type.Object({ target: Type.String(), action: Type.String(), value: Type.Optional(Type.String()) }),
-    async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { updateRelation, addSkillExp, gameState, saveState, setPlayerLocation, getOrCreateNPC, getOrCreateSexState } = await import("./engine/state.ts");
+    name: "transfer_item", label: "转移物品",
+    description: "将物品从一方转移到另一方。from/to 为角色名或'玩家'。引擎强制校验来源确实持有该物品（背包或装备槽）。",
+    parameters: Type.Object({
+      from: Type.String({ description: "物品来源：角色名 或 '玩家'" }),
+      to: Type.String({ description: "物品去向：角色名 或 '玩家'" }),
+      item: Type.String({ description: "物品名" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
       const p = gameState.player;
-      let r = "";
-      if (params.action === "add_affection" && params.value) {
-        const delta = Number(params.value);
-        updateRelation(p.relationships, params.target, delta);
-        r = `${params.target} 好感${delta > 0 ? "+" : ""}${delta}`;
-        if (delta > 0) {
-          const sState = await getOrCreateSexState(params.target);
+
+      // 解析 from 方
+      const fromIsPlayer = params.from === "玩家" || params.from === p.name;
+      const fromInventory: any[] = fromIsPlayer ? p.inventory : getOrCreateNPC(params.from).inventory;
+      const fromEquipment: any = fromIsPlayer ? p.equipment : getOrCreateNPC(params.from).equipment;
+
+      // 在背包找
+      let idx = fromInventory.findIndex((i: any) => i.name === params.item);
+      if (idx >= 0) {
+        const item = fromInventory.splice(idx, 1)[0];
+        // 放入 to 方
+        const toIsPlayer = params.to === "玩家" || params.to === p.name;
+        if (toIsPlayer) p.inventory.push(item);
+        else getOrCreateNPC(params.to).inventory.push(item);
+        saveState();
+        return { content: [{ type: "text", text: `${params.from} → ${params.to}: ${params.item}` }], details: {} };
+      }
+
+      // 在装备槽找
+      for (const [slot, item] of Object.entries(fromEquipment)) {
+        if (item && (item as any).name === params.item) {
+          fromEquipment[slot as any] = null;
+          const toIsPlayer = params.to === "玩家" || params.to === p.name;
+          if (toIsPlayer) p.inventory.push(item as any);
+          else getOrCreateNPC(params.to).inventory.push(item as any);
+          saveState();
+          return { content: [{ type: "text", text: `${params.from} → ${params.to}: ${params.item}（从装备槽卸下）` }], details: {} };
+        }
+      }
+
+      return { content: [{ type: "text", text: `${params.from}没有${params.item}` }], details: {} };
+    },
+  });
+
+  // ── 关系调整（替换 patch_state add_affection）──
+  pi.registerTool({
+    name: "adjust_relation", label: "调整关系",
+    description: "因剧情互动调整好感度。单次上限±20，自动0-100 clamp。reason 写入关系备注。正值会同步提升该NPC的欲望值。",
+    parameters: Type.Object({
+      npc: Type.String({ description: "NPC 名称" }),
+      delta: Type.Number({ description: "好感变化量，范围 [-20, 20]" }),
+      reason: Type.String({ description: "变化原因，如'聊得很投机'、'偷窃被抓'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { updateRelation, gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
+      const delta = Math.max(-20, Math.min(20, params.delta));
+      const p = gameState.player;
+
+      updateRelation(p.relationships, params.npc, delta, params.reason);
+      let r = `${params.npc} 好感${delta > 0 ? "+" : ""}${delta}（${params.reason}）`;
+
+      if (delta > 0) {
+        try {
+          const sState = await getOrCreateSexState(params.npc);
           if (sState) {
             const desireDelta = Math.max(1, Math.round(delta * 0.5));
             sState.desire = Math.min(100, sState.desire + desireDelta);
-            r += `，欲望+${desireDelta} (当前欲望: ${sState.desire}/100)`;
+            r += `，欲望+${desireDelta}`;
           }
-        }
-      } else if (params.action === "add_skill_exp" && params.value) {
-        const [sk, exp] = params.value.split(":");
-        addSkillExp(p.skills, sk, Number(exp));
-        r = `${sk} +${exp}EXP`;
-      } else if (params.action === "move" && params.value) {
-        setPlayerLocation(params.value);
-        r = `移动到 ${params.value}`;
-      } else if (params.action === "give_item" && params.value) {
-        // 玩家给 NPC 物品
-        const idx = p.inventory.findIndex((i: any) => i.name === params.value);
-        if (idx < 0) { r = `背包里没有${params.value}`; }
-        else {
-          const item = p.inventory.splice(idx, 1)[0];
-          const npc = getOrCreateNPC(params.target);
-          npc.inventory.push(item);
-          r = `把${params.value}给了${params.target}`;
-        }
-      } else if (params.action === "take_item" && params.value) {
-        // 玩家从 NPC 拿物品（背包或装备）
-        const npc = getOrCreateNPC(params.target);
-        // 先查背包
-        let idx = npc.inventory.findIndex((i: any) => i.name === params.value);
-        if (idx >= 0) {
-          const item = npc.inventory.splice(idx, 1)[0];
-          p.inventory.push(item);
-          r = `从${params.target}的背包拿到了${params.value}`;
-        } else {
-          // 再查装备槽
-          let found = false;
-          for (const [slot, item] of Object.entries(npc.equipment)) {
-            if (item && item.name === params.value) {
-              p.inventory.push(item);
-              npc.equipment[slot as any] = null;
-              found = true;
-              r = `从${params.target}身上取下了${params.value}`;
-              break;
-            }
-          }
-          if (!found) r = `${params.target}身上没有${params.value}`;
-        }
-      } else { r = `未知操作: ${params.action}`; }
+        } catch (_) {}
+      }
+
       saveState();
       return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+
+  // ── 技能成长（替换 patch_state add_skill_exp）──
+  pi.registerTool({
+    name: "grant_skill_exp", label: "技能成长",
+    description: "因学习/训练/实战获得技能经验。单次上限5 EXP。走引擎升级公式（Lv×10 升一级）。",
+    parameters: Type.Object({
+      skill: Type.String({ description: "技能名，如'格斗'、'潜行'" }),
+      amount: Type.Number({ description: "经验值，1-5" }),
+      reason: Type.String({ description: "获得原因，如'平冢静指导格斗训练'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { addSkillExp, gameState, saveState } = await import("./engine/state.ts");
+      const amount = Math.max(1, Math.min(5, params.amount));
+      const before = gameState.player.skills[params.skill]?.level ?? 0;
+      addSkillExp(gameState.player.skills, params.skill, amount);
+      const after = gameState.player.skills[params.skill]?.level ?? 0;
+      const leveledUp = after > before ? ` → Lv${after}!` : "";
+      saveState();
+      return { content: [{ type: "text", text: `${params.skill} +${amount}EXP（${params.reason}）${leveledUp}` }], details: {} };
     },
   });
 

@@ -24,4 +24,4 @@
 - 当玩家提到位置变化时，调用 lookup_region
 - 当需要角色详情时，调用 lookup_character
 - 当涉及不确定结果时，调用 dice_roll
-- 当状态变化时，调用 patch_state
+- 当状态变化时，调用对应领域工具（adjust_relation / transfer_item / grant_skill_exp）
