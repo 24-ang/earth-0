@@ -576,6 +576,8 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
       action: "",
       scheduleGroup: src?.schedule_group || "自由人",
       scheduleOverrides: src?.schedule_overrides,
+      funds: src?.funds !== undefined ? src.funds : 1000,
+      memoryTags: [],
     };
   }
   return gameState.npcs[name];
@@ -911,15 +913,22 @@ export function buyItem(itemName: string, price: number): string {
   return `买了${itemName}，花费¥${price}。余额¥${gameState.player.funds}`;
 }
 
-export function sellItem(itemName: string, price: number): string {
+export function sellItem(itemName: string, price: number, buyerName?: string): string {
   const idx = gameState.player.inventory.findIndex(i => i.name === itemName);
   if (idx < 0) return `背包里没有${itemName}`;
   const err = validatePrice(itemName, price);
   if (err) return err;
+  // 如果指定了买方 NPC，校验对方资金
+  if (buyerName) {
+    const npc = getOrCreateNPC(buyerName);
+    if (npc.funds < price) return `${buyerName}只有¥${npc.funds}，买不起¥${price}的${itemName}`;
+    npc.funds -= price;
+  }
   gameState.player.inventory.splice(idx, 1);
   gameState.player.funds += price;
   saveState();
-  return `卖了${itemName}，获得¥${price}。余额¥${gameState.player.funds}`;
+  const buyerMsg = buyerName ? ` 给${buyerName}` : "";
+  return `卖了${itemName}${buyerMsg}，获得¥${price}。余额¥${gameState.player.funds}`;
 }
 
 export function workJob(jobName: string, hours: number): string {
@@ -975,11 +984,6 @@ const SEASONS: Record<string, { types: string[]; temps: [number, number] }> = {
 
 export function refreshWeather(): string {
   const m = Number(gameState.time.game_date.split("-")[1]);
-  const s = m >= 3 && m <= 5 ? "春" : m >= 6 && m <= 8 ? "夏" : m >= 9 && m <= 11 ? "秋" : "冬";
-  const p = SEASONS[s];
-  gameState.weather.type = p.types[Math.floor(Math.random() * p.types.length)];
-  gameState.weather.temp = p.temps[0] + Math.floor(Math.random() * (p.temps[1] - p.temps[0]));
-  saveState();
   return `${gameState.weather.type} ${gameState.weather.temp}°C`;
 }
 
@@ -1312,6 +1316,50 @@ export function stealItem(
   return {
     success: false, caught: false,
     narrative: `没能摸到「${itemName}」——${targetName}动了一下。`,
+    roll: { kept: d, mod, total, dc },
+  };
+}
+
+export function stealFunds(player: PlayerState, targetName: string): StealResult {
+  const npc = getOrCreateNPC(targetName);
+  if (npc.funds <= 0) {
+    return { success: false, caught: false, narrative: `${targetName}身无分文。`, roll: { kept: 0, mod: 0, total: 0, dc: 0 } };
+  }
+
+  const dex = player.attributes.敏捷;
+  const stealth = player.skills["潜行"]?.level ?? 0;
+  const mod = attrMod(dex) + stealth;
+  const d = Math.floor(Math.random() * 20) + 1;
+  const dc = 12; // 摸钱包比偷物品稍难
+  const total = d + mod;
+  const success = d === 20 || total >= dc;
+  const caught = d === 1;
+
+  if (success && !caught) {
+    // 随机偷一部分（不是全部），最多 80%
+    const stolen = Math.floor(Math.random() * npc.funds * 0.8) + 1;
+    const actual = Math.min(stolen, npc.funds);
+    npc.funds -= actual;
+    player.funds += actual;
+    saveState();
+    return {
+      success: true, caught: false,
+      narrative: `从${targetName}身上偷到了¥${actual}。`,
+      roll: { kept: d, mod, total, dc },
+    };
+  }
+
+  if (caught) {
+    return {
+      success: false, caught: true,
+      narrative: `手被${targetName}抓住了。`,
+      roll: { kept: d, mod, total, dc },
+    };
+  }
+
+  return {
+    success: false, caught: false,
+    narrative: `没能摸到${targetName}的钱包。`,
     roll: { kept: d, mod, total, dc },
   };
 }
