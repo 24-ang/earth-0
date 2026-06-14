@@ -1560,6 +1560,115 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  pi.registerTool({
+    name: "spawn_item", label: "生成物品",
+    description:
+      "因剧情需要生成一件新物品并放入指定目标背包。必须提供 source（来源）和 reason（原因）。\n" +
+      "引擎强制：物品必须有 name/type/weight，武器必须有 damage。\n" +
+      "禁止用于绕过 buy_item 或 steal_item 的正常获取途径。",
+    parameters: Type.Object({
+      target: Type.String({ description: "接收者：'玩家' 或 NPC 名" }),
+      item: Type.Object({
+        name: Type.String(),
+        type: Type.String({ description: "weapon / clothing / armor / tool / consumable" }),
+        slot: Type.String({ description: "装备槽位" }),
+        weight: Type.Number(),
+        damage: Type.Optional(Type.Object({
+          dice: Type.String({ description: "如 '1d8'" }),
+          damageType: Type.String({ description: "如 '斩击'" }),
+        })),
+        effects: Type.Optional(Type.Array(Type.Object({
+          type: Type.String(),
+          value: Type.Union([Type.Number(), Type.String()]),
+        }))),
+        flavor: Type.Optional(Type.String({ description: "品质描述" })),
+      }),
+      source: Type.String({ description: "来源：谁给的/哪来的" }),
+      reason: Type.String({ description: "为什么获得，如'静将祖父遗物托付给你'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
+      const targetChar = (params.target === "玩家" || params.target === gameState.player.name)
+        ? gameState.player
+        : getOrCreateNPC(params.target);
+
+      // Validate damage for weapon
+      if (params.item.type === "weapon" && !params.item.damage) {
+        return { content: [{ type: "text", text: "错误: weapon 类型的物品必须指定 damage 参数" }], details: {} };
+      }
+
+      const flavorSuffix = `来源: ${params.source}`;
+      const itemObj: any = {
+        name: params.item.name,
+        type: params.item.type,
+        slot: params.item.slot,
+        weight: params.item.weight,
+        state: "intact",
+        flavor: params.item.flavor ? `${params.item.flavor}\n${flavorSuffix}` : flavorSuffix,
+        effects: params.item.effects || [],
+      };
+      if (params.item.damage) {
+        itemObj.damage = params.item.damage;
+      }
+
+      targetChar.inventory.push(itemObj);
+      saveState();
+
+      return {
+        content: [{ type: "text", text: `成功生成物品 ${params.item.name} 并放入 ${params.target} 的背包。原因: ${params.reason}` }],
+        details: { item: itemObj }
+      };
+    },
+  });
+
+  pi.registerTool({
+    name: "inflict_damage", label: "造成伤害",
+    description: "因环境或剧情对角色造成 HP 伤害。不经过战斗检定。target 为角色名或'玩家'。",
+    parameters: Type.Object({
+      target: Type.String({ description: "'玩家' 或 NPC 名" }),
+      amount: Type.Number({ description: "伤害值" }),
+      type: Type.String({ description: "伤害类型：'钝击'/'坠落'/'毒素'/'燃烧'/'冻伤'/'其他'" }),
+      reason: Type.String({ description: "伤害原因，如'被落石砸中'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
+      const isPlayer = params.target === "玩家" || params.target === gameState.player.name;
+      const targetChar = isPlayer ? gameState.player : getOrCreateNPC(params.target);
+
+      targetChar.hp.current = Math.max(0, targetChar.hp.current - params.amount);
+      if (targetChar.hp.current === 0) {
+        if (isPlayer) {
+          gameState.player.alive = false;
+        } else {
+          targetChar.alive = false;
+        }
+      }
+
+      saveState();
+      const statusText = targetChar.hp.current === 0 ? "倒下了/已死亡" : `剩余 HP: ${targetChar.hp.current}/${targetChar.hp.max}`;
+      return {
+        content: [{ type: "text", text: `对 ${params.target} 造成 ${params.amount} 点${params.type}伤害（原因: ${params.reason}）。${params.target}当前状态: ${statusText}` }],
+        details: { currentHp: targetChar.hp.current, alive: isPlayer ? gameState.player.alive : targetChar.alive }
+      };
+    },
+  });
+
+  pi.registerTool({
+    name: "add_memory_tag", label: "记忆标签",
+    description: "将关键剧情点烙印在 NPC 记忆系统中。标签会被注入后续 prompt。",
+    parameters: Type.Object({
+      target: Type.String({ description: "NPC 名" }),
+      tag: Type.String({ description: "标签内容，如'知道玩家是杀手'" }),
+      expires_days: Type.Optional(Type.Number({ description: "过期天数，默认7" })),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { addMemoryTag, saveState } = await import("./engine/state.ts");
+      addMemoryTag(params.target, params.tag, params.expires_days || 7);
+      saveState();
+      return { content: [{ type: "text", text: `${params.target} 记忆: ${params.tag}` }], details: {} };
+    },
+  });
+
   // ── Commands ──
   pi.registerCommand("relations", {
     description: "查看所有NPC关系与恋爱阶段",
