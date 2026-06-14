@@ -2318,66 +2318,263 @@ export default function (pi: ExtensionAPI) {
     await showMenu(ctx, `💰 窃取: ${name}`, stealItems);
   }
 
+  function getAffection(name: string): number {
+    return gameState.player.relationships[name]?.affection ?? 0;
+  }
+  function isLover(name: string): boolean {
+    return gameState.player.relationships[name]?.romance === "恋人";
+  }
+
+  async function showTalkMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
+    const talkItems: MenuItem[] = [
+      {
+        label: "💬 聊聊日常",
+        detail: "随意闲聊一些生活琐事",
+        action: async (talkDone) => {
+          talkDone(); subDone(); parentDone();
+          await pi.sendUserMessage(ctx, `我找 ${name} 随便聊了聊日常琐事。`);
+        }
+      },
+      {
+        label: "💬 聊聊自己",
+        detail: "向对方分享一些自己的经历",
+        action: async (talkDone) => {
+          talkDone(); subDone(); parentDone();
+          await pi.sendUserMessage(ctx, `我主动向 ${name} 聊起了自己最近的一些经历和看法。`);
+        }
+      },
+      {
+        label: "💬 聊聊对方",
+        detail: "询问关于对方的喜好或近况",
+        action: async (talkDone) => {
+          talkDone(); subDone(); parentDone();
+          await pi.sendUserMessage(ctx, `我关切地向 ${name} 询问起她的近况，并聊了聊她的兴趣爱好。`);
+        }
+      },
+      {
+        label: "💬 聊些八卦",
+        detail: "分享学校或街区里的有趣传闻",
+        action: async (talkDone) => {
+          talkDone(); subDone(); parentDone();
+          await pi.sendUserMessage(ctx, `我神秘兮兮地和 ${name} 分享了最近在学校听到的八卦传闻。`);
+        }
+      },
+      {
+        label: "◀ 返回",
+        detail: "",
+        action: (talkDone) => { talkDone(); }
+      }
+    ];
+    await showMenu(ctx, `💬 交流谈话: ${name}`, talkItems);
+  }
+
   async function showTouchMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
-    const { gameState, saveState } = await import("./engine/state.ts");
-    
+    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
+    const aff = getAffection(name);
+
+    function touchResult(success: boolean, label: string, required: number, reward: number, penalty: number): string {
+      if (success) {
+        updateRelation(gameState.player.relationships, name, reward, label);
+        saveState();
+        return `✓ 好感+${reward}`;
+      } else {
+        updateRelation(gameState.player.relationships, name, -penalty, `${label}被拒`);
+        saveState();
+        return `✗ 被拒绝，好感-${penalty}`;
+      }
+    }
+
     const touchItems: MenuItem[] = [
       {
-        label: "🤝 友好握手",
-        detail: "进行礼貌的肢体互动",
-        action: async (touchDone) => {
+        label: `🤝 友好握手 ${aff >= 10 ? "" : "(好感10+)"}`,
+        detail: aff >= 10 ? "进行礼貌的肢体互动" : "关系还不够熟...",
+        action: aff >= 10 ? async (touchDone) => {
           touchDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我主动跟 ${name} 握了握手。`);
-        }
+          const r = touchResult(true, "友好握手", 10, 2, 2);
+          await pi.sendUserMessage(ctx, `我主动跟 ${name} 握了握手。${r}`);
+        } : undefined,
       },
       {
-        label: "👋 亲切摸头",
-        detail: "轻轻抚摸对方的头发",
-        action: async (touchDone) => {
+        label: `👋 亲切摸头 ${aff >= 30 ? "" : "(好感30+)"}`,
+        detail: aff >= 30 ? "轻轻抚摸对方的头发" : "需要更多信任...",
+        action: aff >= 30 ? async (touchDone) => {
           touchDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我轻轻地伸手摸了摸 ${name} 的头。`);
-        }
+          const ok = Math.random() > 0.15;
+          const r = touchResult(ok, "亲切摸头", 30, 2, 5);
+          await pi.sendUserMessage(ctx, ok
+            ? `我轻轻地伸手摸了摸 ${name} 的头，${name} 微微低下了头。${r}`
+            : `我突然伸手想要摸 ${name} 的头，但${name}警惕地退后躲开了。${r}`);
+        } : undefined,
       },
       {
-        label: "🤗 温暖拥抱",
-        detail: "张开双臂给予拥抱",
-        action: async (touchDone) => {
+        label: `🤗 温暖拥抱 ${aff >= 50 ? "" : "(好感50+)"}`,
+        detail: aff >= 50 ? "张开双臂给予拥抱" : "关系还不够亲密...",
+        action: aff >= 50 ? async (touchDone) => {
           touchDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我走上前给 ${name} 来了个温暖的拥抱。`);
-        }
-      }
+          const ok = Math.random() > 0.2;
+          const r = touchResult(ok, "温暖拥抱", 50, 3, 10);
+          await pi.sendUserMessage(ctx, ok
+            ? `我走上前张开双臂，${name}犹豫了一下，轻轻靠了过来。${r}`
+            : `我张开双臂想抱 ${name}，但${name}伸手挡住了我。${r}`);
+        } : undefined,
+      },
     ];
 
     if (gameState.layer1Enabled) {
       touchItems.push({
-        label: "💆 肢体按摩",
-        detail: "为对方揉捏肩膀放松身体",
-        action: async (touchDone) => {
+        label: `💆 肢体按摩 ${aff >= 60 ? "" : "(好感60+)"}`,
+        detail: aff >= 60 ? "为对方揉捏肩膀放松身体" : "需要更深的关系...",
+        action: aff >= 60 ? async (touchDone) => {
           touchDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我帮 ${name} 捏了捏肩膀，做起全身按摩。`);
-        }
+          const ok = Math.random() > 0.25;
+          const r = touchResult(ok, "肢体按摩", 60, 3, 10);
+          await pi.sendUserMessage(ctx, ok
+            ? `我帮 ${name} 捏了捏肩膀，${name}的身体逐渐放松下来。${r}`
+            : `我的手刚碰到 ${name} 的肩膀，${name}就躲开了。${r}`);
+        } : undefined,
       });
     }
 
     touchItems.push({
-      label: "◀ 返回",
-      detail: "",
-      action: (touchDone) => {
-        touchDone();
-      }
+      label: `💋 深情亲吻 ${aff >= 70 || isLover(name) ? "" : "(好感70+或恋人)"}`,
+      detail: (aff >= 70 || isLover(name)) ? "深情的一吻" : "还不是时候...",
+      action: (aff >= 70 || isLover(name)) ? async (touchDone) => {
+        touchDone(); subDone(); parentDone();
+        const ok = Math.random() > 0.3;
+        const r = touchResult(ok, "深情亲吻", 70, 5, 15);
+        await pi.sendUserMessage(ctx, ok
+          ? `我靠近 ${name}，轻轻吻了上去。${name}闭上了眼睛。${r}`
+          : `我凑近 ${name} 想亲吻，但${name}别开了脸。「……不行。」${r}`);
+      } : undefined,
     });
 
+    touchItems.push({ label: "◀ 返回", detail: "", action: (touchDone) => { touchDone(); } });
     await showMenu(ctx, `🖐️ 肢体接触: ${name}`, touchItems);
+  }
+
+  async function showRomanceMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
+    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
+    const aff = getAffection(name);
+
+    const items: MenuItem[] = [
+      {
+        label: `💌 告白交往 ${aff >= 70 ? "" : "(好感70+)"}`,
+        detail: aff >= 70 ? "向对方表达心意" : "还需要更多羁绊...",
+        action: aff >= 70 ? async (rDone) => {
+          rDone(); subDone(); parentDone();
+          const ok = Math.random() > 0.25;
+          if (ok) {
+            updateRelation(gameState.player.relationships, name, 10, "告白交往成功");
+            gameState.player.relationships[name].romance = "恋人";
+            saveState();
+            await pi.sendUserMessage(ctx, `我向 ${name} 告白了。${name}沉默了很久，然后轻轻点了点头。「……我也。」好感+10，成为恋人！`);
+          } else {
+            updateRelation(gameState.player.relationships, name, -10, "告白被拒");
+            saveState();
+            await pi.sendUserMessage(ctx, `我向 ${name} 告白了。${name}低下了头。「……对不起。」好感-10。`);
+          }
+        } : undefined,
+      },
+      {
+        label: `📅 邀请约会 ${aff >= 50 ? "" : "(好感50+)"}`,
+        detail: aff >= 50 ? "邀对方一起出去玩" : "还不够熟...",
+        action: aff >= 50 ? async (rDone) => {
+          rDone(); subDone(); parentDone();
+          const ok = Math.random() > 0.2;
+          if (ok) {
+            updateRelation(gameState.player.relationships, name, 5, "愉快约会");
+            saveState();
+            await pi.sendUserMessage(ctx, `我约 ${name} 周末一起出去玩。${name}笑了笑：「好啊，去哪里？」好感+5。`);
+          } else {
+            updateRelation(gameState.player.relationships, name, -5, "约会邀请被拒");
+            saveState();
+            await pi.sendUserMessage(ctx, `我约 ${name} 出去玩，但${name}说周末有事。好感-5。`);
+          }
+        } : undefined,
+      },
+      { label: "◀ 返回", detail: "", action: (rDone) => { rDone(); } },
+    ];
+    await showMenu(ctx, `💕 恋爱互动: ${name}`, items);
+  }
+
+  async function showNPCPushDownMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
+    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
+    const aff = getAffection(name);
+    const canPush = isLover(name) && aff >= 80;
+
+    const items: MenuItem[] = [
+      {
+        label: `🔥 亲密求欢 ${canPush ? "" : "(需恋人+好感80+)"}`,
+        detail: canPush ? "与恋人共度亲密时光" : "条件未满足",
+        action: canPush ? async (pDone) => {
+          pDone(); subDone(); parentDone();
+          const ok = Math.random() > 0.2;
+          if (ok) {
+            gameState.mode = "sex";
+            gameState.layer1Enabled = true;
+            saveState();
+            await pi.sendUserMessage(ctx, `${name}红着脸点了点头。我把${name}拉到了身边……`);
+          } else {
+            updateRelation(gameState.player.relationships, name, -15, "求欢被拒");
+            saveState();
+            await pi.sendUserMessage(ctx, `我刚想靠近，${name}一巴掌甩了过来。「……你把我当什么了？」好感-15。`);
+          }
+        } : undefined,
+      },
+      { label: "◀ 返回", detail: "", action: (pDone) => { pDone(); } },
+    ];
+    await showMenu(ctx, `🔥 亲密: ${name}`, items);
+  }
+
+  async function showCombatMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
+    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
+    const aff = getAffection(name);
+
+    const items: MenuItem[] = [
+      {
+        label: `⚔️ 切磋武艺 ${aff >= 20 ? "" : "(好感20+)"}`,
+        detail: "友好切磋，点到为止",
+        action: async (cDone) => {
+          cDone(); subDone(); parentDone();
+          gameState.mode = "rpg";
+          saveState();
+          await pi.sendUserMessage(ctx, `我对 ${name} 抱拳行礼：「请赐教。」${name}摆出了架势。切磋开始！`);
+        },
+      },
+      {
+        label: "💀 发起死斗",
+        detail: "以命相搏，关系降为死敌",
+        action: async (cDone) => {
+          cDone(); subDone(); parentDone();
+          updateRelation(gameState.player.relationships, name, -50, "死斗宣战");
+          gameState.player.relationships[name].stage = "死敌";
+          gameState.mode = "rpg";
+          saveState();
+          await pi.sendUserMessage(ctx, `我向 ${name} 发起了死斗！一场你死我活的战斗即将展开……`);
+        },
+      },
+      { label: "◀ 返回", detail: "", action: (cDone) => { cDone(); } },
+    ];
+    await showMenu(ctx, `⚔️ 战斗: ${name}`, items);
   }
 
   async function showNPCInteractionMenu(name: string, isNameless: boolean, parentDone: () => void, ctx: any) {
     const { gameState, getOrCreateNPC, saveState } = await import("./engine/state.ts");
     const { allChars } = await import("./engine/router.ts");
     
+    // 技能等级辅助：查带关键词的技能的等级
+    const pSkills = gameState.player.skills || {};
+    const obsLv = Math.max(0, ...Object.entries(pSkills)
+      .filter(([k]) => /察|侦|感/.test(k))
+      .map(([, v]) => (v as any).level ?? 0));
+    const psychLv = Math.max(0, ...Object.entries(pSkills)
+      .filter(([k]) => /心理|暗示|催眠|心/.test(k))
+      .map(([, v]) => (v as any).level ?? 0));
+
     const subItems: MenuItem[] = [
       {
         label: "🔍 观察详情",
-        detail: "查看其属性与装备",
+        detail: obsLv > 0 ? `洞察Lv${obsLv}·部分信息可见` : "查看基础外观",
         action: async (subDone) => {
           const char = allChars.find((c: any) => c.name === name || c.name.includes(name));
           if (char) {
@@ -2385,50 +2582,81 @@ export default function (pi: ExtensionAPI) {
             const age = getNpcCurrentAge(char.base_age || 16);
             const body = getBodyForAge(char, age);
             const npcState = getOrCreateNPC(char.name);
+
+            // 所有人都能看到的基础信息
             const lines = [
-              `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁 (基础:${char.base_age})`,
+              `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁`,
               `🎬 作品: ${char.source}`,
               `👗 外观: ${char.appearance_brief || "无描述"}`,
-              `💰 资金: ¥${npcState.funds}`,
-              `🎒 背包: ${npcState.inventory && npcState.inventory.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`
             ];
             if (body) {
-              let bodyStr = `📏 身体: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
+              let bodyStr = `📏 身体: ${body.height_cm}cm ${body.build}`;
               if (body.cup) bodyStr += ` ${body.cup}cup`;
-              if (body.measurements) bodyStr += ` ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
               lines.push(bodyStr);
             }
-            if (char.attributes) {
-              const a = char.attributes;
-              lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+
+            // Lv1+: 精确好感数字（替代文字阶段）
+            const rel = gameState.player.relationships[name];
+            const rawAff = rel?.affection ?? 0;
+            if (obsLv >= 1 || psychLv >= 1) {
+              lines.push(`💕 好感: ${rawAff}/100 (${rel?.stage ?? "陌生"})${rel?.romance ? " " + rel.romance : ""}`);
+            } else {
+              lines.push(`💕 关系: ${rel?.stage ?? "陌生"}${rel?.romance ? " " + rel.romance : ""}`);
             }
-            const eq = Object.entries(npcState.equipment).filter(([_, v]) => v);
-            if (eq.length > 0) {
-              lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+
+            // Lv2+: 资金 + 装备
+            if (obsLv >= 2 || psychLv >= 2) {
+              lines.push(`💰 资金: ¥${npcState.funds}`);
+              const eq = Object.entries(npcState.equipment).filter(([_, v]) => v);
+              if (eq.length > 0) lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+              lines.push(`🎒 背包: ${npcState.inventory?.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`);
             }
-            if (char.anchors?.private) {
-              lines.push(`✍️ 设定: ${char.anchors.private.slice(0, 120)}`);
+
+            // Lv3+: 属性 + 详细身材 + 私人设定
+            if (obsLv >= 3 || psychLv >= 2) {
+              if (char.attributes) {
+                const a = char.attributes;
+                lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+              }
+              if (body?.measurements) {
+                lines.push(`📐 三围: ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips} / ${body.cup || "?"}cup`);
+              }
+              if (char.anchors?.private && (obsLv >= 3)) {
+                lines.push(`✍️ 设定: ${char.anchors.private.slice(0, 120)}`);
+              }
             }
+
+            // 心理学Lv2 + Layer1: 欲望/兴奋/心里话
+            if (psychLv >= 2 && gameState.layer1Enabled) {
+              try {
+                const { getOrCreateSexState } = await import("./engine/state.ts");
+                const sState = await getOrCreateSexState(name);
+                if (sState) {
+                  lines.push(`💓 欲望: ${sState.desire}/100`);
+                  lines.push(`🔥 兴奋: ${sState.arousal}/100`);
+                  if (sState.thoughts?.length > 0) {
+                    lines.push(`💭 心里话: ${sState.thoughts.slice(-2).map((t: any) => t.text).join(" | ")}`);
+                  }
+                }
+              } catch (_) {}
+            }
+
             await showPanel(ctx, char.name, lines);
           } else {
-            const lines = [
-              `${name} (临时角色)`,
-              `👗 外观: 普通的路人`,
-            ];
+            const lines = [`${name} (临时角色)`, `👗 外观: 普通的路人`];
             const npcState = getOrCreateNPC(name);
-            lines.push(`💰 资金: ¥${npcState.funds}`);
-            lines.push(`🎒 背包: ${npcState.inventory && npcState.inventory.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`);
+            const rel = gameState.player.relationships[name];
+            if (obsLv >= 1 && rel) lines.push(`💕 好感: ${rel.affection}/100`);
+            if (obsLv >= 2) { lines.push(`💰 资金: ¥${npcState.funds}`); lines.push(`🎒 背包: ${npcState.inventory?.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`); }
             await showPanel(ctx, name, lines);
           }
         }
       },
       {
         label: "💬 交流搭话",
-        detail: "向对方搭话并唤起对话",
+        detail: "与对方交流闲聊",
         action: async (subDone) => {
-          subDone();
-          parentDone();
-          await pi.sendUserMessage(ctx, `我向 ${name} 搭话。`);
+          await showTalkMenu(name, subDone, parentDone, ctx);
         }
       },
       {
@@ -2440,8 +2668,9 @@ export default function (pi: ExtensionAPI) {
       }
     ];
 
-    // 动态组装：组队管理
+    // 动态组装：组队管理（需好感≥40或恋人）
     const isInParty = gameState.player.party?.includes(name);
+    const aff = getAffection(name);
     if (isInParty) {
       subItems.push({
         label: "👥 移出队伍",
@@ -2449,25 +2678,45 @@ export default function (pi: ExtensionAPI) {
         action: async (subDone) => {
           gameState.player.party = gameState.player.party.filter((n: string) => n !== name);
           saveState();
-          subDone();
-          parentDone();
+          subDone(); parentDone();
           await pi.sendUserMessage(ctx, `我把 ${name} 移出了队伍。`);
         }
       });
     } else {
+      const canInvite = aff >= 40 || isLover(name);
       subItems.push({
-        label: "👥 邀请组队",
-        detail: "邀请对方加入你的队伍",
-        action: async (subDone) => {
+        label: `👥 邀请组队 ${canInvite ? "" : "(好感40+或恋人)"}`,
+        detail: canInvite ? "邀请对方加入你的队伍" : "关系还不够铁...",
+        action: canInvite ? async (subDone) => {
           gameState.player.party ??= [];
           gameState.player.party.push(name);
           saveState();
-          subDone();
-          parentDone();
-          await pi.sendUserMessage(ctx, `我邀请 ${name} 加入了我的队伍。`);
-        }
+          subDone(); parentDone();
+          await pi.sendUserMessage(ctx, `我邀请 ${name} 加入了我的队伍。${name}点了点头，跟了上来。`);
+        } : undefined,
       });
     }
+
+    // 恋爱互动
+    subItems.push({
+      label: "💕 恋爱互动",
+      detail: "告白、约会",
+      action: async (subDone) => { await showRomanceMenu(name, subDone, parentDone, ctx); }
+    });
+
+    // 亲密求欢
+    subItems.push({
+      label: `🔥 亲密求欢 ${(isLover(name) && aff >= 80) ? "" : "(需恋人+好感80+)"}`,
+      detail: (isLover(name) && aff >= 80) ? "与恋人共度亲密时光" : "条件未满足",
+      action: async (subDone) => { await showNPCPushDownMenu(name, subDone, parentDone, ctx); }
+    });
+
+    // 战斗
+    subItems.push({
+      label: "⚔️ 战斗交战",
+      detail: "切磋或死斗",
+      action: async (subDone) => { await showCombatMenu(name, subDone, parentDone, ctx); }
+    });
 
     // 动态组装：窃取财物
     const stealthLvl = gameState.player.skills["潜行"]?.level ?? 0;
@@ -2639,7 +2888,7 @@ export default function (pi: ExtensionAPI) {
       } else if (loc.startsWith("千叶_")) {
         titlePrefix = "🏙️";
       }
-      const title = `${titlePrefix} 场景: ${loc}`;
+      const title = `${titlePrefix} ${loc}`;
 
       const menuItems: MenuItem[] = [];
 
@@ -2686,76 +2935,133 @@ export default function (pi: ExtensionAPI) {
         densityDesc += "，隔壁隐约传来动静";
       }
 
-      const headerLine = `⛅ 天气: ${season}季·${weather.type} (${weather.temp}°C) | 👥 氛围: ${densityDesc}`;
-      menuItems.push({ label: headerLine, detail: "", action: () => {} });
-      menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
+      const getEdgeStatus = (r: any, dir: string) => {
+        if (r && r.directions && r.directions[dir]) {
+          return r.directions[dir];
+        }
+        if (!r) return "空";
+        const w = r.width;
+        const h = r.height;
+        let wallCount = 0;
+        let cellCount = 0;
+        let hasExit = false;
+        if (dir === "北") {
+          for (let x = 0; x < w; x++) {
+            const c = r.cells[0]?.[x];
+            if (c) {
+              cellCount++;
+              if (c.type === "wall") wallCount++;
+              if (c.type === "exit" || c.type === "door") hasExit = true;
+            }
+          }
+        } else if (dir === "南") {
+          for (let x = 0; x < w; x++) {
+            const c = r.cells[h - 1]?.[x];
+            if (c) {
+              cellCount++;
+              if (c.type === "wall") wallCount++;
+              if (c.type === "exit" || c.type === "door") hasExit = true;
+            }
+          }
+        } else if (dir === "东") {
+          for (let y = 0; y < h; y++) {
+            const c = r.cells[y]?.[w - 1];
+            if (c) {
+              cellCount++;
+              if (c.type === "wall") wallCount++;
+              if (c.type === "exit" || c.type === "door") hasExit = true;
+            }
+          }
+        } else if (dir === "西") {
+          for (let y = 0; y < h; y++) {
+            const c = r.cells[y]?.[0];
+            if (c) {
+              cellCount++;
+              if (c.type === "wall") wallCount++;
+              if (c.type === "exit" || c.type === "door") hasExit = true;
+            }
+          }
+        }
+        if (hasExit) return "门";
+        if (cellCount === 0) return "空";
+        return (wallCount / cellCount >= 0.5) ? "墙" : "空";
+      };
 
-      // 2. Spatial details & Furniture
       const roomFurniture: { name: string; x: number; y: number }[] = [];
+      const exitsList: string[] = [];
+      
+      let px = 0, py = 0;
+      if (gameState.player.gridPos) {
+        [px, py] = gameState.player.gridPos;
+      }
+
       if (room) {
         const w = room.width;
         const h = room.height;
-        const cs = room.cellSize || 1;
-        
-        // Find exits and furniture
-        const exits: string[] = [];
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             const cell = room.cells[y]?.[x];
             if (!cell) continue;
             if (cell.type === "exit" || cell.type === "door") {
-              exits.push(`${cell.exitTo || "出口"}(${x},${y})${cell.isOpen === false ? "🔒" : ""}`);
+              exitsList.push(`${cell.exitTo || "出口"}(${x},${y})${cell.isOpen === false ? "🔒" : ""}`);
             }
             if (cell.furniture) {
               roomFurniture.push({ name: cell.furniture, x, y });
             }
           }
         }
-
-        const capacity = getRoomCapacity(loc);
-        const curPeople = totalNPCsCount + 1; // +1 for player
-        let gridDesc = `📏 空间规格: ${w * cs}米 × ${h * cs}米 (${w} × ${h} 格) | 👥 容量: ${curPeople}/${capacity}人`;
-        if (gameState.player.gridPos) {
-          const [px, py] = gameState.player.gridPos;
-          gridDesc += ` | 坐标: (${px}, ${py})`;
-        }
-        menuItems.push({ label: gridDesc, detail: "", action: () => {} });
-        
-        if ((room as any).atmosphere) {
-          menuItems.push({ label: `✨ 氛围感知: ${(room as any).atmosphere}`, detail: "", action: () => {} });
-        }
-        
-        const amb = (room as any).ambient;
-        if (amb) {
-          menuItems.push({ label: `🔊 环境渗透: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`, detail: "", action: () => {} });
-        }
-        menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
-
-        // Exits
-        if (exits.length > 0) {
-          menuItems.push({ label: `🚪 显著出口: ${exits.join("  ")}`, detail: "", action: () => {} });
-          menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
-        }
-
-        // Furniture (Interactive List)
-        if (roomFurniture.length > 0) {
-          menuItems.push({ label: "🪑 场景物件 [可选择交互]", detail: "", action: () => {} });
-          roomFurniture.forEach(f => {
-            menuItems.push({
-              label: `  🪑 [${f.name}]`,
-              detail: `坐标:(${f.x},${f.y}) ◀ 交互`,
-              action: async (parentDone) => {
-                await showFurnitureInteractionMenu(f.name, f.x, f.y, parentDone, ctx);
-              }
-            });
-          });
-          menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
-        }
       }
 
-      // 3. NPCs (Interactive list)
-      menuItems.push({ label: "👥 周边动态 [场景视野 - 可选择互动]", detail: "", action: () => {} });
+      const w = room?.width || 0;
+      const h = room?.height || 0;
+      const cs = room?.cellSize || 1;
+      const capacity = getRoomCapacity(loc);
+      const curPeople = totalNPCsCount + 1; // +1 for player
 
+      // Push description block lines
+      menuItems.push({
+        label: `⛅ ${season}季·${weather.type} (${weather.temp}°C)`,
+        detail: "",
+        action: () => {}
+      });
+      menuItems.push({
+        label: `[空间] ${loc} ${w}×${h}格 ${cs}m/格 F${room?.floor || 1} 你在(${px},${py}) | 容纳人数: ${curPeople}/${capacity}人 | 氛围: ${densityDesc}`,
+        detail: "",
+        action: () => {}
+      });
+      menuItems.push({
+        label: `| 出口: ${exitsList.join("  ") || "无"}`,
+        detail: "",
+        action: () => {}
+      });
+      menuItems.push({
+        label: `| 家具: ${roomFurniture.map(f => `${f.name}(${f.x},${f.y})`).join(", ") || "无"}`,
+        detail: "",
+        action: () => {}
+      });
+      menuItems.push({
+        label: `| 四周: 北:${getEdgeStatus(room, "北")} 南:${getEdgeStatus(room, "南")} 东:${getEdgeStatus(room, "东")} 西:${getEdgeStatus(room, "西")}`,
+        detail: "",
+        action: () => {}
+      });
+      menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
+
+      // Interactive Furniture List
+      if (roomFurniture.length > 0) {
+        menuItems.push({ label: "🪑 物件:", detail: "", action: () => {} });
+        roomFurniture.forEach(f => {
+          menuItems.push({
+            label: `  🪑 [[${f.name}]] (${f.x},${f.y})`,
+            detail: "◀ 交互",
+            action: async (parentDone) => {
+              await showFurnitureInteractionMenu(f.name, f.x, f.y, parentDone, ctx);
+            }
+          });
+        });
+        menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
+      }
+
+      // Interactive NPCs List
       const getRelativeDir = (px: number, py: number, nx: number, ny: number) => {
         if (nx === px && ny === py) return "身旁";
         let dir = "";
@@ -2766,10 +3072,10 @@ export default function (pi: ExtensionAPI) {
         return dir + "方";
       };
 
-      let anyNPC = false;
+      if (inRoomNPCs.length > 0 || namelessNPCs.length > 0) {
+        menuItems.push({ label: "👥 角色:", detail: "", action: () => {} });
 
-      if (inRoomNPCs.length > 0) {
-        anyNPC = true;
+        // Named NPCs
         for (const [name, npc] of inRoomNPCs) {
           const char = allChars.find((c: any) => c.name === name);
           let heightStr = "未知";
@@ -2780,65 +3086,63 @@ export default function (pi: ExtensionAPI) {
           }
 
           let positionStr = "处于场景中";
+          let nx = npc.gridPos?.[0] ?? 0;
+          let ny = npc.gridPos?.[1] ?? 0;
           if (gameState.player.gridPos && npc.gridPos) {
-            const [px, py] = gameState.player.gridPos;
-            const [nx, ny] = npc.gridPos;
             const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
             const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
             positionStr = `位于你的${getRelativeDir(px, py, nx, ny)}约 ${dist}米 (约 ${gridDist}格)`;
           }
 
           menuItems.push({
-            label: `👤 [${name}: *${heightStr}*]`,
-            detail: "◀ 交互",
+            label: `  👤 [[${name}]] (${nx},${ny})`,
+            detail: `*${heightStr}* ◀ 交互`,
             action: async (parentDone) => {
               await showNPCInteractionMenu(name, false, parentDone, ctx);
             }
           });
           menuItems.push({
-            label: `  - ${positionStr}`,
+            label: `    - ${positionStr}`,
             detail: "",
             action: () => {}
           });
           menuItems.push({
-            label: `  - *${npc.action || "目前正站立着"}*`,
+            label: `    - *${npc.action || "目前正站立着"}*`,
             detail: "",
             action: () => {}
           });
         }
-      }
 
-      for (const item of namelessNPCs) {
-        anyNPC = true;
-        let positionStr = "处于场景中";
-        if (gameState.player.gridPos) {
-          const [px, py] = gameState.player.gridPos;
-          const [nx, ny] = item.gridPos;
-          const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
-          const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
-          positionStr = `位于你的${getRelativeDir(px, py, nx, ny)}约 ${dist}米 (约 ${gridDist}格)`;
-        }
-
-        menuItems.push({
-          label: `👤 [${item.name}: *${item.height}*]`,
-          detail: "◀ 交互",
-          action: async (parentDone) => {
-            await showNPCInteractionMenu(item.name, true, parentDone, ctx);
+        // Nameless NPCs
+        for (const item of namelessNPCs) {
+          let positionStr = "处于场景中";
+          let nx = item.gridPos[0];
+          let ny = item.gridPos[1];
+          if (gameState.player.gridPos) {
+            const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
+            const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
+            positionStr = `位于你的${getRelativeDir(px, py, nx, ny)}约 ${dist}米 (约 ${gridDist}格)`;
           }
-        });
-        menuItems.push({
-          label: `  - ${positionStr}`,
-          detail: "",
-          action: () => {}
-        });
-        menuItems.push({
-          label: `  - *${item.act}*`,
-          detail: "",
-          action: () => {}
-        });
-      }
 
-      if (!anyNPC) {
+          menuItems.push({
+            label: `  👤 [[${item.name}]] (${nx},${ny})`,
+            detail: `*${item.height}* ◀ 交互`,
+            action: async (parentDone) => {
+              await showNPCInteractionMenu(item.name, true, parentDone, ctx);
+            }
+          });
+          menuItems.push({
+            label: `    - ${positionStr}`,
+            detail: "",
+            action: () => {}
+          });
+          menuItems.push({
+            label: `    - *${item.act}*`,
+            detail: "",
+            action: () => {}
+          });
+        }
+      } else {
         menuItems.push({
           label: "  |-[视野内]: 没有发现其他活动角色",
           detail: "",
