@@ -1102,48 +1102,60 @@ export default function (pi: ExtensionAPI) {
   // combat, steal, equip, build, move, door_toggle, reputation, schedule, economy
   pi.registerTool({
     name: "combat_action", label: "战斗",
-    description: "攻击/防御/逃跑/死亡豁免。action: attack/defend/flee/death_save。target 为 NPC 名。",
-    parameters: Type.Object({ action: Type.String(), target: Type.Optional(Type.String()) }),
+    description: "攻击/防御/逃跑/死亡豁免。action: attack/defend/flee/death_save。actor 可选，默认玩家；设为 NPC 名则 NPC 发动攻击（target 应为'玩家'）。",
+    parameters: Type.Object({
+      action: Type.String({ description: "attack / defend / flee / death_save" }),
+      target: Type.Optional(Type.String({ description: "目标名，attack/flee 时需要" })),
+      actor: Type.Optional(Type.String({ description: "行动者，默认玩家。设为 NPC 名则 NPC 执行该动作" })),
+    }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateNPC, damageItem } = await import("./engine/state.ts");
       const { resolveAttack, defend, attemptFlee, makeDeathSave, getRoundSummary } = await import("./engine/combat.ts");
+      const allChars = (await import("./engine/router.ts")).allChars;
       const p = gameState.player;
-      const playerCombatant = { name: p.name, state: p, cover: "无掩体" as any };
 
-      let r = "";
-      if (params.action === "attack" && params.target) {
-        const npc = getOrCreateNPC(params.target);
-        const allChars = (await import("./engine/router.ts")).allChars;
-        const src = allChars.find((c: any) => c.name === params.target);
+      // Helper: 构建 NPC 战斗状态
+      const buildNPCCombatant = (name: string) => {
+        const npc = getOrCreateNPC(name);
+        const src = allChars.find((c: any) => c.name === name);
         const npcState = {
           ...structuredClone(p),
-          name: params.target,
+          name,
           attributes: src?.attributes || { 力量:5,敏捷:5,体质:5,智力:5,感知:5,魅力:5 },
           skills: src?.skills || {},
           hp: src?.hp ? { ...src.hp } : { current: 10, max: 10 },
           ac: src?.ac || 10,
           equipment: npc.equipment || {},
         };
-        const npcCombatant = { name: params.target, state: npcState, cover: "无掩体" as any };
-        const weapon = Object.values(p.equipment).find((w: any) => w?.damage)
+        return { name, state: npcState, cover: "无掩体" as any };
+      };
+
+      const playerCombatant = { name: p.name, state: p, cover: "无掩体" as any };
+      const isNPC = params.actor && params.actor !== "玩家" && params.actor !== p.name;
+
+      let r = "";
+      if (params.action === "attack" && params.target) {
+        const attacker = isNPC ? buildNPCCombatant(params.actor!) : playerCombatant;
+        const defenderName = isNPC ? params.target : params.target;
+        const defender = (defenderName === "玩家" || defenderName === p.name)
+          ? playerCombatant
+          : buildNPCCombatant(defenderName);
+
+        const attackerEquip = isNPC ? (buildNPCCombatant(params.actor!).state as any).equipment : p.equipment;
+        const weapon = Object.values(isNPC ? attackerEquip : p.equipment).find((w: any) => w?.damage)
           || { name: "拳头", damage: { dice: "1d2", damageType: "钝击" }, type: "weapon", slot: "right_hand", weight: 0, effects: [], state: "intact" };
-        const result = resolveAttack(playerCombatant, npcCombatant, weapon as any);
+
+        const result = resolveAttack(attacker, defender, weapon as any);
         r = result.narrative;
 
-        // 物品损坏：攻击命中后武器有 10% 几率受损
-        if (result.hit && weapon.state === "intact" && Math.random() < 0.1) {
-          damageItem(weapon);
-          r += ` ${weapon.name}出现了损伤。`;
+        // 实际伤害写入目标 HP
+        if (result.hit && result.damage) {
+          if (defender === playerCombatant) {
+            p.hp.current = Math.max(0, p.hp.current - result.damage);
+          }
         }
 
-        // 战斗摘要
-        const summary = getRoundSummary(
-          [playerCombatant, npcCombatant],
-          [{ actor: p.name, narrative: `攻击${params.target}` }]
-        );
-        r += `\n[HP] ${summary.stateSnapshots.map(s => `${s.name}:${s.hp.current}/${s.hp.max}`).join(" | ")}`;
-
-        // 死亡豁免检查
+        // 玩家死亡检查
         if (p.hp.current <= 0) {
           p.alive = false;
           r += `\n⚠️ ${p.name}倒下了！需要死亡豁免检定（使用 death_save 行动）。3次成功=稳定，3次失败=死亡。`;
@@ -1163,19 +1175,7 @@ export default function (pi: ExtensionAPI) {
         const npcName = params.target || Object.keys(gameState.npcs)[0];
         if (!npcName) { r = "没有敌人可逃跑"; }
         else {
-          const npc = getOrCreateNPC(npcName);
-          const allChars = (await import("./engine/router.ts")).allChars;
-          const src = allChars.find((c: any) => c.name === npcName);
-          const npcState = {
-            ...structuredClone(p),
-            name: npcName,
-            attributes: src?.attributes || { 力量:5,敏捷:5,体质:5,智力:5,感知:5,魅力:5 },
-            skills: src?.skills || {},
-            hp: src?.hp ? { ...src.hp } : { current: 10, max: 10 },
-            ac: src?.ac || 10,
-            equipment: npc.equipment || {},
-          };
-          const npcCombatant = { name: npcName, state: npcState, cover: "无掩体" as any };
+          const npcCombatant = buildNPCCombatant(npcName);
           r = attemptFlee(playerCombatant, npcCombatant).narrative;
         }
       } else r = "无效战斗动作";
@@ -1186,13 +1186,38 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "steal_item", label: "偷窃",
-    description: "从NPC偷物品。",
+    description: "从NPC偷物品。成功=物品到手，失败（caught=true）→ 引擎自动扣除好感-20、写入 alert 标记。",
     parameters: Type.Object({ target: Type.String(), item: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, stealItem, saveState } = await import("./engine/state.ts");
+      const { gameState, stealItem, saveState, updateRelation, updateReputation } = await import("./engine/state.ts");
       const r = stealItem(gameState.player, params.target, params.item);
+      let consequence = "";
+
+      if (r.caught) {
+        // 自动关系惩罚
+        updateRelation(gameState.player.relationships, params.target, -20, "偷窃被抓");
+        consequence += `\n⚠️ ${params.target}好感-20`;
+
+        // 写入 alert 标记
+        gameState.flags.steal_alert = true;
+        gameState.flags[`steal_caught_by_${params.target}`] = true;
+
+        // 在校内 → 更新学生声望
+        const loc = gameState.player.location;
+        if (loc.includes("校") || loc.includes("班")) {
+          updateReputation("学生", -1);
+          consequence += `，学生声望-1`;
+        }
+
+        // 在校门口/有警卫的地方 → 更严重
+        if (loc.includes("校门") || loc.includes("警")) {
+          gameState.flags.wanted = true;
+          consequence += `，被通报！`;
+        }
+      }
+
       saveState();
-      return { content: [{ type: "text", text: r.narrative }], details: r };
+      return { content: [{ type: "text", text: r.narrative + consequence }], details: { ...r, flags_set: consequence } };
     },
   });
 
@@ -1363,11 +1388,34 @@ export default function (pi: ExtensionAPI) {
       skillLevel: Type.Optional(Type.Number({ description: "玩家相关伪装或欺瞒技能等级" }))
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState } = await import("./engine/state.ts");
+      const { gameState, saveState, updateReputation } = await import("./engine/state.ts");
       const { identityCheck } = await import("./engine/dice.ts");
       const r = identityCheck(params.difficulty as any, gameState.player.attributes.魅力, params.skillLevel || 0);
       let text = `[身份检定] 难度: ${params.difficulty} | 检定值: ${r.roll.total} vs DC ${r.roll.dc}\n`;
-      text += r.success ? "✅ 检定成功，身份未被识破。" : "❌ 检定失败！身份被识破！";
+
+      if (r.success) {
+        text += "✅ 检定成功，身份未被识破。";
+      } else {
+        text += "❌ 检定失败！身份被识破！";
+        gameState.flags.identity_exposed = true;
+
+        // 根据所在区域自动施加后果
+        const loc = gameState.player.location;
+        if (loc.includes("校") || loc.includes("班")) {
+          updateReputation("学生", -1);
+          text += `\n⚠️ 学生声望-1`;
+        }
+        if (loc.includes("校门") || loc.includes("警") || loc.includes("站") || loc.includes("厅")) {
+          gameState.flags.wanted = true;
+          text += `\n⚠️ 已被通报追查！`;
+        }
+        if (gameState.player.public_identity) {
+          text += `\n⚠️ 伪装身份「${gameState.player.public_identity}」被识破`;
+          gameState.player.public_identity = undefined;
+        }
+      }
+
+      saveState();
       return { content: [{ type: "text", text }], details: { roll: r.roll } };
     },
   });
