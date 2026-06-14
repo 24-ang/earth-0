@@ -25,6 +25,7 @@ import {
   checkTimelineEvents, expireHooks, getActiveHooks, getActiveQuests,
   openQuest, advanceQuest, abandonQuest,
   getTodayCalendar, getCalendarEvents, clearCalendarCache,
+  getHookNoveltyHint,
 } from "./engine/timeline.ts";
 
 let passed = 0, failed = 0;
@@ -1269,6 +1270,46 @@ test("expireHooks 未过期钩子保留", () => {
   }];
   expireHooks();
   if (getActiveHooks().length !== 1) throw new Error("未过期钩子应保留");
+});
+
+test("getHookNoveltyHint 重复钩子→包含已过天数+紧迫度提示", () => {
+  resetState();
+  gameState.time.game_date = "2018-04-12"; // 4月12日≈day 102，比创建日(98)晚4天
+  const hook = {
+    event_id: "test", source_npc: "雪之下雪乃", hook_text: "test",
+    urgency: "medium" as const, created_day: 98, expires_day: 110,
+    seen_count: 2,
+  };
+  const hint = getHookNoveltyHint(hook);
+  if (!hint.includes("4天过去")) throw new Error(`应包含已过天数(4): ${hint}`);
+  if (!hint.includes("雪之下雪乃")) throw new Error(`应包含NPC名: ${hint}`);
+  if (!hint.includes("细微角度")) throw new Error(`medium应含'细微角度': ${hint}`);
+});
+
+test("getHookNoveltyHint high紧迫度→包含焦虑催促", () => {
+  resetState();
+  gameState.time.game_date = "2018-04-10"; // day=100，比98晚2天
+  const hook = {
+    event_id: "test", source_npc: "测试", hook_text: "test",
+    urgency: "high" as const, created_day: 98, expires_day: 105,
+    seen_count: 1,
+  };
+  const hint = getHookNoveltyHint(hook);
+  if (!hint.includes("2天过去")) throw new Error(`应包含已过天数: ${hint}`);
+  if (!hint.includes("紧迫")) throw new Error(`high urgency应包含紧迫: ${hint}`);
+});
+
+test("getHookNoveltyHint low紧迫度→轻描淡写", () => {
+  resetState();
+  gameState.time.game_date = "2018-04-14"; // day=104，比98晚6天
+  const hook = {
+    event_id: "test", source_npc: "路人", hook_text: "test",
+    urgency: "low" as const, created_day: 98, expires_day: 115,
+    seen_count: 1,
+  };
+  const hint = getHookNoveltyHint(hook);
+  if (!hint.includes("6天过去")) throw new Error(`应包含已过天数: ${hint}`);
+  if (!hint.includes("轻描淡写")) throw new Error(`low urgency应轻描淡写: ${hint}`);
 });
 
 // ── Quest 生命周期 ──
