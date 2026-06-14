@@ -281,6 +281,15 @@ export interface MoveResult {
   seconds: number;        // 耗时（秒）
 }
 
+// --- 旅行系统 ---
+export interface PendingTravel {
+  from: string;
+  to: string;
+  route: string;       // "步行" | "京叶线" | "公交" 等
+  minutes: number;
+  timeOfDay: string;   // "傍晚" | "上午" 等
+}
+
 // --- 偷窃结果 ---
 export interface StealResult {
   success: boolean;
@@ -303,4 +312,5 @@ export interface GameState {
   flags: Record<string, boolean>;
   turn: number;
   preset?: "default" | "lite";
+  pendingTravel?: PendingTravel | null;
 }
