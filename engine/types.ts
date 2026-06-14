@@ -302,6 +302,66 @@ export interface StealResult {
   roll: { kept: number; mod: number; total: number; dc: number };
 }
 
+// --- 剧情事件系统 ---
+export interface TimelineEvent {
+  id: string;
+  title: string;
+  source: string;
+  trigger: {
+    min_day?: number;
+    max_day?: number;
+    location?: string;
+    affection?: Record<string, number>;
+    time_of_day?: string[];
+    flags?: Record<string, boolean>;
+  };
+  expires_days: number;
+  repeatable: boolean;
+  hook: {
+    source_npc: string;
+    hook_text: string;
+    urgency: "low" | "medium" | "high";
+  };
+  beats: TimelineBeat[];
+  on_expire?: {
+    narrative: string;
+    effects?: { flags?: Record<string, boolean>; affection?: Record<string, number> };
+  };
+}
+
+export interface TimelineBeat {
+  id: string;
+  label: string;
+  prompt: string;
+  outcomes?: {
+    pick: string;
+    effects?: { flags?: Record<string, boolean>; affection?: Record<string, number> };
+    next_beat?: string;
+  }[];
+  effects?: { flags?: Record<string, boolean>; affection?: Record<string, number> };
+  expires_quest?: boolean;
+}
+
+export interface QuestState {
+  id: string;
+  title: string;
+  status: "active" | "completed" | "abandoned" | "expired";
+  current_beat: string | null;
+  started_day: number;
+  outcomes: Record<string, string>;
+}
+
+export interface Hook {
+  event_id: string;
+  source_npc: string;
+  hook_text: string;
+  urgency: "low" | "medium" | "high";
+  created_day: number;
+  expires_day: number;
+  seen_count: number;
+  novelty?: string;
+}
+
 // --- 游戏状态 ---
 export interface GameState {
   time: TimeState;
@@ -316,4 +376,7 @@ export interface GameState {
   turn: number;
   preset?: "default" | "lite";
   pendingTravel?: PendingTravel | null;
+  quests: Record<string, QuestState>;          // 剧情任务状态
+  active_hooks: Hook[];                        // 活跃钩子账本（上限 3）
+  completed_events: string[];                  // 已完成/已过期的事件 ID（防重复触发）
 }

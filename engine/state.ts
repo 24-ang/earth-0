@@ -62,6 +62,9 @@ function createInitialState(): GameState {
     flags: {},
     weather: { type: "晴", temp: 16 },
     turn: 0,
+    quests: {},
+    active_hooks: [],
+    completed_events: [],
   };
 }
 
@@ -485,6 +488,57 @@ export async function buildStatePrompt(): Promise<string> {
       }
     }
   } catch (_) {}
+
+  // ── 世界日历（来自 data/calendar.json）──
+  try {
+    const { getTodayCalendar } = await import("./timeline.ts");
+    const todayCal = getTodayCalendar();
+    if (todayCal) tpl += `\n\n[今日世界] ${todayCal}`;
+  } catch (_) {}
+
+  // ── 剧情钩子（来自 data/timelines/）──
+  try {
+    const { getActiveHooks, getActiveQuests } = await import("./timeline.ts");
+    const hooks = getActiveHooks();
+    if (hooks.length > 0) {
+      // 计算今日天数（与 timeline.ts 中 currentDay 公式一致）
+      const dParts = gameState.time.game_date.split("-");
+      const yearStart = new Date(Number(dParts[0]), 0, 1).getTime();
+      const today = new Date(Number(dParts[0]), Number(dParts[1]) - 1, Number(dParts[2])).getTime();
+      const todayDay = Math.floor((today - yearStart) / 86400000) + 1;
+
+      tpl += `\n\n[剧情钩子] 以下事件正在等待你的叙事推进。请自然地融入故事中，不要像任务弹窗一样宣告：`;
+      for (const h of hooks) {
+        const remaining = Math.max(0, h.expires_day - todayDay);
+        const daysLeft = `剩余${remaining}天`;
+        if (h.seen_count === 0) {
+          tpl += `\n- ${h.event_id} (来自${h.source_npc}，${daysLeft}): ${h.hook_text}`;
+        } else {
+          tpl += `\n- ${h.event_id} (来自${h.source_npc}，${daysLeft}，第${h.seen_count+1}次提醒): ${h.novelty || "这个事件仍在等待回应。"}`;
+        }
+        h.seen_count++;
+      }
+    }
+    const quests = getActiveQuests();
+    if (quests.length > 0) {
+      tpl += `\n\n[进行中] 当前活跃的任务：`;
+      for (const q of quests) {
+        tpl += `\n- ${q.title} (当前节拍: ${q.current_beat})`;
+      }
+    }
+  } catch (_) {}
+
+  // 注入选项控制
+  if (gameState.flags.show_choices !== false) {
+    tpl += `\n[系统要求 - 回复选项] 你必须在回复的结尾生成 4 个扮演回应选项以指导玩家（格式如下）：
+---
+> ① [普通]: 「你的对话...」或 *你的普通行动...*
+> ② [理智]: 「你的理智分析/冷静回应...」或 *冷静/理性行动...*
+> ③ [吐槽]: 「你的搞笑吐槽/反驳幽默...」
+> ④ [大胆]: *你的突破常规、大胆或者出人意料的动作...*`;
+  } else {
+    tpl += `\n[系统要求] 绝对禁止生成任何回复选项，直接输出正文并以环境感官描写收尾即可。`;
+  }
 
   return tpl;
 }
@@ -1256,7 +1310,11 @@ export function getGridContext(): string {
     else around.push(`${d}:空`);
   }
 
-  let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py})`;
+  const capacity = getRoomCapacity(gameState.player.location);
+  const inRoomNPCs = Object.values(gameState.npcs || {}).filter((n: any) => isSameLocation(n.currentRoom, gameState.player.location)).length;
+  const namelessCount = getNamelessNPCs(gameState.player.location, gameState.turn).length;
+  const currentPeople = inRoomNPCs + namelessCount + 1; // +1 for player
+  let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py}) | 容纳人数:${currentPeople}/${capacity}人`;
   if ((room as any).atmosphere) ctx += ` | ${(room as any).atmosphere}`;
   const amb = (room as any).ambient;
   if (amb) ctx += ` | 环境: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`;
