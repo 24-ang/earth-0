@@ -15,6 +15,7 @@ import {
   setPlayerLocation, attrMod, calcMaxHP, calcAC,
   addSkillExp, updateRelation, getOrCreateNPC,
   calcReputationBonus, updateReputation,
+  checkAndGrantTitles,
 } from "./engine/state.ts";
 
 import { check, attackRoll, rollDamage } from "./engine/dice.ts";
@@ -567,6 +568,53 @@ test("buildStatePrompt 注入里程碑信息", async () => {
   if (!prompt.includes("初吻: 维")) throw new Error("应显示初吻对象");
   if (!prompt.includes("初夜: 未")) throw new Error("应显示初夜未");
   gameState.player.sex = undefined;
+});
+
+// ── 称号系统 ──
+console.log("\n── 称号系统 ──");
+test("checkAndGrantTitles 无达成条件不授予", () => {
+  resetState();
+  gameState.player.titles = [];
+  gameState.player.attributes.魅力 = 10;
+  gameState.player.attributes.力量 = 8;
+  gameState.player.funds = 500;
+  gameState.player.reputation = {};
+  gameState.player.location = "千叶_住宅区";
+  checkAndGrantTitles();
+  if (gameState.player.titles.length !== 0) throw new Error(`不应有称号，但得到: ${gameState.player.titles}`);
+});
+
+test("checkAndGrantTitles 魅力>=16 → 校园偶像", () => {
+  resetState();
+  gameState.player.attributes.魅力 = 16;
+  checkAndGrantTitles();
+  if (!gameState.player.titles.includes("校园偶像")) throw new Error("应授予校园偶像");
+});
+
+test("checkAndGrantTitles 学生声望>=4 → 年级第一", () => {
+  resetState();
+  gameState.player.reputation["学生"] = 4;
+  checkAndGrantTitles();
+  if (!gameState.player.titles.includes("年级第一")) throw new Error("应授予年级第一");
+});
+
+test("checkAndGrantTitles 已有称号不重复", () => {
+  resetState();
+  gameState.player.attributes.魅力 = 16;
+  checkAndGrantTitles();
+  const count1 = gameState.player.titles.filter(t => t === "校园偶像").length;
+  checkAndGrantTitles(); // 再调一次
+  const count2 = gameState.player.titles.filter(t => t === "校园偶像").length;
+  if (count1 !== 1 || count2 !== 1) throw new Error("称号不应重复授予");
+});
+
+test("buildStatePrompt 注入 [称号]", async () => {
+  resetState();
+  gameState.player.titles = ["校园偶像", "年级第一"];
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[称号]")) throw new Error("应包含[称号]标签");
+  if (!prompt.includes("校园偶像")) throw new Error("应包含校园偶像");
+  if (!prompt.includes("年级第一")) throw new Error("应包含年级第一");
 });
 
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);

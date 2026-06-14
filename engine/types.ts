@@ -200,6 +200,7 @@ export interface PlayerState {
   gridPos: [number, number] | null;
   reputation: Record<string, number>;  // 多维声望，键=日程模板组名
   known_locations: string[];           // 已探索地点
+  titles: string[];                    // 引擎自动授予的称号（只加不删）
 }
 
 // --- 静态角色数据结构 ---

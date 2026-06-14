@@ -87,6 +87,7 @@ function createDefaultPlayer(): PlayerState {
     gridPos: null,
     reputation: {},
     known_locations: ["千叶_住宅区"],
+    titles: [],
   };
 }
 
@@ -219,12 +220,37 @@ export function getPlayerStatusNarrative(p: PlayerState): string {
   return desc;
 }
 
+// --- 称号系统（引擎自动授予，只加不删） ---
+export function checkAndGrantTitles(): void {
+  const p = gameState.player;
+  if (!p.titles) p.titles = [];
+  const grant = (title: string) => { if (!p.titles.includes(title)) p.titles.push(title); };
+
+  // 学生声望 ≥4
+  if ((p.reputation["学生"] ?? 0) >= 4) grant("年级第一");
+  // 学生声望 ≤0 且在校
+  if ((p.reputation["学生"] ?? 0) <= 0 && (p.location.includes("班") || p.location.includes("校"))) grant("差生");
+  // 魅力 ≥16
+  if (p.attributes.魅力 >= 16) grant("校园偶像");
+  // 力量 ≥16
+  if (p.attributes.力量 >= 16) grant("怪力");
+  // 资金 ≥100,000
+  if (p.funds >= 100000) grant("小富豪");
+  // 格斗 Lv ≥5
+  if (p.skills["格斗"]?.level >= 5) grant("打架高手");
+  // 潜行 Lv ≥5
+  if (p.skills["潜行"]?.level >= 5) grant("潜行大师");
+}
+
 export async function buildStatePrompt(): Promise<string> {
   const tplPath = path.join(AGENTS_DIR, "gm-state.md");
   if (!fs.existsSync(tplPath)) return "";
   let tpl = fs.readFileSync(tplPath, "utf-8");
   const s = gameState;
   const p = s.player;
+
+  // 称号系统：每轮检查是否有新称号
+  checkAndGrantTitles();
   
   // 周边角色：首次触发时懒初始化 NPC
   let context = "";
@@ -255,6 +281,10 @@ export async function buildStatePrompt(): Promise<string> {
   
   // 附加玩家自身身体状况描述
   tpl += `\n${getPlayerStatusNarrative(p)}`;
+  // 称号注入
+  if (p.titles && p.titles.length > 0) {
+    tpl += `\n[称号] ${p.titles.join(" | ")}`;
+  }
   // 附加玩家装备与背包物品
   const eq = Object.entries(p.equipment).filter(([_, v]) => v);
   if (eq.length > 0) {

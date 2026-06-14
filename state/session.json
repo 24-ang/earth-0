@@ -1,10 +1,10 @@
 {
   "time": {
     "game_date": "2018-04-07",
-    "day_of_week": "日",
-    "time_of_day": "night",
-    "minute_of_day": 80,
-    "player_age": 28,
+    "day_of_week": "土",
+    "time_of_day": "morning",
+    "minute_of_day": 480,
+    "player_age": 16,
     "player_stage": "youth",
     "timeline_origin": {
       "year": 2018,
@@ -14,11 +14,11 @@
   "player": {
     "name": "维",
     "gender": "男",
-    "age": 28,
-    "location": "侍奉部",
+    "age": 16,
+    "location": "千叶_住宅区",
     "body": {
-      "height_cm": 170.4,
-      "weight_kg": 58.2,
+      "height_cm": 170,
+      "weight_kg": 58,
       "build": "标准",
       "leg_type": "修长",
       "skin": {
@@ -42,155 +42,87 @@
     },
     "ac": 10,
     "equipment": {},
-    "inventory": [
-      {
-        "name": "废铁板",
-        "type": "tool",
-        "weight": 3,
-        "effects": [],
-        "state": "intact"
-      },
-      {
-        "name": "绷带",
-        "type": "tool",
-        "slot": "back",
-        "weight": 0.1,
-        "effects": [
-          {
-            "type": "heal",
-            "value": "1d4"
-          }
-        ],
-        "state": "intact"
-      },
-      {
-        "name": "橡皮",
-        "type": "tool",
-        "slot": "acc",
-        "weight": 0.05,
-        "effects": [],
-        "state": "intact"
-      }
-    ],
+    "inventory": [],
     "wounds": [],
-    "relationships": {
-      "雪之下雪乃": {
-        "stage": "陌生",
-        "affection": 15,
-        "romance": null,
-        "notes": "初次见面"
-      }
-    },
-    "funds": 3850,
+    "relationships": {},
+    "funds": 500,
     "flags": {},
     "alive": true,
     "party": [],
-    "gridPos": [
-      2,
-      0
-    ],
-    "reputation": {
-      "学生圈": 1
-    },
+    "gridPos": null,
+    "reputation": {},
     "known_locations": [
-      "千叶_住宅区",
-      "侍奉部"
+      "千叶_住宅区"
+    ],
+    "titles": [
+      "校园偶像",
+      "年级第一"
     ]
   },
   "npcs": {
-    "由比滨结衣": {
-      "inventory": [
-        {
-          "name": "手机",
-          "type": "tool",
-          "slot": "right_hand",
-          "weight": 0.2,
-          "effects": [],
-          "state": "intact"
-        },
-        {
-          "name": "钱包",
-          "type": "tool",
-          "slot": "back",
-          "weight": 0.1,
-          "effects": [],
-          "state": "intact"
-        },
-        {
-          "name": "零食",
-          "type": "consumable",
-          "slot": "back",
-          "weight": 0.2,
-          "effects": [],
-          "state": "intact"
-        }
-      ],
-      "equipment": {
-        "top": {
-          "name": "总武高制服",
-          "type": "clothing",
-          "slot": "top",
-          "weight": 0.5,
-          "effects": [],
-          "state": "intact"
-        },
-        "bottom": {
-          "name": "黑白百褶裙",
-          "type": "clothing",
-          "slot": "bottom",
-          "weight": 0.3,
-          "effects": [],
-          "state": "intact"
-        },
-        "legs": {
-          "name": "白色短袜",
-          "type": "clothing",
-          "slot": "legs",
-          "weight": 0.05,
-          "effects": [],
-          "state": "intact"
-        },
-        "feet": {
-          "name": "学生皮鞋",
-          "type": "clothing",
-          "slot": "feet",
-          "weight": 0.3,
-          "effects": [],
-          "state": "intact"
-        },
-        "acc": {
-          "name": "粉色发圈",
-          "type": "clothing",
-          "slot": "acc",
-          "weight": 0.02,
-          "effects": [],
-          "state": "intact"
-        },
-        "inner_top": {
-          "name": "粉色内衣",
-          "type": "clothing",
-          "slot": "inner_top",
-          "weight": 0.1,
-          "effects": [],
-          "state": "intact"
-        },
-        "inner_bot": {
-          "name": "粉色内裤",
-          "type": "clothing",
-          "slot": "inner_bot",
-          "weight": 0.05,
-          "effects": [],
-          "state": "intact"
-        }
-      },
-      "currentRoom": "自宅（千叶市高级公寓）",
-      "gridPos": [
-        2,
-        3
-      ],
+    "高坂京介": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
       "action": "",
-      "scheduleGroup": "小学生",
-      "scheduleOverrides": {}
+      "scheduleGroup": "自由人"
+    },
+    "田村麻奈实": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人"
+    },
+    "五更琉璃（黑猫）": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人"
+    },
+    "高坂桐乃": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人"
+    },
+    "新垣绫濑": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人"
+    },
+    "来栖加奈子": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人"
+    },
+    "沙织・巴吉纳": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人"
+    },
+    "城廻巡": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人"
     },
     "雪之下雪乃": {
       "inventory": [
@@ -288,14 +220,6 @@
         "weekday_afternoon": "侍奉部"
       }
     },
-    "城廻巡": {
-      "inventory": [],
-      "equipment": {},
-      "currentRoom": "",
-      "gridPos": null,
-      "action": "",
-      "scheduleGroup": "自由人"
-    },
     "比企谷八幡": {
       "inventory": [
         {
@@ -353,6 +277,100 @@
       "gridPos": [
         1,
         6
+      ],
+      "action": "",
+      "scheduleGroup": "小学生",
+      "scheduleOverrides": {}
+    },
+    "由比滨结衣": {
+      "inventory": [
+        {
+          "name": "手机",
+          "type": "tool",
+          "slot": "right_hand",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "钱包",
+          "type": "tool",
+          "slot": "back",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "零食",
+          "type": "consumable",
+          "slot": "back",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        }
+      ],
+      "equipment": {
+        "top": {
+          "name": "总武高制服",
+          "type": "clothing",
+          "slot": "top",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        },
+        "bottom": {
+          "name": "黑白百褶裙",
+          "type": "clothing",
+          "slot": "bottom",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "legs": {
+          "name": "白色短袜",
+          "type": "clothing",
+          "slot": "legs",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        },
+        "feet": {
+          "name": "学生皮鞋",
+          "type": "clothing",
+          "slot": "feet",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "acc": {
+          "name": "粉色发圈",
+          "type": "clothing",
+          "slot": "acc",
+          "weight": 0.02,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_top": {
+          "name": "粉色内衣",
+          "type": "clothing",
+          "slot": "inner_top",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_bot": {
+          "name": "粉色内裤",
+          "type": "clothing",
+          "slot": "inner_bot",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        }
+      },
+      "currentRoom": "千叶_住宅区",
+      "gridPos": [
+        5,
+        3
       ],
       "action": "",
       "scheduleGroup": "小学生",
@@ -504,7 +522,7 @@
       "action": "",
       "scheduleGroup": "自由人"
     },
-    "古桥文乃": {
+    "浅村悠太": {
       "inventory": [],
       "equipment": {},
       "currentRoom": "",
@@ -512,7 +530,7 @@
       "action": "",
       "scheduleGroup": "自由人"
     },
-    "唯我成幸": {
+    "绫濑沙季": {
       "inventory": [],
       "equipment": {},
       "currentRoom": "",
@@ -520,7 +538,7 @@
       "action": "",
       "scheduleGroup": "自由人"
     },
-    "武元润香": {
+    "奈良坂真绫": {
       "inventory": [],
       "equipment": {},
       "currentRoom": "",
@@ -528,7 +546,7 @@
       "action": "",
       "scheduleGroup": "自由人"
     },
-    "绪方理珠": {
+    "丸友和": {
       "inventory": [],
       "equipment": {},
       "currentRoom": "",
@@ -536,7 +554,7 @@
       "action": "",
       "scheduleGroup": "自由人"
     },
-    "桐须真冬": {
+    "新庄圭介": {
       "inventory": [],
       "equipment": {},
       "currentRoom": "",
@@ -544,7 +562,7 @@
       "action": "",
       "scheduleGroup": "自由人"
     },
-    "小美浪爱澄": {
+    "读卖栞": {
       "inventory": [],
       "equipment": {},
       "currentRoom": "",
@@ -552,124 +570,23 @@
       "action": "",
       "scheduleGroup": "自由人"
     },
-    "如月真绫": {
+    "狼谷": {
       "inventory": [],
-      "equipment": {
-        "top": {
-          "name": "居家针织衫",
-          "type": "clothing",
-          "slot": "top",
-          "weight": 0.3,
-          "effects": [],
-          "state": "intact"
-        },
-        "bottom": {
-          "name": "长裙",
-          "type": "clothing",
-          "slot": "bottom",
-          "weight": 0.4,
-          "effects": [],
-          "state": "intact"
-        },
-        "feet": {
-          "name": "拖鞋",
-          "type": "clothing",
-          "slot": "feet",
-          "weight": 0.2,
-          "effects": [],
-          "state": "intact"
-        }
-      },
-      "currentRoom": "千叶_住宅区",
+      "equipment": {},
+      "currentRoom": "",
       "gridPos": null,
       "action": "",
-      "scheduleGroup": "小学生",
-      "scheduleOverrides": {}
+      "scheduleGroup": "自由人"
     }
   },
-  "sexStates": {
-    "测试": {
-      "profile": {
-        "baselineDesire": 40,
-        "attitude": "顺从",
-        "experience": "未开发",
-        "bodyParts": {},
-        "cycleDay": 7,
-        "climaxThreshold": 35,
-        "likes": [],
-        "dislikes": []
-      },
-      "desire": 40,
-      "arousal": 0,
-      "cycleDay": 7,
-      "cyclePhase": "安全期",
-      "climaxed": false,
-      "climaxCount": 0,
-      "squirtCount": 0,
-      "thoughts": [],
-      "milestones": {
-        "virginity": {
-          "isVirgin": true,
-          "lostTo": null,
-          "lostAt": null
-        },
-        "firstKiss": {
-          "given": false,
-          "partner": null,
-          "date": null
-        },
-        "analVirginity": {
-          "isVirgin": true,
-          "lostTo": null,
-          "lostAt": null
-        }
-      }
-    },
-    "测试2": {
-      "profile": {
-        "baselineDesire": 50,
-        "attitude": "主动",
-        "experience": "熟练",
-        "bodyParts": {},
-        "cycleDay": 8,
-        "climaxThreshold": 50,
-        "likes": [],
-        "dislikes": []
-      },
-      "desire": 50,
-      "arousal": 0,
-      "cycleDay": 8,
-      "cyclePhase": "安全期",
-      "climaxed": false,
-      "climaxCount": 0,
-      "squirtCount": 0,
-      "thoughts": [],
-      "milestones": {
-        "virginity": {
-          "isVirgin": false,
-          "lostTo": "?",
-          "lostAt": null
-        },
-        "firstKiss": {
-          "given": true,
-          "partner": "?",
-          "date": null
-        },
-        "analVirginity": {
-          "isVirgin": true,
-          "lostTo": null,
-          "lostAt": null
-        }
-      }
-    }
-  },
+  "sexStates": {},
   "mode": "gal",
   "layer1Enabled": false,
   "auMode": false,
   "flags": {},
   "weather": {
-    "type": "小雨",
-    "temp": 15
+    "type": "晴",
+    "temp": 16
   },
   "turn": 0
 }
