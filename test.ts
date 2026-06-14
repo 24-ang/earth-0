@@ -21,6 +21,11 @@ import {
 import { check, attackRoll, rollDamage } from "./engine/dice.ts";
 import { lookupRegion } from "./engine/router.ts";
 import { advanceMinutes } from "./engine/time.ts";
+import {
+  checkTimelineEvents, expireHooks, getActiveHooks, getActiveQuests,
+  openQuest, advanceQuest, abandonQuest,
+  getTodayCalendar, getCalendarEvents, clearCalendarCache,
+} from "./engine/timeline.ts";
 
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void) {
@@ -1072,6 +1077,315 @@ test("transfer_item 金钱→余额不足拒绝", async () => {
   const r = await tool.execute("id", { from: "由比滨结衣", to: "玩家", item: "金钱:100" }, null, null, null);
   if (r.content[0].text.includes("成功")) throw new Error("不够钱应拒绝");
   if (!r.content[0].text.includes("不够")) throw new Error(`应提示不够: ${r.content[0].text}`);
+});
+
+// ── 日历 ──
+console.log("── 日历 (calendar/) ──");
+
+test("getCalendarEvents 日期匹配", () => {
+  clearCalendarCache();
+  const entries = getCalendarEvents("2018-04-07", "总武高");
+  const match = entries.find(e => e.date === "4月7日" && e.location === "总武高");
+  if (!match) throw new Error("应匹配4月7日总武高入学式条目");
+  if (!match.text.includes("入学式")) throw new Error(`文本应包含入学式，实际: ${match.text.slice(0,40)}`);
+});
+
+test("getCalendarEvents year=null 匹配任意年", () => {
+  clearCalendarCache();
+  const entries = getCalendarEvents("2025-05-01", "住宅区");
+  const match = entries.find(e => e.date === "5月1日" && e.location === null);
+  if (!match) throw new Error("year=null 的黄金周条目应匹配2025年");
+  if (!match.text.includes("黄金周")) throw new Error(`文本应包含黄金周: ${match.text.slice(0,30)}`);
+  const entries2 = getCalendarEvents("2018-05-01", "总武高");
+  if (!entries2.find(e => e.date === "5月1日")) throw new Error("year=null 应也匹配2018年");
+});
+
+test("getCalendarEvents year特定值=仅匹配该年", () => {
+  clearCalendarCache();
+  const e2020 = getCalendarEvents("2020-04-07", "总武高");
+  const m2020 = e2020.find(e => e.date === "4月7日" && e.location === "总武高");
+  if (m2020) throw new Error("year=2018 入学式不应匹配2020年");
+  const e2018 = getCalendarEvents("2018-04-07", "总武高");
+  if (!e2018.find(e => e.date === "4月7日" && e.location === "总武高")) throw new Error("year=2018 应匹配");
+});
+
+test("getCalendarEvents location=null 匹配任意地点", () => {
+  clearCalendarCache();
+  const entries = getCalendarEvents("2018-05-01", "任何地点");
+  const match = entries.find(e => e.date === "5月1日");
+  if (!match) throw new Error("location=null 应匹配任意地点");
+});
+
+test("getCalendarEvents location特定值=仅匹配该地点", () => {
+  clearCalendarCache();
+  const atSobu = getCalendarEvents("2018-04-07", "总武高");
+  if (!atSobu.find(e => e.date === "4月7日" && e.location === "总武高")) throw new Error("在总武高应找到总武高条目");
+  const atHome = getCalendarEvents("2018-04-07", "住宅区");
+  if (atHome.find(e => e.date === "4月7日" && e.location === "总武高")) throw new Error("在住宅区不应有总武高专属条目");
+});
+
+test("getCalendarEvents 多个来源合并", () => {
+  clearCalendarCache();
+  const entries = getCalendarEvents("2018-04-07", "总武高");
+  if (entries.length < 2) throw new Error(`应至少2条（春物+橘家），实际: ${entries.length}`);
+  const sources = new Set(entries.map(e => e.text.slice(0, 4)));
+  if (sources.size < 2) throw new Error(`应有不同来源的条目，实际: ${entries.length}条`);
+});
+
+test("getTodayCalendar 返回1-2条合并文本", () => {
+  clearCalendarCache();
+  resetState();
+  gameState.time.game_date = "2018-04-07";
+  gameState.player.location = "总武高";
+  const text = getTodayCalendar();
+  if (!text.includes("入学式")) throw new Error(`应包含入学式: ${text.slice(0,60)}`);
+  if (text.length > 400) throw new Error(`文本过长(${text.length}字): ${text.slice(0,80)}`);
+});
+
+test("getTodayCalendar 无匹配日期返回空", () => {
+  clearCalendarCache();
+  resetState();
+  gameState.time.game_date = "2018-12-01";
+  gameState.player.location = "住宅区";
+  const text = getTodayCalendar();
+  if (text !== "") throw new Error(`12月1日无条目应返回空，实际: "${text.slice(0,60)}"`);
+});
+
+// ── 剧情钩子 ──
+console.log("── 剧情钩子 (timelines/) ──");
+
+test("checkTimelineEvents 条件满足→创建钩子", () => {
+  resetState();
+  clearCalendarCache();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.location = "侍奉部";
+  gameState.time.game_date = "2018-04-08";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 15, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  if (hooks.length < 1) throw new Error("应至少触发1个钩子(cookie_delegation)");
+  const cookie = hooks.find(h => h.event_id === "cookie_delegation");
+  if (!cookie) throw new Error("应触发cookie_delegation");
+  if (cookie.source_npc !== "雪之下雪乃") throw new Error(`source_npc应为雪之下雪乃: ${cookie.source_npc}`);
+  if (cookie.seen_count !== 0) throw new Error("新钩子seen_count应为0");
+});
+
+test("checkTimelineEvents 未满足条件→不触发", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  gameState.time.time_of_day = "morning";
+  gameState.player.location = "住宅区";
+  gameState.time.game_date = "2018-04-08";
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  if (hooks.length !== 0) throw new Error(`不应触发任何钩子，实际: ${hooks.length}条`);
+});
+
+test("checkTimelineEvents 前置flag满足才触发", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = { cookie_complete: true };
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.location = "侍奉部";
+  gameState.time.game_date = "2018-04-12";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 20, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  if (hooks.length < 2) throw new Error(`应有2个钩子(cookie+zaimokuza)，实际: ${hooks.length}`);
+  if (!hooks.find(h => h.event_id === "zaimokuza_novel")) throw new Error("flag满足后应触发zaimokuza_novel");
+});
+
+test("钩子上限3→第4条挤掉最旧低优先级", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.location = "侍奉部";
+  gameState.time.game_date = "2018-04-08";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 15, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+
+  gameState.active_hooks = [
+    { event_id: "old_low", source_npc: "路人A", hook_text: "旧低", urgency: "low", created_day: 1, expires_day: 10, seen_count: 0 },
+    { event_id: "old_med", source_npc: "路人B", hook_text: "旧中", urgency: "medium", created_day: 2, expires_day: 10, seen_count: 0 },
+    { event_id: "old_high", source_npc: "路人C", hook_text: "旧高", urgency: "high", created_day: 3, expires_day: 10, seen_count: 0 },
+  ];
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  if (hooks.length > 3) throw new Error(`钩子应不超过3，实际: ${hooks.length}`);
+  if (hooks.find(h => h.event_id === "old_low")) throw new Error("最旧低优先级 old_low 应被挤掉");
+  if (!hooks.find(h => h.event_id === "old_med")) throw new Error("old_med 应保留");
+  if (!hooks.find(h => h.event_id === "old_high")) throw new Error("old_high 应保留");
+});
+
+test("expireHooks 过期钩子→移除+执行on_expire", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  gameState.time.game_date = "2018-04-20";
+
+  const day = 98;
+  gameState.active_hooks = [{
+    event_id: "cookie_delegation", source_npc: "雪之下雪乃",
+    hook_text: "test", urgency: "low",
+    created_day: day, expires_day: day + 1,
+    seen_count: 0,
+  }];
+
+  expireHooks();
+  const hooks = getActiveHooks();
+  if (hooks.length !== 0) throw new Error(`过期钩子应被移除，实际: ${hooks.length}`);
+  if (gameState.flags["cookie_missed"] !== true) throw new Error("过期应设置cookie_missed flag");
+  if (!gameState.completed_events.includes("cookie_delegation")) throw new Error("应加入completed_events");
+});
+
+test("expireHooks 未过期钩子保留", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.time.game_date = "2018-04-07";
+  const day = 95;
+
+  gameState.active_hooks = [{
+    event_id: "test_event", source_npc: "测试", hook_text: "test",
+    urgency: "low", created_day: day, expires_day: day + 30,
+    seen_count: 0,
+  }];
+  expireHooks();
+  if (getActiveHooks().length !== 1) throw new Error("未过期钩子应保留");
+});
+
+// ── Quest 生命周期 ──
+console.log("── Quest 生命周期 ──");
+
+test("openQuest 创建任务+移除钩子", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  gameState.time.game_date = "2018-04-08";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 15, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.location = "侍奉部";
+  checkTimelineEvents();
+  if (!getActiveHooks().find(h => h.event_id === "cookie_delegation")) throw new Error("pre: 应有cookie钩子");
+
+  const r = openQuest("cookie_delegation");
+  if (!r || !r.includes("雪乃的第一次委托")) throw new Error(`openQuest应返回任务标题: ${r}`);
+  if (!gameState.quests["cookie_delegation"]) throw new Error("应创建QuestState");
+  if (gameState.quests["cookie_delegation"].status !== "active") throw new Error("状态应为active");
+  if (gameState.quests["cookie_delegation"].current_beat !== "accept") throw new Error(`首beat应为accept，实际: ${gameState.quests["cookie_delegation"].current_beat}`);
+
+  if (getActiveHooks().find(h => h.event_id === "cookie_delegation")) throw new Error("钩子应被移除");
+});
+
+test("advanceQuest 推进→应用效果→完成", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  gameState.time.game_date = "2018-04-08";
+
+  openQuest("cookie_delegation");
+  const r1 = advanceQuest("cookie_delegation", "一起指导做曲奇");
+  if (!r1 || !r1.includes("曲奇烤好了")) throw new Error(`应推进到baking: ${r1}`);
+  if (gameState.flags["cookie_helped"] !== true) throw new Error("'指导做曲奇'应设置cookie_helped flag");
+  const yuiAff = gameState.player.relationships["由比滨结衣"]?.affection;
+  if (yuiAff !== 10) throw new Error(`由比滨好感应为10，实际: ${yuiAff}`);
+
+  const r2 = advanceQuest("cookie_delegation");
+  if (!r2 || !r2.includes("完成")) throw new Error(`应完成任务: ${r2}`);
+  if (gameState.quests["cookie_delegation"].status !== "completed") throw new Error("状态应为completed");
+  if (!gameState.completed_events.includes("cookie_delegation")) throw new Error("应加入completed_events");
+});
+
+test("abandonQuest 放弃任务", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.time.game_date = "2018-04-08";
+
+  openQuest("cookie_delegation");
+  const r = abandonQuest("cookie_delegation");
+  if (!r || !r.includes("放弃")) throw new Error(`应返回已放弃: ${r}`);
+  if (gameState.quests["cookie_delegation"].status !== "abandoned") throw new Error("状态应为abandoned");
+  if (!gameState.completed_events.includes("cookie_delegation")) throw new Error("应加入completed_events防止重新触发");
+});
+
+test("getActiveQuests 仅返回active状态", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.time.game_date = "2018-04-08";
+
+  openQuest("cookie_delegation");
+  if (getActiveQuests().length !== 1) throw new Error("应有1个活跃quest");
+  abandonQuest("cookie_delegation");
+  if (getActiveQuests().length !== 0) throw new Error("放弃后应0个活跃quest");
+});
+
+test("buildStatePrompt 注入[今日世界]+[剧情钩子]+[进行中]", async () => {
+  resetState();
+  clearCalendarCache();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  gameState.time.game_date = "2018-04-08";
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.location = "侍奉部";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 15, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+
+  checkTimelineEvents();
+  openQuest("cookie_delegation");
+
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[今日世界]")) throw new Error("应包含[今日世界]");
+  if (!prompt.includes("[剧情钩子]")) throw new Error("应包含[剧情钩子]");
+  if (!prompt.includes("[进行中]")) throw new Error("应包含[进行中]");
+  if (!prompt.includes("雪乃的第一次委托")) throw new Error("应包含任务标题");
+});
+
+test("buildStatePrompt [今日世界] 含当日日历文本", async () => {
+  resetState();
+  clearCalendarCache();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.time.game_date = "2018-04-07";
+  gameState.player.location = "总武高";
+
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[今日世界]")) throw new Error("应包含[今日世界]");
+  if (!prompt.includes("入学式")) throw new Error("应包含入学式文本");
+});
+
+test("openQuest 不存在的eventId返回错误", () => {
+  resetState();
+  gameState.quests = {};
+  const r = openQuest("nonexistent");
+  if (!r || !r.includes("未找到")) throw new Error(`应返回错误: ${r}`);
 });
 
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);

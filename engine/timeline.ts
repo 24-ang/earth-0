@@ -8,20 +8,53 @@
  * - 钩子重复出现强制写 novelty
  */
 
-import type { TimelineEvent, Hook, QuestState } from "./types.ts";
+import type { TimelineEvent, Hook, QuestState, CalendarEntry } from "./types.ts";
 import { gameState, getOrCreateNPC, updateRelation } from "./state.ts";
 import fs from "node:fs";
 import path from "node:path";
 
 const TIMELINES_DIR = path.resolve(process.cwd(), "data", "timelines");
-const CALENDAR_FILE = path.resolve(process.cwd(), "data", "calendar.json");
+const CALENDAR_DIR = path.resolve(process.cwd(), "data", "calendar");
 
-/** 加载世界日历 */
-let _calendarCache: Record<string, string> | null = null;
-function loadCalendar(): Record<string, string> {
+/** 加载所有日历文件（data/calendar/*.json）→ 扁平化为 CalendarEntry[] */
+let _calendarCache: CalendarEntry[] | null = null;
+function loadCalendar(): CalendarEntry[] {
   if (_calendarCache) return _calendarCache;
-  try { _calendarCache = JSON.parse(fs.readFileSync(CALENDAR_FILE, "utf-8")); } catch (_) { _calendarCache = {}; }
-  return _calendarCache!;
+  const entries: CalendarEntry[] = [];
+  if (!fs.existsSync(CALENDAR_DIR)) { _calendarCache = entries; return entries; }
+  for (const f of fs.readdirSync(CALENDAR_DIR)) {
+    if (!f.endsWith(".json")) continue;
+    try {
+      const data = JSON.parse(fs.readFileSync(path.join(CALENDAR_DIR, f), "utf-8"));
+      if (Array.isArray(data)) entries.push(...data);
+    } catch (_) {}
+  }
+  _calendarCache = entries;
+  return entries;
+}
+
+/** 提取 game_date 中的 M月D日 字符串 */
+function parseMonthDay(gameDate: string): string {
+  const parts = gameDate.split("-");
+  return `${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+}
+
+/** 提取 game_date 中的年份 */
+function parseYear(gameDate: string): number {
+  return Number(gameDate.split("-")[0]);
+}
+
+/** 获取今日匹配的日历条目（按日期+年份+地点过滤） */
+export function getCalendarEvents(date: string, location: string): CalendarEntry[] {
+  const all = loadCalendar();
+  const year = parseYear(date);
+  const mmdd = date.includes("-") ? parseMonthDay(date) : date;
+  return all.filter(e => {
+    if (e.date !== mmdd) return false;
+    if (e.year !== null && e.year !== year) return false;
+    if (e.location !== null && e.location !== location) return false;
+    return true;
+  });
 }
 
 /** 加载所有 timeline 文件 */
@@ -264,13 +297,17 @@ export function abandonQuest(eventId: string): string | null {
   return `任务已放弃: ${q.title}`;
 }
 
-/** 获取今日日历文本（供 prompt 注入） */
+/** 获取今日日历条目（供 prompt 注入） — 保留向后兼容 */
 export function getTodayCalendar(): string {
-  const cal = loadCalendar();
-  const d = gameState.time.game_date; // "2018-04-07"
-  const parts = d.split("-");
-  const mmdd = `${parseInt(parts[1])}月${parseInt(parts[2])}日`;
-  return cal[mmdd] || "";
+  const d = gameState.time.game_date;
+  const loc = gameState.player.location;
+  const entries = getCalendarEvents(d, loc);
+  // 优先 location 精确匹配的条目，其次 location-null 的条目
+  const locationMatch = entries.filter(e => e.location !== null);
+  const anyMatch = entries.filter(e => e.location === null);
+  // 最多取 2 条，location match 优先
+  const picked = [...locationMatch, ...anyMatch].slice(0, 2);
+  return picked.map(e => e.text).join(" ");
 }
 
 /** 清除日历缓存（测试用） */
