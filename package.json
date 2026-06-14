@@ -8,8 +8,14 @@
     "start": "bash start.sh"
   },
   "dependencies": {
-    "tsx": "^4.0.0"
+    "tsx": "^4.0.0",
+    "typebox": "^1.2.9"
   },
-  "keywords": ["rpg", "llm", "text-game", "pi-mono"],
+  "keywords": [
+    "rpg",
+    "llm",
+    "text-game",
+    "pi-mono"
+  ],
   "license": "MIT"
 }
