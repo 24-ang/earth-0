@@ -663,17 +663,38 @@ test("模拟 complete_travel 逻辑更新状态", () => {
 
 // ── 身份与伪装 ──
 console.log("\n── 身份与伪装 ──");
-test("公开身份 注入 prompt", async () => {
-  resetState();
-  gameState.player.public_identity = "极道人员";
-  const prompt = await buildStatePrompt();
-  if (!prompt.includes("[身份] 公开身份: 极道人员")) throw new Error("应包含伪装身份");
+test("identityCheck 普通难度", async () => {
+  const { identityCheck } = await import("./engine/dice.ts");
+  const r = identityCheck("普通", 10, 0);
+  if (!r.outcome || r.roll.total === undefined) throw new Error("identityCheck格式错误");
 });
 
-test("公开身份 默认值", async () => {
+test("getDisguiseIdentity 无装备", async () => {
   resetState();
+  const { getDisguiseIdentity } = await import("./engine/state.ts");
+  if (getDisguiseIdentity(gameState.player) !== null) throw new Error("应返回null");
+});
+
+test("getDisguiseIdentity 穿校服", async () => {
+  resetState();
+  gameState.player.equipment.top = {
+    name: "总武高男校服",
+    type: "clothing", slot: "top", weight: 1, state: "intact",
+    effects: [{ type: "disguise_tag", value: "学生" }]
+  };
+  const { getDisguiseIdentity } = await import("./engine/state.ts");
+  if (getDisguiseIdentity(gameState.player) !== "学生") throw new Error("应返回学生");
+});
+
+test("buildStatePrompt 注入 [身份认知]", async () => {
+  resetState();
+  gameState.player.equipment.top = {
+    name: "总武高男校服",
+    type: "clothing", slot: "top", weight: 1, state: "intact",
+    effects: [{ type: "disguise_tag", value: "总武高学生" }]
+  };
   const prompt = await buildStatePrompt();
-  if (!prompt.includes("[身份] 公开身份: 总武高学生")) throw new Error("应使用默认身份总武高学生");
+  if (!prompt.includes("[身份认知] 你被认知为: 总武高学生")) throw new Error("应包含伪装认知");
 });
 
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);

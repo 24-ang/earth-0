@@ -77,4 +77,7 @@ export function isOverwhelming(attackerLv: number, defenderLv: number): boolean 
   return attackerLv - defenderLv >= 10;
 }
 
-
+// --- 身份检定 ---
+export function identityCheck(difficulty: Difficulty, charisma: number, disguiseSkillLv: number = 0) {
+  return check(difficulty, charisma, disguiseSkillLv);
+}
