@@ -129,6 +129,22 @@ export const SEX_PROFILES: Record<string, SexProfile> = {
     cycleDay: 8, climaxThreshold: 55,
     likes: ["掌控节奏", "被服从", "耳边的恭维"], dislikes: ["被动", "敷衍", "被挑战权威"],
   },
+  "平冢静": {
+    name: "平冢静",
+    attitude: "防御", experience: "青涩",
+    baselineDesire: 45,
+    bodyParts: {
+      "唇":   { sensitivity: 4, development: 1, preference: "喜欢" },
+      "颈":   { sensitivity: 6, development: 1, preference: "普通" },
+      "胸":   { sensitivity: 8, development: 2, preference: "敏感" },
+      "腰":   { sensitivity: 5, development: 1, preference: "反感" },
+      "腿":   { sensitivity: 5, development: 1, preference: "普通" },
+      "秘部": { sensitivity: 7, development: 0, preference: "普通" },
+      "肛":   { sensitivity: 2, development: 0, preference: "反感" },
+    },
+    cycleDay: 10, climaxThreshold: 65,
+    likes: ["被温柔对待", "被需要", "成熟的调情"], dislikes: ["被当做大叔", "催婚话题", "粗暴对待"],
+  },
 };
 
 // --- 周期 ---
