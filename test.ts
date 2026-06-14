@@ -661,6 +661,21 @@ test("模拟 complete_travel 逻辑更新状态", () => {
   if (gameState.pendingTravel !== null) throw new Error("未清除状态");
 });
 
+// ── 身份与伪装 ──
+console.log("\n── 身份与伪装 ──");
+test("公开身份 注入 prompt", async () => {
+  resetState();
+  gameState.player.public_identity = "极道人员";
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[身份] 公开身份: 极道人员")) throw new Error("应包含伪装身份");
+});
+
+test("公开身份 默认值", async () => {
+  resetState();
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[身份] 公开身份: 总武高学生")) throw new Error("应使用默认身份总武高学生");
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);

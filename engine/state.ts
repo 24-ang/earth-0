@@ -281,7 +281,8 @@ export async function buildStatePrompt(): Promise<string> {
   
   // 附加玩家自身身体状况描述
   tpl += `\n${getPlayerStatusNarrative(p)}`;
-  // 称号注入
+  // 身份与称号注入
+  tpl += `\n[身份] 公开身份: ${p.public_identity || "总武高学生"}`;
   if (p.titles && p.titles.length > 0) {
     tpl += `\n[称号] ${p.titles.join(" | ")}`;
   }
