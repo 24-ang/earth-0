@@ -385,7 +385,7 @@ export async function buildStatePrompt(): Promise<string> {
   //   [印记] 永久属性（态度/经验/开发度），gal/sex 都注入——这是身体记忆
   //   [实时] 欲望/兴奋/周期，仅 sex 模式注入——这是瞬时状态
   try {
-    const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, SEX_PROFILES } = await import("./sex.ts");
+    const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, getThoughtsSummary, SEX_PROFILES } = await import("./sex.ts");
     const profiles = SEX_PROFILES as Record<string, any>;
 
     // [印记] 玩家当前 partner（如有）
@@ -413,6 +413,8 @@ export async function buildStatePrompt(): Promise<string> {
         const ah = getArousalNarrative(sx);
         if (dh) tpl += `\n  欲望: ${dh}`;
         if (ah) tpl += `\n  兴奋: ${ah}`;
+        const ts = getThoughtsSummary(sx);
+        if (ts) tpl += `\n  [心里话] ${ts}`;
       }
     }
 

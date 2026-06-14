@@ -929,7 +929,12 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "sex_touch", label: "触碰",
     description: "sex模式触碰部位：唇/颈/胸/腰/腿/秘部/肛。",
-    parameters: Type.Object({ char: Type.String(), part: Type.String(), intensity: Type.String() }),
+    parameters: Type.Object({ 
+      char: Type.String(), 
+      part: Type.String(), 
+      intensity: Type.String(),
+      thoughts: Type.Optional(Type.String({ description: "在此过程中角色的心里话或内心独白" }))
+    }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
       if (!gameState.layer1Enabled) return { content: [{ type: "text", text: "Layer1未启用" }], details: {} };
@@ -941,7 +946,7 @@ export default function (pi: ExtensionAPI) {
         gameState.player.sex = sState;
       }
 
-      const { SEX_PROFILES, touchBodyPart, checkClimax, triggerClimax, settleAfterSex, formatSettlement } = await import("./engine/sex.ts");
+      const { SEX_PROFILES, touchBodyPart, checkClimax, triggerClimax, settleAfterSex, formatSettlement, recordThought } = await import("./engine/sex.ts");
       const p = SEX_PROFILES[params.char];
       if (!p) return { content: [{ type: "text", text: "无该角色sex档案" }], details: {} };
       
@@ -971,6 +976,10 @@ export default function (pi: ExtensionAPI) {
       let textResult = `[${params.part}] ${r.reaction} arousal ${r.arousalChange >= 0 ? "+" : ""}${r.arousalChange} (当前兴奋度: ${gameState.player.sex.arousal}/100)`;
       let settlementReport: any = null;
 
+      if (params.thoughts) {
+        recordThought(gameState.player.sex, params.thoughts, gameState.time.game_date, checkClimax(gameState.player.sex) ? "climax_after" : "scene_end");
+      }
+
       // Check climax
       if (checkClimax(gameState.player.sex)) {
         triggerClimax(gameState.player.sex);
@@ -999,7 +1008,8 @@ export default function (pi: ExtensionAPI) {
     description: "自慰以增加兴奋度，甚至达到高潮。",
     parameters: Type.Object({
       char: Type.String({ description: "角色名" }),
-      minutes: Type.Number({ description: "持续时间(分钟)" })
+      minutes: Type.Number({ description: "持续时间(分钟)" }),
+      thoughts: Type.Optional(Type.String({ description: "在此过程中角色的心里话或内心独白" }))
     }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
@@ -1011,7 +1021,7 @@ export default function (pi: ExtensionAPI) {
         gameState.player.sex = sState;
       }
 
-      const { masturbate, settleAfterSex, formatSettlement } = await import("./engine/sex.ts");
+      const { masturbate, settleAfterSex, formatSettlement, recordThought } = await import("./engine/sex.ts");
       const r = masturbate(gameState.player.sex, params.minutes);
 
       // 防御旧存档 null 值
@@ -1021,6 +1031,10 @@ export default function (pi: ExtensionAPI) {
 
       let textResult = `${params.char}进行了 ${params.minutes} 分钟的自慰。兴奋度 +${r.arousalChange} (当前兴奋度: ${gameState.player.sex.arousal}/100)`;
       let settlementReport: any = null;
+
+      if (params.thoughts) {
+        recordThought(gameState.player.sex, params.thoughts, gameState.time.game_date, r.climaxed ? "climax_after" : "scene_end");
+      }
 
       if (r.climaxed) {
         textResult += `\n检测到高潮！${params.char}达到了高潮！`;
