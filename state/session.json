@@ -35,13 +35,7 @@
       "感知": 10,
       "魅力": 10
     },
-    "skills": {
-      "格斗": {
-        "level": 10,
-        "exp": 0,
-        "nextLevel": 110
-      }
-    },
+    "skills": {},
     "hp": {
       "current": 18,
       "max": 18
@@ -62,7 +56,104 @@
     ],
     "titles": []
   },
-  "npcs": {},
+  "npcs": {
+    "雪之下雪乃": {
+      "inventory": [
+        {
+          "name": "手机",
+          "type": "tool",
+          "slot": "right_hand",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "文库本小说",
+          "type": "tool",
+          "slot": "back",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "侍奉部钥匙",
+          "type": "tool",
+          "slot": "back",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        }
+      ],
+      "equipment": {
+        "top": {
+          "name": "总武高制服",
+          "type": "clothing",
+          "slot": "top",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        },
+        "bottom": {
+          "name": "黑白百褶裙",
+          "type": "clothing",
+          "slot": "bottom",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "legs": {
+          "name": "黑色过膝袜",
+          "type": "clothing",
+          "slot": "legs",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        "feet": {
+          "name": "学生皮鞋",
+          "type": "clothing",
+          "slot": "feet",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "acc": {
+          "name": "红色蝴蝶结丝带",
+          "type": "clothing",
+          "slot": "acc",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_top": {
+          "name": "白色蕾丝内衣",
+          "type": "clothing",
+          "slot": "inner_top",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_bot": {
+          "name": "白色棉质内裤",
+          "type": "clothing",
+          "slot": "inner_bot",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        }
+      },
+      "currentRoom": "千叶市立稻毛小学校",
+      "gridPos": [
+        3,
+        5
+      ],
+      "action": "",
+      "scheduleGroup": "小学生",
+      "scheduleOverrides": {
+        "weekday_afternoon": "侍奉部"
+      }
+    }
+  },
   "sexStates": {},
   "mode": "gal",
   "layer1Enabled": false,
