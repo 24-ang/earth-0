@@ -1630,17 +1630,29 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "list_room_templates", label: "列出场景模板",
-    description: "列出可用的场景模板及尺寸。创建新场景前先查此表，避免尺寸失真。返回: 分类→模板名→宽×高×容量。",
-    parameters: Type.Object({}),
-    async execute(_id, _params, _s, _o, _ctx) {
-      const templates = await import("../data/room_templates.json", { with: { type: "json" } });
-      const lines: string[] = [];
-      for (const [cat, entries] of Object.entries(templates.default || templates)) {
-        if (cat.startsWith("_")) continue;
-        lines.push(`── ${cat} ──`);
-        for (const [name, t] of Object.entries(entries as Record<string, any>)) {
-          lines.push(`  ${name}: ${t.width}×${t.height}格 (${t.width * t.height}㎡) 容量${t.capacity}人 F${t.floor ?? 1}`);
+    description: "列出可用的场景模板及尺寸。传入 category 只返回该分类（school/commercial/residential/outdoor/transport），不传则返回所有分类名供选择。创建新场景前先查此表。",
+    parameters: Type.Object({ category: Type.Optional(Type.String()) }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const raw = await import("../data/room_templates.json", { with: { type: "json" } });
+      const templates = (raw.default || raw) as Record<string, Record<string, any>>;
+      const cat = params.category;
+      // 不传 category → 返回分类概要（极小 token）
+      if (!cat) {
+        const cats: string[] = [];
+        for (const [k, v] of Object.entries(templates)) {
+          if (k.startsWith("_")) continue;
+          cats.push(`${k}: ${Object.keys(v).join("、")}（共${Object.keys(v).length}项）`);
         }
+        cats.push("用法: list_room_templates(category='school') 查看具体尺寸");
+        return { content: [{ type: "text", text: cats.join("\n") }], details: {} };
+      }
+      // 传了 category → 返回该类详细模板
+      const entries = templates[cat];
+      if (!entries) return { content: [{ type: "text", text: `无此分类: ${cat}。可用: ${Object.keys(templates).filter(k => !k.startsWith("_")).join(", ")}` }], details: {} };
+      const lines = [`── ${cat} ──`];
+      for (const [name, t] of Object.entries(entries)) {
+        const extra = t.desc ? ` — ${t.desc}` : "";
+        lines.push(`  ${name}: ${t.width}×${t.height}格 (${t.width * t.height}㎡) 容量${t.capacity ?? t.width * t.height}人 F${t.floor ?? 1}${extra}`);
       }
       return { content: [{ type: "text", text: lines.join("\n") }], details: {} };
     },
