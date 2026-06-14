@@ -41,7 +41,21 @@
       "max": 18
     },
     "ac": 10,
-    "equipment": {},
+    "equipment": {
+      "top": {
+        "name": "总武高男校服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 1,
+        "state": "intact",
+        "effects": [
+          {
+            "type": "disguise_tag",
+            "value": "总武高学生"
+          }
+        ]
+      }
+    },
     "inventory": [],
     "wounds": [],
     "relationships": {},

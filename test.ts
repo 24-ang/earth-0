@@ -570,6 +570,27 @@ test("buildStatePrompt 注入里程碑信息", async () => {
   gameState.player.sex = undefined;
 });
 
+test("buildStatePrompt 注入 [mood_hint]", async () => {
+  const { getOrCreateSexState, updateRelation } = await import("./engine/state.ts");
+  const sState = await getOrCreateSexState("由比滨结衣");
+  // 高好感 → "沉溺"
+  updateRelation(gameState.player.relationships, "由比滨结衣", 80);
+  gameState.player.sex = sState;
+  gameState.layer1Enabled = true;
+
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[mood_hint]")) throw new Error("应注入[mood_hint]标签");
+  if (!prompt.includes("沉溺")) throw new Error("好感80应→沉溺，prompt中未找到");
+
+  // 低好感 → "身心分离的绝望"
+  updateRelation(gameState.player.relationships, "由比滨结衣", -80);
+  const prompt2 = await buildStatePrompt();
+  if (!prompt2.includes("身心分离的绝望")) throw new Error("好感极低应→身心分离的绝望");
+
+  gameState.player.sex = undefined;
+  gameState.layer1Enabled = false;
+});
+
 // ── 称号系统 ──
 console.log("\n── 称号系统 ──");
 test("checkAndGrantTitles 无达成条件不授予", () => {
