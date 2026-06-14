@@ -194,7 +194,7 @@ export function getBodyForAge(char: StaticCharacter | any, targetAge: number): B
 
 /** 计算 NPC 当前年龄（base_age + 游戏时间流逝） */
 export function getNpcCurrentAge(npcBaseAge: number): number {
-  const ageDelta = gameState.player.age - gameState.time.timeline_origin.age;
+  const ageDelta = gameState.player.age - (gameState.time?.timeline_origin?.age ?? 16);
   return Math.max(0, npcBaseAge + ageDelta);
 }
 

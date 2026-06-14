@@ -15,7 +15,7 @@
     "name": "维",
     "gender": "男",
     "age": 16,
-    "location": "千叶_住宅区",
+    "location": "住宅区",
     "body": {
       "height_cm": 170,
       "weight_kg": 58,
@@ -52,7 +52,7 @@
     "gridPos": null,
     "reputation": {},
     "known_locations": [
-      "千叶_住宅区"
+      "住宅区"
     ],
     "titles": []
   },
@@ -151,7 +151,8 @@
       "scheduleGroup": "小学生",
       "scheduleOverrides": {
         "weekday_afternoon": "侍奉部"
-      }
+      },
+      "memoryTags": []
     }
   },
   "sexStates": {},
