@@ -398,7 +398,7 @@ export async function buildStatePrompt(): Promise<string> {
   //   [印记] 永久属性（态度/经验/开发度），gal/sex 都注入——这是身体记忆
   //   [实时] 欲望/兴奋/周期，仅 sex 模式注入——这是瞬时状态
   try {
-    const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, getThoughtsSummary, SEX_PROFILES } = await import("./sex.ts");
+    const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, getThoughtsSummary, getMoodHint, SEX_PROFILES } = await import("./sex.ts");
     const profiles = SEX_PROFILES as Record<string, any>;
 
     // [印记] 玩家当前 partner（如有）
@@ -426,6 +426,11 @@ export async function buildStatePrompt(): Promise<string> {
         const ah = getArousalNarrative(sx);
         if (dh) tpl += `\n  欲望: ${dh}`;
         if (ah) tpl += `\n  兴奋: ${ah}`;
+        // mood_hint — 控制心里话语感倾向（沉溺/动摇/身心分离的绝望）
+        const rel = gameState.player.relationships[prof.name as string];
+        const affection = rel?.affection ?? 0;
+        const moodHint = getMoodHint(affection, prof.attitude);
+        tpl += `\n  [mood_hint] ${moodHint}`;
         const ts = getThoughtsSummary(sx);
         if (ts) tpl += `\n  [心里话] ${ts}`;
       }

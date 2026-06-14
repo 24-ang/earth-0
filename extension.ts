@@ -933,7 +933,7 @@ export default function (pi: ExtensionAPI) {
       char: Type.String(), 
       part: Type.String(), 
       intensity: Type.String(),
-      thoughts: Type.Optional(Type.String({ description: "在此过程中角色的心里话或内心独白" }))
+      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮触碰产生的心里话（30字内/条）" }))
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
@@ -976,8 +976,10 @@ export default function (pi: ExtensionAPI) {
       let textResult = `[${params.part}] ${r.reaction} arousal ${r.arousalChange >= 0 ? "+" : ""}${r.arousalChange} (当前兴奋度: ${gameState.player.sex.arousal}/100)`;
       let settlementReport: any = null;
 
-      if (params.thoughts) {
-        recordThought(gameState.player.sex, params.thoughts, gameState.time.game_date, checkClimax(gameState.player.sex) ? "climax_after" : "scene_end");
+      if (params.thoughts && params.thoughts.length > 0) {
+        for (const t of params.thoughts) {
+          recordThought(gameState.player.sex, t, gameState.time.game_date, checkClimax(gameState.player.sex) ? "climax_after" : "scene_end");
+        }
       }
 
       // Check climax
@@ -1009,7 +1011,7 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       char: Type.String({ description: "角色名" }),
       minutes: Type.Number({ description: "持续时间(分钟)" }),
-      thoughts: Type.Optional(Type.String({ description: "在此过程中角色的心里话或内心独白" }))
+      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮自慰产生的心里话（30字内/条）" }))
     }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
@@ -1032,8 +1034,10 @@ export default function (pi: ExtensionAPI) {
       let textResult = `${params.char}进行了 ${params.minutes} 分钟的自慰。兴奋度 +${r.arousalChange} (当前兴奋度: ${gameState.player.sex.arousal}/100)`;
       let settlementReport: any = null;
 
-      if (params.thoughts) {
-        recordThought(gameState.player.sex, params.thoughts, gameState.time.game_date, r.climaxed ? "climax_after" : "scene_end");
+      if (params.thoughts && params.thoughts.length > 0) {
+        for (const t of params.thoughts) {
+          recordThought(gameState.player.sex, t, gameState.time.game_date, r.climaxed ? "climax_after" : "scene_end");
+        }
       }
 
       if (r.climaxed) {
