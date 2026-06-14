@@ -26,7 +26,24 @@ export default function (pi: ExtensionAPI) {
         const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
         const totalCount = npcsHereCount + namelessCount;
         
-        const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
+        // 18/04/08(日)夜
+        const dateParts = gameState.time.game_date.split("-");
+        const shortYear = dateParts[0].slice(2);
+        const shortDate = `${shortYear}/${dateParts[1]}/${dateParts[2]}`;
+        const dayOfWeekShort = gameState.time.day_of_week[0]; // e.g. "日曜日" -> "日"
+        const tod = timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day;
+        
+        // 🏫 / 🏙️ prefix for location
+        let shortLoc = loc;
+        if (loc.startsWith("千叶市立总武高等学校_")) {
+          shortLoc = "🏫" + loc.replace("千叶市立总武高等学校_", "");
+        } else if (loc.startsWith("千叶_")) {
+          shortLoc = "🏙️" + loc.replace("千叶_", "");
+        } else {
+          shortLoc = "📍" + loc;
+        }
+        
+        const statusBarText = `🕐 ${shortDate}(${dayOfWeekShort})${tod} | ${shortLoc} | 👥 ${totalCount}人`;
         ctx.ui.setWidget("hud-status-bar", [statusBarText]);
       }
     } catch (_) {}
@@ -78,11 +95,7 @@ export default function (pi: ExtensionAPI) {
   }
 
   function showPanel(ctx: any, title: string, lines: string[]): Promise<void> {
-    const finalLines: string[] = [];
-    for (const line of lines) {
-      finalLines.push(...wrapLine(line, 65));
-    }
-    const items: MenuItem[] = finalLines.map(l => ({ label: l, detail: "", action: undefined }));
+    const items: MenuItem[] = lines.map(l => ({ label: l, detail: "", action: undefined }));
     return showMenu(ctx, title, items);
   }
 
@@ -98,39 +111,64 @@ export default function (pi: ExtensionAPI) {
             const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
             const titleW = getStringWidth(title);
             out.push("┌─" + title + " " + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐");
-            
-            // TUI HUD Status Bar
-            try {
-              if (gameState && gameState.time && gameState.player) {
-                const timeOfDayZH: Record<string, string> = {
-                  morning: "午前",
-                  lunch: "昼",
-                  afternoon: "午後",
-                  evening: "夕方",
-                  night: "夜"
-                };
-                const loc = gameState.player.location;
-                const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
-                const cLoc = clean(loc);
-                const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
-                const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
-                const totalCount = npcsHereCount + namelessCount;
-                const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
-                const barTrunc = truncateToWidth(statusBarText, w - 4);
-                const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
-                out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
-                out.push("├" + "─".repeat(w - 2) + "┤");
-              }
-            } catch (_) {}
 
-            const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
-            for (let i = start; i < end; i++) {
-              const it = items[i];
-              const line = (i === sel ? "▶ " : "  ") + it.label + (it.detail ? "  " + it.detail : "");
-              const t = tui.truncateToWidth ? tui.truncateToWidth(line, w - 2) : truncateToWidth(line, w - 2);
-              const pad = Math.max(0, (w - 4) - getStringWidth(t));
-              out.push("│ " + t + " ".repeat(pad) + " │");
+            // Process dynamic line wrapping
+            const linesToDraw: { label: string; detail: string; isSel: boolean; isFirstLine: boolean }[] = [];
+            items.forEach((it, idx) => {
+              const isSel = idx === sel;
+              const detailStr = it.detail ? "  " + it.detail : "";
+              const detailW = getStringWidth(detailStr);
+              // Visible label width should account for borders ("│ " and " │") and cursor ("▶ " or "  ")
+              // Total box width is w. Left border: 2, cursor: 2, right border: 2. Plus detail width.
+              const maxLabelW = w - 6 - detailW;
+              const wrapped = wrapLine(it.label, maxLabelW);
+              
+              if (wrapped.length === 0) wrapped.push("");
+              
+              wrapped.forEach((wrappedLabel, subIdx) => {
+                linesToDraw.push({
+                  label: wrappedLabel,
+                  detail: subIdx === wrapped.length - 1 ? it.detail || "" : "",
+                  isSel,
+                  isFirstLine: subIdx === 0
+                });
+              });
+            });
+
+            // Viewport scroll offsets for wrapped lines
+            const maxVisibleLines = 10;
+            if ((comp as any).scrollOffset === undefined) {
+              (comp as any).scrollOffset = 0;
             }
+            let scrollOffset = (comp as any).scrollOffset;
+
+            const selLineIndices = linesToDraw.map((l, index) => l.isSel ? index : -1).filter(idx => idx !== -1);
+            if (selLineIndices.length > 0) {
+              const firstSel = selLineIndices[0];
+              const lastSel = selLineIndices[selLineIndices.length - 1];
+              
+              if (lastSel >= scrollOffset + maxVisibleLines) {
+                scrollOffset = lastSel - maxVisibleLines + 1;
+              }
+              if (firstSel < scrollOffset) {
+                scrollOffset = firstSel;
+              }
+            }
+            scrollOffset = Math.max(0, Math.min(scrollOffset, linesToDraw.length - maxVisibleLines));
+            (comp as any).scrollOffset = scrollOffset;
+
+            const start = scrollOffset;
+            const end = Math.min(linesToDraw.length, start + maxVisibleLines);
+
+            for (let i = start; i < end; i++) {
+              const lineInfo = linesToDraw[i];
+              const cursor = (lineInfo.isSel && lineInfo.isFirstLine) ? "▶ " : "  ";
+              const line = cursor + lineInfo.label + (lineInfo.detail ? "  " + lineInfo.detail : "");
+              const lineW = getStringWidth(line);
+              const pad = Math.max(0, (w - 4) - lineW);
+              out.push("│ " + line + " ".repeat(pad) + " │");
+            }
+
             out.push("└" + "─".repeat(w - 2) + "┘");
             out.push((sel+1 + "/" + items.length + " 方向键选择 Enter确认 q退出").slice(0, w));
             return out;
@@ -189,9 +227,11 @@ export default function (pi: ExtensionAPI) {
         ctx.ui.notify(`[旅行中] 正在前往 ${to}，行程 ${mins} 分钟。引擎已暂停移动。`, "info");
         ctx.chat.addSystemMessage(`玩家已出发前往 ${to}，耗时约 ${mins} 分钟。不要立即让他们到达目的地！请描述他们在路上的见闻、风景、碰到的事件。等剧情差不多了，再调用 complete_travel 工具让他们到达目的地并扣除时间。`);
         updateChatHUD(ctx);
+        pi.sendUserMessage(`我出发前往 ${to}。`);
       } else {
         await moveTo(to, ctx, gameState, saveState);
         await advanceTimeMinutes(mins, ctx, gameState, saveState);
+        pi.sendUserMessage(`我来到了 ${to}。`);
       }
       subDone();
       parentDone();
@@ -376,6 +416,10 @@ export default function (pi: ExtensionAPI) {
       for (const [rname, reg] of Object.entries(regions) as [string, any][]) {
         for (const l of (reg.landmarks || [])) {
           const here = isSameLocation(currentLoc, l);
+          const known = gameState.player.known_locations || [];
+          const isKnown = known.includes(l) || l.includes("站") || l.includes("总武高") || here;
+          if (!isKnown) continue;
+
           const npcs = Object.entries(gameState.npcs)
             .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, l))
             .map(([n]) => n);
@@ -546,11 +590,31 @@ export default function (pi: ExtensionAPI) {
       items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁`, detail: "" });
       items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ¥${p.funds}`, detail: "" });
       items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""}`, detail: "" });
-      items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
+      items.push({ label: `  💪 力量: ${p.attributes.力量.toString().padEnd(2)}  |  🧠 智力: ${p.attributes.智力}`, detail: "" });
+      items.push({ label: `  🏃 敏捷: ${p.attributes.敏捷.toString().padEnd(2)}  |  👁️ 感知: ${p.attributes.感知}`, detail: "" });
+      items.push({ label: `  🛡️ 体质: ${p.attributes.体质.toString().padEnd(2)}  |  ✨ 魅力: ${p.attributes.魅力}`, detail: "" });
+      
       const woundStr = p.wounds && p.wounds.length > 0 
         ? p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")
         : "健康";
       items.push({ label: `🩸 伤势: ${woundStr}`, detail: "" });
+
+      // 1.5 额外系统变量显示
+      if (p.titles && p.titles.length > 0) {
+        items.push({ label: `🏆 称号: ${p.titles.join(", ")}`, detail: "" });
+      }
+      const skillLines = Object.entries(p.skills || {})
+        .filter(([_, s]) => s.level > 0)
+        .map(([sName, s]) => `${sName}:Lv.${s.level}(${s.exp}/${s.nextLevel})`);
+      if (skillLines.length > 0) {
+        items.push({ label: `🎓 技能: ${skillLines.join("  ")}`, detail: "" });
+      }
+      const repLines = Object.entries(p.reputation || {})
+        .filter(([_, val]) => val !== 0)
+        .map(([gName, val]) => `${gName}:${val}`);
+      if (repLines.length > 0) {
+        items.push({ label: `🏅 声望: ${repLines.join("  ")}`, detail: "" });
+      }
       
       // 2. 装备槽位
       items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
@@ -1763,20 +1827,21 @@ export default function (pi: ExtensionAPI) {
       lines.push("────────────────────────────────────────");
 
       const buildBar = (val: number) => {
-        const filled = Math.round(val / 20);
-        return "■".repeat(filled) + "□".repeat(5 - filled);
+        const totalBar = 10;
+        const filled = Math.min(totalBar, Math.max(0, Math.round(val / 10)));
+        return "■".repeat(filled) + "□".repeat(totalBar - filled);
       };
 
       for (const [n, r] of Object.entries(rels)) {
         const rel = r as any;
-        lines.push(`👥 ${n}`);
-        let stageStr = `  |-[好感阶段-${rel.stage}]: ${buildBar(rel.affection)} (${rel.affection}/100)`;
+        lines.push(`👥 ${n} (${rel.stage})`);
+        let stageStr = `   好感: [${buildBar(rel.affection)}] ${rel.affection}/100`;
         if (rel.romance) {
-          stageStr += ` | [关系: 💕${rel.romance}]`;
+          stageStr += ` | 💕 ${rel.romance}`;
         }
         lines.push(stageStr);
         if (rel.notes) {
-          lines.push(`  |-[评价/便签]: ${rel.notes}`);
+          lines.push(`   ✍️ 评价: ${rel.notes}`);
         }
         lines.push("────────────────────────────────────────");
       }
@@ -1788,13 +1853,6 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("status", {
-    description: "查看/管理玩家状态与装备",
-    handler: async (_args, ctx) => {
-      await runStatus(ctx);
-    },
-  });
-
-  pi.registerCommand("menu", {
     description: "查看/管理玩家状态与装备 (主菜单)",
     handler: async (_args, ctx) => {
       await runStatus(ctx);
@@ -1813,24 +1871,39 @@ export default function (pi: ExtensionAPI) {
       if (isPlayer) {
         const p = gameState.player;
         const lines = [
-          `${p.name}  ${p.gender}  ${p.age}岁  ${gameState.time.player_stage}`,
-          `位置: ${p.location}  资金: ¥${p.funds}`,
-          `HP: ${p.hp.current}/${p.hp.max}  AC: ${p.ac}`,
+          `${p.name}  ${p.gender === "female" ? "女" : "男"}  ${p.age}岁  ${gameState.time.player_stage}`,
+          `📍 位置: ${p.location}  |  💰 资金: ¥${p.funds}`,
+          `❤️ HP: ${p.hp.current}/${p.hp.max}  |  🛡️ AC: ${p.ac}`,
         ];
         if (p.body) {
           const b = p.body;
-          let bodyStr = `身体: ${b.height_cm}cm ${b.weight_kg ? b.weight_kg + "kg " : ""}${b.build}`;
+          let bodyStr = `📏 身体: ${b.height_cm}cm ${b.weight_kg ? b.weight_kg + "kg " : ""}${b.build}`;
           if (b.cup) bodyStr += ` ${b.cup}cup`;
           if (b.measurements) bodyStr += ` ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
           lines.push(bodyStr);
         }
         if (p.attributes) {
           const a = p.attributes;
-          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+          lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+        }
+        if (p.titles && p.titles.length > 0) {
+          lines.push(`🏆 称号: ${p.titles.join(", ")}`);
+        }
+        const skillLines = Object.entries(p.skills || {})
+          .filter(([_, s]) => s.level > 0)
+          .map(([sName, s]) => `${sName}:Lv.${s.level}(${s.exp}/${s.nextLevel})`);
+        if (skillLines.length > 0) {
+          lines.push(`🎓 技能: ${skillLines.join("  ")}`);
+        }
+        const repLines = Object.entries(p.reputation || {})
+          .filter(([_, val]) => val !== 0)
+          .map(([gName, val]) => `${gName}:${val}`);
+        if (repLines.length > 0) {
+          lines.push(`🏅 声望: ${repLines.join("  ")}`);
         }
         const eq = Object.entries(p.equipment).filter(([_, v]) => v);
         if (eq.length > 0) {
-          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+          lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
         }
         await showPanel(ctx, p.name, lines);
         return;
@@ -1840,14 +1913,17 @@ export default function (pi: ExtensionAPI) {
       if (char) {
         const age = getNpcCurrentAge(char.base_age || 16);
         const body = getBodyForAge(char, age);
+        const npcState = getOrCreateNPC(char.name);
         const lines = [
           `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁 (基础:${char.base_age})`,
-          `作品: ${char.source}`,
-          `外观: ${char.appearance_brief || "无描述"}`
+          `🎬 作品: ${char.source}`,
+          `👗 外观: ${char.appearance_brief || "无描述"}`,
+          `💰 资金: ¥${npcState.funds}`,
+          `🎒 背包: ${npcState.inventory && npcState.inventory.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`
         ];
         
         if (body) {
-          let bodyStr = `身体: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
+          let bodyStr = `📏 身体: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
           if (body.cup) bodyStr += ` ${body.cup}cup`;
           if (body.measurements) bodyStr += ` ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
           lines.push(bodyStr);
@@ -1855,17 +1931,16 @@ export default function (pi: ExtensionAPI) {
         
         if (char.attributes) {
           const a = char.attributes;
-          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+          lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
         }
         
-        const npcState = getOrCreateNPC(char.name);
         const eq = Object.entries(npcState.equipment).filter(([_, v]) => v);
         if (eq.length > 0) {
-          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+          lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
         }
         
         if (char.anchors?.private) {
-          lines.push(`设定: ${char.anchors.private.slice(0, 120)}`);
+          lines.push(`✍️ 设定: ${char.anchors.private.slice(0, 120)}`);
         }
         await showPanel(ctx, char.name, lines);
         return;
