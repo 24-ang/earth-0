@@ -172,9 +172,30 @@ export default function (pi: ExtensionAPI) {
     updateChatHUD(ctx);
   }
 
-  async function runNavigation(ctx: any) {
+  async function runNavigation(ctx: any, fastTravel = false) {
     const { gameState, saveState, isSameLocation } = await import("./engine/state.ts");
     const roomsData = (await import("./data/rooms.json", { with: { type: "json" } })).default as any;
+    
+    const doMove = async (to: string, mins: number, subDone: () => void, parentDone: () => void) => {
+      if (!fastTravel && mins >= 15) {
+        gameState.pendingTravel = {
+          from: gameState.player.location,
+          to,
+          route: mins >= 30 ? "交通工具/长途" : "步行/短途",
+          minutes: mins,
+          timeOfDay: gameState.time.time_of_day
+        };
+        saveState();
+        ctx.ui.notify(`[旅行中] 正在前往 ${to}，行程 ${mins} 分钟。引擎已暂停移动。`, "info");
+        ctx.chat.addSystemMessage(`玩家已出发前往 ${to}，耗时约 ${mins} 分钟。不要立即让他们到达目的地！请描述他们在路上的见闻、风景、碰到的事件。等剧情差不多了，再调用 complete_travel 工具让他们到达目的地并扣除时间。`);
+        updateChatHUD(ctx);
+      } else {
+        await moveTo(to, ctx, gameState, saveState);
+        await advanceTimeMinutes(mins, ctx, gameState, saveState);
+      }
+      subDone();
+      parentDone();
+    };
     
     let schoolMap: any = null;
     try {
@@ -234,10 +255,7 @@ export default function (pi: ExtensionAPI) {
           label: `  🚪 ${name}`,
           detail: (here ? "📍当前 " : "") + (npcs.length > 0 ? "👥 " + npcs.join(" ") : ""),
           action: here ? undefined : async (subDone) => {
-            await moveTo(name, ctx, gameState, saveState);
-            await advanceTimeMinutes(2, ctx, gameState, saveState);
-            subDone();
-            parentDone();
+            await doMove(name, 2, subDone, parentDone);
           }
         });
       }
@@ -272,10 +290,7 @@ export default function (pi: ExtensionAPI) {
                 label: `  🏫 ${r}`,
                 detail: `${bname} ${fName}` + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
                 action: here ? undefined : async (subDone) => {
-                  await moveTo(r, ctx, gameState, saveState);
-                  await advanceTimeMinutes(5, ctx, gameState, saveState);
-                  subDone();
-                  parentDone();
+                  await doMove(r, 5, subDone, parentDone);
                 }
               });
             }
@@ -296,10 +311,7 @@ export default function (pi: ExtensionAPI) {
             label: `  🏃 ${r}`,
             detail: "运动设施" + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
             action: here ? undefined : async (subDone) => {
-              await moveTo(r, ctx, gameState, saveState);
-              await advanceTimeMinutes(5, ctx, gameState, saveState);
-              subDone();
-              parentDone();
+              await doMove(r, 5, subDone, parentDone);
             }
           });
         }
@@ -317,10 +329,7 @@ export default function (pi: ExtensionAPI) {
             label: `  🏫 ${r}`,
             detail: "其他区域" + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
             action: here ? undefined : async (subDone) => {
-              await moveTo(r, ctx, gameState, saveState);
-              await advanceTimeMinutes(5, ctx, gameState, saveState);
-              subDone();
-              parentDone();
+              await doMove(r, 5, subDone, parentDone);
             }
           });
         }
@@ -382,10 +391,7 @@ export default function (pi: ExtensionAPI) {
                 return;
               }
               const mins = isCrossRegion ? 30 : 15;
-              await moveTo(l, ctx, gameState, saveState);
-              await advanceTimeMinutes(mins, ctx, gameState, saveState);
-              subDone();
-              parentDone();
+              await doMove(l, mins, subDone, parentDone);
             }
           });
         }
@@ -408,10 +414,7 @@ export default function (pi: ExtensionAPI) {
                   return;
                 }
                 const mins = isCrossRegion ? 30 : 15;
-                await moveTo(sn, ctx, gameState, saveState);
-                await advanceTimeMinutes(mins, ctx, gameState, saveState);
-                subDone();
-                parentDone();
+                await doMove(sn, mins, subDone, parentDone);
               }
             });
           }
@@ -469,10 +472,7 @@ export default function (pi: ExtensionAPI) {
             }
             
             const mins = getTravelTime(currentLoc, k);
-            await moveTo(k, ctx, gameState, saveState);
-            await advanceTimeMinutes(mins, ctx, gameState, saveState);
-            subDone();
-            parentDone();
+            await doMove(k, mins, subDone, parentDone);
           }
         });
       }
@@ -1325,6 +1325,25 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  pi.registerTool({
+    name: "complete_travel", label: "完成旅行",
+    description: "当长途旅行的叙事差不多完成时，调用此工具让玩家到达目的地，并扣除旅程对应的时间。",
+    parameters: Type.Object({}),
+    async execute(_id, _params, _s, _o, _ctx) {
+      const { gameState, saveState } = await import("./engine/state.ts");
+      if (!gameState.pendingTravel) return { content: [{ type: "text", text: "目前没有正在进行的旅行" }], details: {} };
+      
+      const pt = gameState.pendingTravel;
+      gameState.pendingTravel = null;
+      saveState();
+
+      await moveTo(pt.to, _ctx, gameState, saveState);
+      await advanceTimeMinutes(pt.minutes, _ctx, gameState, saveState);
+      
+      return { content: [{ type: "text", text: `旅行完成，已到达 ${pt.to}，耗时 ${pt.minutes} 分钟` }], details: {} };
+    },
+  });
+
   // ── Commands ──
   pi.registerCommand("relations", {
     description: "查看所有NPC关系与恋爱阶段",
@@ -1525,9 +1544,16 @@ export default function (pi: ExtensionAPI) {
 
 
   pi.registerCommand("go", {
-    description: "旅行与探索导航系统",
+    description: "旅行与探索导航系统 (长途旅行会触发剧情叙事)",
     handler: async (_args, ctx) => {
-      await runNavigation(ctx);
+      await runNavigation(ctx, false);
+    },
+  });
+
+  pi.registerCommand("goskip", {
+    description: "旅行与探索导航系统 (跳过剧情，直接到达目的地)",
+    handler: async (_args, ctx) => {
+      await runNavigation(ctx, true);
     },
   });
 

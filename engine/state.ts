@@ -285,6 +285,11 @@ export async function buildStatePrompt(): Promise<string> {
   if (p.titles && p.titles.length > 0) {
     tpl += `\n[称号] ${p.titles.join(" | ")}`;
   }
+  // 旅行状态注入
+  if (s.pendingTravel) {
+    const pt = s.pendingTravel;
+    tpl += `\n[旅行中] 正在通过${pt.route}前往 ${pt.to}（耗时约${pt.minutes}分钟）。到达前请通过 complete_travel 工具结束旅程。`;
+  }
   // 附加玩家装备与背包物品
   const eq = Object.entries(p.equipment).filter(([_, v]) => v);
   if (eq.length > 0) {

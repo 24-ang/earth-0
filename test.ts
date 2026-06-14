@@ -617,6 +617,50 @@ test("buildStatePrompt 注入 [称号]", async () => {
   if (!prompt.includes("年级第一")) throw new Error("应包含年级第一");
 });
 
+// ── 叙事旅行 ──
+console.log("\n── 叙事旅行 ──");
+test("pendingTravel 注入 prompt", async () => {
+  resetState();
+  gameState.pendingTravel = {
+    from: "千叶_住宅区",
+    to: "千叶_市中心",
+    route: "京叶线/公交",
+    minutes: 30,
+    timeOfDay: "morning"
+  };
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[旅行中]")) throw new Error("应包含[旅行中]标签");
+  if (!prompt.includes("千叶_市中心")) throw new Error("应包含目的地");
+});
+
+test("pendingTravel 序列化正常", () => {
+  resetState();
+  gameState.pendingTravel = {
+    from: "千叶_住宅区",
+    to: "侍奉部",
+    route: "步行",
+    minutes: 15,
+    timeOfDay: "morning"
+  };
+  saveState();
+  loadState();
+  if (!gameState.pendingTravel) throw new Error("pendingTravel丢失");
+  if (gameState.pendingTravel.to !== "侍奉部") throw new Error("目的地错误");
+});
+
+test("模拟 complete_travel 逻辑更新状态", () => {
+  resetState();
+  gameState.pendingTravel = {
+    from: "A", to: "B", route: "步行", minutes: 30, timeOfDay: "morning"
+  };
+  const pt = gameState.pendingTravel;
+  // 模拟 complete_travel
+  gameState.player.location = pt.to;
+  gameState.pendingTravel = null;
+  if (gameState.player.location !== "B") throw new Error("位置未更新");
+  if (gameState.pendingTravel !== null) throw new Error("未清除状态");
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);
