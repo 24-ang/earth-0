@@ -1,0 +1,522 @@
+{
+  "雪之下雪乃": {
+    "baselineDesire": 25,
+    "attitude": "抗拒",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "A",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "一线天",
+        "labia_size": "小",
+        "depth_cm": 13,
+        "tightness": "极紧",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "排斥"
+      },
+      "腰": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 14,
+    "climaxThreshold": 40,
+    "likes": [
+      "被动被引导",
+      "注视对方的眼睛",
+      "温柔的触摸"
+    ],
+    "dislikes": [
+      "粗暴",
+      "被嘲笑",
+      "公开场合"
+    ]
+  },
+  "由比滨结衣": {
+    "baselineDesire": 40,
+    "attitude": "顺从",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "D",
+        "shape": "半球",
+        "nipple_size": "普通",
+        "nipple_color": "粉色",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "馒头",
+        "labia_size": "普通",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "玫瑰",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "褐色",
+        "style": "修剪"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 9,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 7,
+    "climaxThreshold": 35,
+    "likes": [
+      "被夸赞",
+      "拥抱",
+      "接吻"
+    ],
+    "dislikes": [
+      "被冷落",
+      "太急"
+    ]
+  },
+  "喜多川海梦": {
+    "baselineDesire": 55,
+    "attitude": "主动",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "E",
+        "shape": "吊钟",
+        "nipple_size": "大",
+        "nipple_color": "浅褐",
+        "areola_size": "宽",
+        "feel": "弹力"
+      },
+      "vagina": {
+        "type": "贝壳",
+        "labia_size": "普通",
+        "depth_cm": 15,
+        "tightness": "普通",
+        "inner_color": "玫瑰",
+        "feel": "普通"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "褐色",
+        "style": "剃除"
+      },
+      "clitoris": "敏感突出"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "腰": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "腿": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      }
+    },
+    "cycleDay": 10,
+    "climaxThreshold": 50,
+    "likes": [
+      "cosplay相关",
+      "新鲜感的互动",
+      "主动探索"
+    ],
+    "dislikes": [
+      "单调重复",
+      "太被动的人"
+    ]
+  },
+  "椎名詩織": {
+    "baselineDesire": 35,
+    "attitude": "期待",
+    "experience": "熟练",
+    "female": {
+      "breast": {
+        "cup": "J",
+        "shape": "纺锤",
+        "nipple_size": "普通",
+        "nipple_color": "浅褐",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "蝴蝶",
+        "labia_size": "普通",
+        "depth_cm": 15,
+        "tightness": "普通",
+        "inner_color": "玫瑰",
+        "feel": "普通"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "黑色",
+        "style": "自然"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 2,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 2,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 2,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 6,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 2,
+    "climaxThreshold": 45,
+    "likes": [
+      "温柔的引导",
+      "耳边低语",
+      "被夸奖身材"
+    ],
+    "dislikes": [
+      "粗暴",
+      "被提年龄",
+      "仓促结束"
+    ]
+  },
+  "如月真绫": {
+    "baselineDesire": 40,
+    "attitude": "期待",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "E",
+        "shape": "吊钟",
+        "nipple_size": "普通",
+        "nipple_color": "粉色",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "普通",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "修剪"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 12,
+    "climaxThreshold": 40,
+    "likes": [
+      "被注视",
+      "温柔的触摸",
+      "在水边"
+    ],
+    "dislikes": [
+      "粗暴",
+      "在学校被发现"
+    ]
+  },
+  "雪之下绫乃": {
+    "baselineDesire": 50,
+    "attitude": "主动",
+    "experience": "熟练",
+    "female": {
+      "breast": {
+        "cup": "D",
+        "shape": "水滴",
+        "nipple_size": "普通",
+        "nipple_color": "浅褐",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "蝴蝶",
+        "labia_size": "普通",
+        "depth_cm": 14,
+        "tightness": "普通",
+        "inner_color": "玫瑰",
+        "feel": "名器"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "黑色",
+        "style": "自然"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 3,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 8,
+        "development": 4,
+        "preference": "喜欢"
+      },
+      "腰": {
+        "sensitivity": 7,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "腿": {
+        "sensitivity": 7,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 7,
+        "development": 4,
+        "preference": "喜欢"
+      },
+      "肛": {
+        "sensitivity": 5,
+        "development": 2,
+        "preference": "普通"
+      }
+    },
+    "cycleDay": 8,
+    "climaxThreshold": 55,
+    "likes": [
+      "掌控节奏",
+      "被服从",
+      "耳边的恭维"
+    ],
+    "dislikes": [
+      "被动",
+      "敷衍",
+      "被挑战权威"
+    ]
+  },
+  "平冢静": {
+    "name": "平冢静",
+    "attitude": "防御",
+    "experience": "青涩",
+    "baselineDesire": 45,
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 4,
+        "development": 1,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 1,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 8,
+        "development": 2,
+        "preference": "敏感"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "反感"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "反感"
+      }
+    },
+    "cycleDay": 10,
+    "climaxThreshold": 65,
+    "likes": [
+      "被温柔对待",
+      "被需要",
+      "成熟的调情"
+    ],
+    "dislikes": [
+      "被当做大叔",
+      "催婚话题",
+      "粗暴对待"
+    ]
+  }
+}

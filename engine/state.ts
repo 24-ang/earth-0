@@ -10,6 +10,9 @@ import { lookupRegion } from "./router.ts";
 import charStages from "../data/character_stages.json" with { type: "json" };
 import fs from "node:fs";
 import path from "node:path";
+import titleRules from "../data/title_rules.json" with { type: "json" };
+import namelessNpcTemplates from "../data/nameless_npc_templates.json" with { type: "json" };
+import economyConfig from "../data/economy.json" with { type: "json" };
 
 // --- 空间数据定义 ---
 const ROOMS_BASE = rooms as Record<string, RoomGrid>;
@@ -67,7 +70,7 @@ function createDefaultPlayer(): PlayerState {
     name: "维",
     gender: "男",
     age: 16,
-    location: "千叶_住宅区",
+    location: "住宅区",
     body: {
       height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
       skin: { base_tone: "普通", tan: 0, texture: "普通" },
@@ -86,7 +89,7 @@ function createDefaultPlayer(): PlayerState {
     party: [],
     gridPos: null,
     reputation: {},
-    known_locations: ["千叶_住宅区"],
+    known_locations: ["住宅区"],
     titles: [],
   };
 }
@@ -198,7 +201,7 @@ export function getNpcCurrentAge(npcBaseAge: number): number {
 /** 设置玩家位置并自动发现新地点 */
 export function setPlayerLocation(loc: string): void {
   gameState.player.location = loc;
-  if (!gameState.player.known_locations) gameState.player.known_locations = ["千叶_住宅区"];
+  if (!gameState.player.known_locations) gameState.player.known_locations = ["住宅区"];
   if (!gameState.player.known_locations.includes(loc)) {
     gameState.player.known_locations.push(loc);
   }
@@ -226,20 +229,26 @@ export function checkAndGrantTitles(): void {
   if (!p.titles) p.titles = [];
   const grant = (title: string) => { if (!p.titles.includes(title)) p.titles.push(title); };
 
-  // 学生声望 ≥4
-  if ((p.reputation["学生"] ?? 0) >= 4) grant("年级第一");
-  // 学生声望 ≤0 且在校
-  if ((p.reputation["学生"] ?? 0) <= 0 && (p.location.includes("班") || p.location.includes("校"))) grant("差生");
-  // 魅力 ≥16
-  if (p.attributes.魅力 >= 16) grant("校园偶像");
-  // 力量 ≥16
-  if (p.attributes.力量 >= 16) grant("怪力");
-  // 资金 ≥100,000
-  if (p.funds >= 100000) grant("小富豪");
-  // 格斗 Lv ≥5
-  if (p.skills["格斗"]?.level >= 5) grant("打架高手");
-  // 潜行 Lv ≥5
-  if (p.skills["潜行"]?.level >= 5) grant("潜行大师");
+  for (const rule of titleRules) {
+    if (rule.location_filter && !rule.location_filter.some((loc: string) => p.location.includes(loc))) {
+      continue;
+    }
+    const cond = rule.condition;
+    let match = false;
+    if (cond.type === "reputation") {
+      match = (p.reputation[cond.group] ?? 0) >= cond.min;
+    } else if (cond.type === "reputation_max") {
+      match = (p.reputation[cond.group] ?? 0) <= cond.max;
+    } else if (cond.type === "attribute") {
+      match = (p.attributes[cond.attr] ?? 0) >= cond.min;
+    } else if (cond.type === "funds") {
+      match = p.funds >= cond.min;
+    } else if (cond.type === "skill") {
+      match = (p.skills[cond.skillName]?.level ?? 0) >= cond.min;
+    }
+
+    if (match) grant(rule.title);
+  }
 }
 
 export function getDisguiseIdentity(player: PlayerState): string | null {
@@ -871,13 +880,7 @@ export function clearScheduleOverride(npcName: string): string {
 // --- 商店/经济（AIRP风格：引擎只做会计，LLM管市场常识） ---
 import itemsCatalog from "../data/items.json" with { type: "json" };
 
-const PRICE_RANGE: Record<string, [number, number]> = {
-  consumable: [80, 800],
-  tool: [50, 5000],
-  weapon: [500, 50000],
-  armor: [500, 30000],
-  clothing: [500, 30000],
-};
+const PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
 
 function validatePrice(itemName: string, price: number): string | null {
   let itemType = "tool";
@@ -920,7 +923,7 @@ export function sellItem(itemName: string, price: number): string {
 }
 
 export function workJob(jobName: string, hours: number): string {
-  const rates: Record<string, number> = {"便利店":900,"送报纸":500,"家教":1500,"餐厅":1000,"发传单":850};
+  const rates = economyConfig.job_rates as Record<string, number>;
   const rate = rates[jobName] || 900;
   const pay = rate * hours;
   gameState.player.funds += pay;
@@ -984,13 +987,14 @@ export function refreshWeather(): string {
 import scheduleTemplates from "../data/schedule_templates.json" with { type: "json" };
 const TEMPLATES = scheduleTemplates as any;
 
-const FALLBACK_ROOMS: Record<string, string> = {
-  "2年J班": "2F南走廊-J班前",
-  "2年F班": "2F南走廊-F班前",
-  "侍奉部": "社团楼1F走廊",
-  "如月家_浴室": "如月家",
-  "如月家_2F": "如月家",
-};
+export function getFallbackRoom(roomName: string): string {
+  const matched = lookupRegion(roomName);
+  if (matched && matched.matched_regions && matched.matched_regions.length > 0) {
+    const reg = matched.matched_regions[0] as any;
+    if (reg.fallback_room) return reg.fallback_room;
+  }
+  return "1F南走廊";
+}
 
 export function getRoomCapacity(roomName: string): number {
   const room = ROOMS[roomName];
@@ -1048,7 +1052,7 @@ export function updateNPCSchedules(): string[] {
         const cap = getRoomCapacity(finalRoom);
         roomCounts[finalRoom] ??= 0;
         if (roomCounts[finalRoom] >= cap) {
-          const fallback = FALLBACK_ROOMS[finalRoom] || "1F南走廊";
+          const fallback = getFallbackRoom(finalRoom);
           events.push(`${name}: 因 ${finalRoom} 人数已满(${roomCounts[finalRoom]}/${cap})，分流至 ${fallback}`);
           finalRoom = fallback;
         }
@@ -1107,7 +1111,7 @@ export function updateNPCSchedules(): string[] {
     const cap = getRoomCapacity(finalRoom);
     roomCounts[finalRoom] ??= 0;
     if (roomCounts[finalRoom] >= cap) {
-      const fallback = FALLBACK_ROOMS[finalRoom] || "1F南走廊";
+      const fallback = getFallbackRoom(finalRoom);
       events.push(`${name}: 因 ${finalRoom} 人数已满(${roomCounts[finalRoom]}/${cap})，分流至 ${fallback}`);
       finalRoom = fallback;
     }
@@ -1353,7 +1357,7 @@ export interface NamelessNPC {
 }
 
 export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
-  const publicRooms = ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前", "操场", "校门", "自行车棚", "便利店街", "商店街", "住宅区", "千叶_住宅区"];
+  const publicRooms = namelessNpcTemplates.public_rooms;
   const isPublic = publicRooms.some(pr => isSameLocation(loc, pr)) || loc.includes("街") || loc.includes("公园") || loc.includes("站");
   if (!isPublic) return [];
 
@@ -1361,20 +1365,7 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
   const room = rKey ? ROOMS[rKey] : null;
   const seed = turn + loc.length;
   const count = 1 + (seed % 3); // 1 to 3 nameless NPCs
-  const traits = [
-    { name: "路人(戴耳机)", act: "戴着耳机闭目听歌", height: "168cm" },
-    { name: "路人(低头看书)", act: "边走路边低头看书", height: "172cm" },
-    { name: "路人(学生)", act: "背着书包急匆匆赶路", height: "162cm" },
-    { name: "路人(职员)", act: "一边大声打电话一边赶路", height: "175cm" },
-    { name: "路人(情侣二人组)", act: "牵着手小声说笑", height: "165/178cm" },
-    { name: "路人(发呆的女生)", act: "靠在路灯旁吃零食发呆", height: "160cm" },
-    { name: "路人(不良少年)", act: "蹲在角落抽烟", height: "170cm" },
-    { name: "路人(主妇)", act: "提着购物袋匆忙走过", height: "158cm" },
-    { name: "路人(小学生)", act: "背着红蓝书包互相追逐", height: "135cm" },
-    { name: "路人(流浪汉)", act: "躺在纸箱上睡觉", height: "165cm" },
-    { name: "路人(巡警)", act: "四处张望巡视", height: "178cm" },
-    { name: "路人(外卖员)", act: "骑着电动车飞驰而过", height: "172cm" }
-  ];
+  const traits = namelessNpcTemplates.traits;
   
   const npcs: NamelessNPC[] = [];
   for (let i = 0; i < count; i++) {

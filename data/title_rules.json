@@ -1,0 +1,31 @@
+[
+  {
+    "title": "年级第一",
+    "condition": { "type": "reputation", "group": "学生", "min": 4 }
+  },
+  {
+    "title": "差生",
+    "condition": { "type": "reputation_max", "group": "学生", "max": 0 },
+    "location_filter": ["班", "校"]
+  },
+  {
+    "title": "校园偶像",
+    "condition": { "type": "attribute", "attr": "魅力", "min": 16 }
+  },
+  {
+    "title": "怪力",
+    "condition": { "type": "attribute", "attr": "力量", "min": 16 }
+  },
+  {
+    "title": "小富豪",
+    "condition": { "type": "funds", "min": 100000 }
+  },
+  {
+    "title": "打架高手",
+    "condition": { "type": "skill", "skillName": "格斗", "min": 5 }
+  },
+  {
+    "title": "潜行大师",
+    "condition": { "type": "skill", "skillName": "潜行", "min": 5 }
+  }
+]
