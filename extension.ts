@@ -1005,8 +1005,9 @@ export default function (pi: ExtensionAPI) {
     description: "推进游戏时间（分钟）。下课/放学/等待时调用。",
     parameters: Type.Object({ minutes: Type.Number() }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { gameState, saveState, updateNPCSchedules, refreshWeather } = await import("./engine/state.ts");
+      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather } = await import("./engine/state.ts");
       const { advanceMinutes } = await import("./engine/time.ts");
+      backupBeforeTurn();  // 自动备份，供 /redo 还原
       const mins = params.minutes;
       // 初始化 legacy session 没有 minute_of_day
       if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
@@ -1900,6 +1901,92 @@ export default function (pi: ExtensionAPI) {
         lines.push("（目前尚未结识任何角色）");
       }
       await showPanel(ctx, "👥 关系谱", lines);
+    },
+  });
+
+  pi.registerCommand("redo", {
+    description: "回退到倒数第 N 次输入前（默认1）。类似酒馆重新生成 / fate-sandbox /fuck。",
+    handler: async (args, ctx) => {
+      const { restoreLastTurn, listBackups, saveState } = await import("./engine/state.ts");
+      const n = parseInt(args.trim()) || 1;
+      const ok = restoreLastTurn(n);
+      if (ok) {
+        saveState();
+        const backups = listBackups();
+        ctx.ui.notify(`↩ 已回退 ${n} 回合 → ${backups.length} 个备份可用 (${backups.join(",")})`, "info");
+      } else {
+        ctx.ui.notify(`❌ 没有倒数第 ${n} 回合的备份。最多保留 ${5} 个。`, "warning");
+      }
+    },
+  });
+
+  pi.registerCommand("save", {
+    description: "创建手动存档。用法: /save <存档名> 或 /save (默认=quick)",
+    handler: async (args, ctx) => {
+      const { createSave } = await import("./engine/state.ts");
+      const name = args.trim() || "quick";
+      const saved = createSave(name);
+      ctx.ui.notify(`💾 已存档: ${saved}`, "info");
+    },
+  });
+
+  pi.registerCommand("load", {
+    description: "载入手动存档。用法: /load <存档名>",
+    handler: async (args, ctx) => {
+      const { loadSave, gameState } = await import("./engine/state.ts");
+      const name = args.trim();
+      if (!name) { ctx.ui.notify("用法: /load <存档名> 用 /saves 查看可用存档", "warning"); return; }
+      const ok = loadSave(name);
+      if (ok) {
+        ctx.ui.notify(`📂 已载入: ${name} → ${gameState.player.location} 第${gameState.turn}回合`, "info");
+      } else {
+        ctx.ui.notify(`❌ 存档不存在: ${name}`, "warning");
+      }
+    },
+  });
+
+  pi.registerCommand("saves", {
+    description: "管理存档 (TUI 面板)。不带参数=查看，/saves delete <名>=删除",
+    handler: async (args, ctx) => {
+      const { listSaves, deleteSave, createSave, loadSave, gameState, saveState } = await import("./engine/state.ts");
+      const parts = args.trim().split(/\s+/);
+      if (parts[0] === "delete" && parts[1]) {
+        const ok = deleteSave(parts[1]);
+        ctx.ui.notify(ok ? `🗑️ 已删除: ${parts[1]}` : `❌ 未找到: ${parts[1]}`, ok ? "info" : "warning");
+        return;
+      }
+
+      const saves = listSaves();
+      if (saves.length === 0) {
+        ctx.ui.notify("📭 暂无手动存档。用 /save <名> 创建。", "info");
+        return;
+      }
+
+      const items: MenuItem[] = saves.map(s => ({
+        label: `💾 ${s.name}`,
+        detail: `第${s.turn}回合 ${s.date} ${s.location}`,
+        action: async (done) => {
+          done();
+          const ok = loadSave(s.name);
+          if (ok) {
+            await pi.sendUserMessage(ctx, `📂 已读档: ${s.name}`);
+            ctx.ui.notify(`已载入: ${s.name}`, "info");
+          }
+        }
+      }));
+
+      items.push({
+        label: "💾 + 新建存档",
+        detail: `第${gameState.turn}回合 ${gameState.time.game_date} ${gameState.player.location}`,
+        action: async (done) => {
+          done();
+          const name = `save_${gameState.turn}`;
+          const saved = createSave(name);
+          ctx.ui.notify(`已存档: ${saved}`, "info");
+        }
+      });
+
+      await showMenu(ctx, "📂 存档管理", items);
     },
   });
 
