@@ -351,6 +351,13 @@ export interface QuestState {
   outcomes: Record<string, string>;
 }
 
+export interface CalendarEntry {
+  year: number | null;       // null = 任意年份均生效
+  date: string;              // "M月D日" 格式，如 "4月7日"
+  location: string | null;   // null = 任意地点均生效
+  text: string;              // 叙事风味文本
+}
+
 export interface Hook {
   event_id: string;
   source_npc: string;
