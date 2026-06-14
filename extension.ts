@@ -1318,6 +1318,23 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
+    name: "identity_check", label: "身份检定",
+    description: "遇到强检查（如警察、保安）时，进行身份检定（通常使用魅力或隐藏技能）。",
+    parameters: Type.Object({
+      difficulty: Type.String({ description: "简单/普通/困难/极难/不可能" }),
+      skillLevel: Type.Optional(Type.Number({ description: "玩家相关伪装或欺瞒技能等级" }))
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState } = await import("./engine/state.ts");
+      const { identityCheck } = await import("./engine/dice.ts");
+      const r = identityCheck(params.difficulty as any, gameState.player.attributes.魅力, params.skillLevel || 0);
+      let text = `[身份检定] 难度: ${params.difficulty} | 检定值: ${r.roll.total} vs DC ${r.roll.dc}\n`;
+      text += r.success ? "✅ 检定成功，身份未被识破。" : "❌ 检定失败！身份被识破！";
+      return { content: [{ type: "text", text }], details: { roll: r.roll } };
+    },
+  });
+
+  pi.registerTool({
     name: "sell_item", label: "出售",
     description: "出售物品。LLM 根据市场常识定价，引擎校验价格范围。",
     parameters: Type.Object({ item: Type.String(), price: Type.Number() }),

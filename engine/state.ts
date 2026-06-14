@@ -242,6 +242,16 @@ export function checkAndGrantTitles(): void {
   if (p.skills["潜行"]?.level >= 5) grant("潜行大师");
 }
 
+export function getDisguiseIdentity(player: PlayerState): string | null {
+  for (const item of Object.values(player.equipment)) {
+    if (!item || !item.effects) continue;
+    for (const eff of item.effects) {
+      if (eff.type === "disguise_tag") return String(eff.value);
+    }
+  }
+  return null;
+}
+
 export async function buildStatePrompt(): Promise<string> {
   const tplPath = path.join(AGENTS_DIR, "gm-state.md");
   if (!fs.existsSync(tplPath)) return "";
@@ -282,7 +292,9 @@ export async function buildStatePrompt(): Promise<string> {
   // 附加玩家自身身体状况描述
   tpl += `\n${getPlayerStatusNarrative(p)}`;
   // 身份与称号注入
-  tpl += `\n[身份] 公开身份: ${p.public_identity || "总武高学生"}`;
+  const disguise = getDisguiseIdentity(p);
+  if (disguise) tpl += `\n[身份认知] 你被认知为: ${disguise}`;
+  else if (p.public_identity) tpl += `\n[身份认知] 公开身份: ${p.public_identity}`;
   if (p.titles && p.titles.length > 0) {
     tpl += `\n[称号] ${p.titles.join(" | ")}`;
   }
