@@ -817,6 +817,100 @@ test("combat_action NPC 可攻击玩家", () => {
   if (npcState.attributes.智力 !== 15) throw new Error("NPC combatant 属性错误");
 });
 
+// ── Phase 3: Scene Macro 层 ──
+console.log("\n── Phase 3: Scene Macro 层 ──");
+
+const registeredTools: Record<string, any> = {};
+const mockPi = {
+  registerTool(tool: any) {
+    registeredTools[tool.name] = tool;
+  },
+  registerCommand() {},
+  on() {}
+};
+
+test("加载 extension 并初始化 mockPi", () => {
+  const registerExtension = require("./extension.ts").default;
+  registerExtension(mockPi);
+  if (!registeredTools["world_interact"]) throw new Error("world_interact 未注册");
+  if (!registeredTools["settle_scene"]) throw new Error("settle_scene 未注册");
+});
+
+test("world_interact place 有物品 → 放置成功，背包扣除", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  // 给玩家塞一个台灯
+  gameState.player.inventory.push({ name: "台灯", type: "tool", slot: "acc", weight: 0.5, effects: [], state: "intact" });
+  
+  const tool = registeredTools["world_interact"];
+  const res = await tool.execute("id", { action: "place", item: "台灯" }, null, null, null);
+  
+  if (res.content[0].text.includes("错误") || res.content[0].text.includes("拒绝")) {
+    throw new Error(`world_interact 失败: ${res.content[0].text}`);
+  }
+  if (gameState.player.inventory.some((i: any) => i.name === "台灯")) {
+    throw new Error("放置后背包应该扣除台灯");
+  }
+});
+
+test("world_interact place 无物品 → 引擎拒绝", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  
+  const tool = registeredTools["world_interact"];
+  const res = await tool.execute("id", { action: "place", item: "黄金马桶" }, null, null, null);
+  
+  if (!res.content[0].text.includes("没有") && !res.content[0].text.includes("拒绝") && !res.content[0].text.includes("无法")) {
+    throw new Error(`应该因为没有物品拒绝，但返回: ${res.content[0].text}`);
+  }
+});
+
+test("world_interact build_wall 无材料 → 引擎拒绝", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  
+  const tool = registeredTools["world_interact"];
+  const res = await tool.execute("id", { action: "build_wall", material: "砖头" }, null, null, null);
+  
+  if (!res.content[0].text.includes("没有") && !res.content[0].text.includes("拒绝") && !res.content[0].text.includes("无法")) {
+    throw new Error(`应该因为无材料拒绝，但返回: ${res.content[0].text}`);
+  }
+});
+
+test("settle_scene 推进时间+日程", async () => {
+  resetState();
+  const beforeMinute = gameState.time.minute_of_day || 480;
+  
+  const tool = registeredTools["settle_scene"];
+  await tool.execute("id", { summary: "聊了一下午", elapsed_minutes: 60 }, null, null, null);
+  
+  const afterMinute = gameState.time.minute_of_day;
+  if (afterMinute !== beforeMinute + 60) {
+    throw new Error(`时间未正确推进，前:${beforeMinute}，后:${afterMinute}`);
+  }
+});
+
+test("settle_scene 写入记忆标签", async () => {
+  resetState();
+  const tool = registeredTools["settle_scene"];
+  const npc = getOrCreateNPC("雪之下雪乃");
+  npc.memoryTags = [];
+  
+  await tool.execute("id", {
+    summary: "帮助了雪乃",
+    elapsed_minutes: 30,
+    memory_tags: [{ target: "雪之下雪乃", tag: "接受了维的帮助" }]
+  }, null, null, null);
+  
+  const tags = npc.memoryTags || [];
+  if (!tags.some((t: any) => t.tag === "接受了维的帮助")) {
+    throw new Error("记忆标签未成功写入");
+  }
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);

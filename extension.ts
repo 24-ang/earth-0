@@ -967,7 +967,7 @@ export default function (pi: ExtensionAPI) {
       char: Type.String(), 
       part: Type.String(), 
       intensity: Type.String(),
-      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮触碰产生的心里话（30字内/条）" }))
+      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮触碰产生的心里话（30字内/条）" })))
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
@@ -1045,7 +1045,7 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       char: Type.String({ description: "角色名" }),
       minutes: Type.Number({ description: "持续时间(分钟)" }),
-      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮自慰产生的心里话（30字内/条）" }))
+      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮自慰产生的心里话（30字内/条）" })))
     }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
@@ -1288,46 +1288,145 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
-    name: "build_add", label: "建造",
-    description: "在棋盘格放置家具/物品。引擎强制要求：玩家背包必须有同名物品（需先通过 buy_item 或剧情获取），放置后从背包扣除。无实物 → 引擎拒绝。",
-    parameters: Type.Object({ item: Type.String(), x: Type.Number(), y: Type.Number() }),
+    name: "world_interact", label: "世界交互",
+    description:
+      "建造/拆除/开关门。引擎内部处理坐标和校验。\n" +
+      "action: place(放置家具) / remove(拆除) / build_wall(造墙) / remove_wall(拆墙) / toggle_door(开关门)\n" +
+      "item: 物品名（place时必需，必须在背包里）\n" +
+      "material: 材料名（build_wall时必需，必须在背包里）\n" +
+      "  remove_wall时可指定工具名，不指定则需玩家力量≥5",
+    parameters: Type.Object({
+      action: Type.String({ description: "place / remove / build_wall / remove_wall / toggle_door" }),
+      item: Type.Optional(Type.String({ description: "物品名（place时必需）" })),
+      material: Type.Optional(Type.String({ description: "材料或工具名" })),
+      description: Type.Optional(Type.String({ description: "放置位置描述，如'靠窗'、'门边'" })),
+    }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { placeFurniture } = await import("./engine/state.ts");
-      const r = placeFurniture(params.x, params.y, params.item);
-      return { content: [{ type: "text", text: r.reason }], details: r };
+      const { gameState, getRoom, placeFurniture, removeFurniture, editCellType, toggleDoor } = await import("./engine/state.ts");
+      const p = gameState.player;
+      if (!p.gridPos) {
+        return { content: [{ type: "text", text: "当前玩家没有网格坐标，无法进行网格交互" }], details: {} };
+      }
+      const room = getRoom(p.location);
+      if (!room) {
+        return { content: [{ type: "text", text: `当前位置 ${p.location} 没有地图格，无法进行网格交互` }], details: {} };
+      }
+
+      const [px, py] = p.gridPos;
+      const directions = [
+        { dx: 0, dy: -1, label: "北" },
+        { dx: 0, dy: 1, label: "南" },
+        { dx: -1, dy: 0, label: "西" },
+        { dx: 1, dy: 0, label: "东" }
+      ];
+
+      const targets = [];
+      for (const dir of directions) {
+        const nx = px + dir.dx;
+        const ny = py + dir.dy;
+        if (nx >= 0 && nx < room.width && ny >= 0 && ny < room.height) {
+          targets.push({ x: nx, y: ny, cell: room.cells[ny][nx], dir: dir.label });
+        }
+      }
+
+      let matched = null;
+      if (params.action === "place") {
+        if (!params.item) {
+          return { content: [{ type: "text", text: "参数错误: place 动作需要指定 item" }], details: {} };
+        }
+        const hasItem = p.inventory.some((i: any) => i.name === params.item);
+        if (!hasItem) {
+          return { content: [{ type: "text", text: `背包里没有 ${params.item}，无法放置` }], details: {} };
+        }
+        matched = targets.find(t => t.cell.type === "floor" && !t.cell.furniture);
+        if (!matched) {
+          return { content: [{ type: "text", text: "附近没有空地可以放置家具" }], details: {} };
+        }
+        const r = placeFurniture(matched.x, matched.y, params.item);
+        return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y}): ${r.reason}` }], details: r };
+
+      } else if (params.action === "remove") {
+        matched = targets.find(t => t.cell.furniture);
+        if (!matched) {
+          return { content: [{ type: "text", text: "附近没有可以拆除的家具" }], details: {} };
+        }
+        const r = removeFurniture(matched.x, matched.y);
+        return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y}): ${r.reason}` }], details: r };
+
+      } else if (params.action === "build_wall") {
+        if (!params.material) {
+          return { content: [{ type: "text", text: "参数错误: build_wall 动作需要指定 material" }], details: {} };
+        }
+        const hasMaterial = p.inventory.some((i: any) => i.name === params.material);
+        if (!hasMaterial) {
+          return { content: [{ type: "text", text: `背包里没有 ${params.material}，无法建造` }], details: {} };
+        }
+        matched = targets.find(t => t.cell.type === "floor" && !t.cell.furniture);
+        if (!matched) {
+          return { content: [{ type: "text", text: "附近没有可以建墙的地板" }], details: {} };
+        }
+        const r = editCellType(matched.x, matched.y, "wall", undefined, params.material);
+        return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y}): ${r.reason}` }], details: r };
+
+      } else if (params.action === "remove_wall") {
+        matched = targets.find(t => t.cell.type === "wall");
+        if (!matched) {
+          return { content: [{ type: "text", text: "附近没有可以拆除的墙壁" }], details: {} };
+        }
+        const r = editCellType(matched.x, matched.y, "floor", undefined, params.material);
+        return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y}): ${r.reason}` }], details: r };
+
+      } else if (params.action === "toggle_door") {
+        matched = targets.find(t => t.cell.type === "door" || t.cell.type === "exit");
+        if (!matched) {
+          return { content: [{ type: "text", text: "附近没有可以开关的门" }], details: {} };
+        }
+        const r = toggleDoor(matched.x, matched.y);
+        return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y})的门: ${r.reason}` }], details: r };
+
+      } else {
+        return { content: [{ type: "text", text: `未知动作: ${params.action}` }], details: {} };
+      }
     },
   });
 
   pi.registerTool({
-    name: "build_remove", label: "拆除",
-    description: "拆除棋盘格物品。",
-    parameters: Type.Object({ x: Type.Number(), y: Type.Number() }),
+    name: "settle_scene", label: "场景收口",
+    description:
+      "一场戏结束时的统一收口。推进时间、更新 NPC 日程、写入记忆标签。\n" +
+      "替代手动调用 commit_turn + add_memory_tag 的组合。",
+    parameters: Type.Object({
+      summary: Type.String({ description: "本场景发生的事，如'在侍奉部和雪乃聊了一下午'" }),
+      elapsed_minutes: Type.Number({ description: "经过的分钟数" }),
+      memory_tags: Type.Optional(Type.Array(Type.Object({
+        target: Type.String({ description: "NPC 名" }),
+        tag: Type.String({ description: "记忆标签，如'接受了维的帮助'" }),
+      }))),
+    }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { removeFurniture } = await import("./engine/state.ts");
-      const r = removeFurniture(params.x, params.y);
-      return { content: [{ type: "text", text: r.reason }], details: r };
-    },
-  });
+      const { gameState, saveState, updateNPCSchedules, refreshWeather, addMemoryTag } = await import("./engine/state.ts");
+      const { advanceMinutes } = await import("./engine/time.ts");
+      const mins = params.elapsed_minutes;
+      if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
+      const result = advanceMinutes(gameState.time, mins);
+      gameState.player.age = gameState.time.player_age;
+      gameState.turn++;
+      if (gameState.turn % 4 === 0) refreshWeather();
+      const events = updateNPCSchedules();
 
-  pi.registerTool({
-    name: "door_toggle", label: "开关门",
-    description: "开关指定坐标的门/窗。",
-    parameters: Type.Object({ x: Type.Number(), y: Type.Number() }),
-    async execute(_id, params, _s, _o, _ctx) {
-      const { toggleDoor } = await import("./engine/state.ts");
-      const r = toggleDoor(params.x, params.y);
-      return { content: [{ type: "text", text: r.reason }], details: r };
-    },
-  });
+      if (params.memory_tags && params.memory_tags.length > 0) {
+        for (const m of params.memory_tags) {
+          addMemoryTag(m.target, m.tag, 7);
+        }
+      }
 
-  pi.registerTool({
-    name: "edit_map_cell", label: "编辑网格",
-    description: "修改房间的墙壁/门/出口状态。type: 'wall'|'floor'|'door'|'exit'。造墙/门/出口时必须传 material（材料物品名，如'砖'/'木板'/'门框'/'废铁板'等，引擎会从背包扣除）。拆墙（wall→floor）时可传 material 指定工具（如'锤子'/'撬棍'），不传则需玩家力量≥5。",
-    parameters: Type.Object({ x: Type.Number(), y: Type.Number(), type: Type.String(), targetRoom: Type.Optional(Type.String()), material: Type.Optional(Type.String()) }),
-    async execute(_id, params, _s, _o, _ctx) {
-      const { editCellType } = await import("./engine/state.ts");
-      const r = editCellType(params.x, params.y, params.type as any, params.targetRoom, params.material);
-      return { content: [{ type: "text", text: r.reason }], details: r };
+      saveState();
+
+      const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
+      const textResult = `场景结束推进了 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。\n` +
+        `日程更新: ${events.length > 0 ? events.join("; ") : "无特殊事件"}\n` +
+        `写入记忆: ${params.memory_tags && params.memory_tags.length > 0 ? params.memory_tags.map(m => `${m.target}(${m.tag})`).join(", ") : "无"}`;
+      return { content: [{ type: "text", text: textResult }], details: { time: gameState.time, events, memory_tags: params.memory_tags } };
     },
   });
 
