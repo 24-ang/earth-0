@@ -718,6 +718,60 @@ test("buildStatePrompt 注入 [身份认知]", async () => {
   if (!prompt.includes("[身份认知] 你被认知为: 总武高学生")) throw new Error("应包含伪装认知");
 });
 
+// ── Phase 1: 新领域工具（替换 patch_state）──
+console.log("\n── 领域工具（transfer_item / adjust_relation / grant_skill_exp）──");
+test("transfer_item 玩家→NPC", () => {
+  resetState();
+  gameState.player.inventory.push({ name: "测试物品", type: "tool", slot: "acc", weight: 0.1, effects: [], state: "intact" });
+  const npc = getOrCreateNPC("由比滨结衣");
+  const idx = gameState.player.inventory.findIndex((i: any) => i.name === "测试物品");
+  if (idx < 0) throw new Error("物品应在背包");
+  const item = gameState.player.inventory.splice(idx, 1)[0];
+  npc.inventory.push(item);
+  if (gameState.player.inventory.some((i: any) => i.name === "测试物品")) throw new Error("转移后玩家不应持有");
+  if (!npc.inventory.some((i: any) => i.name === "测试物品")) throw new Error("NPC应收到物品");
+});
+
+test("transfer_item 来源无物品应拒绝", () => {
+  resetState();
+  const npc = getOrCreateNPC("由比滨结衣");
+  npc.inventory = [];
+  if (npc.inventory.some((i: any) => i.name === "不存在的东西")) throw new Error("NPC不应有该物品");
+});
+
+test("adjust_relation 正值+备注", () => {
+  resetState();
+  updateRelation(gameState.player.relationships, "雪之下雪乃", 15, "聊得很投机");
+  const rel = gameState.player.relationships["雪之下雪乃"];
+  if (!rel) throw new Error("关系未创建");
+  if (rel.affection !== 15) throw new Error("好感应为15");
+  if (rel.notes !== "聊得很投机") throw new Error("备注未写入");
+});
+
+test("adjust_relation 自动 clamp 0-100", () => {
+  resetState();
+  updateRelation(gameState.player.relationships, "测试角色", 150, "过度喜爱");
+  if (gameState.player.relationships["测试角色"].affection > 100) throw new Error("好感超过100");
+  updateRelation(gameState.player.relationships, "测试角色2", -20, "严重冲突");
+  if (gameState.player.relationships["测试角色2"].affection < 0) throw new Error("好感低于0");
+});
+
+test("grant_skill_exp 正常升级", () => {
+  resetState();
+  addSkillExp(gameState.player.skills, "潜行", 12);
+  const sk = gameState.player.skills["潜行"];
+  if (!sk) throw new Error("技能未创建");
+  if (sk.level < 1) throw new Error("12EXP应升到Lv1");
+});
+
+test("grant_skill_exp Lv10上限", () => {
+  resetState();
+  for (let i = 0; i < 200; i++) {
+    addSkillExp(gameState.player.skills, "格斗", 50);
+  }
+  if (gameState.player.skills["格斗"].level > 10) throw new Error("技能等级不应超过10");
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);
