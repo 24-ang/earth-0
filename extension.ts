@@ -842,13 +842,18 @@ export default function (pi: ExtensionAPI) {
       updateRelation(p.relationships, params.npc, delta, params.reason);
       let r = `${params.npc} 好感${delta > 0 ? "+" : ""}${delta}（${params.reason}）`;
 
-      if (delta > 0) {
+      if (delta !== 0) {
         try {
           const sState = await getOrCreateSexState(params.npc);
           if (sState) {
-            const desireDelta = Math.max(1, Math.round(delta * 0.5));
-            sState.desire = Math.min(100, sState.desire + desireDelta);
-            r += `，欲望+${desireDelta}`;
+            const desireDelta = Math.max(1, Math.round(Math.abs(delta) * 0.5));
+            if (delta > 0) {
+              sState.desire = Math.min(100, sState.desire + desireDelta);
+              r += `，欲望+${desireDelta}`;
+            } else {
+              sState.desire = Math.max(0, sState.desire - desireDelta);
+              r += `，欲望-${desireDelta}`;
+            }
           }
         } catch (_) {}
       }
@@ -1068,24 +1073,56 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "masturbate", label: "自慰",
-    description: "自慰以增加兴奋度，甚至达到高潮。",
+    description: "自慰以增加兴奋度、消耗欲望。不传target=玩家自己；传NPC名=该NPC自慰（引擎减少其desire）。",
     parameters: Type.Object({
       char: Type.String({ description: "角色名" }),
       minutes: Type.Number({ description: "持续时间(分钟)" }),
-      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮自慰产生的心里话（30字内/条）" })))
+      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮自慰产生的心里话（30字内/条）" }))),
+      target: Type.Optional(Type.String({ description: "可选：自慰的NPC名。不传默认玩家自己" })),
     }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
-      
+      const { masturbate, settleAfterSex, formatSettlement, recordThought } = await import("./engine/sex.ts");
+      const isNpc = params.target && params.target !== gameState.player.name && params.target !== "玩家";
+
+      if (isNpc) {
+        // NPC 自慰：消耗 NPC 自身欲望
+        const sState = await getOrCreateSexState(params.target);
+        if (!sState) return { content: [{ type: "text", text: `无${params.target}的sex档案` }], details: {} };
+        if (sState.arousal == null) sState.arousal = 0;
+        if (sState.climaxCount == null) sState.climaxCount = 0;
+        if (sState.squirtCount == null) sState.squirtCount = 0;
+
+        const r = masturbate(sState, params.minutes);
+        // NPC 自慰 → 消耗积累的欲望（释放后欲望下降）
+        sState.desire = Math.max(0, sState.desire - Math.round(r.arousalChange * 0.3));
+
+        let textResult = `${params.target}进行了 ${params.minutes} 分钟的自慰。欲望 -${Math.round(r.arousalChange * 0.3)} (当前: ${sState.desire}/100)`;
+
+        if (params.thoughts && params.thoughts.length > 0) {
+          for (const t of params.thoughts) {
+            recordThought(sState, t, gameState.time.game_date, r.climaxed ? "climax_after" : "scene_end");
+          }
+        }
+
+        if (r.climaxed) {
+          textResult += `\n${params.target}达到了高潮！`;
+          const report = settleAfterSex(sState, gameState.time.game_date, params.minutes, ["秘部"], []);
+          const formatted = formatSettlement(report, params.target);
+          textResult += formatted;
+        }
+
+        saveState();
+        return { content: [{ type: "text", text: textResult }], details: { masturbateResult: r } };
+      }
+
+      // === 玩家自慰（原有逻辑） ===
       // 自动对齐或懒加载当前 SexState
       if (!gameState.player.sex || (gameState.player.sex.profile as any).name !== params.char) {
         const sState = await getOrCreateSexState(params.char);
         if (!sState) return { content: [{ type: "text", text: `无该角色sex档案: ${params.char}` }], details: {} };
         gameState.player.sex = sState;
       }
-
-      const { masturbate, settleAfterSex, formatSettlement, recordThought } = await import("./engine/sex.ts");
-      const r = masturbate(gameState.player.sex, params.minutes);
 
       // 防御旧存档 null 值
       if (gameState.player.sex.arousal == null) gameState.player.sex.arousal = 0;
