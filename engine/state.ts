@@ -450,16 +450,29 @@ export async function buildStatePrompt(): Promise<string> {
       if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
       const sp = profiles[nname];
       if (!sp) continue;
-      const devHint = getDevNarrative(sp);
-      tpl += `\n[${nname}·印记] ${sp.attitude} | ${sp.experience} | ${devHint}`;
+      // 确保运行时 SexState 存在（gal 模式欲望累积需要）
+      let sState = gameState.sexStates?.[nname] ?? null;
+      if (!sState) {
+        try { sState = await getOrCreateSexState(nname); } catch (_) {}
+      }
+      const runtimeProfile = sState?.profile ?? sp;
+      const devHint = getDevNarrative(runtimeProfile);
+      tpl += `\n[${nname}·印记] ${runtimeProfile.attitude} | ${runtimeProfile.experience} | ${devHint}`;
       if (gameState.layer1Enabled) {
         const npcPhase = getCyclePhase(sp.cycleDay);
         if (npcPhase !== "安全期") tpl += ` | ${npcPhase}`;
+        // sex 模式也注入 NPC 实时欲望/兴奋
+        if (sState) {
+          const dh = getDesireNarrative(sState);
+          const ah = getArousalNarrative(sState);
+          if (dh) tpl += `\n  [${nname}·欲望] ${dh}`;
+          if (ah) tpl += `\n  [${nname}·兴奋] ${ah}`;
+        }
       }
     }
 
     if (!gameState.layer1Enabled) {
-      // 在 gal 模式下，对在场且在 gameState.sexStates 中有记录的 NPC，注入其身体语言描述（无具体数值）
+      // 在 gal 模式下，对在场 NPC 注入其身体语言描述（无具体数值）
       for (const [nname, npc] of Object.entries(gameState.npcs)) {
         if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
         const sState = gameState.sexStates?.[nname];
