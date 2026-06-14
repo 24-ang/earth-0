@@ -1557,6 +1557,21 @@ export default function (pi: ExtensionAPI) {
 
 
 
+  pi.registerCommand("identity", {
+    description: "设置或查看当前公开身份（伪装）。用法: /identity [新身份]",
+    handler: async (args, ctx) => {
+      const { gameState, saveState } = await import("./engine/state.ts");
+      const newId = args.trim();
+      if (!newId) {
+        ctx.ui.notify(`当前公开身份: ${gameState.player.public_identity || "总武高学生"}`, "info");
+        return;
+      }
+      gameState.player.public_identity = newId;
+      saveState();
+      ctx.ui.notify(`公开身份已更新为: ${newId}`, "success");
+    },
+  });
+
   pi.registerCommand("go", {
     description: "旅行与探索导航系统 (长途旅行会触发剧情叙事)",
     handler: async (_args, ctx) => {
