@@ -911,6 +911,87 @@ test("settle_scene 写入记忆标签", async () => {
   }
 });
 
+// ── Phase 4: 补齐工具闭环 ──
+console.log("\n── Phase 4: 补齐工具闭环 ──");
+
+test("spawn_item 武器 → target背包有该武器，含damage属性且记录来源", async () => {
+  resetState();
+  const tool = registeredTools["spawn_item"];
+  const res = await tool.execute("id", {
+    target: "玩家",
+    item: {
+      name: "家传宝刀",
+      type: "weapon",
+      slot: "right_hand",
+      weight: 2,
+      damage: { dice: "1d10", damageType: "劈砍" },
+      flavor: "祖传的宝刀"
+    },
+    source: "平冢静",
+    reason: "师徒传承"
+  }, null, null, null);
+
+  if (res.content[0].text.includes("错误")) throw new Error(`spawn_item 失败: ${res.content[0].text}`);
+  const item = gameState.player.inventory.find((i: any) => i.name === "家传宝刀");
+  if (!item) throw new Error("背包里找不到生成的武器");
+  if (!item.damage || item.damage.dice !== "1d10") throw new Error("武器damage属性丢失或不正确");
+  if (!item.flavor.includes("来源: 平冢静")) throw new Error("武器未正确记录来源");
+});
+
+test("inflict_damage 玩家 → HP减少且致死alive=false", async () => {
+  resetState();
+  const beforeHP = gameState.player.hp.current;
+  
+  const tool = registeredTools["inflict_damage"];
+  // 非致死伤害
+  await tool.execute("id", {
+    target: "玩家",
+    amount: 2,
+    type: "毒素",
+    reason: "喝了过期牛奶"
+  }, null, null, null);
+  
+  if (gameState.player.hp.current !== beforeHP - 2) {
+    throw new Error(`伤害扣除不正确: 前 ${beforeHP}, 后 ${gameState.player.hp.current}`);
+  }
+  if (!gameState.player.alive) {
+    throw new Error("非致命伤害不应致死");
+  }
+
+  // 致死伤害
+  await tool.execute("id", {
+    target: "玩家",
+    amount: 100,
+    type: "坠落",
+    reason: "高处坠落"
+  }, null, null, null);
+
+  if (gameState.player.hp.current !== 0) {
+    throw new Error(`当前 HP 应为0，但是是 ${gameState.player.hp.current}`);
+  }
+  if (gameState.player.alive) {
+    throw new Error("致命伤害后玩家应处于死亡/倒下状态");
+  }
+});
+
+test("add_memory_tag → NPC memoryTags 包含标签", async () => {
+  resetState();
+  const npc = getOrCreateNPC("雪之下雪乃");
+  npc.memoryTags = [];
+  
+  const tool = registeredTools["add_memory_tag"];
+  await tool.execute("id", {
+    target: "雪之下雪乃",
+    tag: "知道玩家是杀手",
+    expires_days: 5
+  }, null, null, null);
+
+  const tags = npc.memoryTags || [];
+  if (!tags.some((t: any) => t.tag === "知道玩家是杀手")) {
+    throw new Error("记忆标签未成功写入");
+  }
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);
