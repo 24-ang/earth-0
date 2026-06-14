@@ -754,18 +754,45 @@ export default function (pi: ExtensionAPI) {
 
   // ── 物品转移（替换 patch_state give_item/take_item）──
   pi.registerTool({
-    name: "transfer_item", label: "转移物品",
-    description: "将物品从一方转移到另一方。from/to 为角色名或'玩家'。引擎强制校验来源确实持有该物品（背包或装备槽）。",
+    name: "transfer_item", label: "转移物品/金钱",
+    description: "将物品或金钱从一方转移到另一方。from/to 为角色名或'玩家'。item='金钱:500'→转账；否则转移物品。",
     parameters: Type.Object({
       from: Type.String({ description: "物品来源：角色名 或 '玩家'" }),
       to: Type.String({ description: "物品去向：角色名 或 '玩家'" }),
-      item: Type.String({ description: "物品名" }),
+      item: Type.String({ description: "物品名，或'金钱:数字'转账" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
       const p = gameState.player;
 
-      // 解析 from 方
+      // 特殊格式: "金钱:500" → 转账
+      const moneyMatch = params.item.match(/^金钱[:：](\d+)$/);
+      if (moneyMatch) {
+        const amount = parseInt(moneyMatch[1], 10);
+        if (amount <= 0) return { content: [{ type: "text", text: "转账金额必须大于0。" }], details: {} };
+
+        const fromIsPlayer = params.from === "玩家" || params.from === p.name;
+        const toIsPlayer = params.to === "玩家" || params.to === p.name;
+
+        // 扣 from 方
+        if (fromIsPlayer) {
+          if (p.funds < amount) return { content: [{ type: "text", text: `玩家只有¥${p.funds}，不够转¥${amount}。` }], details: {} };
+          p.funds -= amount;
+        } else {
+          const fromNpc = getOrCreateNPC(params.from);
+          if (fromNpc.funds < amount) return { content: [{ type: "text", text: `${params.from}只有¥${fromNpc.funds}，不够转¥${amount}。` }], details: {} };
+          fromNpc.funds -= amount;
+        }
+
+        // 加 to 方
+        if (toIsPlayer) p.funds += amount;
+        else getOrCreateNPC(params.to).funds += amount;
+
+        saveState();
+        return { content: [{ type: "text", text: `${params.from} → ${params.to}: ¥${amount}` }], details: {} };
+      }
+
+      // 原有物品转移逻辑
       const fromIsPlayer = params.from === "玩家" || params.from === p.name;
       const fromInventory: any[] = fromIsPlayer ? p.inventory : getOrCreateNPC(params.from).inventory;
       const fromEquipment: any = fromIsPlayer ? p.equipment : getOrCreateNPC(params.from).equipment;
@@ -1186,10 +1213,28 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "steal_item", label: "偷窃",
-    description: "从NPC偷物品。成功=物品到手，失败（caught=true）→ 引擎自动扣除好感-20、写入 alert 标记。",
+    description: "从NPC偷物品或金钱。item='金钱'→摸钱包（随机偷部分现金）；其他→偷物品。失败（caught=true）→ 引擎自动扣除好感-20、写入 alert 标记。",
     parameters: Type.Object({ target: Type.String(), item: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, stealItem, saveState, updateRelation, updateReputation } = await import("./engine/state.ts");
+      const { gameState, stealItem, stealFunds, saveState, updateRelation, updateReputation } = await import("./engine/state.ts");
+
+      // 特殊：偷钱
+      if (params.item === "金钱" || params.item === "钱") {
+        const r = stealFunds(gameState.player, params.target);
+        let consequence = "";
+        if (r.caught) {
+          updateRelation(gameState.player.relationships, params.target, -20, "偷钱被抓");
+          consequence += `\n⚠️ ${params.target}好感-20`;
+          gameState.flags.steal_alert = true;
+          gameState.flags[`steal_caught_by_${params.target}`] = true;
+          const loc = gameState.player.location;
+          if (loc.includes("校") || loc.includes("班")) { updateReputation("学生", -1); consequence += `，学生声望-1`; }
+          if (loc.includes("校门") || loc.includes("警")) { gameState.flags.wanted = true; consequence += `，被通报！`; }
+        }
+        saveState();
+        return { content: [{ type: "text", text: r.narrative + consequence }], details: { ...r, flags_set: consequence } };
+      }
+
       const r = stealItem(gameState.player, params.target, params.item);
       let consequence = "";
 
@@ -1521,11 +1566,11 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "sell_item", label: "出售",
-    description: "出售物品。LLM 根据市场常识定价，引擎校验价格范围。",
-    parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
+    description: "出售物品给NPC。LLM 根据市场常识定价，引擎校验价格范围。若指定 buyer，引擎校验对方资金并扣款。",
+    parameters: Type.Object({ item: Type.String(), price: Type.Number(), buyer: Type.Optional(Type.String()) }),
     async execute(_id, params, _s, _o, _ctx) {
       const { sellItem } = await import("./engine/state.ts");
-      const r = sellItem(params.item, params.price);
+      const r = sellItem(params.item, params.price, params.buyer);
       return { content: [{ type: "text", text: r }], details: {} };
     },
   });

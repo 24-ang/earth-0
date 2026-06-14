@@ -224,6 +224,7 @@ export interface StaticCharacter {
   schedule_group?: string;
   schedule_overrides?: Record<string, string>;
   schedule_group_by_age?: Record<string, string>;
+  funds?: number;
 }
 
 // --- NPC运行时状态（lazy init，只存被修改过的NPC） ---
@@ -235,6 +236,7 @@ export interface NPCRuntimeState {
   action: string;                  // 当前动作，LLM可更新
   scheduleGroup: string;           // 日程模板标签
   scheduleOverrides?: Record<string, string>;
+  funds: number;                   // NPC 现金
   memoryTags: { tag: string; since: string; expires: number }[];
   pendingOverride?: {              // 一次性最高优先级（生病/约定等）
     location: string;
