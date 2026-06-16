@@ -114,6 +114,27 @@ earth-0/
   }
 ```
 
+### 第四步：配置服装卡（可选但推荐）
+
+在 `characters.json` 的角色条目中添加 `outfits` 字段。引擎自动按场景切换并注入 prompt。无 outfits 时回退到 `appearance_brief`。
+
+```json
+"outfits": {
+  "school": { "top": "总武高制服", "bottom": "黑白百褶裙", "legs": "黑色过膝袜", "feet": "皮鞋", "inner_top": "白色蕾丝胸罩", "inner_bot": "白色棉内裤" },
+  "pe":     { "top": "白色体操服", "bottom": "深蓝运动短裤", "feet": "运动鞋", "inner_top": "运动内衣", "inner_bot": "白色棉内裤" },
+  "swim":   { "top": "白色连体泳衣", "feet": "拖鞋" },
+  "casual": { "top": "米色针织衫", "bottom": "深蓝A字裙", "feet": "棕色短靴", "inner_top": "淡蓝蕾丝胸罩", "inner_bot": "淡蓝蕾丝内裤" },
+  "sleep":  { "top": "白色棉质睡裙" }
+}
+```
+
+**服装卡规则：**
+- 5 个固定 key：`school` / `pe` / `swim` / `casual` / `sleep`
+- 每个 key 下是 `{ 槽位: "物品描述" }` 的 map
+- `inner_` 前缀的槽位（如 `inner_top`）= 内层，sex 模式才展开
+- 槽位名自由——`top`/`bottom`/`feet`/`acc`/`head` 均可，引擎只做分层渲染
+- LLM 通过 `set_npc_outfit(角色名, key)` 切换，引擎自动注入当前外观
+
 ---
 
 ## 4. 时空一致性审计与修复报告
