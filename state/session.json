@@ -56,104 +56,7 @@
     ],
     "titles": []
   },
-  "npcs": {
-    "由比滨结衣": {
-      "inventory": [
-        {
-          "name": "手机",
-          "type": "tool",
-          "slot": "right_hand",
-          "weight": 0.2,
-          "effects": [],
-          "state": "intact"
-        },
-        {
-          "name": "钱包",
-          "type": "tool",
-          "slot": "back",
-          "weight": 0.1,
-          "effects": [],
-          "state": "intact"
-        },
-        {
-          "name": "零食",
-          "type": "consumable",
-          "slot": "back",
-          "weight": 0.2,
-          "effects": [],
-          "state": "intact"
-        }
-      ],
-      "equipment": {
-        "top": {
-          "name": "总武高制服",
-          "type": "clothing",
-          "slot": "top",
-          "weight": 0.5,
-          "effects": [],
-          "state": "intact"
-        },
-        "bottom": {
-          "name": "黑白百褶裙",
-          "type": "clothing",
-          "slot": "bottom",
-          "weight": 0.3,
-          "effects": [],
-          "state": "intact"
-        },
-        "legs": {
-          "name": "白色短袜",
-          "type": "clothing",
-          "slot": "legs",
-          "weight": 0.05,
-          "effects": [],
-          "state": "intact"
-        },
-        "feet": {
-          "name": "学生皮鞋",
-          "type": "clothing",
-          "slot": "feet",
-          "weight": 0.3,
-          "effects": [],
-          "state": "intact"
-        },
-        "acc": {
-          "name": "粉色发圈",
-          "type": "clothing",
-          "slot": "acc",
-          "weight": 0.02,
-          "effects": [],
-          "state": "intact"
-        },
-        "inner_top": {
-          "name": "粉色内衣",
-          "type": "clothing",
-          "slot": "inner_top",
-          "weight": 0.1,
-          "effects": [],
-          "state": "intact"
-        },
-        "inner_bot": {
-          "name": "粉色内裤",
-          "type": "clothing",
-          "slot": "inner_bot",
-          "weight": 0.05,
-          "effects": [],
-          "state": "intact"
-        }
-      },
-      "currentRoom": "千叶_住宅区",
-      "gridPos": [
-        5,
-        3
-      ],
-      "action": "",
-      "scheduleGroup": "小学生",
-      "scheduleOverrides": {},
-      "funds": 50,
-      "memoryTags": []
-    }
-  },
+  "npcs": {},
   "sexStates": {},
   "mode": "gal",
   "layer1Enabled": false,
@@ -164,7 +67,7 @@
     "temp": 16
   },
   "turn": 0,
-  "quests": {},
-  "active_hooks": [],
-  "completed_events": []
+  "phoneInbox": [],
+  "roomTimestamps": {},
+  "quests": {}
 }

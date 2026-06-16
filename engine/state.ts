@@ -18,6 +18,15 @@ import economyConfig from "../data/economy.json" with { type: "json" };
 const ROOMS_BASE = rooms as Record<string, RoomGrid>;
 export let ROOMS = structuredClone(ROOMS_BASE);
 
+import locationsData from "../data/locations.json" with { type: "json" };
+import schoolMapData from "../data/school_map.json" with { type: "json" };
+import cityMapData from "../data/city_map.json" with { type: "json" };
+const LOCATIONS_BASE = locationsData as any;
+const SCHOOL_MAP = schoolMapData as any;
+const CITY_MAP = cityMapData as any;
+// 运行时地点覆盖层：LLM 动态创建的地点 { parentName: [childName, ...] }
+export let LOCATIONS_DELTA: Record<string, string[]> = {};
+
 export function getRoomKey(roomName: string): string | null {
   if (!roomName) return null;
   if (ROOMS[roomName]) return roomName;
@@ -62,9 +71,8 @@ function createInitialState(): GameState {
     flags: {},
     weather: { type: "晴", temp: 16 },
     turn: 0,
-    quests: {},
-    active_hooks: [],
-    completed_events: [],
+    phoneInbox: [],
+    roomTimestamps: {},
   };
 }
 
@@ -98,96 +106,6 @@ function createDefaultPlayer(): PlayerState {
 }
 
 // --- 持久化 ---
-const TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
-const SAVES_DIR = path.join(STATE_DIR, "saves");
-const MAX_BACKUPS = 5;
-
-// ── 手动存档槽位 ──
-
-/** 创建手动存档 */
-export function createSave(name: string): string {
-  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50) || "quick";
-  fs.mkdirSync(SAVES_DIR, { recursive: true });
-  const fp = path.join(SAVES_DIR, `${safeName}.json`);
-  const ts = gameState.time.game_date;
-  saveState(fp);
-  // 写入元数据头
-  const data = JSON.parse(fs.readFileSync(fp, "utf-8"));
-  data._save_meta = { name: safeName, date: ts, turn: gameState.turn, location: gameState.player.location, created: new Date().toISOString() };
-  fs.writeFileSync(fp, JSON.stringify(data, null, 2));
-  return safeName;
-}
-
-/** 载入手动存档 */
-export function loadSave(name: string): boolean {
-  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
-  const fp = path.join(SAVES_DIR, `${safeName}.json`);
-  if (!fs.existsSync(fp)) return false;
-  const ok = loadState(fp);
-  if (ok) {
-    // 恢复后自动创建恢复前备份
-    backupBeforeTurn();
-    saveState();
-  }
-  return ok;
-}
-
-/** 删除手动存档 */
-export function deleteSave(name: string): boolean {
-  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
-  const fp = path.join(SAVES_DIR, `${safeName}.json`);
-  if (!fs.existsSync(fp)) return false;
-  fs.unlinkSync(fp);
-  return true;
-}
-
-/** 列出所有手动存档 */
-export function listSaves(): { name: string; date: string; turn: number; location: string }[] {
-  const result: { name: string; date: string; turn: number; location: string }[] = [];
-  if (!fs.existsSync(SAVES_DIR)) return result;
-  for (const f of fs.readdirSync(SAVES_DIR)) {
-    if (!f.endsWith(".json")) continue;
-    try {
-      const raw = fs.readFileSync(path.join(SAVES_DIR, f), "utf-8");
-      const meta = JSON.parse(raw)._save_meta;
-      if (meta) result.push(meta);
-    } catch (_) {}
-  }
-  result.sort((a, b) => b.turn - a.turn);
-  return result;
-}
-
-/** 备份当前存档（commit_turn 前自动调用），保留最近 N 个 */
-export function backupBeforeTurn(): void {
-  fs.mkdirSync(TURN_BACKUP_DIR, { recursive: true });
-  // 滚动备份：turn_5 ← turn_4 ← ... ← turn_1，最新的存 turn_1
-  for (let i = MAX_BACKUPS - 1; i >= 1; i--) {
-    const older = path.join(TURN_BACKUP_DIR, `turn_${i}.json`);
-    const newer = path.join(TURN_BACKUP_DIR, `turn_${i + 1}.json`);
-    if (fs.existsSync(older)) {
-      try { fs.renameSync(older, newer); } catch (_) { try { fs.copyFileSync(older, newer); fs.unlinkSync(older); } catch (_) {} }
-    }
-  }
-  saveState(path.join(TURN_BACKUP_DIR, "turn_1.json"));
-}
-
-/** 还原到倒数第 N 回合的存档（1=上一回合） */
-export function restoreLastTurn(n: number = 1): boolean {
-  const safeN = Math.max(1, Math.min(n, MAX_BACKUPS));
-  const fp = path.join(TURN_BACKUP_DIR, `turn_${safeN}.json`);
-  if (!fs.existsSync(fp)) return false;
-  return loadState(fp);
-}
-
-/** 列出可用的备份 */
-export function listBackups(): number[] {
-  const result: number[] = [];
-  for (let i = 1; i <= MAX_BACKUPS; i++) {
-    if (fs.existsSync(path.join(TURN_BACKUP_DIR, `turn_${i}.json`))) result.push(i);
-  }
-  return result;
-}
-
 export function saveState(filepath?: string): void {
   const fp = filepath ?? STATE_FILE;
   fs.mkdirSync(path.dirname(fp), { recursive: true });
@@ -216,6 +134,10 @@ export function loadState(filepath?: string): boolean {
   } else {
     ROOMS = structuredClone(ROOMS_BASE);
   }
+
+  loadLocationsDelta();
+  // 迁移：旧存档无 roomTimestamps
+  if (!gameState.roomTimestamps) gameState.roomTimestamps = {};
 
   // 还原 player.sex 引用，保障跨会话内存修改同步
   if (gameState.player.sex && gameState.sexStates) {
@@ -397,6 +319,31 @@ export async function buildStatePrompt(): Promise<string> {
   const disguise = getDisguiseIdentity(p);
   if (disguise) tpl += `\n[身份认知] 你被认知为: ${disguise}`;
   else if (p.public_identity) tpl += `\n[身份认知] 公开身份: ${p.public_identity}`;
+  // 玩家当前穿着（mount 槽单独显示为载具）
+  const INNER_SLOTS = new Set(["inner_top", "inner_bot"]);
+  const outerItems: string[] = [];
+  const innerItems: string[] = [];
+  let mountItem: string | null = null;
+  for (const [slot, item] of Object.entries(p.equipment)) {
+    if (!item) continue;
+    if (slot === "mount") { mountItem = (item as any).name; continue; }
+    if (INNER_SLOTS.has(slot)) innerItems.push((item as any).name);
+    else outerItems.push((item as any).name);
+  }
+  if (outerItems.length > 0 || innerItems.length > 0) {
+    const outerStr = outerItems.length > 0 ? outerItems.join("、") : "（无）";
+    if (s.layer1Enabled && innerItems.length > 0) {
+      tpl += `\n[穿着] ${outerStr}  |  内: ${innerItems.join("、")}`;
+    } else {
+      tpl += `\n[穿着] ${outerStr}`;
+    }
+  } else {
+    tpl += `\n[穿着] （什么都没穿）`;
+  }
+  if (mountItem) {
+    const speedStr = p.vehicle ? ` ×${p.vehicle.speedMul}` : "";
+    tpl += `\n[载具] ${mountItem}${speedStr}`;
+  }
   if (p.titles && p.titles.length > 0) {
     tpl += `\n[称号] ${p.titles.join(" | ")}`;
   }
@@ -405,23 +352,23 @@ export async function buildStatePrompt(): Promise<string> {
     const pt = s.pendingTravel;
     tpl += `\n[旅行中] 正在通过${pt.route}前往 ${pt.to}（耗时约${pt.minutes}分钟）。到达前请通过 complete_travel 工具结束旅程。`;
   }
-  // 附加玩家装备与背包物品
-  const eq = Object.entries(p.equipment).filter(([_, v]) => v);
-  if (eq.length > 0) {
-    tpl += `\n[玩家装备] ${eq.map(([s, it]) => `${s}:${it!.name}`).join(", ")}`;
-  }
-  if (p.inventory.length > 0) {
-    tpl += `\n[玩家背包] ${p.inventory.map(it => it.name).join(", ")}`;
-  }
-  // 负重状态
-  const maxCarry = calcMaxCarry(p.attributes.力量);
-  const curWeight = calcCurrentWeight(p.inventory, p.equipment);
-  const burden = isOverburdened(curWeight, maxCarry);
-  if (burden.overloaded) tpl += `\n[负重] 超重！(${curWeight}/${maxCarry}kg) 无法奔跑，行动迟缓`;
-  else if (burden.encumbered) tpl += `\n[负重] 负重较高(${curWeight}/${maxCarry}kg) 移动速度减半`;
   // 附加空间上下文
   const gridCtx = getGridContext();
   if (gridCtx) tpl += `\n${gridCtx}`;
+  // 周边地点 — LLM 知道附近有什么，不会乱编距离
+  const nav = getLocationNav(p.location);
+  if (nav.nearby.length > 0) {
+    const nearbyStr = nav.nearby.map(n => `${n.name}(约${n.minutes}分钟)`).join("、");
+    tpl += `\n[周边地点] ${nearbyStr}`;
+  }
+  // 房间时间戳脏污 — 低成本氛围注入
+  const agingLine = getRoomAgingLine(p.location);
+  if (agingLine) tpl += `\n[场景氛围] ${agingLine}`;
+
+  // 寒冷天气装备提示：穿厚外套等 → 注入保暖描述
+  if (s.weather.temp < 5 && hasEquipmentEffect(p.equipment, "cold_resist")) {
+    tpl += `\n[装备] 厚实的衣物抵御着寒风——你并不觉得冷。`;
+  }
   // 附加周边角色（通过地区路由器）
   if (r.all_characters.length > 0) {
     const nearby = r.all_characters.slice(0, 8);
@@ -473,6 +420,10 @@ export async function buildStatePrompt(): Promise<string> {
       bodyStr += ` ${body.skin?.base_tone || ""}${body.body_shape?.chest ? " "+body.body_shape.chest : ""}`;
       tpl += `\n[${nname}·身体] ${bodyStr}`;
     }
+    // 服装细节：场景服装卡 + 原始 appearance_brief 作为背景
+    const outfitDesc = getNPCOutfitDesc(nname);
+    const brief = src.appearance_brief ? `（${src.appearance_brief}）` : "";
+    tpl += `\n[${nname}·外观] ${outfitDesc}${brief}`;
   }
   // 附加声望
   const rep = gameState.player.reputation;
@@ -543,29 +494,16 @@ export async function buildStatePrompt(): Promise<string> {
       if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
       const sp = profiles[nname];
       if (!sp) continue;
-      // 确保运行时 SexState 存在（gal 模式欲望累积需要）
-      let sState = gameState.sexStates?.[nname] ?? null;
-      if (!sState) {
-        try { sState = await getOrCreateSexState(nname); } catch (_) {}
-      }
-      const runtimeProfile = sState?.profile ?? sp;
-      const devHint = getDevNarrative(runtimeProfile);
-      tpl += `\n[${nname}·印记] ${runtimeProfile.attitude} | ${runtimeProfile.experience} | ${devHint}`;
+      const devHint = getDevNarrative(sp);
+      tpl += `\n[${nname}·印记] ${sp.attitude} | ${sp.experience} | ${devHint}`;
       if (gameState.layer1Enabled) {
         const npcPhase = getCyclePhase(sp.cycleDay);
         if (npcPhase !== "安全期") tpl += ` | ${npcPhase}`;
-        // sex 模式也注入 NPC 实时欲望/兴奋
-        if (sState) {
-          const dh = getDesireNarrative(sState);
-          const ah = getArousalNarrative(sState);
-          if (dh) tpl += `\n  [${nname}·欲望] ${dh}`;
-          if (ah) tpl += `\n  [${nname}·兴奋] ${ah}`;
-        }
       }
     }
 
     if (!gameState.layer1Enabled) {
-      // 在 gal 模式下，对在场 NPC 注入其身体语言描述（无具体数值）
+      // 在 gal 模式下，对在场且在 gameState.sexStates 中有记录的 NPC，注入其身体语言描述（无具体数值）
       for (const [nname, npc] of Object.entries(gameState.npcs)) {
         if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
         const sState = gameState.sexStates?.[nname];
@@ -576,60 +514,42 @@ export async function buildStatePrompt(): Promise<string> {
           }
         }
       }
-    }
-  } catch (_) {}
 
-  // ── 世界日历（来自 data/calendar.json）──
-  try {
-    const { getTodayCalendar } = await import("./timeline.ts");
-    const todayCal = getTodayCalendar();
-    if (todayCal) tpl += `\n\n[今日世界] ${todayCal}`;
-  } catch (_) {}
-
-  // ── 剧情钩子（来自 data/timelines/）──
-  try {
-    const { getActiveHooks, getActiveQuests, getHookNoveltyHint } = await import("./timeline.ts");
-    const hooks = getActiveHooks();
-    if (hooks.length > 0) {
-      // 计算今日天数（与 timeline.ts 中 currentDay 公式一致）
-      const dParts = gameState.time.game_date.split("-");
-      const yearStart = new Date(Number(dParts[0]), 0, 1).getTime();
-      const today = new Date(Number(dParts[0]), Number(dParts[1]) - 1, Number(dParts[2])).getTime();
-      const todayDay = Math.floor((today - yearStart) / 86400000) + 1;
-
-      tpl += `\n\n[剧情钩子] 以下事件正在等待你的叙事推进。请自然地融入故事中，不要像任务弹窗一样宣告：`;
-      for (const h of hooks) {
-        const remaining = Math.max(0, h.expires_day - todayDay);
-        const daysLeft = `剩余${remaining}天`;
-        if (h.seen_count === 0) {
-          tpl += `\n- ${h.event_id} (来自${h.source_npc}，${daysLeft}): ${h.hook_text}`;
-        } else {
-          const novelty = getHookNoveltyHint(h);
-          tpl += `\n- ${h.event_id} (来自${h.source_npc}，${daysLeft}，第${h.seen_count+1}次出现): ${novelty}`;
+      // 场景sex影响：sex模式下注入房间环境叙事（氛围/声音/视觉）
+      if (gameState.layer1Enabled) {
+        const room = ROOMS[p.location];
+        if (room) {
+          const parts: string[] = [];
+          if ((room as any).atmosphere) parts.push((room as any).atmosphere);
+          const amb = (room as any).ambient;
+          if (amb?.audio) parts.push(`隐约听到${amb.audio}`);
+          if (amb?.visual) parts.push(amb.visual);
+          if (parts.length > 0) {
+            tpl += `\n[环境·亲密] ${parts.join("。")}。`;
+          } else {
+            // 无 atmosphere/ambient 时，按房间类型给默认氛围
+            const defaultAtmo = getDefaultSexAtmosphere(p.location);
+            if (defaultAtmo) tpl += `\n[环境·亲密] ${defaultAtmo}`;
+          }
         }
-        h.seen_count++;
-      }
-    }
-    const quests = getActiveQuests();
-    if (quests.length > 0) {
-      tpl += `\n\n[进行中] 当前活跃的任务：`;
-      for (const q of quests) {
-        tpl += `\n- ${q.title} (当前节拍: ${q.current_beat})`;
       }
     }
   } catch (_) {}
 
-  // 注入选项控制
-  if (gameState.flags.show_choices !== false) {
-    tpl += `\n[系统要求 - 回复选项] 你必须在回复的结尾生成 4 个扮演回应选项以指导玩家（格式如下）：
----
-> ① [普通]: 「你的对话...」或 *你的普通行动...*
-> ② [理智]: 「你的理智分析/冷静回应...」或 *冷静/理性行动...*
-> ③ [吐槽]: 「你的搞笑吐槽/反驳幽默...」
-> ④ [大胆]: *你的突破常规、大胆或者出人意料的动作...*`;
-  } else {
-    tpl += `\n[系统要求] 绝对禁止生成任何回复选项，直接输出正文并以环境感官描写收尾即可。`;
-  }
+/** 按房间名给默认sex氛围描述 */
+function getDefaultSexAtmosphere(location: string): string {
+  if (location.includes("教室") || location.includes("班")) return "空旷的教室，课桌椅整齐排列——在这里做点什么有种背德的刺激。";
+  if (location.includes("侍奉部") || location.includes("部室")) return "狭小的部室，只有老旧暖炉的嗡嗡声和窗外操场的喧闹。";
+  if (location.includes("屋顶")) return "天台的凉风不时吹过，远处的城市景色尽收眼底。";
+  if (location.includes("保健室")) return "消毒水的气味，拉上帘子就是一个小天地。";
+  if (location.includes("更衣室") || location.includes("体育馆")) return "潮湿的空气里混着运动后的汗味和沐浴露的香气。";
+  if (location.includes("住宅") || location.includes("自宅")) return "熟悉的房间里，窗帘透进来的光让一切都显得柔和。";
+  if (location.includes("走廊")) return "随时可能有人经过的走廊转角——紧张感和刺激并存。";
+  if (location.includes("中庭")) return "夜晚的中庭空无一人，只有路灯洒下昏黄的光。";
+  if (location.includes("泳池")) return "水面反射着波光，空气中有氯气的气味。";
+  if (location.includes("浴室") || location.includes("温泉")) return "氤氲的蒸汽模糊了视线，水滴声在瓷砖墙间回荡。";
+  return "";
+}
 
   return tpl;
 }
@@ -658,6 +578,91 @@ export function calcAC(敏捷: number, equipment: EquipmentSlots): number {
   return ac;
 }
 
+// --- 装备效果扫描（attribute_bonus / social_bonus / cold_resist） ---
+
+/** 扫描装备，累计指定 effectType 的数值加成。context 用于 condition 匹配。 */
+export function getEquipmentBonus(
+  equipment: EquipmentSlots,
+  effectType: string,
+  context?: string
+): number {
+  let bonus = 0;
+  for (const item of Object.values(equipment)) {
+    if (!item?.effects) continue;
+    for (const eff of item.effects) {
+      if (eff.type !== effectType) continue;
+      if (eff.condition && context) {
+        if (!context.includes(eff.condition.replace(/相关.*$/, ""))) continue;
+      }
+      bonus += Number(eff.value);
+    }
+  }
+  return bonus;
+}
+
+/** 检查装备是否有某类效果（用于 cold_resist 等标记型效果） */
+export function hasEquipmentEffect(
+  equipment: EquipmentSlots,
+  effectType: string
+): boolean {
+  for (const item of Object.values(equipment)) {
+    if (!item?.effects) continue;
+    for (const eff of item.effects) {
+      if (eff.type === effectType) return true;
+    }
+  }
+  return false;
+}
+
+// --- 载具系统 ---
+
+interface VehicleDef { speedMul: number; tags: string[]; desc: string; }
+const VEHICLES: Record<string, VehicleDef> = {
+  bicycle:    { speedMul: 3, tags: ["narrow","steep","off-road"], desc: "自行车——通学路最常见的交通工具，小巷山路都能钻" },
+  motorcycle: { speedMul: 5, tags: ["narrow","steep"], desc: "摩托车——比汽车灵活，窄巷和山路没问题，但还是要走车道" },
+  car:        { speedMul: 8, tags: [], desc: "汽车——只能在铺装路上开，需要停车场" },
+};
+
+/** 装备载具到 mount 槽 */
+export function mountVehicle(itemName: string): string {
+  const p = gameState.player;
+  if (p.equipment.mount) return `已经骑着 ${p.equipment.mount.name}，请先下车`;
+
+  // 从背包找
+  const idx = p.inventory.findIndex(i => i.effects?.some(e => e.type === "vehicle") && i.name === itemName);
+  if (idx < 0) return `背包里没有 ${itemName}`;
+
+  const found = p.inventory.splice(idx, 1)[0];
+  const vtype = found.effects.find(e => e.type === "vehicle")?.value as string || "bicycle";
+  const def = VEHICLES[vtype];
+  if (!def) return `未知载具类型: ${vtype}`;
+
+  p.equipment.mount = found;
+  p.vehicle = { type: vtype as any, name: found.name, speedMul: def.speedMul };
+  saveState();
+  return `骑上了 ${found.name}（速度×${def.speedMul}）`;
+}
+
+/** 下车：从 mount 槽卸下放背包 */
+export function dismountVehicle(): string {
+  const p = gameState.player;
+  const item = p.equipment.mount;
+  if (!item) return "当前没有骑乘载具";
+
+  p.equipment.mount = null;
+  p.vehicle = undefined;
+  p.inventory.push(item);
+  saveState();
+  return `从 ${item.name} 上下来了`;
+}
+
+
+/** 获取当前载具速度倍率 */
+export function getVehicleMul(): { mul: number; name?: string } {
+  const v = gameState.player.vehicle;
+  return v ? { mul: v.speedMul, name: v.name } : { mul: 1 };
+}
+
 // --- 负重 ---
 export function calcMaxCarry(力量: number): number {
   return Math.round(力量 * 6.8 * 10) / 10; // STR × 6.8 kg
@@ -678,6 +683,170 @@ export function isOverburdened(currentWeight: number, maxCarry: number): { overl
     overloaded: pct > 1.0,   // 不能跑
     encumbered: pct > 0.6,    // 移动减半，DEX劣势
   };
+}
+
+// --- 容器/体积系统 ---
+export interface VolumeCheckResult {
+  ok: boolean;
+  totalVolume: number;
+  maxVolume: number;
+  severity: "ok" | "bulging" | "overflow" | "damage";
+  narrative: string;
+}
+
+/** 从装备的 pocket 效果计算总容积（升） */
+export function calcPocketVolume(equipment: EquipmentSlots): number {
+  let total = 0;
+  for (const item of Object.values(equipment)) {
+    if (!item) continue;
+    for (const eff of item.effects) {
+      if (eff.type === "pocket") total += Number(eff.value);
+    }
+  }
+  return total;
+}
+
+/** 计算背包+装备的总体积 */
+export function calcInventoryVolume(inventory: Item[], equipment: EquipmentSlots): number {
+  let total = 0;
+  for (const item of inventory) total += item.volume;
+  for (const item of Object.values(equipment)) {
+    if (item) total += item.volume;
+  }
+  return Math.round(total * 10) / 10;
+}
+
+/** 检查加入新物品后的体积是否超限 */
+export function checkAddVolume(
+  inventory: Item[],
+  equipment: EquipmentSlots,
+  newItem: { volume: number; name: string }
+): VolumeCheckResult {
+  const curVol = calcInventoryVolume(inventory, equipment);
+  const maxVol = calcPocketVolume(equipment);
+  const newVol = curVol + newItem.volume;
+
+  if (maxVol === 0) {
+    // 没有任何容器，视为无限空间（裸奔状态）
+    return { ok: true, totalVolume: newVol, maxVolume: 0, severity: "ok", narrative: "" };
+  }
+
+  const ratio = newVol / maxVol;
+
+  if (ratio <= 1.0) {
+    return { ok: true, totalVolume: newVol, maxVolume: maxVol, severity: "ok", narrative: "" };
+  }
+  if (ratio <= 1.2) {
+    return {
+      ok: true,
+      totalVolume: newVol,
+      maxVolume: maxVol,
+      severity: "bulging",
+      narrative: `勉强塞进去了——${newItem.name}让背包明显鼓胀，看起来很不自然。`
+    };
+  }
+  if (ratio <= 1.5) {
+    return {
+      ok: false,
+      totalVolume: newVol,
+      maxVolume: maxVol,
+      severity: "overflow",
+      narrative: `塞不下${newItem.name}。背包已经撑到极限了。`
+    };
+  }
+  return {
+    ok: false,
+    totalVolume: newVol,
+    maxVolume: maxVol,
+    severity: "damage",
+    narrative: `强行塞${newItem.name}会把背包撑坏！必须腾出空间或换更大的容器。`
+  };
+}
+
+/** 装备 locker 容量时检查是否会损坏容器 */
+export function checkContainerDamage(totalVolume: number, maxVolume: number): boolean {
+  return maxVolume > 0 && totalVolume > maxVolume * 1.3;
+}
+
+// --- 手机消息系统（引擎存储，TUI 读取，0 token）---
+import type { PhoneMessage } from "./types.ts";
+
+/** 添加一条手机消息到收件箱 */
+export function addPhoneMessage(msg: Omit<PhoneMessage, "read">): void {
+  gameState.phoneInbox ??= [];
+  gameState.phoneInbox.push({ ...msg, read: false });
+  // 最多保留 30 条
+  if (gameState.phoneInbox.length > 30) {
+    gameState.phoneInbox = gameState.phoneInbox.slice(-30);
+  }
+}
+
+/** 事件驱动：从记忆标签生成 NPC 消息 */
+export function generatePhoneMessagesFromEvents(events: string[]): void {
+  const now = gameState.time.game_date;
+  for (const ev of events) {
+    // NPC 移动事件 → 可能发短信
+    const match = ev.match(/^(.+?):\s*(.+?)\s*→\s*(.+)/);
+    if (match) {
+      const [, name, from, to] = match;
+      const rel = gameState.player.relationships[name];
+      if (rel && rel.affection >= 30 && Math.random() < 0.3) {
+        const messages = [
+          `今天换个地方待着——在${to}。`,
+          `刚路过${from}，现在到${to}了。`,
+          `移动中✈️ ${from}→${to}`,
+        ];
+        addPhoneMessage({
+          sender: name,
+          content: messages[Math.floor(Math.random() * messages.length)],
+          timestamp: now,
+          type: "sms",
+        });
+      }
+    }
+    // 社交碰面事件
+    const meetMatch = ev.match(/^(.+?)和(.+?)在(.+?)碰面/);
+    if (meetMatch) {
+      const [, a, b, loc] = meetMatch;
+      const relA = gameState.player.relationships[a];
+      if (relA && relA.affection >= 40 && Math.random() < 0.4) {
+        addPhoneMessage({
+          sender: a,
+          content: `刚在${loc}碰到${b}了！`,
+          timestamp: now,
+          type: "sms",
+        });
+      }
+    }
+  }
+
+  // 记忆标签 → NPC 消息
+  for (const [nname, npc] of Object.entries(gameState.npcs)) {
+    if (!npc.memoryTags || npc.memoryTags.length === 0) continue;
+    const rel = gameState.player.relationships[nname];
+    if (!rel || rel.affection <= 0) continue;
+    const latest = npc.memoryTags[npc.memoryTags.length - 1];
+    if (latest && Math.random() < 0.25) {
+      addPhoneMessage({
+        sender: nname,
+        content: `听说 "${latest.tag}" …能告诉我更多吗？`,
+        timestamp: now,
+        type: "sms",
+      });
+    }
+  }
+}
+
+/** 获取未读消息数 */
+export function getUnreadPhoneCount(): number {
+  return (gameState.phoneInbox || []).filter(m => !m.read).length;
+}
+
+/** 标记所有消息为已读 */
+export function markPhoneMessagesRead(): void {
+  for (const m of (gameState.phoneInbox || [])) {
+    m.read = true;
+  }
 }
 
 // --- 技能EXP ---
@@ -723,22 +892,87 @@ function affectionToStage(val: number): Relationship["stage"] {
 
 // --- NPC 运行时状态 ---
 
+/** 从 items.json 查找同名物品，补全 effects */
+function fillEffectsFromCatalog(equipment: Record<string, any>): Record<string, any> {
+  const lookup = new Map<string, any>();
+  for (const cat of Object.values(itemsCatalog)) {
+    for (const [name, item] of Object.entries(cat as any)) {
+      lookup.set(name, item);
+    }
+  }
+  const result: Record<string, any> = {};
+  for (const [slot, item] of Object.entries(equipment)) {
+    if (!item) { result[slot] = null; continue; }
+    const catalog = lookup.get(item.name);
+    result[slot] = catalog ? { ...structuredClone(catalog), state: item.state || "intact" } : item;
+  }
+  return result;
+}
+
 export function getOrCreateNPC(name: string): NPCRuntimeState {
   if (!gameState.npcs[name]) {
     const src = (characters as any[]).find((c: any) => c.name === name);
     gameState.npcs[name] = {
       inventory: src ? structuredClone(src.inventory ?? []) : [],
-      equipment: src ? structuredClone(src.equipment ?? {}) : {},
+      equipment: src ? fillEffectsFromCatalog(src.equipment ?? {}) : {},
       currentRoom: src?.default_location || "",
       gridPos: src?.grid_pos || null,
       action: "",
       scheduleGroup: src?.schedule_group || "自由人",
       scheduleOverrides: src?.schedule_overrides,
+      currentOutfit: "school",
       funds: src?.funds !== undefined ? src.funds : 1000,
-      memoryTags: [],
     };
+    // 魅力→初始印象：NPC首次创建时自动写入关系
+    if (!gameState.player.relationships[name]) {
+      const impression = Math.round((gameState.player.attributes.魅力 - 10) / 2) * 3;
+      const baseAffection = Math.max(-10, Math.min(10, impression));
+      if (baseAffection !== 0) {
+        gameState.player.relationships[name] = {
+          stage: "陌生",
+          affection: Math.max(0, baseAffection),
+          romance: null,
+          notes: baseAffection > 0 ? "第一印象不错" : "第一印象不太好",
+        };
+      }
+    }
   }
   return gameState.npcs[name];
+}
+
+/** NPC 场景服装切换。返回当前 outfit 描述 */
+export function setNPCOutfit(npcName: string, outfitKey: string): string {
+  const src = (characters as any[]).find((c: any) => c.name === npcName);
+  if (!src?.outfits?.[outfitKey]) return `${npcName}没有 ${outfitKey} 服装卡`;
+  const npc = getOrCreateNPC(npcName);
+  npc.currentOutfit = outfitKey as any;
+  const items = src.outfits[outfitKey];
+  const desc = Object.values(items).join("、");
+  return `${npcName} → ${outfitKey}: ${desc}`;
+}
+
+/** 获取 NPC 当前 outfit 的外观描述。已从装备槽移除的物品不显示 */
+export function getNPCOutfitDesc(npcName: string): string {
+  const src = (characters as any[]).find((c: any) => c.name === npcName);
+  if (!src?.outfits) return src?.appearance_brief || "";
+  const npc = gameState.npcs[npcName];
+  const key = npc?.currentOutfit || "school";
+  const outfit = src.outfits[key];
+  if (!outfit) return src.appearance_brief || "";
+  // 分层：内层 vs 外层；跳过已被移除的装备
+  const inner: string[] = [];
+  const outer: string[] = [];
+  for (const [slot, item] of Object.entries(outfit)) {
+    // 检查装备槽：如果对应槽位为空，该物品已被偷/移除 → 不显示
+    const equipSlot = npc.equipment[slot as any];
+    const isMissing = equipSlot === null || equipSlot === undefined;
+    const label = isMissing ? `${item}（已被拿走）` : item as string;
+    if (slot.startsWith("inner_")) inner.push(label);
+    else outer.push(label);
+  }
+  const outerStr = outer.join("、");
+  if (inner.length > 0) return `${outerStr}。内: ${inner.join("、")}`;
+  return outerStr;
 }
 
 export async function getOrCreateSexState(npcName: string): Promise<SexState | null> {
@@ -756,6 +990,404 @@ export function listNPCItems(name: string): Item[] {
   const npc = getOrCreateNPC(name);
   const equipped = Object.values(npc.equipment).filter(Boolean) as Item[];
   return [...npc.inventory, ...equipped];
+}
+
+// --- 地点层级系统（locations.json 树形结构） ---
+
+export interface LocationNode {
+  key: string;           // 内部key，如 "chiba"
+  name: string;          // 显示名，如 "千叶县"
+  type: "root" | "region" | "prefecture" | "district" | "school" | "landmark" | "custom";
+  children: LocationNode[];
+  parent: LocationNode | null;
+}
+
+/** 递归构建地点树 */
+function buildLocationTree(): LocationNode {
+  const root: LocationNode = { key: "japan", name: LOCATIONS_BASE.japan?.name || "日本", type: "root", children: [], parent: null };
+
+  const regions = LOCATIONS_BASE.japan?.regions || {};
+  for (const [regKey, regData] of Object.entries(regions)) {
+    const reg = regData as any;
+    const regNode: LocationNode = { key: regKey, name: reg.name, type: "region", children: [], parent: root };
+    root.children.push(regNode);
+
+    const prefs = reg.prefectures || {};
+    for (const [prefKey, prefData] of Object.entries(prefs)) {
+      const pref = prefData as any;
+      const prefNode: LocationNode = { key: prefKey, name: pref.name, type: "prefecture", children: [], parent: regNode };
+      regNode.children.push(prefNode);
+
+      const districts: string[] = pref.districts || [];
+      if (districts.length > 0) {
+        // 有区/市 → 学校和地标挂到第一个区下面
+        const mainDistrict: LocationNode = { key: districts[0], name: districts[0], type: "district", children: [], parent: prefNode };
+        prefNode.children.push(mainDistrict);
+        for (const s of (pref.schools || [])) {
+          mainDistrict.children.push({ key: s, name: s, type: "school", children: [], parent: mainDistrict });
+        }
+        for (const l of (pref.landmarks || [])) {
+          mainDistrict.children.push({ key: l, name: l, type: "landmark", children: [], parent: mainDistrict });
+        }
+        // 其余区
+        for (let i = 1; i < districts.length; i++) {
+          prefNode.children.push({ key: districts[i], name: districts[i], type: "district", children: [], parent: prefNode });
+        }
+      } else {
+        // 无区/市 → 学校和地标直接挂在县下
+        for (const s of (pref.schools || [])) {
+          prefNode.children.push({ key: s, name: s, type: "school", children: [], parent: prefNode });
+        }
+        for (const l of (pref.landmarks || [])) {
+          prefNode.children.push({ key: l, name: l, type: "landmark", children: [], parent: prefNode });
+        }
+      }
+
+      // 动态地点
+      const customs = LOCATIONS_DELTA[pref.name] || [];
+      for (const c of customs) {
+        prefNode.children.push({ key: c, name: c, type: "custom", children: [], parent: prefNode });
+      }
+    }
+
+    // prefecture 级别的动态地点
+    const regCustoms = LOCATIONS_DELTA[reg.name] || [];
+    for (const c of regCustoms) {
+      regNode.children.push({ key: c, name: c, type: "custom", children: [], parent: regNode });
+    }
+  }
+  return root;
+}
+
+/** 在树中查找匹配地点（模糊匹配） */
+function findInTree(node: LocationNode, locName: string): LocationNode | null {
+  const cleanLoc = locName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+  if (node.name.replace(/[（(].*[）)]/, "").trim().toLowerCase() === cleanLoc) return node;
+  if (isSameLocation(node.name, locName)) return node;
+  for (const child of node.children) {
+    const found = findInTree(child, locName);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** 获取当前地点的导航上下文 */
+/** 通过 school_map.json 查找房间所属的学校和楼层，找不到则返回 null */
+function findSchoolContext(locName: string): { school: string; building: string; floor: string } | null {
+  if (!SCHOOL_MAP?.buildings) return null;
+  const cleanLoc = locName.replace(/[（(].*[）)]/, "").trim();
+  for (const [bname, bdata] of Object.entries(SCHOOL_MAP.buildings)) {
+    const b = bdata as any;
+    if (b.rooms) {
+      for (const [floor, rooms] of Object.entries(b.rooms)) {
+        for (const r of rooms as string[]) {
+          if (isSameLocation(r, locName) || r.includes(cleanLoc) || cleanLoc.includes(r)) {
+            return { school: SCHOOL_MAP.school, building: bname, floor };
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** 获取学校内部层级——建筑列表、楼层列表、房间列表 */
+function getSchoolInternals(schoolName: string): { buildings: string[]; floorsByBuilding: Record<string, string[]>; roomsByFloor: Record<string, string[]> } {
+  const buildings: string[] = [];
+  const floorsByBuilding: Record<string, string[]> = {};
+  const roomsByFloor: Record<string, string[]> = {};
+  if (!SCHOOL_MAP?.buildings) return { buildings, floorsByBuilding, roomsByFloor };
+
+  for (const [bname, bdata] of Object.entries(SCHOOL_MAP.buildings)) {
+    const b = bdata as any;
+    buildings.push(bname);
+    if (b.rooms) {
+      const floors = Object.keys(b.rooms);
+      floorsByBuilding[bname] = floors;
+      for (const [floor, roomList] of Object.entries(b.rooms)) {
+        const key = `${bname} ${floor}`;
+        roomsByFloor[key] = roomList as string[];
+      }
+    }
+  }
+
+  // 运动设施 → 直接作为叶子房间
+  const sportsGrounds = SCHOOL_MAP.buildings["运动设施"] as string[] | undefined;
+  if (sportsGrounds) {
+    for (const sg of sportsGrounds) {
+      buildings.push(sg);  // 操场等直接作为可导航地点
+    }
+  }
+
+  return { buildings, floorsByBuilding, roomsByFloor };
+}
+
+/** 学校内部树结构 */
+export interface SchoolInternalNode {
+  name: string;
+  type: "building" | "floor" | "room";
+  children: SchoolInternalNode[];
+}
+
+/** 车站信息 */
+export interface StationInfo {
+  name: string;
+  lines: string[];
+  destinations: { name: string; minutes: number }[];
+}
+
+export function getLocationNav(locName: string): {
+  breadcrumb: string[];
+  parent: string | null;
+  siblings: string[];
+  children: string[];
+  rooms: string[];
+  nearby: { name: string; minutes: number }[];
+  stations: StationInfo[];
+  schoolTree: SchoolInternalNode[] | null;
+  level: string;
+} {
+  const tree = buildLocationTree();
+  const node = findInTree(tree, locName);
+
+  // 面包屑
+  const breadcrumb: string[] = [];
+  let cur = node;
+  while (cur) { breadcrumb.unshift(cur.name); cur = cur.parent; }
+
+  // ── 判断是否在学校内部 ──
+  const schoolCtx = findSchoolContext(locName);
+  const isSchoolNode = node?.type === "school";
+  const isInsideSchool = !!schoolCtx;
+
+  // 同层房间（如果在房间级）
+  const rooms: string[] = [];
+  if (schoolCtx) {
+    const floorKey = `${schoolCtx.building} ${schoolCtx.floor}`;
+    const schoolData = getSchoolInternals(schoolCtx.school);
+    const floorRooms = schoolData.roomsByFloor[floorKey] || [];
+    rooms.push(...floorRooms.filter(r => !isSameLocation(r, locName)));
+  }
+
+  // ── 确定当前所在层级和导航上下文 ──
+  let parent: string | null = null;
+  let siblings: string[] = [];
+  let children: string[] = [];
+  let level = node?.type || "unknown";
+
+  if (isInsideSchool) {
+    // 在学校内部的某个房间
+    parent = schoolCtx!.school;  // 父级是学校名
+    level = "room";
+
+    // 面包屑补全：学校 → 建筑 → 楼层
+    if (breadcrumb.length === 0 || !breadcrumb.includes(schoolCtx!.school)) {
+      breadcrumb.push(schoolCtx!.school);
+    }
+    breadcrumb.push(schoolCtx!.building, schoolCtx!.floor);
+
+    // 同级=同层其他房间
+    const floorKey = `${schoolCtx!.building} ${schoolCtx!.floor}`;
+    const schoolData = getSchoolInternals(schoolCtx!.school);
+    siblings = (schoolData.roomsByFloor[floorKey] || []).filter(r => !isSameLocation(r, locName));
+
+    // 子级=空（房间是最底层）
+    children = [];
+
+  } else if (isSchoolNode) {
+    // 在学校级
+    parent = node?.parent?.name || null;
+    level = "school";
+
+    const schoolData = getSchoolInternals(node!.name);
+    if (schoolData.buildings.length > 0) {
+      // 有 school_map 数据 → 建筑→楼层→房间
+      children = schoolData.buildings.filter(b => {
+        // 过滤：只保留有房间的建筑
+        const hasFloors = schoolData.floorsByBuilding[b]?.length > 0;
+        const isSportsGround = SCHOOL_MAP?.buildings?.["运动设施"]?.includes(b);
+        return hasFloors || isSportsGround;
+      });
+    } else {
+      // 无 school_map → 直接用 locations.json 的 children
+      children = (node?.children || []).map(c => c.name);
+    }
+
+    // 同级=同 prefecture 下的其他学校/地标
+    if (node?.parent) {
+      for (const c of node.parent.children) {
+        if (c.name !== node!.name) siblings.push(c.name);
+      }
+    }
+
+  } else {
+    // 不在学校内部——城市/地区/其他
+    parent = node?.parent?.name || null;
+    level = node?.type || "unknown";
+
+    if (node?.parent) {
+      for (const c of node.parent.children) {
+        if (c.name !== node!.name) siblings.push(c.name);
+      }
+    }
+    children = (node?.children || []).map(c => c.name);
+
+    // 查找下属房间
+    for (const [rname] of Object.entries(ROOMS)) {
+      if (knownLocationMatch(rname, locName)) rooms.push(rname);
+    }
+  }
+
+  // 周边微地点：学校/地标的紧邻地点（步行1-8分钟）
+  const nearby: { name: string; minutes: number }[] = [];
+  if (isSchoolNode && SCHOOL_MAP?.buildings) {
+    const surroundings = SCHOOL_MAP["周边"] as { name: string; min: number }[] | undefined;
+    if (surroundings) {
+      for (const s of surroundings) nearby.push({ name: s.name, minutes: s.min });
+    }
+  }
+  // 同区其他地标/学校（距离基于名称hash固定）
+  const parentNode = node?.parent;
+  if (parentNode && (node?.type === "school" || node?.type === "landmark" || node?.type === "custom")) {
+    for (const c of parentNode.children) {
+      if (c.name === node!.name) continue;
+      // 已在上面的周边微地点里 → 跳过
+      if (nearby.some(n => n.name === c.name)) continue;
+      // 固定距离：hash 地名 → 10-30分钟
+      const hash = c.name.split("").reduce((s: number, ch: string) => s + ch.charCodeAt(0), 0);
+      const mins = 10 + (hash % 20);
+      nearby.push({ name: c.name, minutes: mins });
+    }
+  }
+
+  // 车站查找
+  const stations: StationInfo[] = [];
+  const regions = CITY_MAP?.regions || {};
+  for (const reg of Object.values(regions) as any[]) {
+    if (!reg.stations) continue;
+    for (const [sn, sd] of Object.entries(reg.stations)) {
+      if (isSameLocation(sn, locName) || locName.includes(sn) || sn.includes(locName)) {
+        const sdObj = sd as any;
+        const dests: { name: string; minutes: number }[] = [];
+        if (sdObj.time_to) {
+          for (const [dn, dm] of Object.entries(sdObj.time_to)) {
+            dests.push({ name: dn, minutes: dm as number });
+          }
+        }
+        stations.push({ name: sn, lines: sdObj.lines || [], destinations: dests });
+      }
+    }
+  }
+
+  // 学校内部树
+  let schoolTree: SchoolInternalNode[] | null = null;
+  if (isSchoolNode) {
+    const schoolData = getSchoolInternals(node!.name);
+    schoolTree = [];
+    for (const bname of schoolData.buildings) {
+      const bnode: SchoolInternalNode = { name: bname, type: "building", children: [] };
+      const floors = schoolData.floorsByBuilding[bname] || [];
+      for (const f of floors) {
+        const fnode: SchoolInternalNode = { name: f, type: "floor", children: [] };
+        const floorKey = `${bname} ${f}`;
+        const roomList = schoolData.roomsByFloor[floorKey] || [];
+        for (const r of roomList) {
+          fnode.children.push({ name: r, type: "room", children: [] });
+        }
+        bnode.children.push(fnode);
+      }
+      schoolTree.push(bnode);
+    }
+  }
+
+  return { breadcrumb, parent, siblings, children, rooms, nearby, stations, schoolTree, level };
+}
+
+function knownLocationMatch(roomName: string, locName: string): boolean {
+  return roomName.includes(locName) || isSameLocation(roomName, locName);
+}
+
+/** LLM 动态创建地点 */
+export function createDynamicLocation(parentName: string, name: string): string {
+  LOCATIONS_DELTA[parentName] ??= [];
+  if (LOCATIONS_DELTA[parentName].includes(name)) return `${name} 已存在`;
+  LOCATIONS_DELTA[parentName].push(name);
+  // 持久化到 session 目录
+  const deltaPath = path.join(STATE_DIR, "locations_delta.json");
+  fs.writeFileSync(deltaPath, JSON.stringify(LOCATIONS_DELTA, null, 2));
+  // 自动加入已知地点
+  if (!gameState.player.known_locations.includes(name)) {
+    gameState.player.known_locations.push(name);
+  }
+  saveState();
+  return `创建了新地点: ${name}（位于 ${parentName}）`;
+}
+
+/** 恢复 locations delta */
+export function loadLocationsDelta(): void {
+  const deltaPath = path.join(STATE_DIR, "locations_delta.json");
+  if (fs.existsSync(deltaPath)) {
+    try { LOCATIONS_DELTA = JSON.parse(fs.readFileSync(deltaPath, "utf-8")); } catch (_) {}
+  }
+}
+
+// --- 房间时间戳脏污（方向A） ---
+
+/** 记录房间最后访问时间 */
+export function stampRoom(roomName?: string): void {
+  const name = roomName || gameState.player.location;
+  if (!name) return;
+  const key = getRoomKey(name) || name;
+  gameState.roomTimestamps ??= {};
+  gameState.roomTimestamps[key] = gameState.time.game_date;
+}
+
+/** 按距上次访问天数返回氛围描述，空串=不注入 */
+export function getRoomAgingLine(roomName: string): string {
+  gameState.roomTimestamps ??= {};
+  const key = getRoomKey(roomName) || roomName;
+  const lastVisit = gameState.roomTimestamps[key];
+  if (!lastVisit) return "";
+
+  const current = gameState.time.game_date;
+  const daysSince = daysBetween(lastVisit, current);
+  if (daysSince < 4) return "";
+
+  const seed = gameState.turn + roomName.length;
+  const poolIdx = seed % 3;
+
+  if (daysSince >= 30) {
+    const pool = [
+      "灰尘覆盖了一切——这里像是被遗忘了。",
+      "推开门的瞬间，霉味扑面而来。地上积了厚厚一层灰。",
+      "这里太久没人来过，连空气都是静止的。",
+    ];
+    return pool[poolIdx];
+  }
+  if (daysSince >= 15) {
+    const pool = [
+      "角落结了蛛网，空气里有股久置的气味。",
+      "地板上能看到清晰的灰尘——很久没人来过了。",
+      "窗台上积了薄灰，一片寂静。",
+    ];
+    return pool[poolIdx];
+  }
+  // 4-14 天
+  const pool = [
+    "有一阵子没人来了。",
+    "几天没来，空气有些沉闷。",
+    "桌椅还是上次离开时的样子——已经积了薄灰。",
+  ];
+  return pool[poolIdx];
+}
+
+/** 简易日期差（天），不依赖 Date 对象 */
+function daysBetween(d1: string, d2: string): number {
+  const [y1, m1, d1n] = d1.split("-").map(Number);
+  const [y2, m2, d2n] = d2.split("-").map(Number);
+  const total1 = y1 * 365 + m1 * 30 + d1n;
+  const total2 = y2 * 365 + m2 * 30 + d2n;
+  return Math.max(0, total2 - total1);
 }
 
 // --- 空间系统（棋盘格） ---
@@ -843,7 +1475,7 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
   return { success: true, newX: nx, newY: ny, blocked: false, reason: "", distance: cellDist, seconds };
 }
 
-export async function createRoom(roomName: string, width: number, height: number, floor: number, atmosphere?: string, directions?: Record<string, string>): Promise<{ success: boolean; reason: string }> {
+export async function createRoom(roomName: string, width: number, height: number, floor: number): Promise<{ success: boolean; reason: string }> {
   const cleanName = roomName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
   if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
   if (width < 1 || height < 1) return { success: false, reason: "房间尺寸无效" };
@@ -869,9 +1501,7 @@ export async function createRoom(roomName: string, width: number, height: number
     floor,
     origin: [Math.floor(width/2), Math.floor(height/2)],
     cells,
-    capacity: undefined,
-    ...(atmosphere ? { atmosphere } : {}),
-    ...(directions ? { directions } : {}),
+    capacity: undefined
   };
 
   // 物理约束：施工需要时间（引擎不查钱——GM判断经济）
@@ -1066,11 +1696,16 @@ export function buyItem(itemName: string, price: number): string {
   if (!itemData) return `LLM必须指定有效物品名`;
   const err = validatePrice(itemName, price);
   if (err) return err;
-  if (gameState.player.funds < price) return `钱不够。需要¥${price}，余额¥${gameState.player.funds}`;
-  gameState.player.funds -= price;
+  // 魅力谈判：高魅力砍价
+  const chaBonus = attrMod(gameState.player.attributes.魅力);
+  const discount = Math.round(price * chaBonus * 0.01);
+  const finalPrice = Math.max(price - discount, price * 0.85);
+  if (gameState.player.funds < finalPrice) return `钱不够。需要¥${finalPrice}，余额¥${gameState.player.funds}`;
+  gameState.player.funds -= finalPrice;
   gameState.player.inventory.push(structuredClone(itemData));
   saveState();
-  return `买了${itemName}，花费¥${price}。余额¥${gameState.player.funds}`;
+  const discountStr = discount > 0 ? ` (魅力砍价-¥${discount})` : "";
+  return `买了${itemName}，花费¥${finalPrice}${discountStr}。余额¥${gameState.player.funds}`;
 }
 
 export function sellItem(itemName: string, price: number, buyerName?: string): string {
@@ -1078,17 +1713,21 @@ export function sellItem(itemName: string, price: number, buyerName?: string): s
   if (idx < 0) return `背包里没有${itemName}`;
   const err = validatePrice(itemName, price);
   if (err) return err;
-  // 如果指定了买方 NPC，校验对方资金
+  // 魅力谈判：高魅力卖更高价
+  const chaBonus = attrMod(gameState.player.attributes.魅力);
+  const premium = Math.round(price * chaBonus * 0.005);
+  const finalPrice = Math.min(price + premium, price * 1.1);
   if (buyerName) {
     const npc = getOrCreateNPC(buyerName);
-    if (npc.funds < price) return `${buyerName}只有¥${npc.funds}，买不起¥${price}的${itemName}`;
-    npc.funds -= price;
+    if (npc.funds < finalPrice) return `${buyerName}只有¥${npc.funds}，买不起¥${finalPrice}的${itemName}`;
+    npc.funds -= finalPrice;
   }
   gameState.player.inventory.splice(idx, 1);
-  gameState.player.funds += price;
+  gameState.player.funds += finalPrice;
   saveState();
-  const buyerMsg = buyerName ? ` 给${buyerName}` : "";
-  return `卖了${itemName}${buyerMsg}，获得¥${price}。余额¥${gameState.player.funds}`;
+  const buyerMsg = buyerName ? `（卖给${buyerName}）` : "";
+  const premiumStr = premium > 0 ? ` (魅力谈价+¥${premium})` : "";
+  return `卖了${itemName}${buyerMsg}，获得¥${finalPrice}${premiumStr}。余额¥${gameState.player.funds}`;
 }
 
 export function workJob(jobName: string, hours: number): string {
@@ -1144,6 +1783,11 @@ const SEASONS: Record<string, { types: string[]; temps: [number, number] }> = {
 
 export function refreshWeather(): string {
   const m = Number(gameState.time.game_date.split("-")[1]);
+  const s = m >= 3 && m <= 5 ? "春" : m >= 6 && m <= 8 ? "夏" : m >= 9 && m <= 11 ? "秋" : "冬";
+  const p = SEASONS[s];
+  gameState.weather.type = p.types[Math.floor(Math.random() * p.types.length)];
+  gameState.weather.temp = p.temps[0] + Math.floor(Math.random() * (p.temps[1] - p.temps[0]));
+  saveState();
   return `${gameState.weather.type} ${gameState.weather.temp}°C`;
 }
 
@@ -1370,6 +2014,9 @@ export function updateNPCSchedules(): string[] {
     }
   }
   
+  // 手机消息：从事件中生成 NPC 短信
+  try { generatePhoneMessagesFromEvents(events); } catch (_) {}
+
   return events;
 }
 
@@ -1403,11 +2050,7 @@ export function getGridContext(): string {
     else around.push(`${d}:空`);
   }
 
-  const capacity = getRoomCapacity(gameState.player.location);
-  const inRoomNPCs = Object.values(gameState.npcs || {}).filter((n: any) => isSameLocation(n.currentRoom, gameState.player.location)).length;
-  const namelessCount = getNamelessNPCs(gameState.player.location, gameState.turn).length;
-  const currentPeople = inRoomNPCs + namelessCount + 1; // +1 for player
-  let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py}) | 容纳人数:${currentPeople}/${capacity}人`;
+  let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py})`;
   if ((room as any).atmosphere) ctx += ` | ${(room as any).atmosphere}`;
   const amb = (room as any).ambient;
   if (amb) ctx += ` | 环境: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`;
@@ -1418,6 +2061,34 @@ export function getGridContext(): string {
 }
 
 // --- 偷窃 ---
+
+/** 从 NPC 偷钱 */
+export function stealFunds(player: PlayerState, targetName: string): StealResult {
+  const npc = getOrCreateNPC(targetName);
+  if (npc.funds <= 0) {
+    return { success: false, caught: false, narrative: targetName + "身无分文。", roll: { kept: 0, mod: 0, total: 0, dc: 0 } };
+  }
+  const dex = player.attributes.敏捷 + getEquipmentBonus(player.equipment, "attribute_bonus", "敏捷");
+  const stealth = player.skills["潜行"]?.level ?? 0;
+  const mod = attrMod(dex) + stealth;
+  const d = Math.floor(Math.random() * 20) + 1;
+  const dc = 10;
+  const total = d + mod;
+  const success = d === 20 || total >= dc;
+  const caught = d === 1;
+  if (success && !caught) {
+    const stolen = Math.floor(Math.random() * npc.funds * 0.8) + 1;
+    const actual = Math.min(stolen, npc.funds);
+    npc.funds -= actual;
+    player.funds += actual;
+    return { success: true, caught: false, narrative: "从" + targetName + "身上偷到了¥" + actual + "。", roll: { kept: d, mod, total, dc } };
+  }
+  if (caught) {
+    return { success: false, caught: true, narrative: "手被" + targetName + "抓住了。", roll: { kept: d, mod, total, dc } };
+  }
+  return { success: false, caught: false, narrative: "没能摸到钱包。", roll: { kept: d, mod, total, dc } };
+}
+
 export function stealItem(
   player: PlayerState,
   targetName: string,
@@ -1442,7 +2113,7 @@ export function stealItem(
   }
   
   // 检定
-  const dex = player.attributes.敏捷;
+  const dex = player.attributes.敏捷 + getEquipmentBonus(player.equipment, "attribute_bonus", "敏捷");
   const stealth = player.skills["潜行"]?.level ?? 0;
   const mod = attrMod(dex) + stealth;
   const d = Math.floor(Math.random() * 20) + 1;
@@ -1480,50 +2151,6 @@ export function stealItem(
   return {
     success: false, caught: false,
     narrative: `没能摸到「${itemName}」——${targetName}动了一下。`,
-    roll: { kept: d, mod, total, dc },
-  };
-}
-
-export function stealFunds(player: PlayerState, targetName: string): StealResult {
-  const npc = getOrCreateNPC(targetName);
-  if (npc.funds <= 0) {
-    return { success: false, caught: false, narrative: `${targetName}身无分文。`, roll: { kept: 0, mod: 0, total: 0, dc: 0 } };
-  }
-
-  const dex = player.attributes.敏捷;
-  const stealth = player.skills["潜行"]?.level ?? 0;
-  const mod = attrMod(dex) + stealth;
-  const d = Math.floor(Math.random() * 20) + 1;
-  const dc = 12; // 摸钱包比偷物品稍难
-  const total = d + mod;
-  const success = d === 20 || total >= dc;
-  const caught = d === 1;
-
-  if (success && !caught) {
-    // 随机偷一部分（不是全部），最多 80%
-    const stolen = Math.floor(Math.random() * npc.funds * 0.8) + 1;
-    const actual = Math.min(stolen, npc.funds);
-    npc.funds -= actual;
-    player.funds += actual;
-    saveState();
-    return {
-      success: true, caught: false,
-      narrative: `从${targetName}身上偷到了¥${actual}。`,
-      roll: { kept: d, mod, total, dc },
-    };
-  }
-
-  if (caught) {
-    return {
-      success: false, caught: true,
-      narrative: `手被${targetName}抓住了。`,
-      roll: { kept: d, mod, total, dc },
-    };
-  }
-
-  return {
-    success: false, caught: false,
-    narrative: `没能摸到${targetName}的钱包。`,
     roll: { kept: d, mod, total, dc },
   };
 }

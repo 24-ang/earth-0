@@ -271,6 +271,24 @@
       ],
       "state": "intact"
     },
+    "自行车": {
+      "name": "自行车", "type": "tool", "slot": "back",
+      "weight": 12, "volume": 50,
+      "effects": [{ "type": "vehicle", "value": "bicycle" }], "state": "intact",
+      "flavor": "普通通学用自行车，车篮能放书包。千叶坡道多，骑上去有点费劲。"
+    },
+    "摩托车": {
+      "name": "摩托车", "type": "tool", "slot": "back",
+      "weight": 150, "volume": 150,
+      "effects": [{ "type": "vehicle", "value": "motorcycle" }], "state": "intact",
+      "flavor": "中古本田CB400，漆面有点旧但引擎很稳。"
+    },
+    "轻自动车": {
+      "name": "轻自动车", "type": "tool", "slot": "back",
+      "weight": 800, "volume": 600,
+      "effects": [{ "type": "vehicle", "value": "car" }], "state": "intact",
+      "flavor": "黄色牌照的轻自动车，千叶最常见的车型。停商场免费，但去市中心要找停车场。"
+    },
     "绷带": {
       "name": "绷带",
       "type": "tool",
