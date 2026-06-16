@@ -413,7 +413,13 @@
         }
       ]
     ],
-    "atmosphere": "南侧窗边，阳光从左边照进来。窗外是操场和中庭。东墙是走廊门，西墙是黑板"
+    "atmosphere": "南侧窗边，阳光从左边照进来。窗外是操场和中庭。东墙是走廊门，西墙是黑板",
+    "directions": {
+      "北": "黑板 (上方挂着国旗，黑板上写着今日课表和值日生姓名)",
+      "南": "窗台 (整排的玻璃窗，阳光照进课室，窗外是中庭操场)",
+      "东": "前门与布告栏 (挂着班级布告栏)",
+      "西": "后门与卫生角 (后门被后面的杂物凳子挡住，墙角摆放着扫帚)"
+    }
   },
   "2年F班": {
     "width": 8,
@@ -829,7 +835,13 @@
         }
       ]
     ],
-    "atmosphere": "南侧窗边，窗外是操场。东墙黑板，西墙走廊门"
+    "atmosphere": "南侧窗边，窗外是操场。东墙黑板，西墙走廊门",
+    "directions": {
+      "北": "黑板 (上面残留着上节课的数学公式投影痕迹)",
+      "南": "窗台 (明亮的窗户，可以望见学校大门和操场)",
+      "东": "前门与时钟 (前拉门和静静走动的班级时钟)",
+      "西": "后门与卫生角 (后门敞开通往走廊，墙角有垃圾桶)"
+    }
   },
   "自宅（千叶市高级公寓）": {
     "width": 5,
@@ -934,7 +946,13 @@
     ],
     "cellSize": 1,
     "floor": 3,
-    "atmosphere": "三楼角落的房间。窗外是住宅区的街景，能看见远处的便利店灯光"
+    "atmosphere": "三楼角落的房间。窗外是住宅区的街景，能看见远处的便利店灯光",
+    "directions": {
+      "北": "客厅墙面 (挂着大屏电视和抽象挂画)",
+      "南": "落地窗 (通往小阳台，能望见住宅区的霓虹夜景)",
+      "东": "卧室拉门 (木质的推拉门通往睡房)",
+      "西": "玄关墙面 (摆着鞋柜和防盗铁门)"
+    }
   },
   "操场": {
     "width": 10,
@@ -1443,9 +1461,11 @@
           "label": "WL"
         },
         {
-          "type": "wall",
-          "block": true,
-          "label": "WL"
+          "type": "exit",
+          "block": false,
+          "exitTo": "侍奉部",
+          "label": "DR",
+          "isOpen": true
         },
         {
           "type": "wall",
@@ -1754,10 +1774,9 @@
           "label": "WL"
         },
         {
-          "type": "exit",
-          "block": false,
-          "exitTo": "侍奉部",
-          "label": "DR"
+          "type": "wall",
+          "block": true,
+          "label": "WL"
         },
         {
           "type": "wall",
@@ -3294,14 +3313,14 @@
     ]
   },
   "侍奉部": {
-    "width": 4,
-    "height": 4,
+    "width": 8,
+    "height": 9,
     "cellSize": 1,
     "floor": 2,
     "atmosphere": "空置教室改造的社团活动室。几张旧桌子拼在一起，地上堆着没拆封的纸箱。窗外的光线很柔和",
     "origin": [
-      1,
-      3
+      4,
+      8
     ],
     "cells": [
       [
@@ -3317,11 +3336,30 @@
         },
         {
           "type": "exit",
-          "block": true,
-          "exitTo": "2F南走廊-F班前",
+          "block": false,
+          "exitTo": "2F南走廊-J班前",
           "label": "DR",
-          "isOpen": false,
-          "locked": true
+          "isOpen": true
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
         },
         {
           "type": "wall",
@@ -3343,8 +3381,111 @@
         {
           "type": "floor",
           "block": false,
-          "label": "台灯",
-          "furniture": null
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
         },
         {
           "type": "wall",
@@ -3361,14 +3502,34 @@
         {
           "type": "floor",
           "block": true,
-          "furniture": "长桌",
+          "furniture": "靠墙的书架",
+          "label": "BK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "侍奉部茶桌",
           "label": "TB"
         },
         {
           "type": "floor",
-          "block": true,
-          "furniture": "椅子",
-          "label": "CH"
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
         },
         {
           "type": "wall",
@@ -3377,6 +3538,153 @@
         }
       ],
       [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "窗台下的旧课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
         {
           "type": "wall",
           "block": true,
@@ -3398,7 +3706,13 @@
           "label": "WL"
         }
       ]
-    ]
+    ],
+    "directions": {
+      "北": "前隔墙 (通往走廊的木拉门)",
+      "南": "窗台 (大玻璃窗，柔和的夕阳洒入，挂着浅蓝色的旧窗帘)",
+      "东": "右隔墙 (空置的教室白墙，略显斑驳)",
+      "西": "后隔墙 (摆放着靠墙的书架和一堆未拆封的社团纸箱)"
+    }
   },
   "家_玩家房间": {
     "width": 4,
@@ -3479,7 +3793,13 @@
           "label": "WL"
         }
       ]
-    ]
+    ],
+    "directions": {
+      "北": "书桌墙面 (贴着动漫海报，桌上摆着双屏电脑)",
+      "南": "窗台 (挂着米色窗帘，推开可以俯瞰公寓楼下的街道)",
+      "东": "门墙壁 (通往客厅的拉门，旁边挂着衣帽架)",
+      "西": "床头背景墙 (单人木床靠在墙边，床头柜上有台灯)"
+    }
   },
   "如月家": {
     "width": 5,
@@ -3739,7 +4059,6 @@
       ]
     ]
   },
-
   "千葉市街": {
     "width": 30,
     "height": 5,
@@ -4518,5 +4837,4 @@
       ]
     ]
   }
-
 }
