@@ -5,6 +5,13 @@
     "base_age": 16,
     "gender": "female",
     "appearance_brief": "黑长直、蓝色眼睛、冰美人。两侧红色蝴蝶结丝带。",
+    "outfits": {
+      "school": { "top": "总武高制服", "bottom": "黑白百褶裙", "legs": "黑色过膝袜", "feet": "皮鞋", "inner_top": "白色蕾丝胸罩", "inner_bot": "白色棉内裤" },
+      "pe":     { "top": "白色体操服", "bottom": "深蓝运动短裤", "feet": "运动鞋", "inner_top": "运动内衣", "inner_bot": "白色棉内裤" },
+      "swim":   { "top": "白色连体泳衣", "feet": "拖鞋" },
+      "casual": { "top": "米色针织衫", "bottom": "深蓝A字裙", "feet": "棕色短靴", "inner_top": "淡蓝蕾丝胸罩", "inner_bot": "淡蓝蕾丝内裤" },
+      "sleep":  { "top": "白色棉质睡裙" }
+    },
     "body": {
       "height_cm": 164,
       "weight_kg": 48,
@@ -267,6 +274,13 @@
     "base_age": 16,
     "gender": "female",
     "appearance_brief": "茶色波浪卷发、团子头、开朗笑容。",
+    "outfits": {
+      "school": { "top": "总武高制服", "bottom": "黑白百褶裙", "legs": "黑色过膝袜", "feet": "皮鞋", "inner_top": "粉色蕾丝胸罩", "inner_bot": "粉色条纹内裤", "acc": "彩色发圈" },
+      "pe":     { "top": "白色体操服", "bottom": "深蓝运动短裤", "feet": "运动鞋", "inner_top": "粉色运动内衣", "inner_bot": "粉色棉内裤" },
+      "swim":   { "top": "粉色荷叶边比基尼", "bottom": "粉色比基尼下装", "feet": "拖鞋" },
+      "casual": { "top": "粉色针织开衫", "bottom": "白色短裙", "feet": "白色帆布鞋", "inner_top": "淡粉蕾丝胸罩", "inner_bot": "粉色蕾丝内裤", "acc": "蝴蝶结发卡" },
+      "sleep":  { "top": "粉色吊带睡裙" }
+    },
     "body": {
       "height_cm": 158,
       "weight_kg": 50,

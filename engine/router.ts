@@ -23,12 +23,13 @@ function getSchoolRooms(): Set<string> {
   for (const [bname, bld] of Object.entries(schoolMap.buildings)) {
     addRoom(bname);
     const b = bld as any;
+    if (!b.rooms && !b.stairs && !b.bathrooms) continue;
     for (const roomList of Object.values(b.rooms || {})) {
       for (const r of (roomList as string[])) addRoom(r);
     }
     if (b.stairs) for (const s of b.stairs as string[]) addRoom(s);
     if (b.bathrooms) for (const brs of Object.values(b.bathrooms||{}) as string[][]) for (const r of brs) addRoom(r);
-    if (Array.isArray(b)) for (const r of (b as string[])) addRoom(r);
+    if (Array.isArray(b) && b.length > 0 && typeof b[0] === "string") for (const r of (b as string[])) addRoom(r);
   }
   return rooms;
 }

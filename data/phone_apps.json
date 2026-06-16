@@ -1,0 +1,59 @@
+[
+  {
+    "id": "messages",
+    "type": "messaging",
+    "icon": "✉",
+    "label": "短信",
+    "era": "all",
+    "region": "all"
+  },
+  {
+    "id": "contacts",
+    "type": "contacts",
+    "icon": "👤",
+    "label": "通讯录",
+    "era": "all",
+    "region": "all"
+  },
+  {
+    "id": "call_log",
+    "type": "board",
+    "icon": "📞",
+    "label": "通话",
+    "era": "all",
+    "region": "all"
+  },
+  {
+    "id": "timeline",
+    "type": "timeline",
+    "icon": "📔",
+    "label": "mixi",
+    "era": "2004-2014",
+    "region": "jp"
+  },
+  {
+    "id": "twitter",
+    "type": "timeline",
+    "icon": "🐦",
+    "label": "Twitter",
+    "era": "2011+",
+    "region": "all"
+  },
+  {
+    "id": "bbs",
+    "type": "board",
+    "icon": "💬",
+    "label": "掲示板",
+    "era": "all",
+    "region": "jp",
+    "triggerRules": [{ "type": "flag", "value": "bbs_access" }]
+  },
+  {
+    "id": "gallery",
+    "type": "gallery",
+    "icon": "📷",
+    "label": "相册",
+    "era": "all",
+    "region": "all"
+  }
+]

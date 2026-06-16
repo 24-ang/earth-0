@@ -8,6 +8,7 @@
 import { attackRoll, rollDamage, applyDR, isOverwhelming } from "./dice.ts";
 import type { CoverType, Advantage } from "./dice.ts";
 import type { Item, PlayerState, Wound } from "./types.ts";
+import { getEquipmentBonus } from "./state.ts";
 
 export type { CoverType, Advantage };
 
@@ -49,7 +50,10 @@ export function resolveAttack(
   advantage: Advantage = "平"
 ): AttackResult {
   const useStr = weapon.damage?.damageType !== "穿刺";
-  const attr = useStr ? attacker.state.attributes.力量 : attacker.state.attributes.敏捷;
+  const attrKey = useStr ? "力量" : "敏捷";
+  const baseAttr = attacker.state.attributes[attrKey];
+  const equipBonus = getEquipmentBonus(attacker.state.equipment, "attribute_bonus", attrKey);
+  const attr = baseAttr + equipBonus;
   const skill = attacker.state.skills["格斗"]?.level ?? 0;
   const ac = defender.state.ac;
 

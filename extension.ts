@@ -26,24 +26,7 @@ export default function (pi: ExtensionAPI) {
         const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
         const totalCount = npcsHereCount + namelessCount;
         
-        // 18/04/08(日)夜
-        const dateParts = gameState.time.game_date.split("-");
-        const shortYear = dateParts[0].slice(2);
-        const shortDate = `${shortYear}/${dateParts[1]}/${dateParts[2]}`;
-        const dayOfWeekShort = gameState.time.day_of_week[0]; // e.g. "日曜日" -> "日"
-        const tod = timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day;
-        
-        // 🏫 / 🏙️ prefix for location
-        let shortLoc = loc;
-        if (loc.startsWith("千叶市立总武高等学校_")) {
-          shortLoc = "🏫" + loc.replace("千叶市立总武高等学校_", "");
-        } else if (loc.startsWith("千叶_")) {
-          shortLoc = "🏙️" + loc.replace("千叶_", "");
-        } else {
-          shortLoc = "📍" + loc;
-        }
-        
-        const statusBarText = `🕐 ${shortDate}(${dayOfWeekShort})${tod} | ${shortLoc} | 👥 ${totalCount}人`;
+        const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
         ctx.ui.setWidget("hud-status-bar", [statusBarText]);
       }
     } catch (_) {}
@@ -88,14 +71,19 @@ export default function (pi: ExtensionAPI) {
     gs.player.location = loc;
     if (!gs.player.known_locations) gs.player.known_locations = ["千叶_住宅区"];
     if (!gs.player.known_locations.includes(loc)) gs.player.known_locations.push(loc);
-    const { initPlayerGrid } = await import("./engine/state.ts");
+    const { initPlayerGrid, stampRoom } = await import("./engine/state.ts");
     initPlayerGrid();
+    stampRoom(loc);
     save(); ctx.ui.notify("📍 " + loc, "info");
     updateChatHUD(ctx);
   }
 
   function showPanel(ctx: any, title: string, lines: string[]): Promise<void> {
-    const items: MenuItem[] = lines.map(l => ({ label: l, detail: "", action: undefined }));
+    const finalLines: string[] = [];
+    for (const line of lines) {
+      finalLines.push(...wrapLine(line, 65));
+    }
+    const items: MenuItem[] = finalLines.map(l => ({ label: l, detail: "", action: undefined }));
     return showMenu(ctx, title, items);
   }
 
@@ -111,64 +99,39 @@ export default function (pi: ExtensionAPI) {
             const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
             const titleW = getStringWidth(title);
             out.push("┌─" + title + " " + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐");
-
-            // Process dynamic line wrapping
-            const linesToDraw: { label: string; detail: string; isSel: boolean; isFirstLine: boolean }[] = [];
-            items.forEach((it, idx) => {
-              const isSel = idx === sel;
-              const detailStr = it.detail ? "  " + it.detail : "";
-              const detailW = getStringWidth(detailStr);
-              // Visible label width should account for borders ("│ " and " │") and cursor ("▶ " or "  ")
-              // Total box width is w. Left border: 2, cursor: 2, right border: 2. Plus detail width.
-              const maxLabelW = w - 6 - detailW;
-              const wrapped = wrapLine(it.label, maxLabelW);
-              
-              if (wrapped.length === 0) wrapped.push("");
-              
-              wrapped.forEach((wrappedLabel, subIdx) => {
-                linesToDraw.push({
-                  label: wrappedLabel,
-                  detail: subIdx === wrapped.length - 1 ? it.detail || "" : "",
-                  isSel,
-                  isFirstLine: subIdx === 0
-                });
-              });
-            });
-
-            // Viewport scroll offsets for wrapped lines
-            const maxVisibleLines = 10;
-            if ((comp as any).scrollOffset === undefined) {
-              (comp as any).scrollOffset = 0;
-            }
-            let scrollOffset = (comp as any).scrollOffset;
-
-            const selLineIndices = linesToDraw.map((l, index) => l.isSel ? index : -1).filter(idx => idx !== -1);
-            if (selLineIndices.length > 0) {
-              const firstSel = selLineIndices[0];
-              const lastSel = selLineIndices[selLineIndices.length - 1];
-              
-              if (lastSel >= scrollOffset + maxVisibleLines) {
-                scrollOffset = lastSel - maxVisibleLines + 1;
+            
+            // TUI HUD Status Bar
+            try {
+              if (gameState && gameState.time && gameState.player) {
+                const timeOfDayZH: Record<string, string> = {
+                  morning: "午前",
+                  lunch: "昼",
+                  afternoon: "午後",
+                  evening: "夕方",
+                  night: "夜"
+                };
+                const loc = gameState.player.location;
+                const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
+                const cLoc = clean(loc);
+                const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
+                const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
+                const totalCount = npcsHereCount + namelessCount;
+                const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
+                const barTrunc = truncateToWidth(statusBarText, w - 4);
+                const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
+                out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
+                out.push("├" + "─".repeat(w - 2) + "┤");
               }
-              if (firstSel < scrollOffset) {
-                scrollOffset = firstSel;
-              }
-            }
-            scrollOffset = Math.max(0, Math.min(scrollOffset, linesToDraw.length - maxVisibleLines));
-            (comp as any).scrollOffset = scrollOffset;
+            } catch (_) {}
 
-            const start = scrollOffset;
-            const end = Math.min(linesToDraw.length, start + maxVisibleLines);
-
+            const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
             for (let i = start; i < end; i++) {
-              const lineInfo = linesToDraw[i];
-              const cursor = (lineInfo.isSel && lineInfo.isFirstLine) ? "▶ " : "  ";
-              const line = cursor + lineInfo.label + (lineInfo.detail ? "  " + lineInfo.detail : "");
-              const lineW = getStringWidth(line);
-              const pad = Math.max(0, (w - 4) - lineW);
-              out.push("│ " + line + " ".repeat(pad) + " │");
+              const it = items[i];
+              const line = (i === sel ? "▶ " : "  ") + it.label + (it.detail ? "  " + it.detail : "");
+              const t = tui.truncateToWidth ? tui.truncateToWidth(line, w - 2) : truncateToWidth(line, w - 2);
+              const pad = Math.max(0, (w - 4) - getStringWidth(t));
+              out.push("│ " + t + " ".repeat(pad) + " │");
             }
-
             out.push("└" + "─".repeat(w - 2) + "┘");
             out.push((sel+1 + "/" + items.length + " 方向键选择 Enter确认 q退出").slice(0, w));
             return out;
@@ -211,363 +174,407 @@ export default function (pi: ExtensionAPI) {
   }
 
   async function runNavigation(ctx: any, fastTravel = false) {
-    const { gameState, saveState, isSameLocation } = await import("./engine/state.ts");
-    const roomsData = (await import("./data/rooms.json", { with: { type: "json" } })).default as any;
-    
+    const { gameState, saveState, isSameLocation, getLocationNav, getRoom } = await import("./engine/state.ts");
+
     const doMove = async (to: string, mins: number, subDone: () => void, parentDone: () => void) => {
+      // 载具加速
+      const actualMins = Math.max(1, Math.round(mins / vehicleMul));
+
       if (!fastTravel && mins >= 15) {
+        // 长途旅行 → LLM 叙事旅程
         gameState.pendingTravel = {
           from: gameState.player.location,
           to,
-          route: mins >= 30 ? "交通工具/长途" : "步行/短途",
-          minutes: mins,
+          route: vehicleName ? `${vehicleName}（约${actualMins}分钟）` : `步行/短途（约${mins}分钟）`,
+          minutes: actualMins,
           timeOfDay: gameState.time.time_of_day
         };
         saveState();
-        ctx.ui.notify(`[旅行中] 正在前往 ${to}，行程 ${mins} 分钟。引擎已暂停移动。`, "info");
-        ctx.chat.addSystemMessage(`玩家已出发前往 ${to}，耗时约 ${mins} 分钟。不要立即让他们到达目的地！请描述他们在路上的见闻、风景、碰到的事件。等剧情差不多了，再调用 complete_travel 工具让他们到达目的地并扣除时间。`);
+        ctx.ui.notify(`[旅行中] 正在前往 ${to}，行程 ${actualMins} 分钟。引擎已暂停移动。`, "info");
+        const vehicleHint = vehicleName ? `骑${vehicleName}，预计${actualMins}分钟到达。` : `步行约${mins}分钟。`;
+        ctx.chat.addSystemMessage(`玩家已出发前往 ${to}。${vehicleHint}不要立即让他们到达目的地！请描述路上的见闻、风景。等剧情差不多了，再调用 complete_travel 工具。`);
         updateChatHUD(ctx);
-        pi.sendUserMessage(`我出发前往 ${to}。`);
       } else {
+        // 短途 → 直接移动 + 时间对齐提示
         await moveTo(to, ctx, gameState, saveState);
-        await advanceTimeMinutes(mins, ctx, gameState, saveState);
-        pi.sendUserMessage(`我来到了 ${to}。`);
+        await advanceTimeMinutes(actualMins, ctx, gameState, saveState);
+        // 注入移动时间让 LLM 知道过了多久
+        if (mins >= 2) {
+          const vHint = vehicleName ? `（骑${vehicleName}）` : "";
+          ctx.chat.addSystemMessage(`[移动] ${gameState.player.location} → ${to}，耗时 ${actualMins} 分钟${vHint}。`);
+        }
       }
       subDone();
       parentDone();
     };
-    
-    let schoolMap: any = null;
-    try {
-      schoolMap = (await import("./data/school_map.json", { with: { type: "json" } })).default;
-    } catch (_) {}
-
-    let cityMap: any = null;
-    try {
-      cityMap = (await import("./data/city_map.json", { with: { type: "json" } })).default;
-    } catch (_) {}
 
     const loc = gameState.player.location;
-    const curRoom = roomsData[loc];
+    const known = gameState.player.known_locations || [];
+    const nav = getLocationNav(loc);
+    const vehicleMul = gameState.player.vehicle?.speedMul || 1;
+    const vehicleName = gameState.player.vehicle?.name;
 
-    const getRegion = (l: string) => {
-      if (!cityMap || !cityMap.regions) return "";
-      for (const [rn, r] of Object.entries(cityMap.regions) as [string, any][]) {
-        if (r.landmarks?.some((lm: string) => isSameLocation(l, lm) || l.includes(lm) || lm.includes(l))) return rn;
-        if (r.stations && Object.keys(r.stations).some(s => isSameLocation(l, s) || l.includes(s) || s.includes(l))) return rn;
+    // 步行距离估算（现实向校准）
+    const estTravel = (from: string, to: string): number => {
+      const fromRoom = getRoom(from);
+      const toRoom = getRoom(to);
+
+      // 同层有网格 → 真实坐标距离 ÷ 1.5m/s 步行速度
+      if (fromRoom && toRoom && fromRoom.floor === toRoom.floor) {
+        const toOrigin = toRoom.origin;
+        const fromPos = gameState.player.gridPos || fromRoom.origin;
+        const dx = fromPos[0] - toOrigin[0];
+        const dy = fromPos[1] - toOrigin[1];
+        const cells = Math.sqrt(dx * dx + dy * dy);
+        return Math.max(1, Math.round(cells * fromRoom.cellSize / 1.5));
       }
-      return "";
+      // 同校不同层 → 坐标距离 + 每层差额外1分
+      if (fromRoom && toRoom) {
+        const toOrigin = toRoom.origin;
+        const fromOrigin = fromRoom.origin;
+        const dx = fromOrigin[0] - toOrigin[0];
+        const dy = fromOrigin[1] - toOrigin[1];
+        const cells = Math.sqrt(dx * dx + dy * dy);
+        const floorPenalty = Math.abs(fromRoom.floor - toRoom.floor);
+        return Math.max(2, Math.round(cells * fromRoom.cellSize / 1.5) + floorPenalty);
+      }
+
+      // 无网格 → 按层级深度估算（自适应任意地区层级数）
+      const fromNav = getLocationNav(from);
+      const toNav = getLocationNav(to);
+      const sharePrefix = fromNav.breadcrumb.filter(b => toNav.breadcrumb.includes(b)).length;
+      const maxDepth = Math.max(fromNav.breadcrumb.length, toNav.breadcrumb.length, 5);
+      // shareRatio: 0~1，1=完全相同路径，0=毫无关系
+      const shareRatio = sharePrefix / maxDepth;
+
+      // 根据重合比例判定距离档位
+      if (shareRatio >= 0.9) return 1 + hashDist(from, to, 0, 5);   // 几乎同地点→1-5分
+      if (shareRatio >= 0.7) return 2 + hashDist(from, to, 0, 6);   // 同校/同建筑→2-8分
+      if (shareRatio >= 0.5) return 3 + hashDist(from, to, 0, 27);  // 同市/区→3-30分
+      if (shareRatio >= 0.3) return 30 + hashDist(from, to, 0, 60); // 同省/县→30-90分
+      return 60 + hashDist(from, to, 0, 120);                        // 远距离→60-180分
     };
 
-    const getTravelTime = (from: string, to: string) => {
-      const curRoomFrom = roomsData[from];
-      const destRoomTo = roomsData[to];
-      if (curRoomFrom && destRoomTo && curRoomFrom.floor === destRoomTo.floor) {
-        return 2;
-      }
-      const isSchool = (l: string) => {
-        return l.includes("班") || l.includes("校") || l.includes("侍奉部") || l.includes("楼") || l.includes("中庭") || l.includes("操场") || l.includes("体育馆");
-      };
-      if (isSchool(from) && isSchool(to)) {
-        return 5;
-      }
-      const fromReg = getRegion(from);
-      const toReg = getRegion(to);
-      if (fromReg && toReg) {
-        if (fromReg === toReg) return 15;
-        return 30;
-      }
-      return 15;
+    const hashDist = (a: string, b: string, min: number, range: number): number => {
+      const h = (a + b).split("").reduce((s, c) => s + c.charCodeAt(0), 0);
+      return min + (h % range);
     };
 
-    const buildSameFloorMenu = (parentDone: () => void) => {
-      const sameFloorItems: MenuItem[] = [];
-      const floor = curRoom?.floor ?? 0;
-      
-      for (const [name, room] of Object.entries(roomsData)) {
-        if ((room as any).floor !== floor) continue;
-        const here = isSameLocation(loc, name);
-        const npcs = Object.entries(gameState.npcs)
-          .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, name))
-          .map(([n]) => n);
-        
-        sameFloorItems.push({
-          label: `  🚪 ${name}`,
-          detail: (here ? "📍当前 " : "") + (npcs.length > 0 ? "👥 " + npcs.join(" ") : ""),
-          action: here ? undefined : async (subDone) => {
-            await doMove(name, 2, subDone, parentDone);
-          }
+    const buildNavMenu = (parentDone: () => void): MenuItem[] => {
+      const items: MenuItem[] = [];
+
+      // ── 上层 ──
+      if (nav.parent) {
+        items.push({
+          label: `🔼 返回 ${nav.parent}`,
+          action: async (subDone) => { await doMove(nav.parent!, estTravel(loc, nav.parent!), subDone, parentDone); }
         });
       }
-      if (sameFloorItems.length === 0) {
-        sameFloorItems.push({ label: "  （无同楼层可用房间）" });
-      }
-      return sameFloorItems;
-    };
 
-    const buildSchoolMenu = (parentDone: () => void) => {
-      const schoolItems: MenuItem[] = [];
-      if (!schoolMap) {
-        schoolItems.push({ label: "  （无学校地图数据）" });
-        return schoolItems;
-      }
-      
-      const added = new Set<string>();
-
-      for (const [bname, bld] of Object.entries(schoolMap.buildings)) {
-        const b = bld as any;
-        if (b.rooms) {
-          for (const [fName, rl] of Object.entries(b.rooms)) {
-            for (const r of rl as string[]) {
-              if (added.has(r)) continue;
-              added.add(r);
-              const here = isSameLocation(loc, r);
-              const npcs = Object.entries(gameState.npcs)
-                .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, r))
-                .map(([n]) => n);
-              
-              schoolItems.push({
-                label: `  🏫 ${r}`,
-                detail: `${bname} ${fName}` + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
-                action: here ? undefined : async (subDone) => {
-                  await doMove(r, 5, subDone, parentDone);
-                }
-              });
-            }
-          }
-        }
-      }
-      
-      if (schoolMap.buildings["运动设施"]) {
-        for (const r of schoolMap.buildings["运动设施"] as string[]) {
-          if (added.has(r)) continue;
-          added.add(r);
-          const here = isSameLocation(loc, r);
-          const npcs = Object.entries(gameState.npcs)
-            .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, r))
-            .map(([n]) => n);
-          
-          schoolItems.push({
-            label: `  🏃 ${r}`,
-            detail: "运动设施" + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
-            action: here ? undefined : async (subDone) => {
-              await doMove(r, 5, subDone, parentDone);
-            }
-          });
-        }
-      }
-      if (schoolMap.buildings["其他建筑"]) {
-        for (const r of schoolMap.buildings["其他建筑"] as string[]) {
-          if (added.has(r)) continue;
-          added.add(r);
-          const here = isSameLocation(loc, r);
-          const npcs = Object.entries(gameState.npcs)
-            .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, r))
-            .map(([n]) => n);
-          
-          schoolItems.push({
-            label: `  🏫 ${r}`,
-            detail: "其他区域" + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
-            action: here ? undefined : async (subDone) => {
-              await doMove(r, 5, subDone, parentDone);
-            }
-          });
-        }
-      }
-      
-      if (schoolItems.length === 0) {
-        schoolItems.push({ label: "  （无可用校园地点）" });
-      }
-      return schoolItems;
-    };
-
-    const buildCityMenu = (parentDone: () => void) => {
-      const cityItems: MenuItem[] = [];
-      if (!cityMap) {
-        cityItems.push({ label: "  （无城市地图数据）" });
-        return cityItems;
-      }
-
-      const currentLoc = gameState.player.location;
-      const regions = cityMap.regions || {};
-      
-      const stations: string[] = [];
-      for (const reg of Object.values(regions) as any[]) {
-        if (reg.stations) {
-          stations.push(...Object.keys(reg.stations));
-        }
-      }
-      
-      const hubList = [
-        ...stations,
-        "校门",
-        "千叶市立总武高等学校_校门",
-        "住宅区",
-        "千叶_住宅区",
-        "自宅",
-        "千叶_自宅",
-        "高级公寓群"
-      ];
-      
-      const isAtHub = hubList.some(hub => isSameLocation(currentLoc, hub));
-      const hasVehicle = gameState.player.inventory.some((i: any) => i.name.includes("自行车") || i.name.includes("汽车"));
-      const currentRegion = getRegion(currentLoc);
-
-      for (const [rname, reg] of Object.entries(regions) as [string, any][]) {
-        for (const l of (reg.landmarks || [])) {
-          const here = isSameLocation(currentLoc, l);
-          const known = gameState.player.known_locations || [];
-          const isKnown = known.includes(l) || l.includes("站") || l.includes("总武高") || here;
-          if (!isKnown) continue;
-
-          const npcs = Object.entries(gameState.npcs)
-            .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, l))
-            .map(([n]) => n);
-
-          cityItems.push({
-            label: `  🚶 ${l}`,
-            detail: `${rname}` + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
-            action: here ? undefined : async (subDone) => {
-              const toRegion = rname;
-              const isCrossRegion = currentRegion && toRegion && currentRegion !== toRegion;
-              if (isCrossRegion && !isAtHub && !hasVehicle) {
-                ctx.ui.notify("❌ 无法远行: 必须处于交通枢纽(车站、大门、自宅)或拥有交通工具", "warning");
-                return;
+      // ── 学校内部结构（建筑→楼层→房间）──
+      if (nav.schoolTree && nav.schoolTree.length > 0) {
+        items.push({ label: `── 校内建筑 ──` });
+        for (const bld of nav.schoolTree) {
+          items.push({
+            label: `  🏫 ${bld.name}`,
+            detail: `${bld.children.length} 层`,
+            action: async (subDone) => {
+              // 楼层子菜单
+              const floorItems: MenuItem[] = [];
+              for (const fl of bld.children) {
+                floorItems.push({
+                  label: `  📶 ${fl.name}`,
+                  detail: `${fl.children.length} 个房间`,
+                  action: async (floorDone) => {
+                    // 房间子菜单
+                    const roomItems: MenuItem[] = [];
+                    for (const rm of fl.children) {
+                      const rmName = rm.name;
+                      const here = isSameLocation(loc, rmName);
+                      const rmKnown = known.some(k => isSameLocation(k, rmName));
+                      const npcs = Object.entries(gameState.npcs).filter(([_, n]: any) => isSameLocation(n.currentRoom, rmName)).map(([n]) => n);
+                      if (rmKnown) {
+                        roomItems.push({
+                          label: `  ${here ? "📍" : "🚪"} ${rmName}`,
+                          detail: npcs.length > 0 ? `👥 ${npcs.join(" ")}` : "",
+                          action: here ? undefined : async (roomDone) => { await doMove(rmName, 2, roomDone, floorDone); }
+                        });
+                      } else {
+                        roomItems.push({ label: `  ❓ ${rmName}`, detail: "未探索" });
+                      }
+                    }
+                    await showMenu(ctx, `${bld.name} ${fl.name}`, roomItems);
+                  }
+                });
               }
-              const mins = isCrossRegion ? 30 : 15;
-              await doMove(l, mins, subDone, parentDone);
+              await showMenu(ctx, bld.name, floorItems);
             }
           });
         }
+      }
 
-        if (reg.stations) {
-          for (const [sn, sd] of Object.entries(reg.stations) as [string, any][]) {
-            const here = isSameLocation(currentLoc, sn);
-            const npcs = Object.entries(gameState.npcs)
-              .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, sn))
-              .map(([n]) => n);
+      // ── 平级房间（不在学校内部时）──
+      if (nav.rooms.length > 0) {
+        items.push({ label: `── 同层房间 ──` });
+        for (const r of nav.rooms) {
+          if (!known.some(k => isSameLocation(k, r))) continue;
+          const here = isSameLocation(loc, r);
+          const npcs = Object.entries(gameState.npcs).filter(([_, n]: any) => isSameLocation(n.currentRoom, r)).map(([n]) => n);
+          items.push({
+            label: `  🚪 ${r}`,
+            detail: (here ? "📍当前" : "") + (npcs.length > 0 ? ` 👥 ${npcs.join(" ")}` : ""),
+            action: here ? undefined : async (subDone) => { await doMove(r, 2, subDone, parentDone); }
+          });
+        }
+      }
 
-            cityItems.push({
-              label: `  🚉 ${sn}`,
-              detail: `${sd.lines?.join("/") || ""} ${rname}` + (here ? " 📍当前" : "") + (npcs.length > 0 ? " 👥 " + npcs.join(" ") : ""),
-              action: here ? undefined : async (subDone) => {
-                const toRegion = rname;
-                const isCrossRegion = currentRegion && toRegion && currentRegion !== toRegion;
-                if (isCrossRegion && !isAtHub && !hasVehicle) {
-                  ctx.ui.notify("❌ 无法远行: 必须处于交通枢纽(车站、大门、自宅)或拥有交通工具", "warning");
-                  return;
-                }
-                const mins = isCrossRegion ? 30 : 15;
-                await doMove(sn, mins, subDone, parentDone);
-              }
+      // ── 下属地点（非学校）──
+      if (nav.children.length > 0 && !nav.schoolTree) {
+        items.push({ label: `── 下属地点 ──` });
+        for (const c of nav.children) {
+          if (!known.some(k => isSameLocation(k, c))) continue;
+          items.push({
+            label: `  📂 ${c}`,
+            action: async (subDone) => { await doMove(c, estTravel(loc, c), subDone, parentDone); }
+          });
+        }
+        const unknownKids = nav.children.filter(c => !known.some(k => isSameLocation(k, c)));
+        if (unknownKids.length > 0) {
+          items.push({ label: `  ❓ ${unknownKids.length} 个未探索`, detail: "LLM 可以带你去" });
+        }
+      }
+
+      // ── 其他地区（prefecture 级以上） ──
+      if (nav.level === "prefecture" || nav.level === "region") {
+        items.push({ label: `── 其他地区 ──` });
+        const allKnown = known.filter(k => {
+          const kn = getLocationNav(k);
+          return kn.breadcrumb.length > 0 && !nav.breadcrumb.some(b => isSameLocation(b, k));
+        });
+        for (const k of allKnown.slice(0, 6)) {
+          items.push({
+            label: `  🗺️ ${k}`,
+            action: async (subDone) => { await doMove(k, estTravel(loc, k), subDone, parentDone); }
+          });
+        }
+      }
+
+      // ── 电车（在站内或附近时显示）──
+      if (nav.stations && nav.stations.length > 0) {
+        for (const st of nav.stations) {
+          items.push({ label: `── 🚃 ${st.name} | ${st.lines.join("/")} ──` });
+          for (const d of st.destinations) {
+            items.push({
+              label: `  🚃 → ${d.name}`,
+              detail: `${d.minutes}分钟`,
+              action: async (subDone) => { await doMove(d.name, d.minutes, subDone, parentDone); }
             });
           }
         }
       }
-      
-      if (cityItems.length === 0) {
-        cityItems.push({ label: "  （无可用城市地点）" });
+
+      // ── 周边 ──
+      const nearbyClose = (nav.nearby || []).filter(n => n.minutes <= 8);
+      if (nearbyClose.length > 0) {
+        const modeIcon = vehicleName ? "🚲" : "🚶";
+        const modeLabel = vehicleName ? ` | ${vehicleName}` : "";
+        const speedLabel = vehicleMul > 1 ? `×${vehicleMul}` : "";
+        items.push({ label: `── 周边${modeLabel} ${speedLabel} ──` });
+        for (const n of nearbyClose) {
+          const nKnown = known.some(k => isSameLocation(k, n.name));
+          // 有车载显示车载时间，没车显示步行
+          const displayMins = vehicleMul > 1 ? Math.max(1, Math.round(n.minutes / vehicleMul)) : n.minutes;
+          const unit = vehicleMul > 1 ? "分" : "分钟";
+          items.push({
+            label: `  ${modeIcon} ${n.name}`,
+            detail: `${displayMins}${unit}`,
+            action: nKnown ? async (subDone) => { await doMove(n.name, n.minutes, subDone, parentDone); } : undefined
+          });
+        }
       }
-      return cityItems;
+
+      if (items.length === 0) {
+        items.push({ label: "  （当前没有可导航的地点——LLM 可以用 create_location 扩展世界）" });
+      }
+
+      return items;
     };
 
-    const buildHistoryMenu = (parentDone: () => void) => {
-      const historyItems: MenuItem[] = [];
-      const known = gameState.player.known_locations || [];
-      const currentLoc = gameState.player.location;
+    await showMenu(ctx, `🗺️ ${nav.breadcrumb.join(" ▸ ")}`, () => buildNavMenu(() => {}));
+  }
 
-      const filteredKnown = known.filter(k => !isSameLocation(k, currentLoc));
 
-      const regions = cityMap?.regions || {};
-      const stations: string[] = [];
-      for (const reg of Object.values(regions) as any[]) {
-        if (reg.stations) {
-          stations.push(...Object.keys(reg.stations));
-        }
-      }
-      const hubList = [
-        ...stations,
-        "校门",
-        "千叶市立总武高等学校_校门",
-        "住宅区",
-        "千叶_住宅区",
-        "自宅",
-        "千叶_自宅",
-        "高级公寓群"
-      ];
-      const isAtHub = hubList.some(hub => isSameLocation(currentLoc, hub));
-      const hasVehicle = gameState.player.inventory.some((i: any) => i.name.includes("自行车") || i.name.includes("汽车"));
-      const currentRegion = getRegion(currentLoc);
+  // ── 手机 TUI（纯本地，0 token）──
+  async function showPhoneTUI(ctx: any, phoneItem: any) {
+    const { gameState } = await import("./engine/state.ts");
 
-      for (const k of filteredKnown) {
-        const npcs = Object.entries(gameState.npcs)
-          .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, k))
-          .map(([n]) => n);
-
-        historyItems.push({
-          label: `  📌 ${k}`,
-          detail: (npcs.length > 0 ? "👥 " + npcs.join(" ") : "已探索"),
-          action: async (subDone) => {
-            const toRegion = getRegion(k);
-            const isCrossRegion = currentRegion && toRegion && currentRegion !== toRegion;
-            if (isCrossRegion && !isAtHub && !hasVehicle) {
-              ctx.ui.notify("❌ 无法远行: 必须处于交通枢纽(车站、大门、自宅)或拥有交通工具", "warning");
-              return;
-            }
-            
-            const mins = getTravelTime(currentLoc, k);
-            await doMove(k, mins, subDone, parentDone);
-          }
-        });
-      }
-
-      if (historyItems.length === 0) {
-        historyItems.push({ label: "  （暂无其他已知探索历史）" });
-      }
-      return historyItems;
-    };
-
-    const categories: MenuItem[] = [
-      {
-        label: "🏢 同层区域",
-        detail: `楼层: F${curRoom?.floor ?? 0}`,
-        action: async (parentDone) => {
-          await showMenu(ctx, "🏢 选择同层房间", () => buildSameFloorMenu(parentDone));
-        }
-      },
-      {
-        label: "🏫 学校区域",
-        detail: "校园建筑与运动设施",
-        action: async (parentDone) => {
-          await showMenu(ctx, "🏫 选择校园建筑", () => buildSchoolMenu(parentDone));
-        }
-      },
-      {
-        label: "🚉 城市远途",
-        detail: "跨区商业与交通地标",
-        action: async (parentDone) => {
-          await showMenu(ctx, "🚉 选择城市远途", () => buildCityMenu(parentDone));
-        }
-      },
-      {
-        label: "📌 探索历史",
-        detail: "已去过的历史地点",
-        action: async (parentDone) => {
-          await showMenu(ctx, "📌 选择探索历史", () => buildHistoryMenu(parentDone));
-        }
-      }
+    const PHONE_TWEET_TEMPLATES = [
+      "今天车站前的猫又出现了 🐱",
+      "千叶的MAX COFFEE是世界上最好喝的咖啡饮料，不接受反驳。",
+      "考试周要到了，图书馆人好多...",
+      "海浜幕张的夕阳很美。",
+      "新出的限定口味薯片，谁试过了？",
+      "总武高的校服在千叶算好看的。",
+      "周末去哪玩？在线等。",
+      "打工好累，想躺平。",
+      "今天在街上看到有人在拍电影。",
+      "千葉の夏は暑い。",
+      "今晚的月亮真圆。",
+      "電車で寝過ごした…最悪。",
     ];
 
-    await showMenu(ctx, "🗺️ 导航地图 (当前: " + gameState.player.location + ")", categories);
+    const PHONE_DARKWEB_TEMPLATES = [
+      "【暗网节点#37】千叶站东口的储物柜，密码0912。不留名。",
+      "【暗网节点#12】有人在收购'稀有数据'，出手大方。联系频率157.8。",
+      "【暗网节点#55】注意：最近便衣多了。不在学校周边交易。",
+    ];
+
+    const buildSMSPanel = async () => {
+      const { markPhoneMessagesRead, getUnreadPhoneCount } = await import("./engine/state.ts");
+      const smsItems: MenuItem[] = [];
+      const inbox = gameState.phoneInbox || [];
+
+      const unreadCount = getUnreadPhoneCount();
+      if (unreadCount > 0) {
+        smsItems.push({ label: `🆕 ${unreadCount} 条未读消息`, detail: "" });
+        smsItems.push({ label: "── 收件箱 ──" });
+      }
+
+      if (inbox.length > 0) {
+        // 最新在前
+        for (let i = inbox.length - 1; i >= 0; i--) {
+          const msg = inbox[i];
+          const prefix = msg.read ? "📩" : "🆕";
+          const typeLabel = msg.type === "call_missed" ? "📞 未接来电" : msg.type === "system" ? "⚙" : "";
+          smsItems.push({
+            label: `${prefix} ${typeLabel}「${msg.sender}」${msg.content}`,
+            detail: msg.timestamp
+          });
+        }
+      } else {
+        smsItems.push({ label: "📩 （收件箱是空的）", detail: "" });
+        smsItems.push({ label: "📩 「运营商」欢迎使用本服务。" });
+      }
+
+      smsItems.push({ label: "── 系统通知 ──" });
+      const flags = gameState.flags;
+      if (flags.wanted) smsItems.push({ label: "⚠️ 【警视厅】您已被列为重要参考人。" });
+      if (flags.steal_alert) smsItems.push({ label: "⚠️ 【学校通知】近期校内发生盗窃事件，请注意保管财物。" });
+      if (flags.identity_exposed) smsItems.push({ label: "⚠️ 【未知】有人已经知道你是谁了。" });
+
+      // 标记已读
+      markPhoneMessagesRead();
+
+      return smsItems;
+    };
+
+    const buildTwitterPanel = () => {
+      const items: MenuItem[] = [];
+      const seed = gameState.turn + gameState.time.game_date.length;
+      for (let i = 0; i < 5; i++) {
+        const idx = (seed + i * 7) % PHONE_TWEET_TEMPLATES.length;
+        const likes = (seed * 3 + i * 11) % 142;
+        const retweets = (seed * 2 + i * 5) % 37;
+        items.push({
+          label: `🐦 ${PHONE_TWEET_TEMPLATES[idx]}`,
+          detail: `❤️${likes} 🔄${retweets}`
+        });
+      }
+      items.push({ label: "🔄 刷新时间线" });
+      return items;
+    };
+
+    const buildDarkwebPanel = () => {
+      const items: MenuItem[] = [];
+      const rep = gameState.player.reputation;
+      const isCriminal = (rep["不良"] ?? 0) >= 1 || gameState.flags.wanted || gameState.flags.steal_alert;
+
+      if (!isCriminal) {
+        items.push({ label: "🔒 需要不良声望≥1 或触发过犯罪事件才能访问暗网。" });
+        return items;
+      }
+
+      const seed = gameState.turn;
+      for (let i = 0; i < PHONE_DARKWEB_TEMPLATES.length; i++) {
+        if ((seed + i) % 3 === 0) {
+          items.push({ label: `🕶️ ${PHONE_DARKWEB_TEMPLATES[i]}` });
+        }
+      }
+      if (items.length === 0) {
+        items.push({ label: "🕶️ 【暗网】今天没有新消息。" });
+      }
+      return items;
+    };
+
+    const unreadBadge = (() => {
+      try {
+        const n = (gameState.phoneInbox || []).filter(m => !m.read).length;
+        return n > 0 ? ` (${n}条未读)` : "";
+      } catch (_) { return ""; }
+    })();
+
+    const phoneMenu: MenuItem[] = [
+      {
+        label: `📩 短信${unreadBadge}`,
+        detail: "查看收到的消息",
+        action: async (parentDone) => {
+          const smsItems = await buildSMSPanel();
+          await showMenu(ctx, `📱 ${phoneItem.name} - 短信`, smsItems);
+        }
+      },
+      {
+        label: "📷 相册",
+        detail: "查看保存的照片",
+        action: async (_parentDone) => {
+          const fs = await import("node:fs");
+          const path = await import("node:path");
+          const photosDir = path.resolve(process.cwd(), "state", "photos");
+          const photoItems: MenuItem[] = [];
+          if (fs.existsSync(photosDir)) {
+            const files = fs.readdirSync(photosDir).filter((f: string) => /\.(png|jpg|jpeg)$/i.test(f));
+            if (files.length > 0) {
+              files.forEach((f: string) => {
+                photoItems.push({ label: `📷 ${f}` });
+              });
+            } else {
+              photoItems.push({ label: "（相册是空的）" });
+            }
+          } else {
+            photoItems.push({ label: "（相册是空的）" });
+          }
+          await showMenu(ctx, `📱 ${phoneItem.name} - 相册`, photoItems);
+        }
+      },
+      {
+        label: "🐦 推特",
+        detail: "刷时间线",
+        action: async (parentDone) => {
+          const items = buildTwitterPanel();
+          await showMenu(ctx, `📱 ${phoneItem.name} - 推特`, items);
+        }
+      },
+      {
+        label: "🕶️ 暗网",
+        detail: "需要不良声望",
+        action: async (parentDone) => {
+          const items = buildDarkwebPanel();
+          await showMenu(ctx, `📱 ${phoneItem.name} - 暗网`, items);
+        }
+      },
+    ];
+
+    await showMenu(ctx, `📱 ${phoneItem.name}`, phoneMenu);
   }
 
   async function runStatus(ctx: any) {
-    const { gameState, saveState, calcMaxCarry, calcCurrentWeight, isOverburdened } = await import("./engine/state.ts");
+    const { gameState, saveState, calcMaxCarry, calcCurrentWeight, isOverburdened, calcPocketVolume, calcInventoryVolume } = await import("./engine/state.ts");
     const p = gameState.player;
 
     const maxC = calcMaxCarry(p.attributes.力量);
     const curW = calcCurrentWeight(p.inventory, p.equipment);
     const burden = isOverburdened(curW, maxC);
+    const pocketVol = calcPocketVolume(p.equipment);
+    const invVol = calcInventoryVolume(p.inventory, p.equipment);
 
     const SLOT_NAMES: Record<string, string> = {
       inner_top: "内衣上",
@@ -589,32 +596,12 @@ export default function (pi: ExtensionAPI) {
       // 1. 玩家基本状态
       items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁`, detail: "" });
       items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ¥${p.funds}`, detail: "" });
-      items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""}`, detail: "" });
-      items.push({ label: `  💪 力量: ${p.attributes.力量.toString().padEnd(2)}  |  🧠 智力: ${p.attributes.智力}`, detail: "" });
-      items.push({ label: `  🏃 敏捷: ${p.attributes.敏捷.toString().padEnd(2)}  |  👁️ 感知: ${p.attributes.感知}`, detail: "" });
-      items.push({ label: `  🛡️ 体质: ${p.attributes.体质.toString().padEnd(2)}  |  ✨ 魅力: ${p.attributes.魅力}`, detail: "" });
-      
+      items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""} | 📦 体积: ${invVol}${pocketVol > 0 ? `/${pocketVol}` : ""}L`, detail: "" });
+      items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
       const woundStr = p.wounds && p.wounds.length > 0 
         ? p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")
         : "健康";
       items.push({ label: `🩸 伤势: ${woundStr}`, detail: "" });
-
-      // 1.5 额外系统变量显示
-      if (p.titles && p.titles.length > 0) {
-        items.push({ label: `🏆 称号: ${p.titles.join(", ")}`, detail: "" });
-      }
-      const skillLines = Object.entries(p.skills || {})
-        .filter(([_, s]) => s.level > 0)
-        .map(([sName, s]) => `${sName}:Lv.${s.level}(${s.exp}/${s.nextLevel})`);
-      if (skillLines.length > 0) {
-        items.push({ label: `🎓 技能: ${skillLines.join("  ")}`, detail: "" });
-      }
-      const repLines = Object.entries(p.reputation || {})
-        .filter(([_, val]) => val !== 0)
-        .map(([gName, val]) => `${gName}:${val}`);
-      if (repLines.length > 0) {
-        items.push({ label: `🏅 声望: ${repLines.join("  ")}`, detail: "" });
-      }
       
       // 2. 装备槽位
       items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
@@ -665,13 +652,14 @@ export default function (pi: ExtensionAPI) {
             label: `  ${it.name}`,
             detail: `${it.type} ${it.weight}kg`,
             action: async (_done) => {
+              const isPhone = it.name.includes("手机") || it.effects?.some((e: any) => e.type === "communication");
               const subItems: MenuItem[] = [
                 {
                   label: "🔍 查看详情",
                   action: (subDone) => {
                     const lines = [
                       `名称: ${it.name}`,
-                      `类型: ${it.type} | 重量: ${it.weight}kg | 状态: ${it.state}`,
+                      `类型: ${it.type} | 重量: ${it.weight}kg | 体积: ${(it as any).volume ?? "?"}L | 状态: ${it.state}`,
                       it.flavor ? `描述: ${it.flavor}` : "",
                       it.damage ? `伤害: ${it.damage.dice} (${it.damage.damageType})` : "",
                     ].filter(Boolean);
@@ -686,6 +674,16 @@ export default function (pi: ExtensionAPI) {
                   }
                 }
               ];
+
+              if (isPhone) {
+                subItems.push({
+                  label: "📱 打开手机",
+                  action: async (subDone) => {
+                    await showPhoneTUI(ctx, it);
+                    subDone();
+                  }
+                });
+              }
 
               if (it.slot) {
                 const slotName = SLOT_NAMES[it.slot] || it.slot;
@@ -818,45 +816,18 @@ export default function (pi: ExtensionAPI) {
 
   // ── 物品转移（替换 patch_state give_item/take_item）──
   pi.registerTool({
-    name: "transfer_item", label: "转移物品/金钱",
-    description: "将物品或金钱从一方转移到另一方。from/to 为角色名或'玩家'。item='金钱:500'→转账；否则转移物品。",
+    name: "transfer_item", label: "转移物品",
+    description: "将物品从一方转移到另一方。from/to 为角色名或'玩家'。引擎强制校验来源确实持有该物品（背包或装备槽）。",
     parameters: Type.Object({
       from: Type.String({ description: "物品来源：角色名 或 '玩家'" }),
       to: Type.String({ description: "物品去向：角色名 或 '玩家'" }),
-      item: Type.String({ description: "物品名，或'金钱:数字'转账" }),
+      item: Type.String({ description: "物品名" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
       const p = gameState.player;
 
-      // 特殊格式: "金钱:500" → 转账
-      const moneyMatch = params.item.match(/^金钱[:：](\d+)$/);
-      if (moneyMatch) {
-        const amount = parseInt(moneyMatch[1], 10);
-        if (amount <= 0) return { content: [{ type: "text", text: "转账金额必须大于0。" }], details: {} };
-
-        const fromIsPlayer = params.from === "玩家" || params.from === p.name;
-        const toIsPlayer = params.to === "玩家" || params.to === p.name;
-
-        // 扣 from 方
-        if (fromIsPlayer) {
-          if (p.funds < amount) return { content: [{ type: "text", text: `玩家只有¥${p.funds}，不够转¥${amount}。` }], details: {} };
-          p.funds -= amount;
-        } else {
-          const fromNpc = getOrCreateNPC(params.from);
-          if (fromNpc.funds < amount) return { content: [{ type: "text", text: `${params.from}只有¥${fromNpc.funds}，不够转¥${amount}。` }], details: {} };
-          fromNpc.funds -= amount;
-        }
-
-        // 加 to 方
-        if (toIsPlayer) p.funds += amount;
-        else getOrCreateNPC(params.to).funds += amount;
-
-        saveState();
-        return { content: [{ type: "text", text: `${params.from} → ${params.to}: ¥${amount}` }], details: {} };
-      }
-
-      // 原有物品转移逻辑
+      // 解析 from 方
       const fromIsPlayer = params.from === "玩家" || params.from === p.name;
       const fromInventory: any[] = fromIsPlayer ? p.inventory : getOrCreateNPC(params.from).inventory;
       const fromEquipment: any = fromIsPlayer ? p.equipment : getOrCreateNPC(params.from).equipment;
@@ -906,18 +877,13 @@ export default function (pi: ExtensionAPI) {
       updateRelation(p.relationships, params.npc, delta, params.reason);
       let r = `${params.npc} 好感${delta > 0 ? "+" : ""}${delta}（${params.reason}）`;
 
-      if (delta !== 0) {
+      if (delta > 0) {
         try {
           const sState = await getOrCreateSexState(params.npc);
           if (sState) {
-            const desireDelta = Math.max(1, Math.round(Math.abs(delta) * 0.5));
-            if (delta > 0) {
-              sState.desire = Math.min(100, sState.desire + desireDelta);
-              r += `，欲望+${desireDelta}`;
-            } else {
-              sState.desire = Math.max(0, sState.desire - desireDelta);
-              r += `，欲望-${desireDelta}`;
-            }
+            const desireDelta = Math.max(1, Math.round(delta * 0.5));
+            sState.desire = Math.min(100, sState.desire + desireDelta);
+            r += `，欲望+${desireDelta}`;
           }
         } catch (_) {}
       }
@@ -1005,9 +971,8 @@ export default function (pi: ExtensionAPI) {
     description: "推进游戏时间（分钟）。下课/放学/等待时调用。",
     parameters: Type.Object({ minutes: Type.Number() }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather } = await import("./engine/state.ts");
+      const { gameState, saveState, updateNPCSchedules, refreshWeather, stampRoom } = await import("./engine/state.ts");
       const { advanceMinutes } = await import("./engine/time.ts");
-      backupBeforeTurn();  // 自动备份，供 /redo 还原
       const mins = params.minutes;
       // 初始化 legacy session 没有 minute_of_day
       if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
@@ -1017,60 +982,10 @@ export default function (pi: ExtensionAPI) {
       gameState.turn++;
       if (gameState.turn % 4 === 0) refreshWeather();
       const events = updateNPCSchedules();
-      // 剧情事件引擎：扫描 + 清理过期钩子
-      try { const { checkTimelineEvents, expireHooks } = await import("./engine/timeline.ts"); checkTimelineEvents(); expireHooks(); } catch (_) {}
+      stampRoom();
       saveState();
       const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
       return { content: [{ type: "text", text: `时间推进 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。${events.length > 0 ? events.join("; ") : "无特殊事件"}` }], details: { time: gameState.time, events } };
-    },
-  });
-
-  // ── 剧情任务系统（Phase 8a）──
-  pi.registerTool({
-    name: "open_quest", label: "开始任务",
-    description: "玩家接受了剧情钩子。引擎创建任务状态，激活第一个节拍。事件ID来自[剧情钩子]中显示的event_id。",
-    parameters: Type.Object({
-      event_id: Type.String({ description: "事件ID，如'cookie_delegation'" }),
-    }),
-    async execute(_id, params, _s, _o, _ctx) {
-      const { openQuest, getActiveQuests } = await import("./engine/timeline.ts");
-      const { saveState } = await import("./engine/state.ts");
-      const r = openQuest(params.event_id);
-      saveState();
-      if (!r) return { content: [{ type: "text", text: `任务 ${params.event_id} 未找到或已存在` }], details: {} };
-      const quests = getActiveQuests();
-      return { content: [{ type: "text", text: r + (quests.length > 0 ? `\n当前活跃任务: ${quests.map(q => q.title).join("、")}` : "") }], details: {} };
-    },
-  });
-
-  pi.registerTool({
-    name: "advance_quest", label: "推进任务",
-    description: "完成当前节拍。outcome为玩家选择的路径标签（如'帮忙'/'旁观'/'拒绝'）。引擎自动执行效果并推进到下一节拍。",
-    parameters: Type.Object({
-      event_id: Type.String({ description: "事件ID" }),
-      outcome: Type.Optional(Type.String({ description: "玩家选择的路径标签，如'一起指导做曲奇'" })),
-    }),
-    async execute(_id, params, _s, _o, _ctx) {
-      const { advanceQuest } = await import("./engine/timeline.ts");
-      const { saveState } = await import("./engine/state.ts");
-      const r = advanceQuest(params.event_id, params.outcome);
-      saveState();
-      return { content: [{ type: "text", text: r || "推进失败" }], details: {} };
-    },
-  });
-
-  pi.registerTool({
-    name: "abandon_quest", label: "放弃任务",
-    description: "玩家明确拒绝或无视剧情钩子。标记任务为已放弃。",
-    parameters: Type.Object({
-      event_id: Type.String({ description: "事件ID" }),
-    }),
-    async execute(_id, params, _s, _o, _ctx) {
-      const { abandonQuest } = await import("./engine/timeline.ts");
-      const { saveState } = await import("./engine/state.ts");
-      const r = abandonQuest(params.event_id);
-      saveState();
-      return { content: [{ type: "text", text: r || "放弃失败" }], details: {} };
     },
   });
 
@@ -1189,56 +1104,24 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "masturbate", label: "自慰",
-    description: "自慰以增加兴奋度、消耗欲望。不传target=玩家自己；传NPC名=该NPC自慰（引擎减少其desire）。",
+    description: "自慰以增加兴奋度，甚至达到高潮。",
     parameters: Type.Object({
       char: Type.String({ description: "角色名" }),
       minutes: Type.Number({ description: "持续时间(分钟)" }),
-      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮自慰产生的心里话（30字内/条）" }))),
-      target: Type.Optional(Type.String({ description: "可选：自慰的NPC名。不传默认玩家自己" })),
+      thoughts: Type.Optional(Type.Array(Type.String({ description: "此轮自慰产生的心里话（30字内/条）" })))
     }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState, getOrCreateSexState } = await import("./engine/state.ts");
-      const { masturbate, settleAfterSex, formatSettlement, recordThought } = await import("./engine/sex.ts");
-      const isNpc = params.target && params.target !== gameState.player.name && params.target !== "玩家";
-
-      if (isNpc) {
-        // NPC 自慰：消耗 NPC 自身欲望
-        const sState = await getOrCreateSexState(params.target);
-        if (!sState) return { content: [{ type: "text", text: `无${params.target}的sex档案` }], details: {} };
-        if (sState.arousal == null) sState.arousal = 0;
-        if (sState.climaxCount == null) sState.climaxCount = 0;
-        if (sState.squirtCount == null) sState.squirtCount = 0;
-
-        const r = masturbate(sState, params.minutes);
-        // NPC 自慰 → 消耗积累的欲望（释放后欲望下降）
-        sState.desire = Math.max(0, sState.desire - Math.round(r.arousalChange * 0.3));
-
-        let textResult = `${params.target}进行了 ${params.minutes} 分钟的自慰。欲望 -${Math.round(r.arousalChange * 0.3)} (当前: ${sState.desire}/100)`;
-
-        if (params.thoughts && params.thoughts.length > 0) {
-          for (const t of params.thoughts) {
-            recordThought(sState, t, gameState.time.game_date, r.climaxed ? "climax_after" : "scene_end");
-          }
-        }
-
-        if (r.climaxed) {
-          textResult += `\n${params.target}达到了高潮！`;
-          const report = settleAfterSex(sState, gameState.time.game_date, params.minutes, ["秘部"], []);
-          const formatted = formatSettlement(report, params.target);
-          textResult += formatted;
-        }
-
-        saveState();
-        return { content: [{ type: "text", text: textResult }], details: { masturbateResult: r } };
-      }
-
-      // === 玩家自慰（原有逻辑） ===
+      
       // 自动对齐或懒加载当前 SexState
       if (!gameState.player.sex || (gameState.player.sex.profile as any).name !== params.char) {
         const sState = await getOrCreateSexState(params.char);
         if (!sState) return { content: [{ type: "text", text: `无该角色sex档案: ${params.char}` }], details: {} };
         gameState.player.sex = sState;
       }
+
+      const { masturbate, settleAfterSex, formatSettlement, recordThought } = await import("./engine/sex.ts");
+      const r = masturbate(gameState.player.sex, params.minutes);
 
       // 防御旧存档 null 值
       if (gameState.player.sex.arousal == null) gameState.player.sex.arousal = 0;
@@ -1366,28 +1249,10 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "steal_item", label: "偷窃",
-    description: "从NPC偷物品或金钱。item='金钱'→摸钱包（随机偷部分现金）；其他→偷物品。失败（caught=true）→ 引擎自动扣除好感-20、写入 alert 标记。",
+    description: "从NPC偷物品。成功=物品到手，失败（caught=true）→ 引擎自动扣除好感-20、写入 alert 标记。",
     parameters: Type.Object({ target: Type.String(), item: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, stealItem, stealFunds, saveState, updateRelation, updateReputation } = await import("./engine/state.ts");
-
-      // 特殊：偷钱
-      if (params.item === "金钱" || params.item === "钱") {
-        const r = stealFunds(gameState.player, params.target);
-        let consequence = "";
-        if (r.caught) {
-          updateRelation(gameState.player.relationships, params.target, -20, "偷钱被抓");
-          consequence += `\n⚠️ ${params.target}好感-20`;
-          gameState.flags.steal_alert = true;
-          gameState.flags[`steal_caught_by_${params.target}`] = true;
-          const loc = gameState.player.location;
-          if (loc.includes("校") || loc.includes("班")) { updateReputation("学生", -1); consequence += `，学生声望-1`; }
-          if (loc.includes("校门") || loc.includes("警")) { gameState.flags.wanted = true; consequence += `，被通报！`; }
-        }
-        saveState();
-        return { content: [{ type: "text", text: r.narrative + consequence }], details: { ...r, flags_set: consequence } };
-      }
-
+      const { gameState, stealItem, saveState, updateRelation, updateReputation } = await import("./engine/state.ts");
       const r = stealItem(gameState.player, params.target, params.item);
       let consequence = "";
 
@@ -1450,6 +1315,64 @@ export default function (pi: ExtensionAPI) {
         }
         return { content: [{ type: "text", text: `没有装备${params.item}` }], details: {} };
       }
+    },
+  });
+
+  pi.registerTool({
+    name: "use_item", label: "使用物品",
+    description: "使用背包中的消耗品。引擎根据物品效果自动结算（回血/提神等），消耗后物品消失。",
+    parameters: Type.Object({
+      item: Type.String({ description: "要使用的物品名" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, saveState } = await import("./engine/state.ts");
+      const p = gameState.player;
+
+      // 在背包找
+      const idx = p.inventory.findIndex((i: any) => i.name === params.item);
+      if (idx < 0) {
+        return { content: [{ type: "text", text: `背包里没有${params.item}` }], details: {} };
+      }
+
+      const item = p.inventory[idx];
+      if (!item.effects || item.effects.length === 0) {
+        return { content: [{ type: "text", text: `${params.item}没有可用效果` }], details: {} };
+      }
+
+      const results: string[] = [];
+      for (const eff of item.effects) {
+        if (eff.type === "heal") {
+          // 解析治疗量：支持 "1d4", "2d6", 纯数字
+          let healAmount = 0;
+          if (typeof eff.value === "string" && (eff.value as string).includes("d")) {
+            const [count, sides] = (eff.value as string).split("d").map(Number);
+            for (let i = 0; i < count; i++) {
+              healAmount += Math.floor(Math.random() * sides) + 1;
+            }
+          } else {
+            healAmount = Number(eff.value);
+          }
+          const beforeHP = p.hp.current;
+          p.hp.current = Math.min(p.hp.max, p.hp.current + healAmount);
+          const actualHeal = p.hp.current - beforeHP;
+          results.push(`回复了 ${actualHeal} 点HP（${p.hp.current}/${p.hp.max}）`);
+        } else if (eff.type === "energy") {
+          // 提神效果：清除疲劳相关标记，注入叙事提示
+          const strength = eff.value as string;
+          results.push(strength === "强提神" ? "精力充沛，疲劳一扫而空" : "精神恢复了些许");
+        } else {
+          results.push(`${eff.type}: ${eff.value}`);
+        }
+      }
+
+      // 消耗物品
+      p.inventory.splice(idx, 1);
+      saveState();
+
+      return {
+        content: [{ type: "text", text: `使用了${params.item}：${results.join("；")}` }],
+        details: { item: item.name, effects: results }
+      };
     },
   });
 
@@ -1592,6 +1515,7 @@ export default function (pi: ExtensionAPI) {
     name: "settle_scene", label: "场景收口",
     description:
       "一场戏结束时的统一收口。推进时间、更新 NPC 日程、写入记忆标签。\n" +
+      "NPC换装请用 set_npc_outfit 工具。\n" +
       "替代手动调用 commit_turn + add_memory_tag 的组合。",
     parameters: Type.Object({
       summary: Type.String({ description: "本场景发生的事，如'在侍奉部和雪乃聊了一下午'" }),
@@ -1602,7 +1526,7 @@ export default function (pi: ExtensionAPI) {
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, updateNPCSchedules, refreshWeather, addMemoryTag } = await import("./engine/state.ts");
+      const { gameState, saveState, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom } = await import("./engine/state.ts");
       const { advanceMinutes } = await import("./engine/time.ts");
       const mins = params.elapsed_minutes;
       if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
@@ -1618,6 +1542,7 @@ export default function (pi: ExtensionAPI) {
         }
       }
 
+      stampRoom();
       saveState();
 
       const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
@@ -1629,70 +1554,12 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
-    name: "list_room_templates", label: "列出场景模板",
-    description: "列出可用的场景模板及尺寸。传入 category 只返回该分类（school/commercial/residential/outdoor/transport），不传则返回所有分类名供选择。创建新场景前先查此表。",
-    parameters: Type.Object({ category: Type.Optional(Type.String()) }),
-    async execute(_id, params, _s, _o, _ctx) {
-      const raw = await import("../data/room_templates.json", { with: { type: "json" } });
-      const templates = (raw.default || raw) as Record<string, Record<string, any>>;
-      const cat = params.category;
-      // 不传 category → 返回分类概要（极小 token）
-      if (!cat) {
-        const cats: string[] = [];
-        for (const [k, v] of Object.entries(templates)) {
-          if (k.startsWith("_")) continue;
-          cats.push(`${k}: ${Object.keys(v).join("、")}（共${Object.keys(v).length}项）`);
-        }
-        cats.push("用法: list_room_templates(category='school') 查看具体尺寸");
-        return { content: [{ type: "text", text: cats.join("\n") }], details: {} };
-      }
-      // 传了 category → 返回该类详细模板
-      const entries = templates[cat];
-      if (!entries) return { content: [{ type: "text", text: `无此分类: ${cat}。可用: ${Object.keys(templates).filter(k => !k.startsWith("_")).join(", ")}` }], details: {} };
-      const lines = [`── ${cat} ──`];
-      for (const [name, t] of Object.entries(entries)) {
-        const extra = t.desc ? ` — ${t.desc}` : "";
-        lines.push(`  ${name}: ${t.width}×${t.height}格 (${t.width * t.height}㎡) 容量${t.capacity ?? t.width * t.height}人 F${t.floor ?? 1}${extra}`);
-      }
-      return { content: [{ type: "text", text: lines.join("\n") }], details: {} };
-    },
-  });
-
-  pi.registerTool({
     name: "create_room", label: "创建房间",
-    description: "在地图中创建一个新的房间区域。建议先调用 list_room_templates 查看推荐尺寸。template 套用模板尺寸（如'便利店'）；atmosphere 写场景氛围（1-2句话）；directions 写四向描述。家具用 world_interact 放置。",
-    parameters: Type.Object({
-      name: Type.String(),
-      width: Type.Optional(Type.Number()),
-      height: Type.Optional(Type.Number()),
-      floor: Type.Optional(Type.Number()),
-      template: Type.Optional(Type.String()),
-      atmosphere: Type.Optional(Type.String()),
-      directions: Type.Optional(Type.Record(Type.String(), Type.String())),
-    }),
+    description: "在地图中创建一个新的房间区域。",
+    parameters: Type.Object({ name: Type.String(), width: Type.Number(), height: Type.Number(), floor: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { createRoom } = await import("./engine/state.ts");
-      let w = params.width;
-      let h = params.height;
-      let f = params.floor;
-      if (params.template && (!w || !h)) {
-        try {
-          const templates = await import("../data/room_templates.json", { with: { type: "json" } });
-          const all: Record<string, any> = {};
-          for (const [cat, entries] of Object.entries(templates.default || templates)) {
-            if (cat.startsWith("_")) continue;
-            Object.assign(all, entries);
-          }
-          const t = all[params.template];
-          if (t) {
-            if (!w) w = t.width;
-            if (!h) h = t.height;
-            if (!f) f = (t as any).floor ?? 1;
-          }
-        } catch (_) {}
-      }
-      if (!w || !h) return { content: [{ type: "text", text: "请提供 width/height 或有效的 template 名称。可先调用 list_room_templates 查看可用模板。" }], details: {} };
-      const r = await createRoom(params.name, w, h, f ?? 1, params.atmosphere, params.directions as Record<string, string> | undefined);
+      const r = await createRoom(params.name, params.width, params.height, params.floor);
       return { content: [{ type: "text", text: r.reason }], details: r };
     },
   });
@@ -1725,6 +1592,103 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
+    name: "set_npc_outfit", label: "NPC换装",
+    description:
+      "根据场景切换NPC服装卡。school(校服)/pe(体操服)/swim(泳装)/casual(私服)/sleep(睡衣)。\n" +
+      "引擎自动注入当前服装到叙述上下文。",
+    parameters: Type.Object({
+      npc: Type.String({ description: "NPC 名" }),
+      outfit: Type.String({ description: "服装卡：school / pe / swim / casual / sleep" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { setNPCOutfit, saveState } = await import("./engine/state.ts");
+      const r = setNPCOutfit(params.npc, params.outfit);
+      saveState();
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "mount_vehicle", label: "骑乘载具",
+    description: "从背包骑上载具（自行车/摩托车/汽车）。切换后移动速度改变，距离按倍率缩减。",
+    parameters: Type.Object({
+      item: Type.String({ description: "载具物品名，如'自行车'、'摩托车'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { mountVehicle } = await import("./engine/state.ts");
+      const r = mountVehicle(params.item);
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "dismount_vehicle", label: "下车",
+    description: "从当前载具下来，恢复步行速度。载具放回背包。",
+    parameters: Type.Object({}),
+    async execute(_id, _params, _s, _o, _ctx) {
+      const { dismountVehicle } = await import("./engine/state.ts");
+      const r = dismountVehicle();
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "board_train", label: "乘电车",
+    description: "从当前所在车站乘坐电车前往目的地站。时间按时刻表（city_map.json）。触发旅行模式，LLM 可叙述车内见闻。",
+    parameters: Type.Object({
+      from: Type.String({ description: "出发站名" }),
+      to: Type.String({ description: "目的站名" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      // 查时刻表
+      const cityMap = await import("./data/city_map.json", { with: { type: "json" } });
+      const regions = (cityMap as any).default?.regions || {};
+      let mins = 0;
+      for (const reg of Object.values(regions) as any[]) {
+        if (!reg.stations) continue;
+        for (const [sn, sd] of Object.entries(reg.stations)) {
+          if (sn === params.from || sn.includes(params.from)) {
+            const timeTo = (sd as any).time_to || {};
+            for (const [dn, dm] of Object.entries(timeTo)) {
+              if (dn === params.to || dn.includes(params.to)) { mins = dm as number; break; }
+            }
+          }
+        }
+      }
+      if (mins <= 0) return { content: [{ type: "text", text: `找不到 ${params.from} → ${params.to} 的电车路线` }], details: {} };
+
+      // 触发旅行模式
+      const { gameState, saveState } = await import("./engine/state.ts");
+      gameState.pendingTravel = {
+        from: params.from,
+        to: params.to,
+        route: `电车（约${mins}分钟）`,
+        minutes: mins,
+        timeOfDay: gameState.time.time_of_day
+      };
+      saveState();
+      return { content: [{ type: "text", text: `登上了 ${params.from} → ${params.to} 的电车。预计 ${mins} 分钟。到达前请叙述车内见闻，然后调用 complete_travel。` }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "create_location", label: "创建地点",
+    description:
+      "在某个区域/城市下创建新地点。引擎自动加入导航层级和已知地点。\n" +
+      "LLM 可以随时扩展世界——新开的咖啡店、新发现的秘密基地、新学校等。\n" +
+      "parent 为上级地名（如'千叶县'、'东京都'），name 为新地点名。",
+    parameters: Type.Object({
+      parent: Type.String({ description: "上级地名，如'千叶县'、'东京都'、'千叶市'" }),
+      name: Type.String({ description: "新地点名称" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { createDynamicLocation } = await import("./engine/state.ts");
+      const r = createDynamicLocation(params.parent, params.name);
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+
+  pi.registerTool({
     name: "buy_item", label: "购买",
     description: "从商店购买物品。LLM 根据市场常识定价，引擎校验价格范围。",
     parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
@@ -1743,9 +1707,15 @@ export default function (pi: ExtensionAPI) {
       skillLevel: Type.Optional(Type.Number({ description: "玩家相关伪装或欺瞒技能等级" }))
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, updateReputation } = await import("./engine/state.ts");
+      const { gameState, saveState, updateReputation, getEquipmentBonus } = await import("./engine/state.ts");
       const { identityCheck } = await import("./engine/dice.ts");
-      const r = identityCheck(params.difficulty as any, gameState.player.attributes.魅力, params.skillLevel || 0);
+      const loc = gameState.player.location;
+      // 装备加成: 魅力属性加成 + 社交加成（校内穿制服等）
+      const attrBonus = getEquipmentBonus(gameState.player.equipment, "attribute_bonus", "魅力");
+      const socialBonus = getEquipmentBonus(gameState.player.equipment, "social_bonus", loc);
+      const effectiveCha = gameState.player.attributes.魅力 + attrBonus;
+      const effectiveSkill = (params.skillLevel || 0) + socialBonus;
+      const r = identityCheck(params.difficulty as any, effectiveCha, effectiveSkill);
       let text = `[身份检定] 难度: ${params.difficulty} | 检定值: ${r.roll.total} vs DC ${r.roll.dc}\n`;
 
       if (r.success) {
@@ -1754,8 +1724,7 @@ export default function (pi: ExtensionAPI) {
         text += "❌ 检定失败！身份被识破！";
         gameState.flags.identity_exposed = true;
 
-        // 根据所在区域自动施加后果
-        const loc = gameState.player.location;
+        // 根据所在区域自动施加后果（loc 已在上方声明）
         if (loc.includes("校") || loc.includes("班")) {
           updateReputation("学生", -1);
           text += `\n⚠️ 学生声望-1`;
@@ -1777,11 +1746,11 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "sell_item", label: "出售",
-    description: "出售物品给NPC。LLM 根据市场常识定价，引擎校验价格范围。若指定 buyer，引擎校验对方资金并扣款。",
-    parameters: Type.Object({ item: Type.String(), price: Type.Number(), buyer: Type.Optional(Type.String()) }),
+    description: "出售物品。LLM 根据市场常识定价，引擎校验价格范围。",
+    parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { sellItem } = await import("./engine/state.ts");
-      const r = sellItem(params.item, params.price, params.buyer);
+      const r = sellItem(params.item, params.price);
       return { content: [{ type: "text", text: r }], details: {} };
     },
   });
@@ -1820,7 +1789,7 @@ export default function (pi: ExtensionAPI) {
     name: "spawn_item", label: "生成物品",
     description:
       "因剧情需要生成一件新物品并放入指定目标背包。必须提供 source（来源）和 reason（原因）。\n" +
-      "引擎强制：物品必须有 name/type/weight，武器必须有 damage。\n" +
+      "引擎强制：物品必须有 name/type/weight/volume，武器必须有 damage。\n" +
       "禁止用于绕过 buy_item 或 steal_item 的正常获取途径。",
     parameters: Type.Object({
       target: Type.String({ description: "接收者：'玩家' 或 NPC 名" }),
@@ -1829,6 +1798,7 @@ export default function (pi: ExtensionAPI) {
         type: Type.String({ description: "weapon / clothing / armor / tool / consumable" }),
         slot: Type.String({ description: "装备槽位" }),
         weight: Type.Number(),
+        volume: Type.Number({ description: "体积（升）" }),
         damage: Type.Optional(Type.Object({
           dice: Type.String({ description: "如 '1d8'" }),
           damageType: Type.String({ description: "如 '斩击'" }),
@@ -1843,7 +1813,7 @@ export default function (pi: ExtensionAPI) {
       reason: Type.String({ description: "为什么获得，如'静将祖父遗物托付给你'" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
+      const { gameState, saveState, getOrCreateNPC, checkAddVolume } = await import("./engine/state.ts");
       const targetChar = (params.target === "玩家" || params.target === gameState.player.name)
         ? gameState.player
         : getOrCreateNPC(params.target);
@@ -1852,6 +1822,21 @@ export default function (pi: ExtensionAPI) {
       if (params.item.type === "weapon" && !params.item.damage) {
         return { content: [{ type: "text", text: "错误: weapon 类型的物品必须指定 damage 参数" }], details: {} };
       }
+      if (!params.item.volume || params.item.volume < 0) {
+        return { content: [{ type: "text", text: "错误: 物品必须指定 volume（体积，升）" }], details: {} };
+      }
+
+      // 体积校验（仅玩家）
+      if (params.target === "玩家" || params.target === gameState.player.name) {
+        const volCheck = checkAddVolume(
+          gameState.player.inventory,
+          gameState.player.equipment,
+          { volume: params.item.volume, name: params.item.name }
+        );
+        if (!volCheck.ok && volCheck.severity !== "bulging") {
+          return { content: [{ type: "text", text: volCheck.narrative }], details: volCheck };
+        }
+      }
 
       const flavorSuffix = `来源: ${params.source}`;
       const itemObj: any = {
@@ -1859,6 +1844,7 @@ export default function (pi: ExtensionAPI) {
         type: params.item.type,
         slot: params.item.slot,
         weight: params.item.weight,
+        volume: params.item.volume,
         state: "intact",
         flavor: params.item.flavor ? `${params.item.flavor}\n${flavorSuffix}` : flavorSuffix,
         effects: params.item.effects || [],
@@ -1910,6 +1896,73 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
+    name: "lookup_body", label: "查身体",
+    description:
+      "查询角色的身体详细数据（三围、cup、体型），以及性器官档案（如果 Layer1 启用且有数据）。\n" +
+      "LLM 在需要描写具体身体细节时调用此工具按需获取，避免默认注入浪费 token。\n" +
+      "type 参数：'basic' 只返回身体数据（身高体重三围）；'full' 返回含器官档案的全部数据。",
+    parameters: Type.Object({
+      name: Type.String({ description: "角色名" }),
+      type: Type.Optional(Type.String({ description: "basic(仅身体数据) / full(含器官档案)，默认 full" })),
+    }),
+    async execute(_id, params, _signal, _onUpdate, _ctx) {
+      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateSexState } = await import("./engine/state.ts");
+      const { allChars } = await import("./engine/router.ts");
+      const isPlayer = params.name === gameState.player.name || params.name === "玩家";
+
+      // 身体数据
+      let body: any = null;
+      if (isPlayer) {
+        body = gameState.player.body;
+      } else {
+        const c = allChars.find((x: any) => x.name === params.name);
+        if (!c) return { content: [{ type: "text", text: `无此角色: ${params.name}` }], details: {} };
+        const age = getNpcCurrentAge(c.base_age || 16);
+        body = getBodyForAge(c, age);
+      }
+
+      const result: any = { name: params.name, body };
+
+      // 器官档案（仅 full 模式）
+      if (params.type !== "basic") {
+        try {
+          let profile: any = null;
+          if (isPlayer && gameState.player.sex) {
+            profile = gameState.player.sex.profile;
+          } else {
+            const sState = await getOrCreateSexState(params.name);
+            if (sState) profile = sState.profile;
+          }
+          if (profile) {
+            const safe: any = {};
+            if (profile.female) {
+              safe.female = {
+                breast: profile.female.breast,
+                vagina: profile.female.vagina,
+                pubic_hair: profile.female.pubic_hair,
+                clitoris: profile.female.clitoris,
+              };
+            }
+            if (profile.male) {
+              safe.male = {
+                penis: profile.male.penis,
+                testicles: profile.male.testicles,
+                pubic_hair: profile.male.pubic_hair,
+              };
+            }
+            safe.bodyParts = profile.bodyParts;
+            safe.attitude = profile.attitude;
+            safe.experience = profile.experience;
+            result.sex_profile = safe;
+          }
+        } catch (_) {}
+      }
+
+      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], details: result };
+    },
+  });
+
+  pi.registerTool({
     name: "add_memory_tag", label: "记忆标签",
     description: "将关键剧情点烙印在 NPC 记忆系统中。标签会被注入后续 prompt。",
     parameters: Type.Object({
@@ -1937,21 +1990,20 @@ export default function (pi: ExtensionAPI) {
       lines.push("────────────────────────────────────────");
 
       const buildBar = (val: number) => {
-        const totalBar = 10;
-        const filled = Math.min(totalBar, Math.max(0, Math.round(val / 10)));
-        return "■".repeat(filled) + "□".repeat(totalBar - filled);
+        const filled = Math.round(val / 20);
+        return "■".repeat(filled) + "□".repeat(5 - filled);
       };
 
       for (const [n, r] of Object.entries(rels)) {
         const rel = r as any;
-        lines.push(`👥 ${n} (${rel.stage})`);
-        let stageStr = `   好感: [${buildBar(rel.affection)}] ${rel.affection}/100`;
+        lines.push(`👥 ${n}`);
+        let stageStr = `  |-[好感阶段-${rel.stage}]: ${buildBar(rel.affection)} (${rel.affection}/100)`;
         if (rel.romance) {
-          stageStr += ` | 💕 ${rel.romance}`;
+          stageStr += ` | [关系: 💕${rel.romance}]`;
         }
         lines.push(stageStr);
         if (rel.notes) {
-          lines.push(`   ✍️ 评价: ${rel.notes}`);
+          lines.push(`  |-[评价/便签]: ${rel.notes}`);
         }
         lines.push("────────────────────────────────────────");
       }
@@ -1962,93 +2014,14 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  pi.registerCommand("redo", {
-    description: "回退到倒数第 N 次输入前（默认1）。类似酒馆重新生成 / fate-sandbox /fuck。",
-    handler: async (args, ctx) => {
-      const { restoreLastTurn, listBackups, saveState } = await import("./engine/state.ts");
-      const n = parseInt(args.trim()) || 1;
-      const ok = restoreLastTurn(n);
-      if (ok) {
-        saveState();
-        const backups = listBackups();
-        ctx.ui.notify(`↩ 已回退 ${n} 回合 → ${backups.length} 个备份可用 (${backups.join(",")})`, "info");
-      } else {
-        ctx.ui.notify(`❌ 没有倒数第 ${n} 回合的备份。最多保留 ${5} 个。`, "warning");
-      }
-    },
-  });
-
-  pi.registerCommand("save", {
-    description: "创建手动存档。用法: /save <存档名> 或 /save (默认=quick)",
-    handler: async (args, ctx) => {
-      const { createSave } = await import("./engine/state.ts");
-      const name = args.trim() || "quick";
-      const saved = createSave(name);
-      ctx.ui.notify(`💾 已存档: ${saved}`, "info");
-    },
-  });
-
-  pi.registerCommand("load", {
-    description: "载入手动存档。用法: /load <存档名>",
-    handler: async (args, ctx) => {
-      const { loadSave, gameState } = await import("./engine/state.ts");
-      const name = args.trim();
-      if (!name) { ctx.ui.notify("用法: /load <存档名> 用 /saves 查看可用存档", "warning"); return; }
-      const ok = loadSave(name);
-      if (ok) {
-        ctx.ui.notify(`📂 已载入: ${name} → ${gameState.player.location} 第${gameState.turn}回合`, "info");
-      } else {
-        ctx.ui.notify(`❌ 存档不存在: ${name}`, "warning");
-      }
-    },
-  });
-
-  pi.registerCommand("saves", {
-    description: "管理存档 (TUI 面板)。不带参数=查看，/saves delete <名>=删除",
-    handler: async (args, ctx) => {
-      const { listSaves, deleteSave, createSave, loadSave, gameState, saveState } = await import("./engine/state.ts");
-      const parts = args.trim().split(/\s+/);
-      if (parts[0] === "delete" && parts[1]) {
-        const ok = deleteSave(parts[1]);
-        ctx.ui.notify(ok ? `🗑️ 已删除: ${parts[1]}` : `❌ 未找到: ${parts[1]}`, ok ? "info" : "warning");
-        return;
-      }
-
-      const saves = listSaves();
-      if (saves.length === 0) {
-        ctx.ui.notify("📭 暂无手动存档。用 /save <名> 创建。", "info");
-        return;
-      }
-
-      const items: MenuItem[] = saves.map(s => ({
-        label: `💾 ${s.name}`,
-        detail: `第${s.turn}回合 ${s.date} ${s.location}`,
-        action: async (done) => {
-          done();
-          const ok = loadSave(s.name);
-          if (ok) {
-            await pi.sendUserMessage(ctx, `📂 已读档: ${s.name}`);
-            ctx.ui.notify(`已载入: ${s.name}`, "info");
-          }
-        }
-      }));
-
-      items.push({
-        label: "💾 + 新建存档",
-        detail: `第${gameState.turn}回合 ${gameState.time.game_date} ${gameState.player.location}`,
-        action: async (done) => {
-          done();
-          const name = `save_${gameState.turn}`;
-          const saved = createSave(name);
-          ctx.ui.notify(`已存档: ${saved}`, "info");
-        }
-      });
-
-      await showMenu(ctx, "📂 存档管理", items);
-    },
-  });
-
   pi.registerCommand("status", {
+    description: "查看/管理玩家状态与装备",
+    handler: async (_args, ctx) => {
+      await runStatus(ctx);
+    },
+  });
+
+  pi.registerCommand("menu", {
     description: "查看/管理玩家状态与装备 (主菜单)",
     handler: async (_args, ctx) => {
       await runStatus(ctx);
@@ -2067,39 +2040,24 @@ export default function (pi: ExtensionAPI) {
       if (isPlayer) {
         const p = gameState.player;
         const lines = [
-          `${p.name}  ${p.gender === "female" ? "女" : "男"}  ${p.age}岁  ${gameState.time.player_stage}`,
-          `📍 位置: ${p.location}  |  💰 资金: ¥${p.funds}`,
-          `❤️ HP: ${p.hp.current}/${p.hp.max}  |  🛡️ AC: ${p.ac}`,
+          `${p.name}  ${p.gender}  ${p.age}岁  ${gameState.time.player_stage}`,
+          `位置: ${p.location}  资金: ¥${p.funds}`,
+          `HP: ${p.hp.current}/${p.hp.max}  AC: ${p.ac}`,
         ];
         if (p.body) {
           const b = p.body;
-          let bodyStr = `📏 身体: ${b.height_cm}cm ${b.weight_kg ? b.weight_kg + "kg " : ""}${b.build}`;
+          let bodyStr = `身体: ${b.height_cm}cm ${b.weight_kg ? b.weight_kg + "kg " : ""}${b.build}`;
           if (b.cup) bodyStr += ` ${b.cup}cup`;
           if (b.measurements) bodyStr += ` ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
           lines.push(bodyStr);
         }
         if (p.attributes) {
           const a = p.attributes;
-          lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
-        }
-        if (p.titles && p.titles.length > 0) {
-          lines.push(`🏆 称号: ${p.titles.join(", ")}`);
-        }
-        const skillLines = Object.entries(p.skills || {})
-          .filter(([_, s]) => s.level > 0)
-          .map(([sName, s]) => `${sName}:Lv.${s.level}(${s.exp}/${s.nextLevel})`);
-        if (skillLines.length > 0) {
-          lines.push(`🎓 技能: ${skillLines.join("  ")}`);
-        }
-        const repLines = Object.entries(p.reputation || {})
-          .filter(([_, val]) => val !== 0)
-          .map(([gName, val]) => `${gName}:${val}`);
-        if (repLines.length > 0) {
-          lines.push(`🏅 声望: ${repLines.join("  ")}`);
+          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
         }
         const eq = Object.entries(p.equipment).filter(([_, v]) => v);
         if (eq.length > 0) {
-          lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
         }
         await showPanel(ctx, p.name, lines);
         return;
@@ -2109,17 +2067,14 @@ export default function (pi: ExtensionAPI) {
       if (char) {
         const age = getNpcCurrentAge(char.base_age || 16);
         const body = getBodyForAge(char, age);
-        const npcState = getOrCreateNPC(char.name);
         const lines = [
           `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁 (基础:${char.base_age})`,
-          `🎬 作品: ${char.source}`,
-          `👗 外观: ${char.appearance_brief || "无描述"}`,
-          `💰 资金: ¥${npcState.funds}`,
-          `🎒 背包: ${npcState.inventory && npcState.inventory.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`
+          `作品: ${char.source}`,
+          `外观: ${char.appearance_brief || "无描述"}`
         ];
         
         if (body) {
-          let bodyStr = `📏 身体: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
+          let bodyStr = `身体: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
           if (body.cup) bodyStr += ` ${body.cup}cup`;
           if (body.measurements) bodyStr += ` ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
           lines.push(bodyStr);
@@ -2127,16 +2082,17 @@ export default function (pi: ExtensionAPI) {
         
         if (char.attributes) {
           const a = char.attributes;
-          lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
         }
         
+        const npcState = getOrCreateNPC(char.name);
         const eq = Object.entries(npcState.equipment).filter(([_, v]) => v);
         if (eq.length > 0) {
-          lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
         }
         
         if (char.anchors?.private) {
-          lines.push(`✍️ 设定: ${char.anchors.private.slice(0, 120)}`);
+          lines.push(`设定: ${char.anchors.private.slice(0, 120)}`);
         }
         await showPanel(ctx, char.name, lines);
         return;
@@ -2360,853 +2316,63 @@ export default function (pi: ExtensionAPI) {
 
 
 
-  async function showStealMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
-    const { gameState, getOrCreateNPC, stealFunds, stealItem, updateRelation, updateReputation, saveState } = await import("./engine/state.ts");
-    const npcState = getOrCreateNPC(name);
-    
-    const stealItems: MenuItem[] = [];
-    
-    // 1. Wallet
-    stealItems.push({
-      label: `💰 钱包 (现金: ¥${npcState.funds})`,
-      detail: "尝试摸钱包",
-      action: async (stealDone) => {
-        const r = stealFunds(gameState.player, name);
-        let consequence = "";
-        if (r.caught) {
-          updateRelation(gameState.player.relationships, name, -20, "偷钱被抓");
-          consequence += `\n⚠️ ${name}好感-20`;
-          gameState.flags.steal_alert = true;
-          gameState.flags[`steal_caught_by_${name}`] = true;
-          const loc = gameState.player.location;
-          if (loc.includes("校") || loc.includes("班")) { updateReputation("学生", -1); consequence += `，学生声望-1`; }
-          if (loc.includes("校门") || loc.includes("警")) { gameState.flags.wanted = true; consequence += `，被通报！`; }
-        }
-        saveState();
-        
-        stealDone();
-        subDone();
-        parentDone();
-        
-        await showPanel(ctx, "💰 偷窃结果", [r.narrative, consequence].filter(Boolean));
-      }
-    });
-
-    // 2. Inventory Items
-    if (npcState.inventory && npcState.inventory.length > 0) {
-      npcState.inventory.forEach(it => {
-        stealItems.push({
-          label: `🎒 [物品] ${it.name} (重: ${it.weight}kg)`,
-          detail: "尝试偷取",
-          action: async (stealDone) => {
-            const r = stealItem(gameState.player, name, it.name);
-            let consequence = "";
-            if (r.caught) {
-              updateRelation(gameState.player.relationships, name, -20, "偷窃被抓");
-              consequence += `\n⚠️ ${name}好感-20`;
-              gameState.flags.steal_alert = true;
-              gameState.flags[`steal_caught_by_${name}`] = true;
-              const loc = gameState.player.location;
-              if (loc.includes("校") || loc.includes("班")) { updateReputation("学生", -1); consequence += `，学生声望-1`; }
-              if (loc.includes("校门") || loc.includes("警")) { gameState.flags.wanted = true; consequence += `，被通报！`; }
-            }
-            saveState();
-            
-            stealDone();
-            subDone();
-            parentDone();
-            
-            await showPanel(ctx, "💰 偷窃结果", [r.narrative, consequence].filter(Boolean));
-          }
-        });
-      });
-    }
-
-    // 3. Equipment Items
-    Object.entries(npcState.equipment).forEach(([slot, eqItem]) => {
-      if (eqItem) {
-        stealItems.push({
-          label: `🛡️ [装备] ${eqItem.name} (${slot})`,
-          detail: "尝试偷取",
-          action: async (stealDone) => {
-            const r = stealItem(gameState.player, name, eqItem.name);
-            let consequence = "";
-            if (r.caught) {
-              updateRelation(gameState.player.relationships, name, -20, "偷窃被抓");
-              consequence += `\n⚠️ ${name}好感-20`;
-              gameState.flags.steal_alert = true;
-              gameState.flags[`steal_caught_by_${name}`] = true;
-              const loc = gameState.player.location;
-              if (loc.includes("校") || loc.includes("班")) { updateReputation("学生", -1); consequence += `，学生声望-1`; }
-              if (loc.includes("校门") || loc.includes("警")) { gameState.flags.wanted = true; consequence += `，被通报！`; }
-            }
-            saveState();
-            
-            stealDone();
-            subDone();
-            parentDone();
-            
-            await showPanel(ctx, "💰 偷窃结果", [r.narrative, consequence].filter(Boolean));
-          }
-        });
-      }
-    });
-
-    stealItems.push({
-      label: "◀ 返回",
-      detail: "",
-      action: (stealDone) => {
-        stealDone();
-      }
-    });
-
-    await showMenu(ctx, `💰 窃取: ${name}`, stealItems);
-  }
-
-  function getAffection(name: string): number {
-    return gameState.player.relationships[name]?.affection ?? 0;
-  }
-  function isLover(name: string): boolean {
-    return gameState.player.relationships[name]?.romance === "恋人";
-  }
-
-  async function showTalkMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
-    const talkItems: MenuItem[] = [
-      {
-        label: "💬 聊聊日常",
-        detail: "随意闲聊一些生活琐事",
-        action: async (talkDone) => {
-          talkDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我找 ${name} 随便聊了聊日常琐事。`);
-        }
-      },
-      {
-        label: "💬 聊聊自己",
-        detail: "向对方分享一些自己的经历",
-        action: async (talkDone) => {
-          talkDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我主动向 ${name} 聊起了自己最近的一些经历和看法。`);
-        }
-      },
-      {
-        label: "💬 聊聊对方",
-        detail: "询问关于对方的喜好或近况",
-        action: async (talkDone) => {
-          talkDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我关切地向 ${name} 询问起她的近况，并聊了聊她的兴趣爱好。`);
-        }
-      },
-      {
-        label: "💬 聊些八卦",
-        detail: "分享学校或街区里的有趣传闻",
-        action: async (talkDone) => {
-          talkDone(); subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我神秘兮兮地和 ${name} 分享了最近在学校听到的八卦传闻。`);
-        }
-      },
-      {
-        label: "◀ 返回",
-        detail: "",
-        action: (talkDone) => { talkDone(); }
-      }
-    ];
-    await showMenu(ctx, `💬 交流谈话: ${name}`, talkItems);
-  }
-
-  async function showTouchMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
-    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
-    const aff = getAffection(name);
-
-    function touchResult(success: boolean, label: string, required: number, reward: number, penalty: number): string {
-      if (success) {
-        updateRelation(gameState.player.relationships, name, reward, label);
-        saveState();
-        return `✓ 好感+${reward}`;
-      } else {
-        updateRelation(gameState.player.relationships, name, -penalty, `${label}被拒`);
-        saveState();
-        return `✗ 被拒绝，好感-${penalty}`;
-      }
-    }
-
-    const touchItems: MenuItem[] = [
-      {
-        label: `🤝 友好握手 ${aff >= 10 ? "" : "(好感10+)"}`,
-        detail: aff >= 10 ? "进行礼貌的肢体互动" : "关系还不够熟...",
-        action: aff >= 10 ? async (touchDone) => {
-          touchDone(); subDone(); parentDone();
-          const r = touchResult(true, "友好握手", 10, 2, 2);
-          await pi.sendUserMessage(ctx, `我主动跟 ${name} 握了握手。${r}`);
-        } : undefined,
-      },
-      {
-        label: `👋 亲切摸头 ${aff >= 30 ? "" : "(好感30+)"}`,
-        detail: aff >= 30 ? "轻轻抚摸对方的头发" : "需要更多信任...",
-        action: aff >= 30 ? async (touchDone) => {
-          touchDone(); subDone(); parentDone();
-          const ok = Math.random() > 0.15;
-          const r = touchResult(ok, "亲切摸头", 30, 2, 5);
-          await pi.sendUserMessage(ctx, ok
-            ? `我轻轻地伸手摸了摸 ${name} 的头，${name} 微微低下了头。${r}`
-            : `我突然伸手想要摸 ${name} 的头，但${name}警惕地退后躲开了。${r}`);
-        } : undefined,
-      },
-      {
-        label: `🤗 温暖拥抱 ${aff >= 50 ? "" : "(好感50+)"}`,
-        detail: aff >= 50 ? "张开双臂给予拥抱" : "关系还不够亲密...",
-        action: aff >= 50 ? async (touchDone) => {
-          touchDone(); subDone(); parentDone();
-          const ok = Math.random() > 0.2;
-          const r = touchResult(ok, "温暖拥抱", 50, 3, 10);
-          await pi.sendUserMessage(ctx, ok
-            ? `我走上前张开双臂，${name}犹豫了一下，轻轻靠了过来。${r}`
-            : `我张开双臂想抱 ${name}，但${name}伸手挡住了我。${r}`);
-        } : undefined,
-      },
-    ];
-
-    if (gameState.layer1Enabled) {
-      touchItems.push({
-        label: `💆 肢体按摩 ${aff >= 60 ? "" : "(好感60+)"}`,
-        detail: aff >= 60 ? "为对方揉捏肩膀放松身体" : "需要更深的关系...",
-        action: aff >= 60 ? async (touchDone) => {
-          touchDone(); subDone(); parentDone();
-          const ok = Math.random() > 0.25;
-          const r = touchResult(ok, "肢体按摩", 60, 3, 10);
-          await pi.sendUserMessage(ctx, ok
-            ? `我帮 ${name} 捏了捏肩膀，${name}的身体逐渐放松下来。${r}`
-            : `我的手刚碰到 ${name} 的肩膀，${name}就躲开了。${r}`);
-        } : undefined,
-      });
-    }
-
-    touchItems.push({
-      label: `💋 深情亲吻 ${aff >= 70 || isLover(name) ? "" : "(好感70+或恋人)"}`,
-      detail: (aff >= 70 || isLover(name)) ? "深情的一吻" : "还不是时候...",
-      action: (aff >= 70 || isLover(name)) ? async (touchDone) => {
-        touchDone(); subDone(); parentDone();
-        const ok = Math.random() > 0.3;
-        const r = touchResult(ok, "深情亲吻", 70, 5, 15);
-        await pi.sendUserMessage(ctx, ok
-          ? `我靠近 ${name}，轻轻吻了上去。${name}闭上了眼睛。${r}`
-          : `我凑近 ${name} 想亲吻，但${name}别开了脸。「……不行。」${r}`);
-      } : undefined,
-    });
-
-    touchItems.push({ label: "◀ 返回", detail: "", action: (touchDone) => { touchDone(); } });
-    await showMenu(ctx, `🖐️ 肢体接触: ${name}`, touchItems);
-  }
-
-  async function showRomanceMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
-    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
-    const aff = getAffection(name);
-
-    const items: MenuItem[] = [
-      {
-        label: `💌 告白交往 ${aff >= 70 ? "" : "(好感70+)"}`,
-        detail: aff >= 70 ? "向对方表达心意" : "还需要更多羁绊...",
-        action: aff >= 70 ? async (rDone) => {
-          rDone(); subDone(); parentDone();
-          const ok = Math.random() > 0.25;
-          if (ok) {
-            updateRelation(gameState.player.relationships, name, 10, "告白交往成功");
-            gameState.player.relationships[name].romance = "恋人";
-            saveState();
-            await pi.sendUserMessage(ctx, `我向 ${name} 告白了。${name}沉默了很久，然后轻轻点了点头。「……我也。」好感+10，成为恋人！`);
-          } else {
-            updateRelation(gameState.player.relationships, name, -10, "告白被拒");
-            saveState();
-            await pi.sendUserMessage(ctx, `我向 ${name} 告白了。${name}低下了头。「……对不起。」好感-10。`);
-          }
-        } : undefined,
-      },
-      {
-        label: `📅 邀请约会 ${aff >= 50 ? "" : "(好感50+)"}`,
-        detail: aff >= 50 ? "邀对方一起出去玩" : "还不够熟...",
-        action: aff >= 50 ? async (rDone) => {
-          rDone(); subDone(); parentDone();
-          const ok = Math.random() > 0.2;
-          if (ok) {
-            updateRelation(gameState.player.relationships, name, 5, "愉快约会");
-            saveState();
-            await pi.sendUserMessage(ctx, `我约 ${name} 周末一起出去玩。${name}笑了笑：「好啊，去哪里？」好感+5。`);
-          } else {
-            updateRelation(gameState.player.relationships, name, -5, "约会邀请被拒");
-            saveState();
-            await pi.sendUserMessage(ctx, `我约 ${name} 出去玩，但${name}说周末有事。好感-5。`);
-          }
-        } : undefined,
-      },
-      { label: "◀ 返回", detail: "", action: (rDone) => { rDone(); } },
-    ];
-    await showMenu(ctx, `💕 恋爱互动: ${name}`, items);
-  }
-
-  async function showNPCPushDownMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
-    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
-    const aff = getAffection(name);
-    const canPush = isLover(name) && aff >= 80;
-
-    const items: MenuItem[] = [
-      {
-        label: `🔥 亲密求欢 ${canPush ? "" : "(需恋人+好感80+)"}`,
-        detail: canPush ? "与恋人共度亲密时光" : "条件未满足",
-        action: canPush ? async (pDone) => {
-          pDone(); subDone(); parentDone();
-          const ok = Math.random() > 0.2;
-          if (ok) {
-            gameState.mode = "sex";
-            gameState.layer1Enabled = true;
-            saveState();
-            await pi.sendUserMessage(ctx, `${name}红着脸点了点头。我把${name}拉到了身边……`);
-          } else {
-            updateRelation(gameState.player.relationships, name, -15, "求欢被拒");
-            saveState();
-            await pi.sendUserMessage(ctx, `我刚想靠近，${name}一巴掌甩了过来。「……你把我当什么了？」好感-15。`);
-          }
-        } : undefined,
-      },
-      { label: "◀ 返回", detail: "", action: (pDone) => { pDone(); } },
-    ];
-    await showMenu(ctx, `🔥 亲密: ${name}`, items);
-  }
-
-  async function showCombatMenu(name: string, subDone: () => void, parentDone: () => void, ctx: any) {
-    const { gameState, saveState, updateRelation } = await import("./engine/state.ts");
-    const aff = getAffection(name);
-
-    const items: MenuItem[] = [
-      {
-        label: `⚔️ 切磋武艺 ${aff >= 20 ? "" : "(好感20+)"}`,
-        detail: "友好切磋，点到为止",
-        action: async (cDone) => {
-          cDone(); subDone(); parentDone();
-          gameState.mode = "rpg";
-          saveState();
-          await pi.sendUserMessage(ctx, `我对 ${name} 抱拳行礼：「请赐教。」${name}摆出了架势。切磋开始！`);
-        },
-      },
-      {
-        label: "💀 发起死斗",
-        detail: "以命相搏，关系降为死敌",
-        action: async (cDone) => {
-          cDone(); subDone(); parentDone();
-          updateRelation(gameState.player.relationships, name, -50, "死斗宣战");
-          gameState.player.relationships[name].stage = "死敌";
-          gameState.mode = "rpg";
-          saveState();
-          await pi.sendUserMessage(ctx, `我向 ${name} 发起了死斗！一场你死我活的战斗即将展开……`);
-        },
-      },
-      { label: "◀ 返回", detail: "", action: (cDone) => { cDone(); } },
-    ];
-    await showMenu(ctx, `⚔️ 战斗: ${name}`, items);
-  }
-
-  async function showNPCInteractionMenu(name: string, isNameless: boolean, parentDone: () => void, ctx: any) {
-    const { gameState, getOrCreateNPC, saveState } = await import("./engine/state.ts");
-    const { allChars } = await import("./engine/router.ts");
-    
-    // 技能等级辅助：查带关键词的技能的等级
-    const pSkills = gameState.player.skills || {};
-    const obsLv = Math.max(0, ...Object.entries(pSkills)
-      .filter(([k]) => /察|侦|感/.test(k))
-      .map(([, v]) => (v as any).level ?? 0));
-    const psychLv = Math.max(0, ...Object.entries(pSkills)
-      .filter(([k]) => /心理|暗示|催眠|心/.test(k))
-      .map(([, v]) => (v as any).level ?? 0));
-
-    const subItems: MenuItem[] = [
-      {
-        label: "🔍 观察详情",
-        detail: obsLv > 0 ? `洞察Lv${obsLv}·部分信息可见` : "查看基础外观",
-        action: async (subDone) => {
-          const char = allChars.find((c: any) => c.name === name || c.name.includes(name));
-          if (char) {
-            const { getNpcCurrentAge, getBodyForAge } = await import("./engine/state.ts");
-            const age = getNpcCurrentAge(char.base_age || 16);
-            const body = getBodyForAge(char, age);
-            const npcState = getOrCreateNPC(char.name);
-
-            // 所有人都能看到的基础信息
-            const lines = [
-              `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁`,
-              `🎬 作品: ${char.source}`,
-              `👗 外观: ${char.appearance_brief || "无描述"}`,
-            ];
-            if (body) {
-              let bodyStr = `📏 身体: ${body.height_cm}cm ${body.build}`;
-              if (body.cup) bodyStr += ` ${body.cup}cup`;
-              lines.push(bodyStr);
-            }
-
-            // Lv1+: 精确好感数字（替代文字阶段）
-            const rel = gameState.player.relationships[name];
-            const rawAff = rel?.affection ?? 0;
-            if (obsLv >= 1 || psychLv >= 1) {
-              lines.push(`💕 好感: ${rawAff}/100 (${rel?.stage ?? "陌生"})${rel?.romance ? " " + rel.romance : ""}`);
-            } else {
-              lines.push(`💕 关系: ${rel?.stage ?? "陌生"}${rel?.romance ? " " + rel.romance : ""}`);
-            }
-
-            // Lv2+: 资金 + 装备
-            if (obsLv >= 2 || psychLv >= 2) {
-              lines.push(`💰 资金: ¥${npcState.funds}`);
-              const eq = Object.entries(npcState.equipment).filter(([_, v]) => v);
-              if (eq.length > 0) lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
-              lines.push(`🎒 背包: ${npcState.inventory?.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`);
-            }
-
-            // Lv3+: 属性 + 详细身材 + 私人设定
-            if (obsLv >= 3 || psychLv >= 2) {
-              if (char.attributes) {
-                const a = char.attributes;
-                lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
-              }
-              if (body?.measurements) {
-                lines.push(`📐 三围: ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips} / ${body.cup || "?"}cup`);
-              }
-              if (char.anchors?.private && (obsLv >= 3)) {
-                lines.push(`✍️ 设定: ${char.anchors.private.slice(0, 120)}`);
-              }
-            }
-
-            // 心理学Lv2 + Layer1: 欲望/兴奋/心里话
-            if (psychLv >= 2 && gameState.layer1Enabled) {
-              try {
-                const { getOrCreateSexState } = await import("./engine/state.ts");
-                const sState = await getOrCreateSexState(name);
-                if (sState) {
-                  lines.push(`💓 欲望: ${sState.desire}/100`);
-                  lines.push(`🔥 兴奋: ${sState.arousal}/100`);
-                  if (sState.thoughts?.length > 0) {
-                    lines.push(`💭 心里话: ${sState.thoughts.slice(-2).map((t: any) => t.text).join(" | ")}`);
-                  }
-                }
-              } catch (_) {}
-            }
-
-            await showPanel(ctx, char.name, lines);
-          } else {
-            const lines = [`${name} (临时角色)`, `👗 外观: 普通的路人`];
-            const npcState = getOrCreateNPC(name);
-            const rel = gameState.player.relationships[name];
-            if (obsLv >= 1 && rel) lines.push(`💕 好感: ${rel.affection}/100`);
-            if (obsLv >= 2) { lines.push(`💰 资金: ¥${npcState.funds}`); lines.push(`🎒 背包: ${npcState.inventory?.length > 0 ? npcState.inventory.map(it => it.name).join(", ") : "(空)"}`); }
-            await showPanel(ctx, name, lines);
-          }
-        }
-      },
-      {
-        label: "💬 交流搭话",
-        detail: "与对方交流闲聊",
-        action: async (subDone) => {
-          await showTalkMenu(name, subDone, parentDone, ctx);
-        }
-      },
-      {
-        label: "🖐️ 肢体接触",
-        detail: "摸头、握手、拥抱或按摩",
-        action: async (subDone) => {
-          await showTouchMenu(name, subDone, parentDone, ctx);
-        }
-      }
-    ];
-
-    // 动态组装：组队管理（需好感≥40或恋人）
-    const isInParty = gameState.player.party?.includes(name);
-    const aff = getAffection(name);
-    if (isInParty) {
-      subItems.push({
-        label: "👥 移出队伍",
-        detail: "将对方移出当前队伍",
-        action: async (subDone) => {
-          gameState.player.party = gameState.player.party.filter((n: string) => n !== name);
-          saveState();
-          subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我把 ${name} 移出了队伍。`);
-        }
-      });
-    } else {
-      const canInvite = aff >= 40 || isLover(name);
-      subItems.push({
-        label: `👥 邀请组队 ${canInvite ? "" : "(好感40+或恋人)"}`,
-        detail: canInvite ? "邀请对方加入你的队伍" : "关系还不够铁...",
-        action: canInvite ? async (subDone) => {
-          gameState.player.party ??= [];
-          gameState.player.party.push(name);
-          saveState();
-          subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我邀请 ${name} 加入了我的队伍。${name}点了点头，跟了上来。`);
-        } : undefined,
-      });
-    }
-
-    // 恋爱互动
-    subItems.push({
-      label: "💕 恋爱互动",
-      detail: "告白、约会",
-      action: async (subDone) => { await showRomanceMenu(name, subDone, parentDone, ctx); }
-    });
-
-    // 亲密求欢
-    subItems.push({
-      label: `🔥 亲密求欢 ${(isLover(name) && aff >= 80) ? "" : "(需恋人+好感80+)"}`,
-      detail: (isLover(name) && aff >= 80) ? "与恋人共度亲密时光" : "条件未满足",
-      action: async (subDone) => { await showNPCPushDownMenu(name, subDone, parentDone, ctx); }
-    });
-
-    // 战斗
-    subItems.push({
-      label: "⚔️ 战斗交战",
-      detail: "切磋或死斗",
-      action: async (subDone) => { await showCombatMenu(name, subDone, parentDone, ctx); }
-    });
-
-    // 动态组装：窃取财物
-    const stealthLvl = gameState.player.skills["潜行"]?.level ?? 0;
-    subItems.push({
-      label: "💰 窃取财物",
-      detail: `摸钱包或偷物品 (潜行 Lv.${stealthLvl})`,
-      action: async (subDone) => {
-        await showStealMenu(name, subDone, parentDone, ctx);
-      }
-    });
-
-    // 动态组装：根据玩家特殊技能呈现交互
-    Object.keys(gameState.player.skills || {}).forEach(sName => {
-      const lvl = gameState.player.skills[sName]?.level ?? 0;
-      if (lvl <= 0) return;
-      if (sName === "医疗" || sName === "治疗") {
-        subItems.push({
-          label: "🩹 医疗包扎",
-          detail: `使用${sName}技能 (Lv.${lvl})`,
-          action: async (subDone) => {
-            subDone(); parentDone();
-            await pi.sendUserMessage(ctx, `我使用${sName}技能对 ${name} 进行伤势包扎治疗。`);
-          }
-        });
-      } else if (sName === "说服" || sName === "口才" || sName === "话术") {
-        subItems.push({
-          label: "🗣️ 尝试劝说",
-          detail: `使用${sName}技能 (Lv.${lvl})`,
-          action: async (subDone) => {
-            subDone(); parentDone();
-            await pi.sendUserMessage(ctx, `我施展${sName}技巧，试图说服 ${name}。`);
-          }
-        });
-      } else if (sName === "暗示" || sName === "催眠") {
-        subItems.push({
-          label: "🌀 潜意识暗示",
-          detail: `使用${sName}技能 (Lv.${lvl})`,
-          action: async (subDone) => {
-            subDone(); parentDone();
-            await pi.sendUserMessage(ctx, `我尝试对 ${name} 进行${sName}和心灵引导。`);
-          }
-        });
-      }
-    });
-
-    subItems.push({
-      label: "⚔️ 发起交战",
-      detail: "进入交战或切磋",
-      action: async (subDone) => {
-        subDone();
-        parentDone();
-        await pi.sendUserMessage(ctx, `我向 ${name} 发起交战！`);
-      }
-    });
-
-    subItems.push({
-      label: "◀ 返回",
-      detail: "",
-      action: (subDone) => {
-        subDone();
-      }
-    });
-
-    await showMenu(ctx, `👤 互动: ${name}`, subItems);
-  }
-
-  async function showFurnitureInteractionMenu(name: string, x: number, y: number, parentDone: () => void, ctx: any) {
-    const { gameState, saveState } = await import("./engine/state.ts");
-    
-    const subItems: MenuItem[] = [];
-    
-    const nameLower = name.toLowerCase();
-    if (nameLower.includes("床") || nameLower.includes("bed")) {
-      subItems.push({
-        label: "😴 睡觉且存档",
-        detail: "推进8小时时间并保存进度",
-        action: async (subDone) => {
-          subDone(); parentDone();
-          await advanceTimeMinutes(480, ctx, gameState, saveState);
-          await pi.sendUserMessage(ctx, `我在床(${x},${y})上睡了一觉，感到精力充沛，并保存了游戏进度。`);
-        }
-      });
-      subItems.push({
-        label: "🛋️ 躺下休息",
-        detail: "休息30分钟",
-        action: async (subDone) => {
-          subDone(); parentDone();
-          await advanceTimeMinutes(30, ctx, gameState, saveState);
-          await pi.sendUserMessage(ctx, `我躺在床(${x},${y})上闭目养神休息了半小时。`);
-        }
-      });
-    } else if (nameLower.includes("柜") || nameLower.includes("箱") || nameLower.includes("locker") || nameLower.includes("cabinet")) {
-      subItems.push({
-        label: "🚪 藏匿其中",
-        detail: "躲进柜子里隐藏身形",
-        action: async (subDone) => {
-          subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我躲进了(${x},${y})处的柜子里藏匿起来。`);
-        }
-      });
-      subItems.push({
-        label: "🔍 搜寻物品",
-        detail: "仔细搜索里面是否有有用物品",
-        action: async (subDone) => {
-          subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我仔细翻找了(${x},${y})处的柜子，看看里面有什么东西。`);
-        }
-      });
-    } else if (nameLower.includes("售票") || nameLower.includes("购票") || nameLower.includes("售货") || nameLower.includes("vending") || nameLower.includes("ticket")) {
-      subItems.push({
-        label: "💰 投币购买",
-        detail: "花费一些现金购买物品/车票",
-        action: async (subDone) => {
-          subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我走到(${x},${y})处的售票机/售货机前投币买票或商品。`);
-        }
-      });
-    } else if (nameLower.includes("自行车") || nameLower.includes("车") || nameLower.includes("吉普") || nameLower.includes("car") || nameLower.includes("bike") || nameLower.includes("载具")) {
-      subItems.push({
-        label: "🚲 驾驶/骑行",
-        detail: "开启代步载具",
-        action: async (subDone) => {
-          subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我坐上了(${x},${y})处的${name}准备驾驶出发。`);
-        }
-      });
-    } else if (nameLower.includes("过票") || nameLower.includes("闸机") || nameLower.includes("turnstile")) {
-      subItems.push({
-        label: "🎫 刷卡过闸",
-        detail: "使用车票或电子卡刷卡过站",
-        action: async (subDone) => {
-          subDone(); parentDone();
-          await pi.sendUserMessage(ctx, `我向车站的过票机刷卡，准备进站。`);
-        }
-      });
-    }
-
-    subItems.push({
-      label: "🔍 仔细观察",
-      detail: "调查它的状态和细节",
-      action: async (subDone) => {
-        subDone(); parentDone();
-        await pi.sendUserMessage(ctx, `我仔细端详并调查了位于(${x},${y})的${name}。`);
-      }
-    });
-
-    subItems.push({
-      label: "◀ 返回",
-      detail: "",
-      action: (subDone) => {
-        subDone();
-      }
-    });
-
-    await showMenu(ctx, `🛋️ 互动: ${name} (${x},${y})`, subItems);
-  }
-
   pi.registerCommand("room", {
-    description: "视觉观察当前场景：提取空间感、周边NPC并支持交互",
+    description: "视觉观察当前场景：提取空间感、周边NPC大致高度与距离",
     handler: async (_args, ctx) => {
-      const { gameState, getRoom, isSameLocation, getNpcCurrentAge, getBodyForAge, getRoomCapacity } = await import("./engine/state.ts");
+      const { gameState, getRoom, isSameLocation, getNpcCurrentAge, getBodyForAge } = await import("./engine/state.ts");
       const { allChars } = await import("./engine/router.ts");
       const loc = gameState.player.location;
       const room = getRoom(loc);
-      
-      let titlePrefix = "📍";
-      if (loc.startsWith("千叶市立总武高等学校_")) {
-        titlePrefix = "🏫";
-      } else if (loc.startsWith("千叶_")) {
-        titlePrefix = "🏙️";
-      }
-      const title = `${titlePrefix} ${loc}`;
+      const lines: string[] = [];
 
-      const menuItems: MenuItem[] = [];
-
-      // 1. Climate & Sensation Header
-      const weather = gameState.weather || { type: "晴", temp: 16 };
-      const m = Number(gameState.time.game_date.split("-")[1]);
-      let season = "冬";
-      if (m >= 3 && m <= 5) season = "春";
-      else if (m >= 6 && m <= 8) season = "夏";
-      else if (m >= 9 && m <= 11) season = "秋";
-
-      const inRoomNPCs = Object.entries(gameState.npcs)
-        .filter(([_, n]) => isSameLocation(n.currentRoom, loc));
-      const namelessNPCs = getNamelessNPCs(loc, gameState.turn);
-      const totalNPCsCount = inRoomNPCs.length + namelessNPCs.length;
-
-      let densityDesc = "冷清 (四周空无一人)";
-      if (totalNPCsCount === 1) {
-        densityDesc = "安静 (仅有零星的人影)";
-      } else if (totalNPCsCount >= 2 && totalNPCsCount <= 4) {
-        densityDesc = "正常 (气氛相对安详)";
-      } else if (totalNPCsCount >= 5) {
-        densityDesc = "热闹 (人头攒动嘈杂)";
-      }
-
-      // Check adjacent room noise
-      const roomsData = (await import("./data/rooms.json", { with: { type: "json" } })).default as any;
-      const curRoom = roomsData[loc];
-      const floor = curRoom?.floor;
-      let nearNoise = false;
-      if (floor !== undefined) {
-        for (const [name, r] of Object.entries(roomsData)) {
-          if (name !== loc && (r as any).floor === floor) {
-            const otherNPCs = Object.entries(gameState.npcs)
-              .filter(([_, n]) => isSameLocation(n.currentRoom, name));
-            if (otherNPCs.length > 0) {
-              nearNoise = true;
-              break;
-            }
-          }
-        }
-      }
-      if (nearNoise) {
-        densityDesc += "，隔壁隐约传来动静";
-      }
-
-      const getEdgeStatus = (r: any, dir: string) => {
-        if (r && r.directions && r.directions[dir]) {
-          return r.directions[dir];
-        }
-        if (!r) return "空";
-        const w = r.width;
-        const h = r.height;
-        let wallCount = 0;
-        let cellCount = 0;
-        let hasExit = false;
-        if (dir === "北") {
-          for (let x = 0; x < w; x++) {
-            const c = r.cells[0]?.[x];
-            if (c) {
-              cellCount++;
-              if (c.type === "wall") wallCount++;
-              if (c.type === "exit" || c.type === "door") hasExit = true;
-            }
-          }
-        } else if (dir === "南") {
-          for (let x = 0; x < w; x++) {
-            const c = r.cells[h - 1]?.[x];
-            if (c) {
-              cellCount++;
-              if (c.type === "wall") wallCount++;
-              if (c.type === "exit" || c.type === "door") hasExit = true;
-            }
-          }
-        } else if (dir === "东") {
-          for (let y = 0; y < h; y++) {
-            const c = r.cells[y]?.[w - 1];
-            if (c) {
-              cellCount++;
-              if (c.type === "wall") wallCount++;
-              if (c.type === "exit" || c.type === "door") hasExit = true;
-            }
-          }
-        } else if (dir === "西") {
-          for (let y = 0; y < h; y++) {
-            const c = r.cells[y]?.[0];
-            if (c) {
-              cellCount++;
-              if (c.type === "wall") wallCount++;
-              if (c.type === "exit" || c.type === "door") hasExit = true;
-            }
-          }
-        }
-        if (hasExit) return "门";
-        if (cellCount === 0) return "空";
-        return (wallCount / cellCount >= 0.5) ? "墙" : "空";
-      };
-
-      const roomFurniture: { name: string; x: number; y: number }[] = [];
-      const exitsList: string[] = [];
-      
-      let px = 0, py = 0;
-      if (gameState.player.gridPos) {
-        [px, py] = gameState.player.gridPos;
-      }
+      lines.push(`📍 当前场景: ${loc}`);
+      lines.push("────────────────────────────────────────");
 
       if (room) {
+        // 1. 空间与微观网格
         const w = room.width;
         const h = room.height;
+        const cs = room.cellSize || 1;
+        let gridDesc = `📏 空间规格: ${w * cs}米 × ${h * cs}米 (${w} × ${h} 格，${cs}m/格)`;
+        if (gameState.player.gridPos) {
+          const [px, py] = gameState.player.gridPos;
+          gridDesc += ` | 你的坐标: (${px}, ${py})`;
+        }
+        lines.push(gridDesc);
+        
+        if ((room as any).atmosphere) {
+          lines.push(`✨ 氛围感知: ${(room as any).atmosphere}`);
+        }
+        
+        const amb = (room as any).ambient;
+        if (amb) {
+          lines.push(`🔊 环境渗透: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`);
+        }
+        lines.push("────────────────────────────────────────");
+
+        // 2. 出口与家具 (玩家一瞥能看到的显著地标)
+        const exits: string[] = [];
+        const furniture: string[] = [];
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             const cell = room.cells[y]?.[x];
             if (!cell) continue;
             if (cell.type === "exit" || cell.type === "door") {
-              exitsList.push(`${cell.exitTo || "出口"}(${x},${y})${cell.isOpen === false ? "🔒" : ""}`);
+              exits.push(`${cell.exitTo || "出口"}(${x},${y})${cell.isOpen === false ? "🔒" : ""}`);
             }
             if (cell.furniture) {
-              roomFurniture.push({ name: cell.furniture, x, y });
+              furniture.push(`${cell.furniture}(${x},${y})`);
             }
           }
         }
+        if (exits.length > 0) lines.push(`🚪 显著出口: ${exits.join("  ")}`);
+        if (furniture.length > 0) lines.push(`🪑 场景物件: ${furniture.join("  ")}`);
+        lines.push("────────────────────────────────────────");
       }
 
-      const w = room?.width || 0;
-      const h = room?.height || 0;
-      const cs = room?.cellSize || 1;
-      const capacity = getRoomCapacity(loc);
-      const curPeople = totalNPCsCount + 1; // +1 for player
-
-      // Push description block lines
-      menuItems.push({
-        label: `⛅ ${season}季·${weather.type} (${weather.temp}°C)`,
-        detail: "",
-        action: () => {}
-      });
-      menuItems.push({
-        label: `[空间] ${loc} ${w}×${h}格 ${cs}m/格 F${room?.floor || 1} 你在(${px},${py}) | 容纳人数: ${curPeople}/${capacity}人 | 氛围: ${densityDesc}`,
-        detail: "",
-        action: () => {}
-      });
-      menuItems.push({
-        label: `| 出口: ${exitsList.join("  ") || "无"}`,
-        detail: "",
-        action: () => {}
-      });
-      menuItems.push({
-        label: `| 家具: ${roomFurniture.map(f => `${f.name}(${f.x},${f.y})`).join(", ") || "无"}`,
-        detail: "",
-        action: () => {}
-      });
-      menuItems.push({
-        label: `| 四周: 北:${getEdgeStatus(room, "北")} 南:${getEdgeStatus(room, "南")} 东:${getEdgeStatus(room, "东")} 西:${getEdgeStatus(room, "西")}`,
-        detail: "",
-        action: () => {}
-      });
-      menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
-
-      // Interactive Furniture List
-      if (roomFurniture.length > 0) {
-        menuItems.push({ label: "🪑 物件:", detail: "", action: () => {} });
-        roomFurniture.forEach(f => {
-          menuItems.push({
-            label: `  🪑 [[${f.name}]] (${f.x},${f.y})`,
-            detail: "◀ 交互",
-            action: async (parentDone) => {
-              await showFurnitureInteractionMenu(f.name, f.x, f.y, parentDone, ctx);
-            }
-          });
-        });
-        menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
-      }
-
-      // Interactive NPCs List
+      // 3. 👥 周边动态 (Surrounding Dynamics)
+      lines.push("👥 周边动态 [场景视野]");
+      
       const getRelativeDir = (px: number, py: number, nx: number, ny: number) => {
         if (nx === px && ny === py) return "身旁";
         let dir = "";
@@ -3217,10 +2383,12 @@ export default function (pi: ExtensionAPI) {
         return dir + "方";
       };
 
-      if (inRoomNPCs.length > 0 || namelessNPCs.length > 0) {
-        menuItems.push({ label: "👥 角色:", detail: "", action: () => {} });
+      const inRoomNPCs = Object.entries(gameState.npcs)
+        .filter(([_, n]) => isSameLocation(n.currentRoom, loc));
 
-        // Named NPCs
+      let totalNPCsCount = 0;
+
+      if (inRoomNPCs.length > 0) {
         for (const [name, npc] of inRoomNPCs) {
           const char = allChars.find((c: any) => c.name === name);
           let heightStr = "未知";
@@ -3231,86 +2399,46 @@ export default function (pi: ExtensionAPI) {
           }
 
           let positionStr = "处于场景中";
-          let nx = npc.gridPos?.[0] ?? 0;
-          let ny = npc.gridPos?.[1] ?? 0;
           if (gameState.player.gridPos && npc.gridPos) {
+            const [px, py] = gameState.player.gridPos;
+            const [nx, ny] = npc.gridPos;
             const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
             const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
-            positionStr = `位于你的${getRelativeDir(px, py, nx, ny)}约 ${dist}米 (约 ${gridDist}格)`;
+            positionStr = `位于你的 ${getRelativeDir(px, py, nx, ny)} 约 ${dist}米 (约 ${gridDist}格)`;
           }
 
-          menuItems.push({
-            label: `  👤 [[${name}]] (${nx},${ny})`,
-            detail: `*${heightStr}* ◀ 交互`,
-            action: async (parentDone) => {
-              await showNPCInteractionMenu(name, false, parentDone, ctx);
-            }
-          });
-          menuItems.push({
-            label: `    - ${positionStr}`,
-            detail: "",
-            action: () => {}
-          });
-          menuItems.push({
-            label: `    - *${npc.action || "目前正站立着"}*`,
-            detail: "",
-            action: () => {}
-          });
+          lines.push(`  |-[${name}: *${heightStr}*] ${positionStr} - *${npc.action || "目前正站立着"}*`);
+          totalNPCsCount++;
         }
-
-        // Nameless NPCs
-        for (const item of namelessNPCs) {
-          let positionStr = "处于场景中";
-          let nx = item.gridPos[0];
-          let ny = item.gridPos[1];
-          if (gameState.player.gridPos) {
-            const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
-            const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
-            positionStr = `位于你的${getRelativeDir(px, py, nx, ny)}约 ${dist}米 (约 ${gridDist}格)`;
-          }
-
-          menuItems.push({
-            label: `  👤 [[${item.name}]] (${nx},${ny})`,
-            detail: `*${item.height}* ◀ 交互`,
-            action: async (parentDone) => {
-              await showNPCInteractionMenu(item.name, true, parentDone, ctx);
-            }
-          });
-          menuItems.push({
-            label: `    - ${positionStr}`,
-            detail: "",
-            action: () => {}
-          });
-          menuItems.push({
-            label: `    - *${item.act}*`,
-            detail: "",
-            action: () => {}
-          });
-        }
-      } else {
-        menuItems.push({
-          label: "  |-[视野内]: 没有发现其他活动角色",
-          detail: "",
-          action: () => {}
-        });
       }
 
-      menuItems.push({ label: "────────────────────────────────────────", detail: "", action: () => {} });
-      
-      menuItems.push({
-        label: "◀ 返回",
-        detail: "退出观察",
-        action: (done) => {
-          done();
+      // Public room nameless NPCs seeding (on the fly for visual TUI)
+      const namelessNPCs = getNamelessNPCs(loc, gameState.turn);
+      for (const item of namelessNPCs) {
+        let positionStr = "处于场景中";
+        if (gameState.player.gridPos) {
+          const [px, py] = gameState.player.gridPos;
+          const [nx, ny] = item.gridPos;
+          const dist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)) * (room?.cellSize || 1) * 10) / 10;
+          const gridDist = Math.round(Math.sqrt(Math.pow(nx - px, 2) + Math.pow(ny - py, 2)));
+          positionStr = `位于你的 ${getRelativeDir(px, py, nx, ny)} 约 ${dist}米 (约 ${gridDist}格)`;
         }
-      });
+        lines.push(`  |-[${item.name}: *${item.height}*] ${positionStr} - *${item.act}*`);
+        totalNPCsCount++;
+      }
 
-      await showMenu(ctx, title, menuItems);
+      if (totalNPCsCount === 0) {
+        lines.push("  |-[视野内]: 没有发现其他活动角色");
+      }
+      
+      lines.push("────────────────────────────────────────");
+
+      await showPanel(ctx, "👁️ 场景视觉观察", lines);
     },
   });
 
   pi.registerCommand("preset", {
-    description: "配置系统提示词与回复选项显示。",
+    description: "切换系统提示词组装配置（标准 default / 轻量 lite）。",
     handler: async (args, ctx) => {
       const { gameState, saveState } = await import("./engine/state.ts");
       if (args && (args[0] === "default" || args[0] === "lite")) {
@@ -3318,40 +2446,12 @@ export default function (pi: ExtensionAPI) {
         saveState();
         ctx.ui.notify(`已切换提示词模式为: ${args[0]}`, "info");
       } else {
-        const buildMenu = (): MenuItem[] => {
-          const items: MenuItem[] = [
-            {
-              label: `模组预设 (当前: ${gameState.preset || "default"})`,
-              detail: "切换标准(default)或轻量(lite)提示词",
-              action: async (subDone) => {
-                const subItems: MenuItem[] = [
-                  { label: "default (标准)", detail: "包含完整战斗/规则细节", action: () => { gameState.preset = "default"; saveState(); ctx.ui.notify("模式切换为: default", "info"); subDone(); } },
-                  { label: "lite (轻量)", detail: "省略部分规则以节省 Token", action: () => { gameState.preset = "lite"; saveState(); ctx.ui.notify("模式切换为: lite", "info"); subDone(); } }
-                ];
-                await showMenu(ctx, "选择模组预设", subItems);
-              }
-            },
-            {
-              label: `回复选项建议 (当前: ${gameState.flags.show_choices !== false ? "开启" : "关闭"})`,
-              detail: "开启/关闭每轮回复末尾的 ①②③④ 行动建议",
-              action: () => {
-                gameState.flags.show_choices = gameState.flags.show_choices === false ? true : false;
-                saveState();
-                ctx.ui.notify(`选项建议已: ${gameState.flags.show_choices !== false ? "开启" : "关闭"}`, "info");
-              }
-            },
-            {
-              label: "◀ 返回",
-              detail: "退出设置",
-              action: (subDone) => {
-                subDone();
-              }
-            }
-          ];
-          return items;
-        };
-
-        await showMenu(ctx, "系统设置", buildMenu);
+        // 弹窗菜单选择
+        const items: MenuItem[] = [
+          { label: "default (标准)", detail: "完整系统提示，含规则+输出+状态+模式", action: () => { gameState.preset = "default"; saveState(); ctx.ui.notify("模式切换为: default", "info"); } },
+          { label: "lite (轻量)", detail: "省略硬规则，日常场景节省 Token", action: () => { gameState.preset = "lite"; saveState(); ctx.ui.notify("模式切换为: lite", "info"); } },
+        ];
+        await showMenu(ctx, "系统提示词预设", items);
       }
     },
   });

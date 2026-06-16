@@ -38,7 +38,7 @@ export type Skills = Record<string, Skill>;
 
 // --- 物品 ---
 export type ItemType = "weapon" | "clothing" | "armor" | "tool" | "consumable";
-export type SlotType = "inner_top" | "inner_bot" | "top" | "bottom" | "legs" | "feet" | "head" | "acc" | "left_hand" | "right_hand" | "back";
+export type SlotType = "inner_top" | "inner_bot" | "top" | "bottom" | "legs" | "feet" | "head" | "acc" | "left_hand" | "right_hand" | "back" | "mount";
 export type ItemState = "intact" | "damaged" | "ruined";
 
 export interface ItemEffect {
@@ -202,6 +202,11 @@ export interface PlayerState {
   known_locations: string[];           // 已探索地点
   titles: string[];                    // 引擎自动授予的称号（只加不删）
   public_identity?: string;            // 伪装身份/公开身份
+  vehicle?: {                          // 当前载具
+    type: "bicycle" | "motorcycle" | "car";
+    name: string;                      // 物品名
+    speedMul: number;                  // 速度倍率（相对步行1.0）
+  };
 }
 
 // --- 静态角色数据结构 ---
@@ -228,6 +233,10 @@ export interface StaticCharacter {
 }
 
 // --- NPC运行时状态（lazy init，只存被修改过的NPC） ---
+// --- 场景服装集（每套衣服的各槽物品名） ---
+export type OutfitKey = "school" | "pe" | "swim" | "casual" | "sleep";
+export type NPCOutfitSet = Record<OutfitKey, Partial<Record<string, string>>>;
+
 export interface NPCRuntimeState {
   inventory: Item[];
   equipment: EquipmentSlots;
@@ -238,6 +247,7 @@ export interface NPCRuntimeState {
   scheduleOverrides?: Record<string, string>;
   funds: number;                   // NPC 现金
   memoryTags: { tag: string; since: string; expires: number }[];
+  currentOutfit: OutfitKey;        // 当前激活的服装卡（默认 school）
   pendingOverride?: {              // 一次性最高优先级（生病/约定等）
     location: string;
     action: string;
@@ -386,4 +396,5 @@ export interface GameState {
   quests: Record<string, QuestState>;          // 剧情任务状态
   active_hooks: Hook[];                        // 活跃钩子账本（上限 3）
   completed_events: string[];                  // 已完成/已过期的事件 ID（防重复触发）
+  roomTimestamps: Record<string, string>;  // 房间名 → game_date，场景时间戳脏污
 }
