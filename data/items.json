@@ -240,10 +240,11 @@
       "effects": [
         {
           "type": "unlock",
-          "value": "自宅/学校"
+          "value": "如月家"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "flavor": "自家钥匙。能开如月家区域的门。"
     },
     "手电筒": {
       "name": "手电筒",

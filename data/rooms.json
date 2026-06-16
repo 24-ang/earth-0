@@ -3320,7 +3320,8 @@
           "block": true,
           "exitTo": "2F南走廊-F班前",
           "label": "DR",
-          "isOpen": false
+          "isOpen": false,
+          "locked": true
         },
         {
           "type": "wall",

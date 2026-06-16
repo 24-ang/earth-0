@@ -60,6 +60,7 @@ export interface Item {
     dice: string;      // "1d6" / "2d6"
     damageType: string; // "钝击" / "穿刺" / "切割" / "子弹"
   };
+  phoneData?: PhoneData;  // 手机数据（懒初始化，引擎读取）
 }
 
 // --- 伤势（HP=0后使用） ---
@@ -207,6 +208,7 @@ export interface PlayerState {
     name: string;                      // 物品名
     speedMul: number;                  // 速度倍率（相对步行1.0）
   };
+  fatigue: number;                      // 疲劳值 0-100（0=精力充沛，100=筋疲力尽）
 }
 
 // --- 静态角色数据结构 ---
@@ -268,6 +270,7 @@ export interface CellData {
   isOpen?: boolean;
   outsideView?: string;
   faces?: string;            // 窗户面对的房间名（跨节点感知）
+  locked?: boolean;          // 门是否锁着（需要匹配钥匙 unlock 值）
 }
 
 export interface RoomGrid {
@@ -397,4 +400,61 @@ export interface GameState {
   active_hooks: Hook[];                        // 活跃钩子账本（上限 3）
   completed_events: string[];                  // 已完成/已过期的事件 ID（防重复触发）
   roomTimestamps: Record<string, string>;  // 房间名 → game_date，场景时间戳脏污
+}
+
+// ── 手机数据（存储在 Item.phoneData）──
+
+export interface Contact {
+  name: string;
+  number: string;
+  relation: string;
+  addedAt: string;
+}
+
+export interface PhoneMessage {
+  id: number;
+  from: string;
+  to: string;
+  text: string;
+  timestamp: string;
+  read: boolean;
+  type: "sms" | "system";
+}
+
+export interface CallLogEntry {
+  id: number;
+  caller: string;
+  callee: string;
+  startTime: string;
+  endTime: string | null;
+  duration_seconds: number;
+  status: "ongoing" | "answered" | "missed" | "rejected";
+}
+
+export interface SnsPost {
+  id: number;
+  author: string;
+  text: string;
+  timestamp: string;
+  platform: "mixi" | "twitter";
+  likes: number;
+}
+
+export interface PhotoEntry {
+  id: number;
+  filename: string;
+  caption: string;
+  location: string;
+  takenAt: string;
+}
+
+export interface PhoneData {
+  owner: string;
+  contacts: Contact[];
+  messages: PhoneMessage[];
+  callLog: CallLogEntry[];
+  snsPosts: SnsPost[];
+  photos: PhotoEntry[];
+  unreadCount: number;
+  lastCheckTime: string | null;
 }

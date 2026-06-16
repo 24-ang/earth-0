@@ -162,9 +162,10 @@ export default function (pi: ExtensionAPI) {
     gs.player.age = gs.time.player_age;
     gs.turn++;
     if (gs.turn % 4 === 0) refreshWeather();
-    const events = updateNPCSchedules();
+    const events = await updateNPCSchedules();
+    gs.player.fatigue = Math.min(100, (gs.player.fatigue ?? 0) + Math.round(mins / 12));
     save();
-    
+
     const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
     ctx.ui.notify(`⏱️ 时间推进了 ${mins} 分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}`, "info");
     if (events.length > 0) {
@@ -404,166 +405,159 @@ export default function (pi: ExtensionAPI) {
   }
 
 
-  // ── 手机 TUI（纯本地，0 token）──
+  // ── 手机 TUI（引擎存储 + phone_apps.json 驱动，无硬编码）──
   async function showPhoneTUI(ctx: any, phoneItem: any) {
+    const { getPlayerPhoneData, syncContactsFromRelationships, markAllRead } =
+      await import("./engine/phone.ts");
+    const phoneApps: any[] = (await import("./data/phone_apps.json", { with: { type: "json" } })).default;
     const { gameState } = await import("./engine/state.ts");
 
-    const PHONE_TWEET_TEMPLATES = [
-      "今天车站前的猫又出现了 🐱",
-      "千叶的MAX COFFEE是世界上最好喝的咖啡饮料，不接受反驳。",
-      "考试周要到了，图书馆人好多...",
-      "海浜幕张的夕阳很美。",
-      "新出的限定口味薯片，谁试过了？",
-      "总武高的校服在千叶算好看的。",
-      "周末去哪玩？在线等。",
-      "打工好累，想躺平。",
-      "今天在街上看到有人在拍电影。",
-      "千葉の夏は暑い。",
-      "今晚的月亮真圆。",
-      "電車で寝過ごした…最悪。",
-    ];
+    const pd = getPlayerPhoneData();
+    if (!pd) { ctx.ui.notify("没有手机数据", "warning"); return; }
 
-    const PHONE_DARKWEB_TEMPLATES = [
-      "【暗网节点#37】千叶站东口的储物柜，密码0912。不留名。",
-      "【暗网节点#12】有人在收购'稀有数据'，出手大方。联系频率157.8。",
-      "【暗网节点#55】注意：最近便衣多了。不在学校周边交易。",
-    ];
+    // 同步通讯录
+    syncContactsFromRelationships(pd);
 
-    const buildSMSPanel = async () => {
-      const { markPhoneMessagesRead, getUnreadPhoneCount } = await import("./engine/state.ts");
-      const smsItems: MenuItem[] = [];
-      const inbox = gameState.phoneInbox || [];
+    // 按 era/region 过滤可见 app
+    const gameYear = parseInt(gameState.time.game_date.split("-")[0]) || 2018;
+    const isJP = true;
 
-      const unreadCount = getUnreadPhoneCount();
-      if (unreadCount > 0) {
-        smsItems.push({ label: `🆕 ${unreadCount} 条未读消息`, detail: "" });
-        smsItems.push({ label: "── 收件箱 ──" });
+    function eraMatches(era: string): boolean {
+      if (era === "all") return true;
+      if (era === "2004-2014") return gameYear >= 2004 && gameYear <= 2014;
+      if (era === "2011+") return gameYear >= 2011;
+      return true;
+    }
+    function regionMatches(region: string): boolean {
+      if (region === "all") return true;
+      if (region === "jp") return isJP;
+      return true;
+    }
+
+    const visibleApps = phoneApps.filter(
+      (app: any) => eraMatches(app.era) && regionMatches(app.region)
+    );
+
+    // ── 泛型渲染器 ──
+    function buildMessagingPanel(): MenuItem[] {
+      const items: MenuItem[] = [];
+      const msgs = pd.messages;
+      const unread = msgs.filter(m => !m.read && m.to === gameState.player.name);
+      if (unread.length > 0) {
+        items.push({ label: `🆕 ${unread.length} 条未读消息`, detail: "" });
+        items.push({ label: "── 收件箱 ──" });
       }
-
-      if (inbox.length > 0) {
-        // 最新在前
-        for (let i = inbox.length - 1; i >= 0; i--) {
-          const msg = inbox[i];
-          const prefix = msg.read ? "📩" : "🆕";
-          const typeLabel = msg.type === "call_missed" ? "📞 未接来电" : msg.type === "system" ? "⚙" : "";
-          smsItems.push({
-            label: `${prefix} ${typeLabel}「${msg.sender}」${msg.content}`,
-            detail: msg.timestamp
+      if (msgs.length > 0) {
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          const m = msgs[i];
+          items.push({
+            label: `${m.read ? "📩" : "🆕"}「${m.from}」${m.text}`,
+            detail: m.timestamp,
           });
         }
       } else {
-        smsItems.push({ label: "📩 （收件箱是空的）", detail: "" });
-        smsItems.push({ label: "📩 「运营商」欢迎使用本服务。" });
+        items.push({ label: "📩 （收件箱是空的）" });
       }
-
-      smsItems.push({ label: "── 系统通知 ──" });
-      const flags = gameState.flags;
-      if (flags.wanted) smsItems.push({ label: "⚠️ 【警视厅】您已被列为重要参考人。" });
-      if (flags.steal_alert) smsItems.push({ label: "⚠️ 【学校通知】近期校内发生盗窃事件，请注意保管财物。" });
-      if (flags.identity_exposed) smsItems.push({ label: "⚠️ 【未知】有人已经知道你是谁了。" });
-
-      // 标记已读
-      markPhoneMessagesRead();
-
-      return smsItems;
-    };
-
-    const buildTwitterPanel = () => {
-      const items: MenuItem[] = [];
-      const seed = gameState.turn + gameState.time.game_date.length;
-      for (let i = 0; i < 5; i++) {
-        const idx = (seed + i * 7) % PHONE_TWEET_TEMPLATES.length;
-        const likes = (seed * 3 + i * 11) % 142;
-        const retweets = (seed * 2 + i * 5) % 37;
-        items.push({
-          label: `🐦 ${PHONE_TWEET_TEMPLATES[idx]}`,
-          detail: `❤️${likes} 🔄${retweets}`
-        });
-      }
-      items.push({ label: "🔄 刷新时间线" });
+      markAllRead(pd);
       return items;
-    };
+    }
 
-    const buildDarkwebPanel = () => {
+    function buildContactsPanel(): MenuItem[] {
       const items: MenuItem[] = [];
-      const rep = gameState.player.reputation;
-      const isCriminal = (rep["不良"] ?? 0) >= 1 || gameState.flags.wanted || gameState.flags.steal_alert;
-
-      if (!isCriminal) {
-        items.push({ label: "🔒 需要不良声望≥1 或触发过犯罪事件才能访问暗网。" });
-        return items;
-      }
-
-      const seed = gameState.turn;
-      for (let i = 0; i < PHONE_DARKWEB_TEMPLATES.length; i++) {
-        if ((seed + i) % 3 === 0) {
-          items.push({ label: `🕶️ ${PHONE_DARKWEB_TEMPLATES[i]}` });
+      if (pd.contacts.length > 0) {
+        for (const c of pd.contacts) {
+          items.push({
+            label: `👤 ${c.name}`,
+            detail: `${c.number} | ${c.relation}`,
+          });
         }
-      }
-      if (items.length === 0) {
-        items.push({ label: "🕶️ 【暗网】今天没有新消息。" });
+      } else {
+        items.push({ label: "（通讯录是空的）" });
       }
       return items;
-    };
+    }
 
-    const unreadBadge = (() => {
-      try {
-        const n = (gameState.phoneInbox || []).filter(m => !m.read).length;
-        return n > 0 ? ` (${n}条未读)` : "";
-      } catch (_) { return ""; }
-    })();
-
-    const phoneMenu: MenuItem[] = [
-      {
-        label: `📩 短信${unreadBadge}`,
-        detail: "查看收到的消息",
-        action: async (parentDone) => {
-          const smsItems = await buildSMSPanel();
-          await showMenu(ctx, `📱 ${phoneItem.name} - 短信`, smsItems);
-        }
-      },
-      {
-        label: "📷 相册",
-        detail: "查看保存的照片",
-        action: async (_parentDone) => {
-          const fs = await import("node:fs");
-          const path = await import("node:path");
-          const photosDir = path.resolve(process.cwd(), "state", "photos");
-          const photoItems: MenuItem[] = [];
-          if (fs.existsSync(photosDir)) {
-            const files = fs.readdirSync(photosDir).filter((f: string) => /\.(png|jpg|jpeg)$/i.test(f));
-            if (files.length > 0) {
-              files.forEach((f: string) => {
-                photoItems.push({ label: `📷 ${f}` });
-              });
-            } else {
-              photoItems.push({ label: "（相册是空的）" });
-            }
-          } else {
-            photoItems.push({ label: "（相册是空的）" });
+    function buildBoardPanel(appId: string): MenuItem[] {
+      const items: MenuItem[] = [];
+      if (appId === "call_log") {
+        if (pd.callLog.length > 0) {
+          for (let i = pd.callLog.length - 1; i >= 0; i--) {
+            const cl = pd.callLog[i];
+            const icon = cl.status === "missed" ? "🔴" : cl.status === "answered" ? "✅" : "📞";
+            items.push({
+              label: `${icon} ${cl.caller} → ${cl.callee}`,
+              detail: `${cl.status} | ${cl.startTime}`,
+            });
           }
-          await showMenu(ctx, `📱 ${phoneItem.name} - 相册`, photoItems);
+        } else {
+          items.push({ label: "（无通话记录）" });
         }
-      },
-      {
-        label: "🐦 推特",
-        detail: "刷时间线",
-        action: async (parentDone) => {
-          const items = buildTwitterPanel();
-          await showMenu(ctx, `📱 ${phoneItem.name} - 推特`, items);
-        }
-      },
-      {
-        label: "🕶️ 暗网",
-        detail: "需要不良声望",
-        action: async (parentDone) => {
-          const items = buildDarkwebPanel();
-          await showMenu(ctx, `📱 ${phoneItem.name} - 暗网`, items);
-        }
-      },
-    ];
+      } else if (appId === "bbs") {
+        const flags = gameState.flags;
+        if (flags.wanted) items.push({ label: "💬 【警视厅通告】您已被列为重要参考人。" });
+        if (flags.steal_alert) items.push({ label: "💬 【学校通知】近期校内发生盗窃事件。" });
+        if (flags.identity_exposed) items.push({ label: "💬 【匿名】有人已经知道你是谁了。" });
+        if (items.length === 0) items.push({ label: "💬 【掲示板】今天没有新帖子。" });
+      }
+      return items;
+    }
 
-    await showMenu(ctx, `📱 ${phoneItem.name}`, phoneMenu);
+    function buildTimelinePanel(appId: string): MenuItem[] {
+      const items: MenuItem[] = [];
+      const platformFilter = appId === "twitter" ? "twitter" : "mixi";
+      const posts = pd.snsPosts.filter(p => p.platform === platformFilter);
+      if (posts.length > 0) {
+        for (let i = posts.length - 1; i >= 0; i--) {
+          const p = posts[i];
+          items.push({
+            label: `${p.author}: ${p.text}`,
+            detail: `❤️${p.likes} | ${p.timestamp}`,
+          });
+        }
+      } else {
+        items.push({ label: "（时间线是空的——LLM 可以用 browse_sns 填充内容）" });
+      }
+      return items;
+    }
+
+    function buildGalleryPanel(): MenuItem[] {
+      const items: MenuItem[] = [];
+      if (pd.photos.length > 0) {
+        for (const p of pd.photos) {
+          items.push({
+            label: `📷 ${p.caption || p.filename}`,
+            detail: `${p.location} | ${p.takenAt}`,
+          });
+        }
+      } else {
+        items.push({ label: "（相册是空的）" });
+      }
+      return items;
+    }
+
+    // ── 主菜单：从 phone_apps.json 动态生成 ──
+    const phoneMenu: MenuItem[] = [];
+    for (const app of visibleApps) {
+      phoneMenu.push({
+        label: `${app.icon} ${app.label}`,
+        detail: app.type,
+        action: async (_done: () => void) => {
+          let items: MenuItem[];
+          switch (app.type) {
+            case "messaging":  items = buildMessagingPanel(); break;
+            case "contacts":   items = buildContactsPanel(); break;
+            case "board":      items = buildBoardPanel(app.id); break;
+            case "timeline":   items = buildTimelinePanel(app.id); break;
+            case "gallery":    items = buildGalleryPanel(); break;
+            default:           items = [{ label: "未支持的应用类型" }];
+          }
+          await showMenu(ctx, `📱 ${phoneItem.name} - ${app.label}`, items);
+        },
+      });
+    }
+
+    const unreadStr = pd.unreadCount > 0 ? ` (${pd.unreadCount}条未读)` : "";
+    await showMenu(ctx, `📱 ${phoneItem.name}${unreadStr}`, phoneMenu);
   }
 
   async function runStatus(ctx: any) {
@@ -981,8 +975,10 @@ export default function (pi: ExtensionAPI) {
       gameState.player.age = gameState.time.player_age;
       gameState.turn++;
       if (gameState.turn % 4 === 0) refreshWeather();
-      const events = updateNPCSchedules();
+      const events = await updateNPCSchedules();
       stampRoom();
+      // 疲劳累积：每推进1小时+5疲劳
+      gameState.player.fatigue = Math.min(100, (gameState.player.fatigue ?? 0) + Math.round(mins / 12));
       saveState();
       const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
       return { content: [{ type: "text", text: `时间推进 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。${events.length > 0 ? events.join("; ") : "无特殊事件"}` }], details: { time: gameState.time, events } };
@@ -1359,7 +1355,10 @@ export default function (pi: ExtensionAPI) {
         } else if (eff.type === "energy") {
           // 提神效果：清除疲劳相关标记，注入叙事提示
           const strength = eff.value as string;
-          results.push(strength === "强提神" ? "精力充沛，疲劳一扫而空" : "精神恢复了些许");
+          const reduce = strength === "强提神" ? 40 : 20;
+          const before = p.fatigue;
+          p.fatigue = Math.max(0, before - reduce);
+          results.push(before > 50 ? "疲劳一扫而空，精力充沛！" : before > 20 ? "精神恢复了些许" : "本来也不太累——精神更好了");
         } else {
           results.push(`${eff.type}: ${eff.value}`);
         }
@@ -1534,7 +1533,9 @@ export default function (pi: ExtensionAPI) {
       gameState.player.age = gameState.time.player_age;
       gameState.turn++;
       if (gameState.turn % 4 === 0) refreshWeather();
-      const events = updateNPCSchedules();
+      const events = await updateNPCSchedules();
+      // 疲劳累积
+      gameState.player.fatigue = Math.min(100, (gameState.player.fatigue ?? 0) + Math.round(mins / 12));
 
       if (params.memory_tags && params.memory_tags.length > 0) {
         for (const m of params.memory_tags) {
@@ -1978,6 +1979,90 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  // ── 手机工具（使用 phone.ts 引擎）──
+
+  pi.registerTool({
+    name: "check_phone", label: "查看手机",
+    description:
+      "查看手机未读通知摘要和通讯录。有新消息或未接来电时返回提醒。自动同步好感联系人。",
+    parameters: Type.Object({}),
+    async execute(_id, _params, _s, _o, _ctx) {
+      const { getPlayerPhoneData, syncContactsFromRelationships, getUnreadSummary } =
+        await import("./engine/phone.ts");
+      const pd = getPlayerPhoneData();
+      if (!pd) {
+        return { content: [{ type: "text", text: "你没有手机或手机数据未初始化。" }], details: {} };
+      }
+      syncContactsFromRelationships(pd);
+      const summary = getUnreadSummary(pd);
+      const contactList = pd.contacts.map(c => `${c.name} (${c.relation})`).join("、");
+      const text = [
+        summary || "[手机] 没有新通知。",
+        `通讯录(${pd.contacts.length}人): ${contactList || "空"}`,
+      ].join("\n");
+      return { content: [{ type: "text", text }], details: { unreadCount: pd.unreadCount, contacts: pd.contacts.length } };
+    },
+  });
+
+  pi.registerTool({
+    name: "send_sms", label: "发送短信",
+    description:
+      "以玩家身份向通讯录中的NPC发送短信。需要该NPC在通讯录中且好感>=40。",
+    parameters: Type.Object({
+      to: Type.String({ description: "收信NPC名称" }),
+      text: Type.String({ description: "短信内容" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { getPlayerPhoneData, canContact, deliverMessage } =
+        await import("./engine/phone.ts");
+      const { gameState, saveState } = await import("./engine/state.ts");
+      const pd = getPlayerPhoneData();
+      if (!pd) {
+        return { content: [{ type: "text", text: "你没有手机。" }], details: {} };
+      }
+      if (!canContact(pd, params.to)) {
+        const contact = pd.contacts.find(c => c.name === params.to);
+        if (!contact) {
+          return { content: [{ type: "text", text: `${params.to} 不在你的通讯录中。` }], details: {} };
+        }
+        return { content: [{ type: "text", text: `与 ${params.to} 的好感度不足（需>=40，当前通讯录可见需>=20）。` }], details: {} };
+      }
+      const msg = deliverMessage(pd, gameState.player.name, params.to, params.text);
+      saveState();
+      return {
+        content: [{ type: "text", text: `已向 ${params.to} 发送短信: "${params.text}"` }],
+        details: { message: msg },
+      };
+    },
+  });
+
+  pi.registerTool({
+    name: "browse_sns", label: "浏览社交",
+    description: "浏览手机上的社交媒体时间线（mixi或Twitter）。LLM可以用这个了解角色动态。",
+    parameters: Type.Object({
+      platform: Type.Optional(Type.String({ description: "'mixi' 或 'twitter'，不传则返回全部" })),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { getPlayerPhoneData } = await import("./engine/phone.ts");
+      const pd = getPlayerPhoneData();
+      if (!pd) {
+        return { content: [{ type: "text", text: "你没有手机。" }], details: {} };
+      }
+      let posts = pd.snsPosts;
+      if (params.platform) {
+        posts = posts.filter(p => p.platform === params.platform);
+      }
+      if (posts.length === 0) {
+        return { content: [{ type: "text", text: "时间线上没有帖子。" }], details: {} };
+      }
+      const recent = posts.slice(-10).reverse();
+      const text = recent.map(p =>
+        `[${p.platform}] ${p.author}: ${p.text}  ❤️${p.likes}  ${p.timestamp}`
+      ).join("\n");
+      return { content: [{ type: "text", text }], details: { posts: recent } };
+    },
+  });
+
   // ── Commands ──
   pi.registerCommand("relations", {
     description: "查看所有NPC关系与恋爱阶段",
@@ -2358,7 +2443,8 @@ export default function (pi: ExtensionAPI) {
             const cell = room.cells[y]?.[x];
             if (!cell) continue;
             if (cell.type === "exit" || cell.type === "door") {
-              exits.push(`${cell.exitTo || "出口"}(${x},${y})${cell.isOpen === false ? "🔒" : ""}`);
+              const lockTag = cell.locked ? "🔐" : cell.isOpen === false ? "🔒" : "";
+              exits.push(`${cell.exitTo || "出口"}(${x},${y})${lockTag}`);
             }
             if (cell.furniture) {
               furniture.push(`${cell.furniture}(${x},${y})`);
