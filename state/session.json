@@ -15,7 +15,7 @@
     "name": "维",
     "gender": "男",
     "age": 16,
-    "location": "住宅区",
+    "location": "千叶_住宅区",
     "body": {
       "height_cm": 170,
       "weight_kg": 58,
@@ -48,6 +48,7 @@
     "funds": 500,
     "flags": {},
     "alive": true,
+    "fatigue": 85,
     "party": [],
     "gridPos": null,
     "reputation": {},
@@ -56,7 +57,598 @@
     ],
     "titles": []
   },
-  "npcs": {},
+  "npcs": {
+    "高坂京介": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "田村麻奈实": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "五更琉璃（黑猫）": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "高坂桐乃": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "新垣绫濑": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "来栖加奈子": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "沙织・巴吉纳": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "城廻巡": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "雪之下雪乃": {
+      "inventory": [
+        {
+          "name": "手机",
+          "type": "tool",
+          "slot": "right_hand",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "文库本小说",
+          "type": "tool",
+          "slot": "back",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "侍奉部钥匙",
+          "type": "tool",
+          "slot": "back",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        }
+      ],
+      "equipment": {
+        "top": {
+          "name": "总武高制服",
+          "type": "clothing",
+          "slot": "top",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        },
+        "bottom": {
+          "name": "黑白百褶裙",
+          "type": "clothing",
+          "slot": "bottom",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "legs": {
+          "name": "黑色过膝袜",
+          "type": "clothing",
+          "slot": "legs",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        "feet": {
+          "name": "学生皮鞋",
+          "type": "clothing",
+          "slot": "feet",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "acc": {
+          "name": "红色蝴蝶结丝带",
+          "type": "clothing",
+          "slot": "acc",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_top": {
+          "name": "白色蕾丝内衣",
+          "type": "clothing",
+          "slot": "inner_top",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_bot": {
+          "name": "白色棉质内裤",
+          "type": "clothing",
+          "slot": "inner_bot",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        }
+      },
+      "currentRoom": "千叶市立稻毛小学校",
+      "gridPos": [
+        3,
+        5
+      ],
+      "action": "",
+      "scheduleGroup": "小学生",
+      "scheduleOverrides": {
+        "weekday_afternoon": "侍奉部"
+      },
+      "currentOutfit": "school",
+      "funds": 30000
+    },
+    "比企谷八幡": {
+      "inventory": [
+        {
+          "name": "手机",
+          "type": "tool",
+          "slot": "right_hand",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "MAX COFFEE",
+          "type": "consumable",
+          "slot": "back",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "文库本",
+          "type": "tool",
+          "slot": "back",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        }
+      ],
+      "equipment": {
+        "top": {
+          "name": "总武高制服",
+          "type": "clothing",
+          "slot": "top",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        },
+        "bottom": {
+          "name": "校服裤子",
+          "type": "clothing",
+          "slot": "bottom",
+          "weight": 0.4,
+          "effects": [],
+          "state": "intact"
+        },
+        "feet": {
+          "name": "学生皮鞋",
+          "type": "clothing",
+          "slot": "feet",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        }
+      },
+      "currentRoom": "千叶_住宅区",
+      "gridPos": [
+        1,
+        6
+      ],
+      "action": "",
+      "scheduleGroup": "小学生",
+      "scheduleOverrides": {},
+      "currentOutfit": "school",
+      "funds": 1200
+    },
+    "由比滨结衣": {
+      "inventory": [
+        {
+          "name": "手机",
+          "type": "tool",
+          "slot": "right_hand",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "钱包",
+          "type": "tool",
+          "slot": "back",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        {
+          "name": "零食",
+          "type": "consumable",
+          "slot": "back",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        }
+      ],
+      "equipment": {
+        "top": {
+          "name": "总武高制服",
+          "type": "clothing",
+          "slot": "top",
+          "weight": 0.5,
+          "effects": [],
+          "state": "intact"
+        },
+        "bottom": {
+          "name": "黑白百褶裙",
+          "type": "clothing",
+          "slot": "bottom",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "legs": {
+          "name": "白色短袜",
+          "type": "clothing",
+          "slot": "legs",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        },
+        "feet": {
+          "name": "学生皮鞋",
+          "type": "clothing",
+          "slot": "feet",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "acc": {
+          "name": "粉色发圈",
+          "type": "clothing",
+          "slot": "acc",
+          "weight": 0.02,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_top": {
+          "name": "粉色内衣",
+          "type": "clothing",
+          "slot": "inner_top",
+          "weight": 0.1,
+          "effects": [],
+          "state": "intact"
+        },
+        "inner_bot": {
+          "name": "粉色内裤",
+          "type": "clothing",
+          "slot": "inner_bot",
+          "weight": 0.05,
+          "effects": [],
+          "state": "intact"
+        }
+      },
+      "currentRoom": "千叶_住宅区",
+      "gridPos": [
+        5,
+        3
+      ],
+      "action": "",
+      "scheduleGroup": "小学生",
+      "scheduleOverrides": {},
+      "currentOutfit": "school",
+      "funds": 2500
+    },
+    "户塚彩加": {
+      "inventory": [],
+      "equipment": {
+        "top": {
+          "name": "小学校服",
+          "type": "clothing",
+          "slot": "top",
+          "weight": 0.4,
+          "effects": [],
+          "state": "intact"
+        },
+        "bottom": {
+          "name": "短裤",
+          "type": "clothing",
+          "slot": "bottom",
+          "weight": 0.2,
+          "effects": [],
+          "state": "intact"
+        },
+        "feet": {
+          "name": "运动鞋",
+          "type": "clothing",
+          "slot": "feet",
+          "weight": 0.6,
+          "effects": [
+            {
+              "type": "attribute_bonus",
+              "value": 1,
+              "condition": "运动相关"
+            }
+          ],
+          "state": "intact"
+        }
+      },
+      "currentRoom": "千叶_住宅区",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "小学生",
+      "currentOutfit": "school",
+      "funds": 1500
+    },
+    "叶山隼人": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "户部翔": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "大和": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "大冈": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "材木座义辉": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "一色彩羽": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "平塚静": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "比企谷小町": {
+      "inventory": [],
+      "equipment": {
+        "top": {
+          "name": "小学校服",
+          "type": "clothing",
+          "slot": "top",
+          "weight": 0.4,
+          "effects": [],
+          "state": "intact"
+        },
+        "bottom": {
+          "name": "短裙",
+          "type": "clothing",
+          "slot": "bottom",
+          "weight": 0.3,
+          "effects": [],
+          "state": "intact"
+        },
+        "feet": {
+          "name": "运动鞋",
+          "type": "clothing",
+          "slot": "feet",
+          "weight": 0.6,
+          "effects": [
+            {
+              "type": "attribute_bonus",
+              "value": 1,
+              "condition": "运动相关"
+            }
+          ],
+          "state": "intact"
+        }
+      },
+      "currentRoom": "千叶_住宅区",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "小学生",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "折本香织": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "仲町千佳": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "鹤见留美": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "浅村悠太": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "绫濑沙季": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "奈良坂真绫": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "丸友和": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "新庄圭介": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "读卖栞": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    },
+    "狼谷": {
+      "inventory": [],
+      "equipment": {},
+      "currentRoom": "",
+      "gridPos": null,
+      "action": "",
+      "scheduleGroup": "自由人",
+      "currentOutfit": "school",
+      "funds": 1000
+    }
+  },
   "sexStates": {},
   "mode": "gal",
   "layer1Enabled": false,
@@ -67,7 +659,5 @@
     "temp": 16
   },
   "turn": 0,
-  "phoneInbox": [],
-  "roomTimestamps": {},
-  "quests": {}
+  "roomTimestamps": {}
 }

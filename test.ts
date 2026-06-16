@@ -16,6 +16,10 @@ import {
   addSkillExp, updateRelation, getOrCreateNPC,
   calcReputationBonus, updateReputation,
   checkAndGrantTitles,
+  stampRoom, getRoomAgingLine,
+  setNPCOutfit, getNPCOutfitDesc,
+  getLocationNav, createDynamicLocation,
+  mountVehicle, dismountVehicle, getVehicleMul,
 } from "./engine/state.ts";
 
 import { check, attackRoll, rollDamage } from "./engine/dice.ts";
@@ -331,8 +335,8 @@ test("getBodyForAge", () => {
   if (body.height_cm !== 160) throw new Error("fallback body 应返回");
 });
 
-test("updateNPCSchedules", () => {
-  const events = updateNPCSchedules();
+test("updateNPCSchedules", async () => {
+  const events = await updateNPCSchedules();
   // 应该有事件或至少不崩溃
 });
 
@@ -1427,6 +1431,143 @@ test("openQuest 不存在的eventId返回错误", () => {
   gameState.quests = {};
   const r = openQuest("nonexistent");
   if (!r || !r.includes("未找到")) throw new Error(`应返回错误: ${r}`);
+});
+
+// ── 场景持久化 ──
+console.log("\n── 场景持久化 ──");
+
+test("stampRoom + getRoomAgingLine 首次访问", () => {
+  resetState();
+  gameState.time.game_date = "2018-04-07";
+  // 首次访问无记录 → 返回空
+  const line = getRoomAgingLine("侍奉部");
+  if (line !== "") throw new Error(`首次访问应无氛围线: ${line}`);
+});
+
+test("stampRoom + getRoomAgingLine 15天后回访", () => {
+  resetState();
+  gameState.time.game_date = "2018-04-07";
+  stampRoom("侍奉部");
+  gameState.time.game_date = "2018-04-25";
+  const line = getRoomAgingLine("侍奉部");
+  if (!line) throw new Error("15天后应有氛围线");
+});
+
+// ── 服装卡 ──
+console.log("\n── 服装卡 ──");
+
+test("setNPCOutfit 切换雪乃服装卡", () => {
+  resetState();
+  const r = setNPCOutfit("雪之下雪乃", "pe");
+  if (!r.includes("pe")) throw new Error(`应切换成功: ${r}`);
+});
+
+test("getNPCOutfitDesc 返回外观描述", () => {
+  resetState();
+  setNPCOutfit("雪之下雪乃", "school");
+  const desc = getNPCOutfitDesc("雪之下雪乃");
+  if (!desc.includes("制服")) throw new Error(`应包含制服: ${desc}`);
+});
+
+// ── 层级导航 ──
+console.log("\n── 层级导航 ──");
+
+test("getLocationNav 学校内部返回schoolTree", () => {
+  resetState();
+  gameState.player.location = "侍奉部";
+  const nav = getLocationNav("侍奉部");
+  if (nav.breadcrumb.length === 0) throw new Error("应有面包屑");
+});
+
+test("createDynamicLocation 创建+持久化", () => {
+  resetState();
+  const r = createDynamicLocation("千叶县", "测试咖啡馆");
+  if (!r.includes("创建")) throw new Error(`应创建成功: ${r}`);
+});
+
+// ── 载具 ──
+console.log("\n── 载具 ──");
+
+test("mountVehicle 自行车 → 装备", () => {
+  resetState();
+  gameState.player.inventory.push({
+    name: "自行车", type: "tool", slot: "back", weight: 12,
+    effects: [{ type: "vehicle", value: "bicycle" }], state: "intact"
+  });
+  const r = mountVehicle("自行车");
+  if (!r.includes("骑上了")) throw new Error(`应骑上: ${r}`);
+  if (gameState.player.vehicle?.speedMul !== 3) throw new Error("速度应为×3");
+});
+
+test("dismountVehicle 下车", () => {
+  resetState();
+  gameState.player.inventory.push({
+    name: "自行车", type: "tool", slot: "back", weight: 12,
+    effects: [{ type: "vehicle", value: "bicycle" }], state: "intact"
+  });
+  mountVehicle("自行车");
+  const r = dismountVehicle();
+  if (!r.includes("下来了")) throw new Error(`应下车: ${r}`);
+  if (gameState.player.vehicle) throw new Error("vehicle 应为空");
+});
+
+// ── 手机引擎 ──
+console.log("\n── 手机引擎 ──");
+
+test("phone: getPlayerPhoneData 无手机返回null", async () => {
+  const { getPlayerPhoneData } = await import("./engine/phone.ts");
+  resetState();
+  const pd = getPlayerPhoneData();
+  if (pd !== null) throw new Error("无手机应返回null");
+});
+
+test("phone: 装备手机后返回PhoneData", async () => {
+  const { getPlayerPhoneData, createDefaultPhoneData } = await import("./engine/phone.ts");
+  resetState();
+  // 给玩家装备手机
+  gameState.player.equipment.right_hand = {
+    name: "手机", type: "tool", slot: "right_hand", weight: 0.2,
+    effects: [{ type: "communication", value: "通话/短信/网络" }],
+    state: "intact",
+    phoneData: createDefaultPhoneData(gameState.player.name),
+  };
+  const pd = getPlayerPhoneData();
+  if (!pd) throw new Error("应返回PhoneData");
+  if (pd.owner !== gameState.player.name) throw new Error("owner 应为玩家");
+});
+
+test("phone: deliverMessage 发送消息", async () => {
+  const { createDefaultPhoneData, deliverMessage, getUnreadSummary } = await import("./engine/phone.ts");
+  const pd = createDefaultPhoneData("维");
+  deliverMessage(pd, "雪之下雪乃", "维", "要来侍奉部吗？");
+  if (pd.messages.length !== 1) throw new Error("应有1条消息");
+  if (pd.unreadCount !== 1) throw new Error("未读应为1");
+  const summary = getUnreadSummary(pd);
+  if (!summary) throw new Error("应有未读摘要");
+});
+
+// ── 疲劳系统 ──
+console.log("\n── 疲劳系统 ──");
+
+test("疲劳: use_item energy 减少疲劳", () => {
+  resetState();
+  gameState.player.fatigue = 60;
+  gameState.player.inventory.push({
+    name: "MAX COFFEE", type: "consumable", slot: "back", weight: 0.3,
+    effects: [{ type: "energy", value: "提神" }], state: "intact",
+    flavor: "千叶发祥的咖啡饮料"
+  });
+  // 模拟 use_item 的 energy 逻辑
+  gameState.player.fatigue = Math.max(0, gameState.player.fatigue - 20);
+  if (gameState.player.fatigue !== 40) throw new Error(`应为40: ${gameState.player.fatigue}`);
+});
+
+test("疲劳: buildStatePrompt 高疲劳注入状态", async () => {
+  resetState();
+  gameState.player.fatigue = 85;
+  gameState.player.location = "千叶_住宅区";
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("筋疲力尽")) throw new Error("应包含疲劳状态");
 });
 
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);

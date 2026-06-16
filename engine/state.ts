@@ -71,7 +71,6 @@ function createInitialState(): GameState {
     flags: {},
     weather: { type: "晴", temp: 16 },
     turn: 0,
-    phoneInbox: [],
     roomTimestamps: {},
   };
 }
@@ -97,6 +96,7 @@ function createDefaultPlayer(): PlayerState {
     funds: 500,
     flags: {},
     alive: true,
+    fatigue: 0,
     party: [],
     gridPos: null,
     reputation: {},
@@ -365,6 +365,12 @@ export async function buildStatePrompt(): Promise<string> {
   const agingLine = getRoomAgingLine(p.location);
   if (agingLine) tpl += `\n[场景氛围] ${agingLine}`;
 
+  // 疲劳状态注入
+  const f = p.fatigue ?? 0;
+  if (f >= 80) tpl += `\n[状态] 你已经筋疲力尽，急需休息或提神饮品。`;
+  else if (f >= 50) tpl += `\n[状态] 你感到明显的疲劳，动作开始变慢。`;
+  else if (f >= 25) tpl += `\n[状态] 你有一丝倦意。`;
+
   // 寒冷天气装备提示：穿厚外套等 → 注入保暖描述
   if (s.weather.temp < 5 && hasEquipmentEffect(p.equipment, "cold_resist")) {
     tpl += `\n[装备] 厚实的衣物抵御着寒风——你并不觉得冷。`;
@@ -514,23 +520,23 @@ export async function buildStatePrompt(): Promise<string> {
           }
         }
       }
+    }
 
-      // 场景sex影响：sex模式下注入房间环境叙事（氛围/声音/视觉）
-      if (gameState.layer1Enabled) {
-        const room = ROOMS[p.location];
-        if (room) {
-          const parts: string[] = [];
-          if ((room as any).atmosphere) parts.push((room as any).atmosphere);
-          const amb = (room as any).ambient;
-          if (amb?.audio) parts.push(`隐约听到${amb.audio}`);
-          if (amb?.visual) parts.push(amb.visual);
-          if (parts.length > 0) {
-            tpl += `\n[环境·亲密] ${parts.join("。")}。`;
-          } else {
-            // 无 atmosphere/ambient 时，按房间类型给默认氛围
-            const defaultAtmo = getDefaultSexAtmosphere(p.location);
-            if (defaultAtmo) tpl += `\n[环境·亲密] ${defaultAtmo}`;
-          }
+    // 场景sex影响：sex模式下注入房间环境叙事（氛围/声音/视觉）
+    if (gameState.layer1Enabled) {
+      const room = ROOMS[p.location];
+      if (room) {
+        const parts: string[] = [];
+        if ((room as any).atmosphere) parts.push((room as any).atmosphere);
+        const amb = (room as any).ambient;
+        if (amb?.audio) parts.push(`隐约听到${amb.audio}`);
+        if (amb?.visual) parts.push(amb.visual);
+        if (parts.length > 0) {
+          tpl += `\n[环境·亲密] ${parts.join("。")}。`;
+        } else {
+          // 无 atmosphere/ambient 时，按房间类型给默认氛围
+          const defaultAtmo = getDefaultSexAtmosphere(p.location);
+          if (defaultAtmo) tpl += `\n[环境·亲密] ${defaultAtmo}`;
         }
       }
     }
@@ -539,7 +545,7 @@ export async function buildStatePrompt(): Promise<string> {
 /** 按房间名给默认sex氛围描述 */
 function getDefaultSexAtmosphere(location: string): string {
   if (location.includes("教室") || location.includes("班")) return "空旷的教室，课桌椅整齐排列——在这里做点什么有种背德的刺激。";
-  if (location.includes("侍奉部") || location.includes("部室")) return "狭小的部室，只有老旧暖炉的嗡嗡声和窗外操场的喧闹。";
+  if (location.includes("部室") || location.includes("社团")) return "狭小的部室，窗外隐约传来操场上的喧闹声。";
   if (location.includes("屋顶")) return "天台的凉风不时吹过，远处的城市景色尽收眼底。";
   if (location.includes("保健室")) return "消毒水的气味，拉上帘子就是一个小天地。";
   if (location.includes("更衣室") || location.includes("体育馆")) return "潮湿的空气里混着运动后的汗味和沐浴露的香气。";
@@ -550,6 +556,13 @@ function getDefaultSexAtmosphere(location: string): string {
   if (location.includes("浴室") || location.includes("温泉")) return "氤氲的蒸汽模糊了视线，水滴声在瓷砖墙间回荡。";
   return "";
 }
+
+  // 手机通知注入
+  try {
+    const { getPlayerPhoneData, getUnreadSummary } = await import("./phone.ts");
+    const phoneNote = getUnreadSummary(getPlayerPhoneData());
+    if (phoneNote) tpl += `\n${phoneNote}`;
+  } catch (_) {}
 
   return tpl;
 }
@@ -766,87 +779,6 @@ export function checkAddVolume(
 /** 装备 locker 容量时检查是否会损坏容器 */
 export function checkContainerDamage(totalVolume: number, maxVolume: number): boolean {
   return maxVolume > 0 && totalVolume > maxVolume * 1.3;
-}
-
-// --- 手机消息系统（引擎存储，TUI 读取，0 token）---
-import type { PhoneMessage } from "./types.ts";
-
-/** 添加一条手机消息到收件箱 */
-export function addPhoneMessage(msg: Omit<PhoneMessage, "read">): void {
-  gameState.phoneInbox ??= [];
-  gameState.phoneInbox.push({ ...msg, read: false });
-  // 最多保留 30 条
-  if (gameState.phoneInbox.length > 30) {
-    gameState.phoneInbox = gameState.phoneInbox.slice(-30);
-  }
-}
-
-/** 事件驱动：从记忆标签生成 NPC 消息 */
-export function generatePhoneMessagesFromEvents(events: string[]): void {
-  const now = gameState.time.game_date;
-  for (const ev of events) {
-    // NPC 移动事件 → 可能发短信
-    const match = ev.match(/^(.+?):\s*(.+?)\s*→\s*(.+)/);
-    if (match) {
-      const [, name, from, to] = match;
-      const rel = gameState.player.relationships[name];
-      if (rel && rel.affection >= 30 && Math.random() < 0.3) {
-        const messages = [
-          `今天换个地方待着——在${to}。`,
-          `刚路过${from}，现在到${to}了。`,
-          `移动中✈️ ${from}→${to}`,
-        ];
-        addPhoneMessage({
-          sender: name,
-          content: messages[Math.floor(Math.random() * messages.length)],
-          timestamp: now,
-          type: "sms",
-        });
-      }
-    }
-    // 社交碰面事件
-    const meetMatch = ev.match(/^(.+?)和(.+?)在(.+?)碰面/);
-    if (meetMatch) {
-      const [, a, b, loc] = meetMatch;
-      const relA = gameState.player.relationships[a];
-      if (relA && relA.affection >= 40 && Math.random() < 0.4) {
-        addPhoneMessage({
-          sender: a,
-          content: `刚在${loc}碰到${b}了！`,
-          timestamp: now,
-          type: "sms",
-        });
-      }
-    }
-  }
-
-  // 记忆标签 → NPC 消息
-  for (const [nname, npc] of Object.entries(gameState.npcs)) {
-    if (!npc.memoryTags || npc.memoryTags.length === 0) continue;
-    const rel = gameState.player.relationships[nname];
-    if (!rel || rel.affection <= 0) continue;
-    const latest = npc.memoryTags[npc.memoryTags.length - 1];
-    if (latest && Math.random() < 0.25) {
-      addPhoneMessage({
-        sender: nname,
-        content: `听说 "${latest.tag}" …能告诉我更多吗？`,
-        timestamp: now,
-        type: "sms",
-      });
-    }
-  }
-}
-
-/** 获取未读消息数 */
-export function getUnreadPhoneCount(): number {
-  return (gameState.phoneInbox || []).filter(m => !m.read).length;
-}
-
-/** 标记所有消息为已读 */
-export function markPhoneMessagesRead(): void {
-  for (const m of (gameState.phoneInbox || [])) {
-    m.read = true;
-  }
 }
 
 // --- 技能EXP ---
@@ -1451,7 +1383,19 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
   // 出口/楼梯
   if (cell.type === "exit" || cell.type === "door" || cell.type === "stairs") {
     if (cell.isOpen === false) {
-      return { success: false, newX: cx, newY: cy, blocked: true, reason: "门关着", distance: 0, seconds: 0 };
+      // 锁门：检查玩家装备有无匹配钥匙
+      if (cell.locked) {
+        const keyMatch = matchKeyForDoor(gameState.player.equipment, gameState.player.location, cell.exitTo || "");
+        if (!keyMatch) {
+          return { success: false, newX: cx, newY: cy, blocked: true, reason: "门锁着，需要钥匙", distance: 0, seconds: 0 };
+        }
+        // 有钥匙 → 开锁，继续走出口逻辑
+        cell.locked = false;
+        cell.isOpen = true;
+        cell.block = false;
+      } else {
+        return { success: false, newX: cx, newY: cy, blocked: true, reason: "门关着", distance: 0, seconds: 0 };
+      }
     }
     if (cell.exitTo) {
       // 宏观名册校验
@@ -1602,12 +1546,37 @@ export function removeFurniture(x: number, y: number): { success: boolean; reaso
   return { success: true, reason: `拆除了${item}`, item };
 }
 
+// --- 钥匙匹配 ---
+
+/** 检查装备中是否有钥匙能开这扇门。匹配规则：钥匙 unlock 值包含在当前房间名或出口名中 */
+function matchKeyForDoor(equipment: EquipmentSlots, roomName: string, exitTo: string): string | null {
+  for (const item of Object.values(equipment)) {
+    if (!item?.effects) continue;
+    for (const eff of item.effects) {
+      if (eff.type !== "unlock") continue;
+      const val = String(eff.value);
+      if (roomName.includes(val) || exitTo.includes(val)) return item.name;
+    }
+  }
+  return null;
+}
+
 // --- 门窗开关 ---
 export function toggleDoor(x: number, y: number): { success: boolean; reason: string; isOpen: boolean } {
   const room = ROOMS[gameState.player.location];
   if (!room) return { success: false, reason: "当前位置没有地图", isOpen: false };
   const cell = room.cells[y][x];
   if (cell.type !== "door" && cell.type !== "exit") return { success: false, reason: "这不是门窗", isOpen: false };
+  // 锁门需要钥匙才能开
+  if (cell.locked) {
+    const keyMatch = matchKeyForDoor(gameState.player.equipment, gameState.player.location, cell.exitTo || "");
+    if (!keyMatch) return { success: false, reason: "门锁着，需要钥匙", isOpen: false };
+    cell.locked = false;
+    cell.isOpen = true;
+    cell.block = false;
+    saveState();
+    return { success: true, reason: `${keyMatch}打开了门`, isOpen: true };
+  }
   cell.isOpen = !(cell.isOpen !== false); // 切换，默认true
   cell.block = !cell.isOpen;
   saveState();
@@ -1825,7 +1794,7 @@ export function getRoomCapacity(roomName: string): number {
   return Math.max(1, traversableCount);
 }
 
-export function updateNPCSchedules(): string[] {
+export async function updateNPCSchedules(): Promise<string[]> {
   const events: string[] = [];
   const { time_of_day, day_of_week } = gameState.time;
   const isWeekend = ["土", "日"].includes(day_of_week);
@@ -2014,8 +1983,49 @@ export function updateNPCSchedules(): string[] {
     }
   }
   
-  // 手机消息：从事件中生成 NPC 短信
-  try { generatePhoneMessagesFromEvents(events); } catch (_) {}
+  // 手机消息：从事件中生成 NPC 短信（使用 phone.ts 引擎）
+  try {
+    const { getPlayerPhoneData, syncContactsFromRelationships, deliverMessage } = await import("./phone.ts");
+    const pd = getPlayerPhoneData();
+    if (pd) {
+      syncContactsFromRelationships(pd);
+      const now = gameState.time.game_date;
+      for (const ev of events) {
+        const match = ev.match(/^(.+?):\s*(.+?)\s*→\s*(.+)/);
+        if (match) {
+          const [, name, from, to] = match;
+          const rel = gameState.player.relationships[name];
+          if (rel && rel.affection >= 30 && Math.random() < 0.3) {
+            const templates = [
+              `今天换个地方待着——在${to}。`,
+              `刚路过${from}，现在到${to}了。`,
+              `移动中 ${from}→${to}`,
+            ];
+            deliverMessage(pd, name, gameState.player.name,
+              templates[Math.floor(Math.random() * templates.length)]);
+          }
+        }
+        const meetMatch = ev.match(/^(.+?)和(.+?)在(.+?)碰面/);
+        if (meetMatch) {
+          const [, a, b, loc] = meetMatch;
+          const relA = gameState.player.relationships[a];
+          if (relA && relA.affection >= 40 && Math.random() < 0.4) {
+            deliverMessage(pd, a, gameState.player.name, `刚在${loc}碰到${b}了！`);
+          }
+        }
+      }
+      for (const [nname, npc] of Object.entries(gameState.npcs)) {
+        if (!npc.memoryTags || npc.memoryTags.length === 0) continue;
+        const rel = gameState.player.relationships[nname];
+        if (!rel || rel.affection <= 0) continue;
+        const latest = npc.memoryTags[npc.memoryTags.length - 1];
+        if (latest && Math.random() < 0.25) {
+          deliverMessage(pd, nname, gameState.player.name,
+            `听说 "${latest.tag}"…能告诉我更多吗？`);
+        }
+      }
+    }
+  } catch (_) {}
 
   return events;
 }
@@ -2033,7 +2043,10 @@ export function getGridContext(): string {
   for (let y = 0; y < room.height; y++) {
     for (let x = 0; x < room.width; x++) {
       const c = room.cells[y][x];
-      if (c.type === "exit" || c.type === "door") exits.push(`${c.exitTo || "出口"}(${x},${y})`);
+      if (c.type === "exit" || c.type === "door") {
+        const lockTag = c.locked ? "{锁}" : c.isOpen === false ? "{关}" : "";
+        exits.push(`${c.exitTo || "出口"}(${x},${y})${lockTag}`);
+      }
       if (c.furniture) furniture.push(`${c.furniture}(${x},${y})`);
     }
   }
@@ -2046,7 +2059,10 @@ export function getGridContext(): string {
     const c = room.cells[ny][nx];
     if (c.type === "wall") around.push(`${d}:墙`);
     else if (c.furniture) around.push(`${d}:${c.furniture}`);
-    else if (c.type === "exit" || c.type === "door") around.push(`${d}:出口→${c.exitTo || "?"}`);
+    else if (c.type === "exit" || c.type === "door") {
+      const lockTag = c.locked ? "🔐" : c.isOpen === false ? "🔒" : "";
+      around.push(`${d}:${lockTag}→${c.exitTo || "?"}`);
+    }
     else around.push(`${d}:空`);
   }
 
