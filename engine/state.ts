@@ -699,6 +699,49 @@ function getDefaultSexAtmosphere(location: string): string {
     if (phoneNote) tpl += `\n${phoneNote}`;
   } catch (_) {}
 
+  // ── 场景工具提示（软约束，不屏蔽工具）──
+  // 根据当前场景告诉LLM哪些工具优先。来自顶会论文验证过的attention scoping方法。
+  const sceneHints: string[] = [];
+
+  // combat模式 → 战斗工具优先
+  if (s.mode === "combat") {
+    sceneHints.push("战斗场景: combat_action, dice_roll, move, use_item, equip_item, inflict_damage");
+  }
+  // sex/Layer1模式
+  if (s.layer1Enabled || s.mode === "sex") {
+    sceneHints.push("亲密模式: sex_touch, masturbate, lookup_body, toggle_layer1");
+  }
+  // 旅行中
+  if (s.pendingTravel) {
+    sceneHints.push("旅行中: complete_travel(到达时必调), lookup_region");
+  }
+  // 通缉/警报 → 身份检定相关
+  if ((s.flags as any)?.steal_alert || (s.flags as any)?.wanted || (s.flags as any)?.identity_exposed) {
+    sceneHints.push("警报生效中: identity_check, update_reputation, schedule_override");
+  }
+  // 有活跃钩子 → 任务工具
+  if (s.active_hooks && s.active_hooks.length > 0) {
+    sceneHints.push("剧情钩子待处理: open_quest(接受后调用), advance_quest, abandon_quest");
+  }
+  // 活跃任务进行中
+  if (s.quests && Object.values(s.quests).some((q: any) => q.status === "active")) {
+    sceneHints.push("任务进行中: advance_quest, set_flags, add_memory_tag");
+  }
+  // 在商业区 → 经济工具
+  if (p.location.includes("店") || p.location.includes("市场") || p.location.includes("商业")) {
+    sceneHints.push("商业区: buy_item, sell_item, work_job, transfer_item");
+  }
+  // 在学校/社交场所
+  if (p.location.includes("校") || p.location.includes("部室") || p.location.includes("侍奉部")) {
+    sceneHints.push("社交场景: adjust_relation, lookup_character, set_npc_outfit, add_memory_tag");
+  }
+
+  if (sceneHints.length > 0) {
+    // 始终提醒可用的核心工具（不随场景变）
+    const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn";
+    tpl += `\n[工具提示] ${[...sceneHints, always].join(" | ")}`;
+  }
+
   return tpl;
 }
 
