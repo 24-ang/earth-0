@@ -165,6 +165,10 @@ export default function (pi: ExtensionAPI) {
     const events = await updateNPCSchedules();
     const { tickSexStates } = await import("./engine/state.ts");
     await tickSexStates(result.daysAdvanced, mins);
+    // 剧情时间线：扫描触发条件 → 生成钩子 → 清理过期钩子
+    const { checkTimelineEvents, expireHooks } = await import("./engine/timeline.ts");
+    checkTimelineEvents();
+    expireHooks();
     gs.player.fatigue = Math.min(100, (gs.player.fatigue ?? 0) + Math.round(mins / 12));
     save();
 
@@ -2071,6 +2075,60 @@ export default function (pi: ExtensionAPI) {
       addMemoryTag(params.target, params.tag, params.expires_days || 7);
       saveState();
       return { content: [{ type: "text", text: `${params.target} 记忆: ${params.tag}` }], details: {} };
+    },
+  });
+
+  // ── 剧情任务工具（timeline.ts）──
+
+  pi.registerTool({
+    name: "open_quest", label: "开启任务",
+    description:
+      "将一个待处理的剧情钩子正式开启为活跃任务。调用后钩子从等待列表移除，任务进入进行中状态。\n" +
+      "只在 GM 确认玩家愿意接受委托/参与事件后才调用。",
+    parameters: Type.Object({
+      eventId: Type.String({ description: "事件ID，来自 active_hooks 中的 event_id" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { openQuest, getActiveQuests } = await import("./engine/timeline.ts");
+      const { saveState } = await import("./engine/state.ts");
+      const r = openQuest(params.eventId);
+      saveState();
+      if (!r) return { content: [{ type: "text", text: `开启任务失败: ${params.eventId}` }], details: {} };
+      const quests = getActiveQuests();
+      return { content: [{ type: "text", text: `${r}\n当前活跃任务: ${quests.map(q => q.title).join("、") || "无"}` }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "advance_quest", label: "推进任务",
+    description:
+      "推进一个活跃任务的剧情节拍。当玩家完成当前步骤后调用。可选 outcomeKey 指定玩家选择的分支。",
+    parameters: Type.Object({
+      eventId: Type.String({ description: "任务事件ID" }),
+      outcomeKey: Type.Optional(Type.String({ description: "玩家选择的分支key，如'一起指导做曲奇'" })),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { advanceQuest, getActiveQuests } = await import("./engine/timeline.ts");
+      const { saveState } = await import("./engine/state.ts");
+      const r = advanceQuest(params.eventId, params.outcomeKey);
+      saveState();
+      if (!r) return { content: [{ type: "text", text: `推进任务失败: ${params.eventId}` }], details: {} };
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "abandon_quest", label: "放弃任务",
+    description: "放弃一个活跃任务。玩家主动拒绝或无法继续时调用。",
+    parameters: Type.Object({
+      eventId: Type.String({ description: "要放弃的任务事件ID" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { abandonQuest, getActiveQuests } = await import("./engine/timeline.ts");
+      const { saveState } = await import("./engine/state.ts");
+      const r = abandonQuest(params.eventId);
+      saveState();
+      return { content: [{ type: "text", text: r || `已放弃: ${params.eventId}` }], details: {} };
     },
   });
 

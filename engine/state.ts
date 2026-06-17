@@ -453,6 +453,30 @@ export async function buildStatePrompt(): Promise<string> {
     const pt = s.pendingTravel;
     tpl += `\n[旅行中] 正在通过${pt.route}前往 ${pt.to}（耗时约${pt.minutes}分钟）。到达前请通过 complete_travel 工具结束旅程。`;
   }
+  // 剧情钩子注入（timeline.ts 自动扫描生成的触发事件）
+  const { getActiveHooks, getActiveQuests, getTodayCalendar } = await import("./timeline.ts");
+  const hooks = getActiveHooks();
+  if (hooks.length > 0) {
+    tpl += `\n[剧情钩子] 以下事件等待触发（请自然融入叙事，不要直接朗读hook_text）：`;
+    for (const h of hooks) {
+      const seenNote = h.seen_count > 0 ? `（第${h.seen_count + 1}次提及，请换角度）` : "";
+      tpl += `\n  • [${h.urgency}][${h.event_id}] ${h.hook_text} ${seenNote}`;
+    }
+    tpl += `\n→ 玩家接受委托后，调用 open_quest 工具开启任务。`;
+  }
+  // 日历事件注入
+  const todayCal = getTodayCalendar();
+  if (todayCal) {
+    tpl += `\n[日历] 今日特殊: ${todayCal}`;
+  }
+  // 活跃任务注入
+  const activeQuests = getActiveQuests();
+  if (activeQuests.length > 0) {
+    tpl += `\n[活跃任务]`;
+    for (const q of activeQuests) {
+      tpl += `\n  • ${q.title} (${q.current_beat || "未开始"}) — 状态: ${q.status}`;
+    }
+  }
   // 附加空间上下文
   const gridCtx = getGridContext();
   if (gridCtx) tpl += `\n${gridCtx}`;
