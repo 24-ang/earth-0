@@ -798,7 +798,7 @@ export default function (pi: ExtensionAPI) {
   // ── Tools ──
   pi.registerTool({
     name: "lookup_character", label: "查角色",
-    description: "查询角色属性、装备（含flavor描述）、技能、身体数据。描写服装细节前务必调用此工具。",
+    description: "查询角色属性/装备(含flavor)/技能/身体。描写服装细节前务必调用。",
     parameters: Type.Object({ name: Type.String({ description: "角色名" }) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { allChars } = await import("./engine/router.ts");
@@ -894,7 +894,7 @@ export default function (pi: ExtensionAPI) {
   // ── 物品转移（替换 patch_state give_item/take_item）──
   pi.registerTool({
     name: "transfer_item", label: "转移物品",
-    description: "将物品从一方转移到另一方。from/to 为角色名或'玩家'。引擎强制校验来源确实持有该物品（背包或装备槽）。",
+    description: "转移物品。from/to: 角色名或'玩家'。引擎强制校验来源持有该物品。",
     parameters: Type.Object({
       from: Type.String({ description: "物品来源：角色名 或 '玩家'" }),
       to: Type.String({ description: "物品去向：角色名 或 '玩家'" }),
@@ -940,7 +940,7 @@ export default function (pi: ExtensionAPI) {
   // ── 关系调整（替换 patch_state add_affection）──
   pi.registerTool({
     name: "adjust_relation", label: "调整关系",
-    description: "因剧情互动调整好感度。单次上限±20，自动0-100 clamp。reason 写入关系备注。正值会同步提升该NPC的欲望值。",
+    description: "调整好感度。单次≤±20，自动0-100 clamp。reason写入备注。",
     parameters: Type.Object({
       npc: Type.String({ description: "NPC 名称" }),
       delta: Type.Number({ description: "好感变化量，范围 [-20, 20]" }),
@@ -973,7 +973,7 @@ export default function (pi: ExtensionAPI) {
   // ── 技能成长（替换 patch_state add_skill_exp）──
   pi.registerTool({
     name: "grant_skill_exp", label: "技能成长",
-    description: "因学习/训练/实战获得技能经验。单次上限5 EXP。走引擎升级公式（Lv×10 升一级）。",
+    description: "技能经验。单次≤5 EXP。引擎自动升级(Lv×10)。",
     parameters: Type.Object({
       skill: Type.String({ description: "技能名，如'格斗'、'潜行'" }),
       amount: Type.Number({ description: "经验值，1-5" }),
@@ -993,7 +993,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "init_game", label: "初始化游戏",
-    description: "新开局或重新开始时初始化玩家数据。重置除玩家设定外的所有状态。",
+    description: "初始化新游戏。重置时间和位置，保留玩家设定。",
     parameters: Type.Object({
       name: Type.String({ description: "玩家姓名" }),
       gender: Type.String({ description: "玩家性别，男/女" }),
@@ -1244,7 +1244,7 @@ export default function (pi: ExtensionAPI) {
   // combat, steal, equip, build, move, door_toggle, reputation, schedule, economy
   pi.registerTool({
     name: "combat_action", label: "战斗",
-    description: "攻击/防御/逃跑/死亡豁免。action: attack/defend/flee/death_save。actor 可选，默认玩家；设为 NPC 名则 NPC 发动攻击（target 应为'玩家'）。",
+    description: "攻击|防御|逃跑|死亡豁免。actor可选NPC名(以NPC攻击)。",
     parameters: Type.Object({
       action: Type.String({ description: "attack / defend / flee / death_save" }),
       target: Type.Optional(Type.String({ description: "目标名，attack/flee 时需要" })),
@@ -1328,7 +1328,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "steal_item", label: "偷窃",
-    description: "从NPC偷物品。成功=物品到手，失败（caught=true）→ 引擎自动扣除好感-20、写入 alert 标记。",
+    description: "偷NPC物品。失败→好感-20+alert标记。不可替代正常获取。",
     parameters: Type.Object({ target: Type.String(), item: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, stealItem, saveState, updateRelation, updateReputation } = await import("./engine/state.ts");
@@ -1365,7 +1365,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "equip_item", label: "装备",
-    description: "装备物品到指定槽位，或卸下物品。",
+    description: "装备/卸下物品到指定槽位。",
     parameters: Type.Object({ item: Type.String(), slot: Type.Optional(Type.String()) }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState } = await import("./engine/state.ts");
@@ -1399,7 +1399,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "use_item", label: "使用物品",
-    description: "使用背包中的消耗品。引擎根据物品效果自动结算（回血/提神等），消耗后物品消失。",
+    description: "使用背包中消耗品。引擎自动结算效果(回血/提神)后物品消失。",
     parameters: Type.Object({
       item: Type.String({ description: "要使用的物品名" }),
     }),
@@ -1492,12 +1492,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "world_interact", label: "世界交互",
-    description:
-      "建造/拆除/开关门。引擎内部处理坐标和校验。\n" +
-      "action: place(放置家具) / remove(拆除) / build_wall(造墙) / remove_wall(拆墙) / toggle_door(开关门)\n" +
-      "item: 物品名（place时必需，必须在背包里）\n" +
-      "material: 材料名（build_wall时必需，必须在背包里）\n" +
-      "  remove_wall时可指定工具名，不指定则需玩家力量≥5",
+    description: "建造/拆除/开关门。action: place|remove|build_wall|remove_wall|toggle_door。item/material须在背包里。",
     parameters: Type.Object({
       action: Type.String({ description: "place / remove / build_wall / remove_wall / toggle_door" }),
       item: Type.Optional(Type.String({ description: "物品名（place时必需）" })),
@@ -1595,10 +1590,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "settle_scene", label: "场景收口",
-    description:
-      "一场戏结束时的统一收口。推进时间、更新 NPC 日程、写入记忆标签。\n" +
-      "NPC换装请用 set_npc_outfit 工具。\n" +
-      "替代手动调用 commit_turn + add_memory_tag 的组合。",
+    description: "场景收口：推进时间+更新NPC日程+写入记忆标签。替代commit_turn+add_memory_tag。NPC换装请用set_npc_outfit。",
     parameters: Type.Object({
       summary: Type.String({ description: "本场景发生的事，如'在侍奉部和雪乃聊了一下午'" }),
       elapsed_minutes: Type.Number({ description: "经过的分钟数" }),
@@ -1677,9 +1669,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "set_npc_outfit", label: "NPC换装",
-    description:
-      "根据场景切换NPC服装卡。school(校服)/pe(体操服)/swim(泳装)/casual(私服)/sleep(睡衣)。\n" +
-      "引擎自动注入当前服装到叙述上下文。",
+    description: "切换NPC服装卡。outfit: school|pe|swim|casual|sleep。引擎自动注入服装上下文。",
     parameters: Type.Object({
       npc: Type.String({ description: "NPC 名" }),
       outfit: Type.String({ description: "服装卡：school / pe / swim / casual / sleep" }),
@@ -1694,7 +1684,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "mount_vehicle", label: "骑乘载具",
-    description: "从背包骑上载具（自行车/摩托车/汽车）。切换后移动速度改变，距离按倍率缩减。",
+    description: "骑上载具(自行车/摩托车/汽车)。移动速度按倍率提升。",
     parameters: Type.Object({
       item: Type.String({ description: "载具物品名，如'自行车'、'摩托车'" }),
     }),
@@ -1707,7 +1697,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "dismount_vehicle", label: "下车",
-    description: "从当前载具下来，恢复步行速度。载具放回背包。",
+    description: "下车上马，恢复步行速度。载具放回背包。",
     parameters: Type.Object({}),
     async execute(_id, _params, _s, _o, _ctx) {
       const { dismountVehicle } = await import("./engine/state.ts");
@@ -1718,7 +1708,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "board_train", label: "乘电车",
-    description: "从当前所在车站乘坐电车前往目的地站。时间按时刻表（city_map.json）。触发旅行模式，LLM 可叙述车内见闻。",
+    description: "从当前所在车站乘电车。读city_map.json时刻表，触发旅行叙事模式。",
     parameters: Type.Object({
       from: Type.String({ description: "出发站名" }),
       to: Type.String({ description: "目的站名" }),
@@ -1757,10 +1747,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "create_location", label: "创建地点",
-    description:
-      "在某个区域/城市下创建新地点。引擎自动加入导航层级和已知地点。\n" +
-      "LLM 可以随时扩展世界——新开的咖啡店、新发现的秘密基地、新学校等。\n" +
-      "parent 为上级地名（如'千叶县'、'东京都'），name 为新地点名。",
+    description: "创建新地点（如新咖啡店、秘密基地）。引擎自动加入导航层级。parent: 上级地名。",
     parameters: Type.Object({
       parent: Type.String({ description: "上级地名，如'千叶县'、'东京都'、'千叶市'" }),
       name: Type.String({ description: "新地点名称" }),
@@ -1774,7 +1761,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "buy_item", label: "购买",
-    description: "从商店购买物品。LLM 根据市场常识定价，引擎校验价格范围。",
+    description: "购买物品。LLM定价，引擎校验价格范围(economy.json)。",
     parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { buyItem } = await import("./engine/state.ts");
@@ -1785,7 +1772,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "identity_check", label: "身份检定",
-    description: "遇到强检查（如警察、保安）时，进行身份检定（通常使用魅力或隐藏技能）。",
+    description: "身份检定(魅力/隐藏技能)。警察/保安等强检查时调用。",
     parameters: Type.Object({
       difficulty: Type.String({ description: "简单/普通/困难/极难/不可能" }),
       skillLevel: Type.Optional(Type.Number({ description: "玩家相关伪装或欺瞒技能等级" }))
@@ -1830,7 +1817,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "sell_item", label: "出售",
-    description: "出售物品。LLM 根据市场常识定价，引擎校验价格范围。",
+    description: "出售物品。LLM定价，引擎校验价格范围(economy.json)。",
     parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { sellItem } = await import("./engine/state.ts");
@@ -1841,7 +1828,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "monthly_growth", label: "成长",
-    description: "月末发育结算。",
+    description: "月末发育结算。传入diet(普通|节食|高蛋白|丰胸)和exercise(普通|规律|高强度)。",
     parameters: Type.Object({ diet: Type.String(), exercise: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { monthlyGrowth } = await import("./engine/state.ts");
@@ -1852,9 +1839,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "work_job", label: "打工",
-    description:
-      "玩家打工赚钱。jobName 可选：便利店(¥900/h)、送报纸(¥500/h)、家教(¥1500/h)、餐厅(¥1000/h)、发传单(¥850/h)。\n" +
-      "引擎自动推进时间（hours 小时），扣疲劳。GM应确保打工时间和地点合理。",
+    description: "打工赚钱。jobName: 便利店|送报纸|家教|餐厅|发传单。引擎推进时间+扣疲劳。",
     parameters: Type.Object({
       jobName: Type.String({ description: "工作名称：便利店/送报纸/家教/餐厅/发传单" }),
       hours: Type.Number({ description: "工作时长（小时）" }),
@@ -1868,7 +1853,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "complete_travel", label: "完成旅行",
-    description: "当长途旅行的叙事差不多完成时，调用此工具让玩家到达目的地，并扣除旅程对应的时间。",
+    description: "完成旅行叙事：玩家到达目的地+推进时间+清除pendingTravel。",
     parameters: Type.Object({}),
     async execute(_id, _params, _s, _o, _ctx) {
       const { gameState, saveState } = await import("./engine/state.ts");
@@ -1887,10 +1872,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "spawn_item", label: "生成物品",
-    description:
-      "因剧情需要生成一件新物品并放入指定目标背包。必须提供 source（来源）和 reason（原因）。\n" +
-      "引擎强制：物品必须有 name/type/weight/volume，武器必须有 damage。\n" +
-      "禁止用于绕过 buy_item 或 steal_item 的正常获取途径。",
+    description: "剧情生成物品放入背包。须提供source和reason。禁止绕过buy_item/steal_item正常获取。",
     parameters: Type.Object({
       target: Type.String({ description: "接收者：'玩家' 或 NPC 名" }),
       item: Type.Object({
@@ -1965,7 +1947,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "inflict_damage", label: "造成伤害",
-    description: "因环境或剧情对角色造成 HP 伤害。不经过战斗检定。target 为角色名或'玩家'。",
+    description: "环境/剧情HP伤害。不经战斗检定。target: 玩家|NPC名。",
     parameters: Type.Object({
       target: Type.String({ description: "'玩家' 或 NPC 名" }),
       amount: Type.Number({ description: "伤害值" }),
@@ -1997,10 +1979,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "lookup_body", label: "查身体",
-    description:
-      "查询角色的身体详细数据（三围、cup、体型），以及性器官档案（如果 Layer1 启用且有数据）。\n" +
-      "LLM 在需要描写具体身体细节时调用此工具按需获取，避免默认注入浪费 token。\n" +
-      "type 参数：'basic' 只返回身体数据（身高体重三围）；'full' 返回含器官档案的全部数据。",
+    description: "查询角色身体数据(三围/cup/体型)及性器官档案。type: basic|full。按需调用，避免默认注入浪费token。",
     parameters: Type.Object({
       name: Type.String({ description: "角色名" }),
       type: Type.Optional(Type.String({ description: "basic(仅身体数据) / full(含器官档案)，默认 full" })),
@@ -2064,9 +2043,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "lookup_lore", label: "查设定",
-    description:
-      "查询世界观设定资料库（data/lore/）。按关键词搜索，返回匹配的设定条目。\n" +
-      "用于 GM 需要确认某个世界观细节时——如'侍奉部的规则是什么'、'英灵召唤的条件'等。",
+    description: "搜索世界观设定(data/lore/)。按关键词匹配。如'侍奉部规则'、'英灵召唤条件'。",
     parameters: Type.Object({
       keyword: Type.String({ description: "搜索关键词，如'侍奉部'、'魔术协会'、'千叶地理'" }),
     }),
@@ -2103,7 +2080,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "add_memory_tag", label: "记忆标签",
-    description: "将关键剧情点烙印在 NPC 记忆系统中。标签会被注入后续 prompt。",
+    description: "写入NPC记忆标签。注入后续prompt。默认7天过期。",
     parameters: Type.Object({
       target: Type.String({ description: "NPC 名" }),
       tag: Type.String({ description: "标签内容，如'知道玩家是杀手'" }),
@@ -2121,9 +2098,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "open_quest", label: "开启任务",
-    description:
-      "将一个待处理的剧情钩子正式开启为活跃任务。调用后钩子从等待列表移除，任务进入进行中状态。\n" +
-      "只在 GM 确认玩家愿意接受委托/参与事件后才调用。",
+    description: "剧情钩子→活跃任务。仅当玩家明确接受委托后调用。",
     parameters: Type.Object({
       eventId: Type.String({ description: "事件ID，来自 active_hooks 中的 event_id" }),
     }),
@@ -2140,8 +2115,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "advance_quest", label: "推进任务",
-    description:
-      "推进一个活跃任务的剧情节拍。当玩家完成当前步骤后调用。可选 outcomeKey 指定玩家选择的分支。",
+    description: "推进任务节拍。可选outcomeKey指定玩家选择的分支。",
     parameters: Type.Object({
       eventId: Type.String({ description: "任务事件ID" }),
       outcomeKey: Type.Optional(Type.String({ description: "玩家选择的分支key，如'一起指导做曲奇'" })),
@@ -2158,7 +2132,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "abandon_quest", label: "放弃任务",
-    description: "放弃一个活跃任务。玩家主动拒绝或无法继续时调用。",
+    description: "放弃活跃任务。玩家拒绝或无法继续时调用。",
     parameters: Type.Object({
       eventId: Type.String({ description: "要放弃的任务事件ID" }),
     }),
@@ -2175,8 +2149,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "check_phone", label: "查看手机",
-    description:
-      "查看手机未读通知摘要和通讯录。有新消息或未接来电时返回提醒。自动同步好感联系人。",
+    description: "查看手机未读通知+通讯录。自动同步好感联系人。",
     parameters: Type.Object({}),
     async execute(_id, _params, _s, _o, _ctx) {
       const { getPlayerPhoneData, syncContactsFromRelationships, getUnreadSummary } =
@@ -2198,8 +2171,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "send_sms", label: "发送短信",
-    description:
-      "以玩家身份向通讯录中的NPC发送短信。需要该NPC在通讯录中且好感>=40。",
+    description: "向NPC发送短信。需在通讯录中且好感≥40。",
     parameters: Type.Object({
       to: Type.String({ description: "收信NPC名称" }),
       text: Type.String({ description: "短信内容" }),
@@ -2230,7 +2202,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "browse_sns", label: "浏览社交",
-    description: "浏览手机上的社交媒体时间线（mixi或Twitter）。LLM可以用这个了解角色动态。",
+    description: "浏览社交时间线(mixi/Twitter)。了解角色动态。",
     parameters: Type.Object({
       platform: Type.Optional(Type.String({ description: "'mixi' 或 'twitter'，不传则返回全部" })),
     }),
