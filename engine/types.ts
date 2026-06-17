@@ -38,7 +38,7 @@ export type Skills = Record<string, Skill>;
 
 // --- 物品 ---
 export type ItemType = "weapon" | "clothing" | "armor" | "tool" | "consumable";
-export type SlotType = "inner_top" | "inner_bot" | "top" | "bottom" | "legs" | "feet" | "head" | "acc" | "left_hand" | "right_hand" | "back" | "mount";
+export type SlotType = "inner_top" | "inner_bot" | "shirt" | "top" | "bottom" | "legs" | "feet" | "head" | "acc" | "left_hand" | "right_hand" | "back" | "mount";
 export type ItemState = "intact" | "damaged" | "ruined";
 
 export interface ItemEffect {
@@ -79,6 +79,7 @@ export interface Relationship {
   affection: number;    // 0-100
   romance: RomanceStage;
   notes: string;
+  history?: { delta: number; reason: string; date: string }[];  // 好感变化历史
 }
 
 // --- 身体数据 ---
@@ -218,6 +219,16 @@ export interface StaticCharacter {
   base_age?: number;
   gender: string;
   appearance_brief: string;
+  hair_color?: string;   // "黑色" | "茶色" | "橘棕色" | "银色" | ...
+  hair_style?: string;   // "长直" | "波浪卷发" | "短发" | "马尾" | ...
+  eye_color?: string;    // "蓝色" | "紫色" | "湖水蓝" | ...
+  hair_accessories?: string; // "红色蝴蝶结丝带" | "红丝带" | ...
+  appearance_by_age?: Record<string, {
+    hair_color?: string;
+    hair_style?: string;
+    eye_color?: string;
+    hair_accessories?: string;
+  }>;
   body: BodyMeasurements;
   body_by_age?: Record<string, Partial<BodyMeasurements>>;
   attributes?: Attributes;

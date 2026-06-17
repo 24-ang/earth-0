@@ -163,6 +163,8 @@ export default function (pi: ExtensionAPI) {
     gs.turn++;
     if (gs.turn % 4 === 0) refreshWeather();
     const events = await updateNPCSchedules();
+    const { tickSexStates } = await import("./engine/state.ts");
+    await tickSexStates(result.daysAdvanced, mins);
     gs.player.fatigue = Math.min(100, (gs.player.fatigue ?? 0) + Math.round(mins / 12));
     save();
 
@@ -537,6 +539,21 @@ export default function (pi: ExtensionAPI) {
 
     // ── 主菜单：从 phone_apps.json 动态生成 ──
     const phoneMenu: MenuItem[] = [];
+    
+    // --- Add Time and Weather Widget ---
+    const { time, weather } = gameState;
+    const { getTodayCalendar } = await import("./engine/calendar.ts");
+    const todayEvents = getTodayCalendar(gameState.time.game_date, gameState.player.location);
+    const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
+    const dayStr = dayNames[time.day];
+    
+    phoneMenu.push({ label: `📅 ${time.year}年${time.month}月${time.date}日 星期${dayStr} ${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`, detail: "" });
+    phoneMenu.push({ label: `⛅ ${time.season}季 | ${weather.type} (${weather.temp}°C)`, detail: "" });
+    if (todayEvents) {
+      phoneMenu.push({ label: `📌 今日提醒: ${todayEvents}`, detail: "" });
+    }
+    phoneMenu.push({ label: "────────────────────────────────────────", detail: "" });
+
     for (const app of visibleApps) {
       phoneMenu.push({
         label: `${app.icon} ${app.label}`,
@@ -571,12 +588,13 @@ export default function (pi: ExtensionAPI) {
     const invVol = calcInventoryVolume(p.inventory, p.equipment);
 
     const SLOT_NAMES: Record<string, string> = {
-      inner_top: "内衣上",
-      inner_bot: "内衣下",
-      top: "外套上衣",
-      bottom: "下装",
-      legs: "袜子/丝袜",
-      feet: "鞋子",
+      top: "外套大衣",
+      shirt: "内搭衬衫",
+      inner_top: "胸罩/裹胸",
+      bottom: "下装/裙子",
+      inner_bot: "内裤/胖次",
+      legs: "丝袜/连裤袜",
+      feet: "脚部鞋子",
       head: "头部/发饰",
       acc: "配饰/挂件",
       left_hand: "副手/左手",
@@ -588,15 +606,36 @@ export default function (pi: ExtensionAPI) {
       const items: MenuItem[] = [];
       
       // 1. 玩家基本状态
-      items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁`, detail: "" });
-      items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ¥${p.funds}`, detail: "" });
+      const identityStr = p.public_identity ? ` | 🎭 伪装: ${p.public_identity}` : "";
+      items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁${identityStr}`, detail: "" });
+      items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ¥${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`, detail: "" });
       items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""} | 📦 体积: ${invVol}${pocketVol > 0 ? `/${pocketVol}` : ""}L`, detail: "" });
       items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
       const woundStr = p.wounds && p.wounds.length > 0 
         ? p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")
         : "健康";
       items.push({ label: `🩸 伤势: ${woundStr}`, detail: "" });
-      
+
+      // 身体数据
+      if (p.body) {
+        const b = p.body;
+        let bodyStr = `📏 ${b.height_cm}cm ${b.weight_kg}kg ${b.build}`;
+        if (b.cup) bodyStr += ` ${b.cup}cup`;
+        if (b.measurements) bodyStr += ` 三围${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
+        if (b.leg_type) bodyStr += ` ${b.leg_type}腿`;
+        if (b.skin) bodyStr += ` 肤${b.skin.texture}·${b.skin.base_tone}`;
+        items.push({ label: bodyStr, detail: "" });
+      }
+
+      // 声望展示
+      items.push({ label: "── 🌟 声望与派系 ──", detail: "" });
+      const reps = Object.entries(p.reputation || {});
+      if (reps.length > 0) {
+        items.push({ label: `  ${reps.map(([k, v]) => `${k}(${v})`).join(" | ")}`, detail: "" });
+      } else {
+        items.push({ label: `  (无)`, detail: "" });
+      }
+
       // 2. 装备槽位
       items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
       for (const [slotKey, slotName] of Object.entries(SLOT_NAMES)) {
@@ -755,16 +794,56 @@ export default function (pi: ExtensionAPI) {
   // ── Tools ──
   pi.registerTool({
     name: "lookup_character", label: "查角色",
-    description: "查询角色属性、装备、技能、身体数据。",
+    description: "查询角色属性、装备（含flavor描述）、技能、身体数据。描写服装细节前务必调用此工具。",
     parameters: Type.Object({ name: Type.String({ description: "角色名" }) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { allChars } = await import("./engine/router.ts");
-      const { getBodyForAge, getNpcCurrentAge } = await import("./engine/state.ts");
+      const { getBodyForAge, getNpcCurrentAge, gameState } = await import("./engine/state.ts");
+      const itemsCatalog = (await import("./data/items.json", { with: { type: "json" } })).default;
       const c = allChars.find((x: any) => x.name === params.name);
       if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
       const age = getNpcCurrentAge(c.base_age || 16);
       const aged = { ...c, body: getBodyForAge(c, age) };
-      return { content: [{ type: "text", text: JSON.stringify(aged, null, 2) }], details: { character: aged } };
+
+      // 构建装备物品的 flavor 速查表
+      const flavorMap = new Map<string, string>();
+      for (const cat of Object.values(itemsCatalog as any)) {
+        for (const [iname, item] of Object.entries(cat as any)) {
+          if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
+        }
+      }
+
+      // 当前穿着物品及flavor
+      const equipLines: string[] = [];
+      const npc = gameState.npcs?.[params.name];
+      if (npc) {
+        const key = npc.currentOutfit || "school";
+        const outfit = c.outfits?.[key];
+        if (outfit) {
+          const outer: string[] = [];
+          const inner: string[] = [];
+          for (const [slot, itemName] of Object.entries(outfit)) {
+            const name = itemName as string;
+            const flavor = flavorMap.get(name);
+            const line = flavor ? `${name}（${flavor}）` : name;
+            if (slot.startsWith("inner_")) inner.push(line);
+            else outer.push(line);
+          }
+          if (outer.length > 0) equipLines.push(`穿着: ${outer.join("、")}`);
+          if (inner.length > 0) equipLines.push(`内衣: ${inner.join("、")}`);
+        }
+        // 非服装装备（武器等）
+        const nonClothing = Object.entries(npc.equipment)
+          .filter(([slot, item]: [string, any]) => item && !["inner_top", "inner_bot", "top", "bottom", "legs", "feet", "head", "shirt"].includes(slot));
+        for (const [slot, item] of nonClothing) {
+          const it = item as any;
+          const flavor = flavorMap.get(it.name);
+          equipLines.push(`${slot}: ${it.name}${flavor ? `（${flavor}）` : ""}`);
+        }
+      }
+
+      const equipStr = equipLines.length > 0 ? `\n\n[当前装备]\n${equipLines.join("\n")}` : "";
+      return { content: [{ type: "text", text: JSON.stringify(aged, null, 2) + equipStr }], details: { character: aged } };
     },
   });
 
@@ -2079,16 +2158,40 @@ export default function (pi: ExtensionAPI) {
         return "■".repeat(filled) + "□".repeat(5 - filled);
       };
 
+      const nextThreshold = (aff: number): string => {
+        if (aff < 20) return `距「熟人」(20) 还差 ${20 - aff}`;
+        if (aff < 40) return `距「友人」(40) 还差 ${40 - aff}`;
+        if (aff < 70) return `距「信赖」(70) 还差 ${70 - aff}`;
+        if (aff < 90) return `距「至交」(90) 还差 ${90 - aff}`;
+        return `已满 (100)`;
+      };
+
+      const romanceCondition = (rel: any): string => {
+        if (!rel.romance) {
+          if (rel.affection >= 60) return "💕 可触发「暧昧」(好感≥60，需特殊事件)";
+          return `💕 暧昧需好感≥60 (当前${rel.affection})`;
+        }
+        if (rel.romance === "暧昧") return `💕 → 恋人: 需好感≥80 + 告白事件`;
+        if (rel.romance === "恋人") return `💕 → 灵魂伴侣: 需好感≥95 + 深度事件`;
+        return `💕 已达最高`;
+      };
+
       for (const [n, r] of Object.entries(rels)) {
         const rel = r as any;
         lines.push(`👥 ${n}`);
-        let stageStr = `  |-[好感阶段-${rel.stage}]: ${buildBar(rel.affection)} (${rel.affection}/100)`;
-        if (rel.romance) {
-          stageStr += ` | [关系: 💕${rel.romance}]`;
-        }
-        lines.push(stageStr);
-        if (rel.notes) {
-          lines.push(`  |-[评价/便签]: ${rel.notes}`);
+        lines.push(`  |-[好感]: ${buildBar(rel.affection)} (${rel.affection}/100) | ${rel.stage}`);
+        lines.push(`  |-[进阶]: ${nextThreshold(rel.affection)}`);
+        lines.push(`  |-[恋爱]: ${romanceCondition(rel)}`);
+        if (rel.romance) lines.push(`  |-[关系]: 💕${rel.romance}`);
+        if (rel.notes) lines.push(`  |-[备注]: ${rel.notes}`);
+        // 变化历史（最近5条）
+        if (rel.history && rel.history.length > 0) {
+          const recent = rel.history.slice(-5);
+          lines.push(`  |-[最近变动]:`);
+          for (const h of recent.reverse()) {
+            const sign = h.delta >= 0 ? "+" : "";
+            lines.push(`      ${h.date} ${sign}${h.delta}: ${h.reason}`);
+          }
         }
         lines.push("────────────────────────────────────────");
       }
@@ -2118,31 +2221,59 @@ export default function (pi: ExtensionAPI) {
     handler: async (args, ctx) => {
       const name = args.trim();
       if (!name) { ctx.ui.notify("用法: /look <角色名或物品名>", "warning"); return; }
-      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateNPC } = await import("./engine/state.ts");
+      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateNPC, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
       const { allChars } = await import("./engine/router.ts");
       
       const isPlayer = name === gameState.player.name || name === "玩家" || name === "我";
       if (isPlayer) {
         const p = gameState.player;
         const lines = [
-          `${p.name}  ${p.gender}  ${p.age}岁  ${gameState.time.player_stage}`,
-          `位置: ${p.location}  资金: ¥${p.funds}`,
+          `${p.name} | ${p.gender} | ${p.age}岁 | ${gameState.time.player_stage}`,
+          `── 基本 ──`,
+          `位置: ${p.location}  资金: ¥${p.funds}  疲劳: ${p.fatigue ?? 0}/100`,
           `HP: ${p.hp.current}/${p.hp.max}  AC: ${p.ac}`,
         ];
         if (p.body) {
+          lines.push(`── 身体 ──`);
           const b = p.body;
-          let bodyStr = `身体: ${b.height_cm}cm ${b.weight_kg ? b.weight_kg + "kg " : ""}${b.build}`;
-          if (b.cup) bodyStr += ` ${b.cup}cup`;
-          if (b.measurements) bodyStr += ` ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
-          lines.push(bodyStr);
+          lines.push(`身材: ${b.height_cm}cm ${b.weight_kg}kg ${b.build}${b.cup ? " " + b.cup + "cup" : ""}`);
+          if (b.measurements) lines.push(`三围: ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`);
+          if (b.leg_type || b.skin) {
+            let feats = `特征: `;
+            if (b.leg_type) feats += `${b.leg_type}腿 | `;
+            if (b.skin) feats += `肤质:${b.skin.texture} | 肤色:${b.skin.base_tone}`;
+            lines.push(feats.replace(/ \|\s*$/, ""));
+          }
         }
         if (p.attributes) {
+          lines.push(`── 属性 ──`);
           const a = p.attributes;
-          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+          lines.push(`力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+        }
+        if (p.reputation && Object.keys(p.reputation).length > 0) {
+          lines.push(`── 声望 ──`);
+          lines.push(Object.entries(p.reputation).map(([k, v]) => `${k}(${v})`).join(" | "));
         }
         const eq = Object.entries(p.equipment).filter(([_, v]) => v);
         if (eq.length > 0) {
-          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+          lines.push(`── 装备 ──`);
+          const flavorMap = new Map<string, string>();
+          try {
+            const itemsCatalog = (await import("./data/items.json", { with: { type: "json" } })).default;
+            for (const cat of Object.values(itemsCatalog as any)) {
+              for (const [iname, item] of Object.entries(cat as any)) {
+                if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
+              }
+            }
+          } catch (_) {}
+          const SLOT_NAMES: Record<string, string> = {
+            top: "外套", shirt: "内搭", inner_top: "胸罩", bottom: "下装", inner_bot: "内裤",
+            legs: "袜", feet: "鞋", head: "头饰", acc: "配饰", left_hand: "副手", right_hand: "主手", back: "背"
+          };
+          eq.forEach(([s, it]) => {
+            const flavor = flavorMap.get(it!.name);
+            lines.push(`[${SLOT_NAMES[s] || s}] ${flavor ? `${it!.name}（${flavor}）` : it!.name}`);
+          });
         }
         await showPanel(ctx, p.name, lines);
         return;
@@ -2153,31 +2284,97 @@ export default function (pi: ExtensionAPI) {
         const age = getNpcCurrentAge(char.base_age || 16);
         const body = getBodyForAge(char, age);
         const lines = [
-          `${char.name}  ${char.gender === "female" ? "女" : "男"}  ${age}岁 (基础:${char.base_age})`,
-          `作品: ${char.source}`,
-          `外观: ${char.appearance_brief || "无描述"}`
+          `${char.name} | ${char.gender === "female" ? "女" : "男"} | ${age}岁 (基础:${char.base_age})`,
+          `── 外观 ──`
         ];
         
+        const outfitRaw = getNPCOutfitDesc(char.name);
+        const outfitParts = outfitRaw.split("。内: ");
+        lines.push(`穿着: ${outfitParts[0]}`);
+        if (outfitParts[1]) lines.push(`内衣: ${outfitParts[1]}`);
+
+        // 结构化外貌（按年龄分层）
+        const appLook = getAppearanceForAge(char, age);
+        const hairEyeParts: string[] = [];
+        const hairDesc = [appLook.hair_color, appLook.hair_style].filter(Boolean).join("");
+        if (hairDesc) hairEyeParts.push(`💇 ${hairDesc}`);
+        if (appLook.eye_color) hairEyeParts.push(`👁 ${appLook.eye_color}眼睛`);
+        if (appLook.hair_accessories) hairEyeParts.push(`🎀 ${appLook.hair_accessories}`);
+        if (hairEyeParts.length > 0) lines.push(hairEyeParts.join(" | "));
+
         if (body) {
-          let bodyStr = `身体: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
-          if (body.cup) bodyStr += ` ${body.cup}cup`;
-          if (body.measurements) bodyStr += ` ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
-          lines.push(bodyStr);
+          lines.push(`── 身体 ──`);
+          lines.push(`身材: ${body.height_cm}cm ${body.weight_kg}kg ${body.build}`);
+          let meas = `三围: `;
+          if (body.measurements) meas += `${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
+          if (body.cup) meas += ` (${body.cup}cup)`;
+          if (body.body_shape) {
+             const bs = body.body_shape;
+             meas += ` [${bs.chest||""} ${bs.waist||""} ${bs.hips?bs.hips+"臀":""}]`;
+          }
+          if (meas !== `三围: `) lines.push(meas.replace(/\s+/g, ' '));
+          
+          let feats = `特征: `;
+          if (body.leg_type) feats += `${body.leg_type}腿 | `;
+          if (body.skin) feats += `肤质:${body.skin.texture} | 肤色:${body.skin.base_tone}`;
+          if (feats !== `特征: `) lines.push(feats.replace(/ \|\s*$/, ''));
         }
         
         if (char.attributes) {
+          lines.push(`── 属性 ──`);
           const a = char.attributes;
-          lines.push(`属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
+          lines.push(`力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
         }
         
         const npcState = getOrCreateNPC(char.name);
-        const eq = Object.entries(npcState.equipment).filter(([_, v]) => v);
-        if (eq.length > 0) {
-          lines.push(`装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`);
+        
+        lines.push(`── 动态 ──`);
+        lines.push(`位置: ${npcState.currentRoom || "未知"}`);
+        lines.push(`行为: ${npcState.action || "无"}`);
+        lines.push(`日程组: ${npcState.scheduleGroup || char.schedule_group || "无"}`);
+
+        // 与玩家的关系
+        const rel = gameState.player.relationships[char.name];
+        if (rel) {
+          lines.push(`── 关系 ──`);
+          const buildBar = (val: number) => { const f = Math.round(val / 20); return "■".repeat(f) + "□".repeat(5 - f); };
+          let relLine = `好感: ${buildBar(rel.affection)} (${rel.affection}/100) | ${rel.stage}`;
+          if (rel.romance) relLine += ` | 💕${rel.romance}`;
+          lines.push(relLine);
+          if (rel.notes) lines.push(`备注: ${rel.notes}`);
         }
         
-        if (char.anchors?.private) {
-          lines.push(`设定: ${char.anchors.private.slice(0, 120)}`);
+        // 装备 flavor 速查
+        const flavorMap = new Map<string, string>();
+        try {
+          const itemsCatalog = (await import("./data/items.json", { with: { type: "json" } })).default;
+          for (const cat of Object.values(itemsCatalog as any)) {
+            for (const [iname, item] of Object.entries(cat as any)) {
+              if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
+            }
+          }
+        } catch (_) {}
+
+        const clothingSlots = ['top', 'shirt', 'inner_top', 'bottom', 'inner_bot', 'legs', 'feet'];
+        const eq = Object.entries(npcState.equipment).filter(([k, v]) => v && !clothingSlots.includes(k));
+        if (eq.length > 0) {
+          lines.push(`── 携带装备 ──`);
+          const SLOT_NAMES: Record<string, string> = {
+            head: "头部/发饰", acc: "配饰/挂件", left_hand: "副手/左手", right_hand: "主手/右手", back: "背部/背包"
+          };
+          eq.forEach(([s, it]) => {
+            const flavor = flavorMap.get(it!.name);
+            lines.push(`[${SLOT_NAMES[s]||s}] ${flavor ? `${it!.name}（${flavor}）` : it!.name}`);
+          });
+        }
+        
+        if (npcState.inventory && npcState.inventory.length > 0) {
+          lines.push("────────────────────────────────────────");
+          lines.push(`🎒 携带物品:`);
+          const items = npcState.inventory.map((i: any) => i.name);
+          for (let i = 0; i < items.length; i += 3) {
+            lines.push(`  ${items.slice(i, i + 3).join(" | ")}`);
+          }
         }
         await showPanel(ctx, char.name, lines);
         return;
@@ -2246,8 +2443,14 @@ export default function (pi: ExtensionAPI) {
               const a = char.attributes;
               lines.push(`   属性: 力${a.力量} 敏${a.敏捷} 体${a.体质} 智${a.智力} 感${a.感知} 魅${a.魅力}`);
             }
-            if (char.appearance_brief) {
-              lines.push(`   外貌: ${char.appearance_brief}`);
+            if (char.appearance_brief || char.hair_color || char.hair_style || char.eye_color) {
+              const hairDesc = [char.hair_color, char.hair_style].filter(Boolean).join("");
+              const appearanceParts: string[] = [];
+              if (hairDesc) appearanceParts.push(hairDesc);
+              if (char.eye_color) appearanceParts.push(`${char.eye_color}眼睛`);
+              if (char.hair_accessories) appearanceParts.push(char.hair_accessories);
+              const appearanceStr = appearanceParts.length > 0 ? appearanceParts.join("、") : char.appearance_brief;
+              lines.push(`   外貌: ${appearanceStr}`);
             }
             lines.push("────────────────────────────────────────");
           }
@@ -2268,7 +2471,11 @@ export default function (pi: ExtensionAPI) {
       const { gameState, saveState } = await import("./engine/state.ts");
       const newId = args.trim();
       if (!newId) {
-        ctx.ui.notify(`当前公开身份: ${gameState.player.public_identity || "总武高学生"}`, "info");
+        const { getDisguiseIdentity } = await import("./engine/state.ts");
+        const disguise = getDisguiseIdentity(gameState.player);
+        const manual = gameState.player.public_identity || "总武高学生";
+        const info = disguise ? `${manual} | 🎭 装备伪装: ${disguise}` : manual;
+        ctx.ui.notify(`当前公开身份: ${info}`, "info");
         return;
       }
       gameState.player.public_identity = newId;
@@ -2365,7 +2572,27 @@ export default function (pi: ExtensionAPI) {
           lines.push(``);
           lines.push(`胸: ${p.female.breast.cup}cup ${p.female.breast.shape} ${p.female.breast.feel}`);
           lines.push(`秘部: ${p.female.vagina.type} ${p.female.vagina.tightness} ${p.female.vagina.depth_cm}cm`);
+          lines.push(`阴蒂: ${p.female.clitoris}`);
+        } else if (p.male) {
+          lines.push(``);
+          const circum = p.male.penis.circumcised ? "已割" : "未割";
+          lines.push(`阴茎: ${p.male.penis.length_cm}cm × ${p.male.penis.girth_cm}cm ${p.male.penis.shape} ${p.male.penis.head_size}头 ${circum} ${p.male.penis.color}色`);
+          lines.push(`睾丸: ${p.male.testicles.size}`);
         }
+        // 可用体位
+        try {
+          const { getAvailableActions } = await import("./engine/sex.ts");
+          let posDB: any = null;
+          try { posDB = (await import("./data/positions.json", { with: { type: "json" } })).default; } catch (_) {}
+          const avail = getAvailableActions(p, s, posDB);
+          if (avail.actions.length > 0 || avail.positions.length > 0) {
+            lines.push(``);
+            lines.push(`可用动作: ${avail.actions.join("、")}`);
+            if (avail.positions.length > 0) lines.push(`可用体位: ${avail.positions.join("、")}`);
+            if (avail.locked.length > 0) lines.push(`🔒 锁定: ${avail.locked.join("、")}`);
+            if (avail.lockedPositions.length > 0) lines.push(`🔒 体位解锁: ${avail.lockedPositions.join("、")}`);
+          }
+        } catch (_) {}
         if (s.thoughts && s.thoughts.length > 0) {
           lines.push(``);
           lines.push(`心里话:`);
@@ -2410,7 +2637,9 @@ export default function (pi: ExtensionAPI) {
       const room = getRoom(loc);
       const lines: string[] = [];
 
+      const timeOfDayZH: Record<string, string> = { dawn: "拂晓", morning: "上午", noon: "正午", afternoon: "下午", evening: "傍晚", night: "深夜" };
       lines.push(`📍 当前场景: ${loc}`);
+      lines.push(`🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day}`);
       lines.push("────────────────────────────────────────");
 
       if (room) {
@@ -2428,10 +2657,15 @@ export default function (pi: ExtensionAPI) {
         if ((room as any).atmosphere) {
           lines.push(`✨ 氛围感知: ${(room as any).atmosphere}`);
         }
-        
+
         const amb = (room as any).ambient;
         if (amb) {
           lines.push(`🔊 环境渗透: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`);
+        }
+
+        const agingLine = getRoomAgingLine(loc);
+        if (agingLine) {
+          lines.push(`🕸️ 久置痕迹: ${agingLine}`);
         }
         lines.push("────────────────────────────────────────");
 
@@ -2521,6 +2755,247 @@ export default function (pi: ExtensionAPI) {
 
       await showPanel(ctx, "👁️ 场景视觉观察", lines);
     },
+  });
+
+  // ── /train 通勤面板 ──
+  pi.registerCommand("train", {
+    description: "电车通勤：查看当前区域车站，购票乘车",
+    handler: async (_args, ctx) => {
+      const { gameState, saveState, getLocationNav } = await import("./engine/state.ts");
+      const loc = gameState.player.location;
+      const nav = getLocationNav(loc);
+
+      // 加载车站数据
+      let cityMap: any = null;
+      try { cityMap = (await import("./data/city_map.json", { with: { type: "json" } })).default; } catch (_) {}
+
+      // 在 city_map 中搜索当前位置所在区域的车站
+      const findStations = (): { region: string; stationName: string; station: any }[] => {
+        const result: { region: string; stationName: string; station: any }[] = [];
+        if (!cityMap?.regions) return result;
+        for (const [rname, rdata] of Object.entries(cityMap.regions) as any) {
+          // 匹配：导航路径包含该区域名 或 该区域的 landmarks 中有当前位置
+          const inBreadcrumb = nav.breadcrumb.some((b: string) => b.includes(rname) || rname.includes(b));
+          const hasLandmark = (rdata.landmarks || []).some((lm: string) => loc.includes(lm) || lm.includes(loc));
+          if (inBreadcrumb || hasLandmark) {
+            if (rdata.stations) {
+              for (const [sname, sdata] of Object.entries(rdata.stations) as any) {
+                result.push({ region: rname, stationName: sname, station: sdata });
+              }
+            }
+          }
+        }
+        // 没匹配到 → 返回所有车站
+        if (result.length === 0 && cityMap?.regions) {
+          for (const [rname, rdata] of Object.entries(cityMap.regions) as any) {
+            if (rdata.stations) {
+              for (const [sname, sdata] of Object.entries(rdata.stations) as any) {
+                result.push({ region: rname, stationName: sname, station: sdata });
+              }
+            }
+          }
+        }
+        return result;
+      };
+
+      const stations = findStations();
+      if (stations.length === 0) {
+        ctx.ui.notify("附近没有车站。试着移动到城区再乘坐。", "warning");
+        return;
+      }
+
+      // 一级菜单：选择出发站
+      const stationItems: MenuItem[] = stations.map(s => ({
+        label: `🚉 ${s.stationName}`,
+        detail: `${s.region} | ${(s.station.lines || []).join("、")}`,
+        action: async (stationDone) => {
+          // 二级菜单：选择目的地
+          const dests = s.station.time_to || {};
+          const destEntries = Object.entries(dests) as [string, number][];
+          if (destEntries.length === 0) {
+            ctx.ui.notify(`${s.stationName}没有可直达的车站`, "warning");
+            stationDone();
+            return;
+          }
+          const destItems: MenuItem[] = destEntries.map(([dest, mins]) => ({
+            label: `🎫 → ${dest}`,
+            detail: `约${mins}分钟 | ¥${Math.round(mins * 20)}`,
+            action: async (destDone) => {
+              const fare = Math.round(mins * 20);
+              if (gameState.player.funds < fare) {
+                ctx.ui.notify(`资金不足！需要 ¥${fare}，当前 ¥${gameState.player.funds}`, "warning");
+                destDone();
+                return;
+              }
+              gameState.player.funds -= fare;
+              // 推进时间 + 移动
+              gameState.pendingTravel = {
+                from: loc,
+                to: dest,
+                route: `电车 ${s.stationName}→${dest}（${mins}分钟）`,
+                minutes: mins,
+                timeOfDay: gameState.time.time_of_day
+              };
+              saveState();
+              ctx.ui.notify(`🚃 从 ${s.stationName} 出发，前往 ${dest}。¥${fare}`, "info");
+              ctx.chat.addSystemMessage(`玩家乘坐电车从 ${s.stationName} 前往 ${dest}，约${mins}分钟。描述车窗外的风景，到达前调用 complete_travel。`);
+              updateChatHUD(ctx);
+              destDone();
+              stationDone();
+            }
+          }));
+          await showMenu(ctx, `🚉 ${s.stationName} → 目的地`, destItems);
+        }
+      }));
+
+      await showMenu(ctx, "🚃 电车通勤 — 选择出发站", stationItems);
+    },
+  });
+
+  // ── /bag 背包交互面板 ──
+  pi.registerCommand("bag", {
+    description: "背包管理：查看/筛选/使用物品",
+    handler: async (_args, ctx) => {
+      const { gameState, saveState, checkAddVolume } = await import("./engine/state.ts");
+      const p = gameState.player;
+
+      const rerender = (filter: string, sort: string, done: any) => {
+        let items = [...p.inventory];
+        // 过滤
+        if (filter === "weapon") items = items.filter((i: any) => i.type === "weapon");
+        else if (filter === "consumable") items = items.filter((i: any) => i.type === "consumable");
+        else if (filter === "clothing") items = items.filter((i: any) => i.type === "clothing" || i.type === "armor");
+        else if (filter === "equipped") {
+          items = Object.values(p.equipment).filter(Boolean) as any[];
+        }
+        // 排序
+        if (sort === "weight") items.sort((a: any, b: any) => (b.weight || 0) - (a.weight || 0));
+        else if (sort === "name") items.sort((a: any, b: any) => a.name.localeCompare(b.name, "zh"));
+
+        const lines: string[] = [];
+        const volUsed = p.inventory.reduce((s: number, i: any) => s + (i.volume || 0), 0);
+        const volMax = 30; // 默认背包容量
+        lines.push(`🎒 背包 (${p.inventory.length}件 | ${volUsed.toFixed(1)}/${volMax}L) | 资金 ¥${p.funds}`);
+        lines.push(`筛选: ${filter === "all" ? "全部" : filter} | 排序: ${sort === "name" ? "名称" : sort === "weight" ? "重量" : "默认"}`);
+        lines.push("────────────────────────────────────────");
+
+        if (items.length === 0) {
+          lines.push("（空）");
+        } else {
+          const display = items.slice(0, 30); // 最多显示30件
+          display.forEach((item: any, idx: number) => {
+            const tag = item.type ? `[${item.type.slice(0, 2)}]` : "";
+            const wt = item.weight ? `${item.weight}kg` : "";
+            const vol = item.volume ? `${item.volume}L` : "";
+            const state = item.state === "damaged" ? "⚠️" : item.state === "ruined" ? "💀" : "";
+            lines.push(`${idx + 1}. ${tag} ${item.name} ${wt} ${vol} ${state}`);
+            if (item.effects?.length > 0) {
+              const effStr = item.effects.map((e: any) => `${e.type}:${e.value}`).join(" ");
+              lines.push(`   效果: ${effStr}`);
+            }
+          });
+          if (items.length > 30) lines.push(`  ... 还有 ${items.length - 30} 件`);
+        }
+
+        lines.push("────────────────────────────────────────");
+        lines.push("按键: [A]全部 [W]武器 [C]消耗品 [T]服装 [E]已装备 | [N]名称排序 [G]重量排序");
+        lines.push("[U]使用消耗品 [D]丢弃物品 | [Q]退出");
+
+        ctx.ui.custom(
+          (tui: any, _theme: any, _kb: any, doneCb: any) => {
+            return {
+              render(_termW: number): string[] { return lines; },
+              handleInput(d: string) {
+                const key = d.toLowerCase();
+                if (key === "q") { doneCb(); done(); }
+                else if (key === "a") rerender("all", sort, done);
+                else if (key === "w") rerender("weapon", sort, done);
+                else if (key === "c") rerender("consumable", sort, done);
+                else if (key === "t") rerender("clothing", sort, done);
+                else if (key === "e") rerender("equipped", sort, done);
+                else if (key === "n") rerender(filter, "name", done);
+                else if (key === "g") rerender(filter, "weight", done);
+                else if (key === "u") {
+                  // 使用消耗品：列出可用的 consumable 物品
+                  const consumables = p.inventory.filter((i: any) => i.type === "consumable");
+                  if (consumables.length === 0) {
+                    ctx.ui.notify("没有可用的消耗品", "warning");
+                    return;
+                  }
+                  // 简单版：使用第一个消耗品（完整实现应用菜单选择）
+                  const item = consumables[0];
+                  const idx = p.inventory.indexOf(item);
+                  if (idx >= 0) {
+                    let healed = false;
+                    for (const eff of item.effects || []) {
+                      if (eff.type === "heal") {
+                        let amt = typeof eff.value === "string" ? parseInt(eff.value) || 5 : Number(eff.value);
+                        p.hp.current = Math.min(p.hp.max, p.hp.current + amt);
+                        healed = true;
+                      }
+                    }
+                    p.inventory.splice(idx, 1);
+                    saveState();
+                    ctx.ui.notify(`使用了 ${item.name}${healed ? `，HP ${p.hp.current}/${p.hp.max}` : ""}`, "info");
+                    rerender(filter, sort, done);
+                  }
+                }
+                else if (key === "d") {
+                  if (items.length > 0) {
+                    const last = items[items.length - 1];
+                    const idx = p.inventory.indexOf(last);
+                    if (idx >= 0) {
+                      const name = p.inventory[idx].name;
+                      p.inventory.splice(idx, 1);
+                      saveState();
+                      ctx.ui.notify(`丢弃了 ${name}`, "info");
+                      rerender(filter, sort, done);
+                    }
+                  }
+                }
+              },
+              invalidate() {},
+            };
+          },
+          { overlay: true }
+        );
+        done();
+      };
+
+      rerender("all", "name", () => {});
+    },
+  });
+
+  pi.registerCommand("quest", {
+    description: "查看当前正在进行的任务与剧情线",
+    handler: async (_args, ctx) => {
+      const { getActiveQuests } = await import("./engine/timeline.ts");
+      const { gameState } = await import("./engine/state.ts");
+      const activeQuests = getActiveQuests();
+      
+      const items: any[] = [];
+      items.push({ label: `📋 进行中的任务: (${activeQuests.length})`, detail: "" });
+      items.push({ label: "────────────────────────────────────────", detail: "" });
+      
+      if (activeQuests.length > 0) {
+        for (const q of activeQuests) {
+          items.push({ label: `▶ [${q.eventId}] ${q.description || ""}`, detail: "" });
+        }
+      } else {
+        items.push({ label: "  (当前没有正在进行的任务)", detail: "" });
+      }
+      
+      items.push({ label: "────────────────────────────────────────", detail: "" });
+      items.push({ label: `🔗 等待触发的剧情钩子: (${gameState.timeline_events?.length || 0})`, detail: "" });
+      if (gameState.timeline_events && gameState.timeline_events.length > 0) {
+        for (const ev of gameState.timeline_events) {
+          items.push({ label: `  - ${ev.eventId} (优先级: ${ev.priority}, ${ev.type})`, detail: "" });
+        }
+      }
+      
+      const { showMenu } = await import("./engine/router.ts");
+      await showMenu(ctx, `任务与剧情`, items);
+    }
   });
 
   pi.registerCommand("preset", {

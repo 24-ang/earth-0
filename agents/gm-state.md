@@ -5,6 +5,7 @@
 - **时间**：{{game_date}} {{day_of_week}}曜日 {{time_of_day}}
 - **玩家**：{{player_name}}，{{player_age}}岁，{{player_stage}}
 - **位置**：{{player_location}}
+- **通勤**：{{commute_status}}
 - **模式**：{{mode}}
 
 ## 周边动态

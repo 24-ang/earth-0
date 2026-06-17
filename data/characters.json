@@ -5,12 +5,41 @@
     "base_age": 16,
     "gender": "female",
     "appearance_brief": "黑长直、蓝色眼睛、冰美人。两侧红色蝴蝶结丝带。",
+    "hair_color": "黑色",
+    "hair_style": "长直",
+    "eye_color": "蓝色",
+    "hair_accessories": "红色蝴蝶结丝带",
     "outfits": {
-      "school": { "top": "总武高制服", "bottom": "黑白百褶裙", "legs": "黑色过膝袜", "feet": "皮鞋", "inner_top": "白色蕾丝胸罩", "inner_bot": "白色棉内裤" },
-      "pe":     { "top": "白色体操服", "bottom": "深蓝运动短裤", "feet": "运动鞋", "inner_top": "运动内衣", "inner_bot": "白色棉内裤" },
-      "swim":   { "top": "白色连体泳衣", "feet": "拖鞋" },
-      "casual": { "top": "米色针织衫", "bottom": "深蓝A字裙", "feet": "棕色短靴", "inner_top": "淡蓝蕾丝胸罩", "inner_bot": "淡蓝蕾丝内裤" },
-      "sleep":  { "top": "白色棉质睡裙" }
+      "school": {
+        "top": "总武高制服外套",
+        "bottom": "黑白百褶裙",
+        "legs": "黑色过膝袜",
+        "feet": "皮鞋",
+        "inner_top": "白色蕾丝胸罩",
+        "inner_bot": "白色棉内裤",
+        "shirt": "长袖衬衫"
+      },
+      "pe": {
+        "bottom": "深蓝运动短裤",
+        "feet": "运动鞋",
+        "inner_top": "运动内衣",
+        "inner_bot": "白色棉内裤",
+        "shirt": "白色体操服"
+      },
+      "swim": {
+        "feet": "拖鞋",
+        "shirt": "白色连体泳衣"
+      },
+      "casual": {
+        "bottom": "深蓝A字裙",
+        "feet": "棕色短靴",
+        "inner_top": "淡蓝蕾丝胸罩",
+        "inner_bot": "淡蓝蕾丝内裤",
+        "shirt": "米色针织衫"
+      },
+      "sleep": {
+        "shirt": "白色棉质睡裙"
+      }
     },
     "body": {
       "height_cm": 164,
@@ -266,7 +295,17 @@
     "schedule_overrides": {
       "weekday_afternoon": "侍奉部"
     },
-    "funds": 30000
+    "funds": 30000,
+    "appearance_by_age": {
+      "6": {
+        "hair_style": "短发",
+        "hair_accessories": ""
+      },
+      "9": {
+        "hair_style": "中长发",
+        "hair_accessories": ""
+      }
+    }
   },
   {
     "name": "由比滨结衣",
@@ -274,12 +313,42 @@
     "base_age": 16,
     "gender": "female",
     "appearance_brief": "茶色波浪卷发、团子头、开朗笑容。",
+    "hair_color": "茶色",
+    "hair_style": "波浪卷发、团子头",
     "outfits": {
-      "school": { "top": "总武高制服", "bottom": "黑白百褶裙", "legs": "黑色过膝袜", "feet": "皮鞋", "inner_top": "粉色蕾丝胸罩", "inner_bot": "粉色条纹内裤", "acc": "彩色发圈" },
-      "pe":     { "top": "白色体操服", "bottom": "深蓝运动短裤", "feet": "运动鞋", "inner_top": "粉色运动内衣", "inner_bot": "粉色棉内裤" },
-      "swim":   { "top": "粉色荷叶边比基尼", "bottom": "粉色比基尼下装", "feet": "拖鞋" },
-      "casual": { "top": "粉色针织开衫", "bottom": "白色短裙", "feet": "白色帆布鞋", "inner_top": "淡粉蕾丝胸罩", "inner_bot": "粉色蕾丝内裤", "acc": "蝴蝶结发卡" },
-      "sleep":  { "top": "粉色吊带睡裙" }
+      "school": {
+        "top": "总武高制服外套",
+        "bottom": "黑白百褶裙",
+        "legs": "黑色过膝袜",
+        "feet": "皮鞋",
+        "inner_top": "粉色蕾丝胸罩",
+        "inner_bot": "粉色条纹内裤",
+        "acc": "彩色发圈",
+        "shirt": "长袖衬衫"
+      },
+      "pe": {
+        "bottom": "深蓝运动短裤",
+        "feet": "运动鞋",
+        "inner_top": "粉色运动内衣",
+        "inner_bot": "粉色棉内裤",
+        "shirt": "白色体操服"
+      },
+      "swim": {
+        "bottom": "粉色比基尼下装",
+        "feet": "拖鞋",
+        "shirt": "粉色荷叶边比基尼"
+      },
+      "casual": {
+        "bottom": "白色短裙",
+        "feet": "白色帆布鞋",
+        "inner_top": "淡粉蕾丝胸罩",
+        "inner_bot": "粉色蕾丝内裤",
+        "acc": "蝴蝶结发卡",
+        "shirt": "粉色针织开衫"
+      },
+      "sleep": {
+        "shirt": "粉色吊带睡裙"
+      }
     },
     "body": {
       "height_cm": 158,
@@ -433,6 +502,8 @@
     "base_age": 16,
     "gender": "male",
     "appearance_brief": "死鱼眼、不修边幅的黑发。",
+    "hair_color": "黑色",
+    "hair_style": "不修边幅",
     "body": {
       "height_cm": 172,
       "weight_kg": 60,
@@ -542,6 +613,8 @@
     "base_age": 16,
     "gender": "female",
     "appearance_brief": "金发辣妹系、开朗外向、热爱cosplay。",
+    "hair_color": "金色",
+    "hair_style": "辣妹系",
     "body": {
       "height_cm": 167,
       "weight_kg": 54,
@@ -688,6 +761,9 @@
     "base_age": 26,
     "gender": "female",
     "appearance_brief": "高挑的邻家太太，墨色长发，湖水蓝眼睛，左眼角下有泪痣。平面模特兼主妇。",
+    "hair_color": "墨色",
+    "hair_style": "长发",
+    "eye_color": "湖水蓝",
     "body": {
       "height_cm": 173,
       "weight_kg": 58,
@@ -882,7 +958,15 @@
     },
     "grid_pos": null,
     "schedule_group": "自由人",
-    "funds": 18000
+    "funds": 18000,
+    "appearance_by_age": {
+      "8": {
+        "hair_style": "短发"
+      },
+      "12": {
+        "hair_style": "中长发"
+      }
+    }
   },
   {
     "name": "比企谷小町",
@@ -890,6 +974,7 @@
     "base_age": 15,
     "gender": "female",
     "appearance_brief": "和八幡相似的黑发，笑容明亮。比哥哥会来事。",
+    "hair_color": "黑色",
     "body": {
       "height_cm": 110,
       "weight_kg": 18,
@@ -965,6 +1050,8 @@
     "base_age": 16,
     "gender": "male",
     "appearance_brief": "银色短发，面容精致到常被误认成女生。网球部。",
+    "hair_color": "银色",
+    "hair_style": "短发",
     "body": {
       "height_cm": 115,
       "weight_kg": 20,
@@ -1040,6 +1127,8 @@
     "base_age": 17,
     "gender": "female",
     "appearance_brief": "栗色及腰长发，发尾微卷。知性成熟，身材丰满。游泳部。",
+    "hair_color": "栗色",
+    "hair_style": "及腰长发、发尾微卷",
     "body": {
       "height_cm": 166,
       "weight_kg": 54,
@@ -1210,7 +1299,15 @@
       "private": "如月家长女。栗色及腰长发，发尾微卷。学校游泳部。隐藏姐弟关系——全校只有闺蜜北条彩香和教导主任佐佐木知道她和佑/玩家的真实关系。父亲翔太是投行高管常不在家，母亲绫乃是国际空姐也常飞。家里常常只有姐弟三人。真绫的房间在二楼走廊尽头，衣柜里堆满精致衣裙，梳妆台上摆满化妆品"
     },
     "sex_profile": "如月真绫",
-    "funds": 4000
+    "funds": 4000,
+    "appearance_by_age": {
+      "7": {
+        "hair_style": "短发"
+      },
+      "12": {
+        "hair_style": "中长发"
+      }
+    }
   },
   {
     "name": "如月佑",
@@ -1293,6 +1390,8 @@
     "base_age": 39,
     "gender": "male",
     "appearance_brief": "高大挺拔，常年健身，深棕色短发。成熟稳重。",
+    "hair_color": "深棕色",
+    "hair_style": "短发",
     "body": {
       "height_cm": 182,
       "weight_kg": 78,
@@ -1338,6 +1437,8 @@
     "base_age": 33,
     "gender": "female",
     "appearance_brief": "乌黑长发盘成发髻，杏眼柳眉，鹅蛋脸。身材丰满匀称，比实际年龄年轻许多。",
+    "hair_color": "乌黑",
+    "hair_style": "长发盘髻",
     "body": {
       "height_cm": 165,
       "weight_kg": 52,
@@ -1394,6 +1495,8 @@
     "base_age": 36,
     "gender": "female",
     "appearance_brief": "黑色长发盘髻，眉眼妩媚。和雪乃外表相似但气质更成熟强势。保养极好，看起来像三十出头。偏爱素雅和服。",
+    "hair_color": "黑色",
+    "hair_style": "长发盘髻",
     "body": {
       "height_cm": 162,
       "weight_kg": 50,
@@ -1501,6 +1604,8 @@
     "base_age": 19,
     "gender": "female",
     "appearance_brief": "和雪乃相似的完美超人。黑长发，阳光笑容。姿容端丽，在雪乃以上。",
+    "hair_color": "黑色",
+    "hair_style": "长发",
     "body": {
       "height_cm": 166,
       "weight_kg": 50,
@@ -1643,7 +1748,15 @@
     "anchors": {
       "private": "雪乃的姐姐，比雪乃大2岁。总武高毕业，目前大学生。能力比雪乃更强，表面阳光开朗，实则腹黑。长期戴着完美的社交面具。认真时眼神相当恐怖。对没兴趣的人不干涉，喜欢的东西死命玩弄，讨厌的彻底击溃。叫平冢静「小静」。和雪乃关系复杂——雪乃一直想超越她但没成功过。阳乃曾说雪乃「讨厌我却不想被我讨厌」。"
     },
-    "funds": 50000
+    "funds": 50000,
+    "appearance_by_age": {
+      "8": {
+        "hair_style": "短发"
+      },
+      "12": {
+        "hair_style": "中长发"
+      }
+    }
   },
   {
     "name": "雪之下大志",
@@ -1702,6 +1815,8 @@
     "base_age": 38,
     "gender": "female",
     "appearance_brief": "橘棕色中长发、常梳马尾、中分刘海。175cm 美貌御姐，保养得像不到三十岁。",
+    "hair_color": "橘棕色",
+    "hair_style": "中长发、马尾、中分刘海",
     "body": {
       "height_cm": 172,
       "weight_kg": 56,
@@ -1808,6 +1923,9 @@
     "base_age": 20,
     "gender": "female",
     "appearance_brief": "黑色长发常扎高马尾系红丝带。面容秀丽有些英气，喜欢黑红色衣服。",
+    "hair_color": "黑色",
+    "hair_style": "长发、高马尾",
+    "hair_accessories": "红丝带",
     "body": {
       "height_cm": 168,
       "weight_kg": 52,
@@ -1925,7 +2043,12 @@
     "anchors": {
       "private": "橘家长女，双胞胎姐姐。强势主动，对陌生人有排斥感。嘴上逞强不愿服输，内心对某些事其实胆怯。在学校成绩优异，不喜欢身边轻浮的男性所以长期单身。后来对住进家里的佑产生了复杂的感情。"
     },
-    "funds": 800
+    "funds": 800,
+    "appearance_by_age": {
+      "10": {
+        "hair_accessories": ""
+      }
+    }
   },
   {
     "name": "橘小春",
@@ -1933,6 +2056,8 @@
     "base_age": 20,
     "gender": "female",
     "appearance_brief": "亮橘色长卷发，温柔面孔有点天然呆。喜欢白色系裙子。",
+    "hair_color": "亮橘色",
+    "hair_style": "长卷发",
     "body": {
       "height_cm": 168,
       "weight_kg": 54,
@@ -2068,7 +2193,12 @@
     "anchors": {
       "private": "橘家次女，双胞胎妹妹。天然呆，对人和善没什么戒心。稍微被夸就开心。被姐姐在学校保护得很好，没有恋爱经验。发育极早——小学高年级就开始显现远超同龄人的身材。对住进家里的佑抱有好感，后因好奇逐渐陷入。"
     },
-    "funds": 800
+    "funds": 800,
+    "appearance_by_age": {
+      "10": {
+        "hair_style": "中长发"
+      }
+    }
   },
   {
     "name": "樋口円香",
@@ -2076,6 +2206,9 @@
     "base_age": 16,
     "gender": "female",
     "appearance_brief": "茶色齐颈短发（河童头），紫色眼睛。左眼下泪痣。冷静沉着的美人。",
+    "hair_color": "茶色",
+    "hair_style": "齐颈短发",
+    "eye_color": "紫色",
     "body": {
       "height_cm": 159,
       "weight_kg": 47,
@@ -2214,6 +2347,9 @@
     "base_age": 16,
     "gender": "female",
     "appearance_brief": "褐色短发带蓝色挑染，有呆毛。蓝色眼睛。中性气质的美少女。",
+    "hair_color": "褐色",
+    "hair_style": "短发、蓝色挑染、呆毛",
+    "eye_color": "蓝色",
     "body": {
       "height_cm": 160,
       "weight_kg": 47,
@@ -2343,7 +2479,16 @@
     "anchors": {
       "private": "悠闲自在的少女。不太在意他人眼光，随性而为却总能吸引视线。说话简洁到有时让人困惑——习惯先「嗯」一声再开口。天然呆，会忘记带钱包。和樋口円香是好朋友，从小一起长大。与母亲同住。小时候常被误认成男孩子。"
     },
-    "funds": 1500
+    "funds": 1500,
+    "appearance_by_age": {
+      "6": {
+        "hair_style": "短发",
+        "hair_accessories": ""
+      },
+      "10": {
+        "hair_style": "短发"
+      }
+    }
   },
   {
     "name": "平冢静",
@@ -2351,6 +2496,8 @@
     "base_age": 29,
     "gender": "female",
     "appearance_brief": "黑色长发，常穿白大褂和西装，身材丰满，透露着成熟大人的魅力与疲惫。",
+    "hair_color": "黑色",
+    "hair_style": "长发",
     "body": {
       "height_cm": 168,
       "weight_kg": 54,
@@ -2503,6 +2650,14 @@
         "activity": "喝啤酒、看漫画"
       }
     ],
-    "funds": 80000
+    "funds": 80000,
+    "appearance_by_age": {
+      "6": {
+        "hair_style": "短发"
+      },
+      "12": {
+        "hair_style": "中长发"
+      }
+    }
   }
 ]
