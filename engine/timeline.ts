@@ -57,17 +57,29 @@ export function getCalendarEvents(date: string, location: string): CalendarEntry
   });
 }
 
-/** 加载所有 timeline 文件 */
+/** 递归加载所有 timeline 文件（支持子目录分片） */
 function loadAllTimelines(): TimelineEvent[] {
   const events: TimelineEvent[] = [];
   if (!fs.existsSync(TIMELINES_DIR)) return events;
-  for (const f of fs.readdirSync(TIMELINES_DIR)) {
-    if (!f.endsWith(".json")) continue;
-    try {
-      const data = JSON.parse(fs.readFileSync(path.join(TIMELINES_DIR, f), "utf-8"));
-      if (Array.isArray(data)) events.push(...data);
-    } catch (_) {}
+
+  function scanDir(dir: string) {
+    for (const f of fs.readdirSync(dir)) {
+      const full = path.join(dir, f);
+      // 跳过禁用目录和非JSON文件
+      if (f.startsWith("_")) continue;
+      if (fs.statSync(full).isDirectory()) {
+        scanDir(full);
+      } else if (f.endsWith(".json")) {
+        try {
+          const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+          // 单条 TimelineEvent 或数组都支持
+          if (Array.isArray(data)) events.push(...data);
+          else if (data.id) events.push(data);
+        } catch (_) {}
+      }
+    }
   }
+  scanDir(TIMELINES_DIR);
   return events;
 }
 

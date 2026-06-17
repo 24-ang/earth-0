@@ -2063,6 +2063,45 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
+    name: "lookup_lore", label: "查设定",
+    description:
+      "查询世界观设定资料库（data/lore/）。按关键词搜索，返回匹配的设定条目。\n" +
+      "用于 GM 需要确认某个世界观细节时——如'侍奉部的规则是什么'、'英灵召唤的条件'等。",
+    parameters: Type.Object({
+      keyword: Type.String({ description: "搜索关键词，如'侍奉部'、'魔术协会'、'千叶地理'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const fs = await import("node:fs");
+      const path = await import("node:path");
+      const LORE_DIR = path.resolve(process.cwd(), "data", "lore");
+      const kw = params.keyword.toLowerCase();
+      const results: { title: string; text: string }[] = [];
+
+      if (fs.existsSync(LORE_DIR)) {
+        for (const f of fs.readdirSync(LORE_DIR)) {
+          if (!f.endsWith(".json")) continue;
+          try {
+            const data = JSON.parse(fs.readFileSync(path.join(LORE_DIR, f), "utf-8"));
+            for (const [title, entry] of Object.entries(data) as any) {
+              const etags = (entry.tags || []).map((t: string) => t.toLowerCase());
+              const etext = (entry.text || "").toLowerCase();
+              if (title.toLowerCase().includes(kw) || etags.some((t: string) => t.includes(kw)) || etext.includes(kw)) {
+                results.push({ title, text: entry.text?.slice(0, 500) || "" });
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (results.length === 0) {
+        return { content: [{ type: "text", text: `未找到与「${params.keyword}」相关的设定资料。` }], details: {} };
+      }
+      const output = results.map(r => `## ${r.title}\n${r.text}`).join("\n\n---\n\n");
+      return { content: [{ type: "text", text: output }], details: { count: results.length } };
+    },
+  });
+
+  pi.registerTool({
     name: "add_memory_tag", label: "记忆标签",
     description: "将关键剧情点烙印在 NPC 记忆系统中。标签会被注入后续 prompt。",
     parameters: Type.Object({

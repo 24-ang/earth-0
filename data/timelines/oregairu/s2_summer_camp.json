@@ -1,0 +1,45 @@
+{
+  "id": "summer_camp",
+  "title": "千叶村合宿",
+  "source": "春物",
+  "trigger": {
+    "min_day": 25,
+    "flags": { "cookie_complete": true, "novel_complete": true },
+    "time_of_day": ["morning"]
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "平冢静",
+    "hook_text": "平冢静在班会上宣布：「下周去千叶村合宿。侍奉部全员参加。」她叼着烟，用拳头在你桌上敲了敲。「别想着逃。这是命令。」班上响起一片哀嚎和零星的欢呼。",
+    "urgency": "high"
+  },
+  "beats": [
+    {
+      "id": "accept",
+      "label": "参加合宿",
+      "prompt": "千叶村的合宿开始了。白天是林间学习和户外活动，晚上是自由时间。平冢静安排了侍奉部帮忙辅导其他学生的功课。到了深夜，几个女生在温泉里的话题传到了男生这边……",
+      "outcomes": [
+        { "pick": "认真辅导功课", "effects": { "affection": { "雪之下雪乃": 10, "由比滨结衣": 10 }, "flags": { "camp_helped": true } }, "next_beat": "bonfire" },
+        { "pick": "偷懒去探险", "effects": { "flags": { "camp_sneaked": true } }, "next_beat": "bonfire" }
+      ]
+    },
+    {
+      "id": "bonfire",
+      "label": "篝火晚会",
+      "prompt": "合宿的最后一晚，篝火晚会上大家围坐在一起。侍奉部的几个人坐在一起，火光映在每个人脸上。这大概是夏天结束前最后一个重要的夜晚了。",
+      "effects": { "flags": { "camp_complete": true } }
+    },
+    {
+      "id": "ignore",
+      "label": "逃掉合宿",
+      "prompt": "你找了个借口没去。后来听说合宿期间发生了不少事，但你没有亲眼看到。开学后雪乃说起合宿时语气明显冷淡。",
+      "effects": { "affection": { "雪之下雪乃": -10 }, "flags": { "camp_skipped": true } },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "合宿的大巴已经开走了。操场上只剩下几个没去的学生在闲逛。今年的夏天，有些事情你错过了。",
+    "effects": { "flags": { "camp_missed": true } }
+  }
+}
