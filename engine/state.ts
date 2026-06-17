@@ -189,6 +189,12 @@ export function resetState(): void {
   if (fs.existsSync(roomsDeltaPath)) {
     try { fs.unlinkSync(roomsDeltaPath); } catch (_) {}
   }
+  // 删除 locations_delta.json 并重置内存
+  LOCATIONS_DELTA = {};
+  const locDeltaPath = path.join(STATE_DIR, "locations_delta.json");
+  if (fs.existsSync(locDeltaPath)) {
+    try { fs.unlinkSync(locDeltaPath); } catch (_) {}
+  }
   saveState();
 }
 
@@ -205,6 +211,29 @@ export function getBodyForAge(char: StaticCharacter | any, targetAge: number): B
     return (char.body_by_age[String(best)] || char.body) as BodyMeasurements;
   }
   return char.body as BodyMeasurements;
+}
+
+/** 按年龄取外貌：仅发育期应用 appearance_by_age，达到覆盖最大键后回退 base */
+export function getAppearanceForAge(char: StaticCharacter | any, targetAge: number): {
+  hair_color?: string; hair_style?: string; eye_color?: string; hair_accessories?: string;
+} {
+  const base = {
+    hair_color: char.hair_color,
+    hair_style: char.hair_style,
+    eye_color: char.eye_color,
+    hair_accessories: char.hair_accessories,
+  };
+  if (!char.appearance_by_age) return base;
+  const keys = Object.keys(char.appearance_by_age).map(Number).sort((a, b) => a - b);
+  // 已达到覆盖最大年龄 → 直接用 base
+  if (targetAge >= keys[keys.length - 1]) return base;
+  // 发育期 → 找 ≤ targetAge 的最大键
+  let best = keys[0];
+  for (const k of keys) {
+    if (k <= targetAge) best = k;
+    else break;
+  }
+  return { ...base, ...char.appearance_by_age[String(best)] };
 }
 
 /** 计算 NPC 当前年龄（base_age + 游戏时间流逝） */
@@ -241,7 +270,7 @@ export function getPlayerStatusNarrative(p: PlayerState): string {
 // --- 称号系统（引擎自动授予，只加不删） ---
 export function checkAndGrantTitles(): void {
   const p = gameState.player;
-  if (!p.titles) p.titles = [];
+  p.titles = []; // 动态触发：每次重置，只保留当前仍符合条件的称号
   const grant = (title: string) => { if (!p.titles.includes(title)) p.titles.push(title); };
 
   for (const rule of titleRules) {
@@ -255,7 +284,7 @@ export function checkAndGrantTitles(): void {
     } else if (cond.type === "reputation_max") {
       match = (p.reputation[cond.group] ?? 0) <= cond.max;
     } else if (cond.type === "attribute") {
-      match = (p.attributes[cond.attr] ?? 0) >= cond.min;
+      match = ((p.attributes as any)[cond.attr] ?? 0) >= cond.min;
     } else if (cond.type === "funds") {
       match = p.funds >= cond.min;
     } else if (cond.type === "skill") {
@@ -274,6 +303,78 @@ export function getDisguiseIdentity(player: PlayerState): string | null {
     }
   }
   return null;
+}
+
+// ── 声誉 → 自然语言 ──
+const REPUTATION_TIERS: [number, string][] = [
+  [5, "人尽皆知——走在路上人人都认识你"],
+  [4, "声望很高，常有人侧目或低声议论"],
+  [3, "声望不错"],
+  [2, "有些正面印象"],
+  [1, "偶尔有人对你有好感"],
+  [-3, "名声很差——走到哪里都有人警惕"],
+  [-2, "名声不太好"],
+  [-1, "有些负面传闻"],
+];
+
+const GROUP_LABELS: Record<string, string> = {
+  "学生": "在学生中",
+  "教师": "在老师中",
+  "不良": "在不良圈子里",
+  "路人": "在附近居民中",
+  "社会人": "在职场人士中",
+};
+
+/** 从 public_identity 字符串推断相关的声望组。未知身份 → 空数组（新人效应）。 */
+function identityToReputationGroups(identity: string | undefined): string[] {
+  if (!identity) return ["学生", "教师"]; // 默认：总武高学生
+  if (identity.includes("学生") || identity.includes("校")) return ["学生", "教师"];
+  if (identity.includes("不良")) return ["不良", "学生"];
+  if (identity.includes("教师") || identity.includes("老师")) return ["教师", "学生"];
+  if (identity.includes("社会人") || identity.includes("职场")) return ["社会人", "路人"];
+  return []; // 转校生 / 陌生人 / 无法推断 → 新人，无声望
+}
+
+function reputationValueToNarrative(value: number): string | null {
+  if (value === 0) return null;
+  for (const [threshold, text] of REPUTATION_TIERS) {
+    if (value >= threshold && threshold > 0) return text;
+    if (value <= threshold && threshold < 0) return text;
+  }
+  return null;
+}
+
+/** 将玩家的多维声望转为 LLM 可引用的自然语言。根据当前身份过滤可见组。 */
+export function getReputationNarrative(): string {
+  const p = gameState.player;
+  const rep = p.reputation;
+  if (!rep || Object.keys(rep).length === 0) return "";
+
+  // disguise 模式 → 伪装压力叙事，不暴露声望
+  const disguise = getDisguiseIdentity(p);
+  if (disguise) {
+    return `你正伪装成${disguise}。每一个眼神交汇、每一次盘问都可能戳穿这层假面——身份检定的骰子将决定一切。`;
+  }
+
+  const groups = identityToReputationGroups(p.public_identity);
+  if (groups.length === 0) return ""; // 新人，没人在意你
+
+  const parts: string[] = [];
+  for (const g of groups) {
+    const v = rep[g];
+    if (v === undefined || v === 0) continue;
+    const label = GROUP_LABELS[g] || g;
+    const narrative = reputationValueToNarrative(v);
+    if (narrative) parts.push(`${label}${narrative}`);
+  }
+
+  if (parts.length === 0) {
+    // 有声望组但值都是 0 → 给一句中性的
+    const label = GROUP_LABELS[groups[0]] || groups[0];
+    return `${label}你是个普通面孔，没人特别注意你。`;
+  }
+
+  return parts.join("。");
 }
 
 export async function buildStatePrompt(): Promise<string> {
@@ -355,11 +456,14 @@ export async function buildStatePrompt(): Promise<string> {
   // 附加空间上下文
   const gridCtx = getGridContext();
   if (gridCtx) tpl += `\n${gridCtx}`;
-  // 周边地点 — LLM 知道附近有什么，不会乱编距离
-  const nav = getLocationNav(p.location);
-  if (nav.nearby.length > 0) {
-    const nearbyStr = nav.nearby.map(n => `${n.name}(约${n.minutes}分钟)`).join("、");
-    tpl += `\n[周边地点] ${nearbyStr}`;
+  // 首次进入房间 → 注入 atmosphere（仅一次，不重复）
+  gameState.roomTimestamps ??= {};
+  const roomKey = getRoomKey(p.location) || p.location;
+  if (!gameState.roomTimestamps[roomKey]) {
+    const room = ROOMS[p.location];
+    if (room && (room as any).atmosphere) {
+      tpl += `\n[环境] ${(room as any).atmosphere}`;
+    }
   }
   // 房间时间戳脏污 — 低成本氛围注入
   const agingLine = getRoomAgingLine(p.location);
@@ -420,26 +524,33 @@ export async function buildStatePrompt(): Promise<string> {
     const curAgeBody = getNpcCurrentAge(src.base_age || 16);
     const body = getBodyForAge(src, curAgeBody);
     if (body) {
-      let bodyStr = `${body.height_cm}cm ${body.build}`;
+      let bodyStr = `${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
       if (body.cup) bodyStr += ` ${body.cup}cup`;
       if (body.measurements) bodyStr += ` 三围${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
-      bodyStr += ` ${body.skin?.base_tone || ""}${body.body_shape?.chest ? " "+body.body_shape.chest : ""}`;
-      tpl += `\n[${nname}·身体] ${bodyStr}`;
+      if (body.body_shape) {
+         const bs = body.body_shape;
+         bodyStr += ` 提醒:[${bs.chest||""} ${bs.waist||""} ${bs.hips?bs.hips+"臀":""}]`;
+      }
+      if (body.leg_type) bodyStr += ` ${body.leg_type}腿`;
+      if (body.skin) {
+         bodyStr += ` 肤质:${body.skin.texture} 肤色:${body.skin.base_tone}`;
+      }
+      tpl += `\n[${nname}·身体] ${bodyStr.replace(/\s+/g, ' ')}`;
     }
-    // 服装细节：场景服装卡 + 原始 appearance_brief 作为背景
+    // 服装细节 + 结构化外貌（按年龄分层）
     const outfitDesc = getNPCOutfitDesc(nname);
-    const brief = src.appearance_brief ? `（${src.appearance_brief}）` : "";
-    tpl += `\n[${nname}·外观] ${outfitDesc}${brief}`;
+    tpl += `\n[${nname}·外观] ${outfitDesc}`;
+    const app = getAppearanceForAge(src, curAgeBody);
+    const appParts: string[] = [];
+    const hairDesc = [app.hair_color, app.hair_style].filter(Boolean).join("");
+    if (hairDesc) appParts.push(hairDesc);
+    if (app.eye_color) appParts.push(`${app.eye_color}眼睛`);
+    if (app.hair_accessories) appParts.push(app.hair_accessories);
+    if (appParts.length > 0) tpl += `\n[${nname}·外貌] ${appParts.join("、")}`;
   }
-  // 附加声望
-  const rep = gameState.player.reputation;
-  if (Object.keys(rep).length > 0) {
-    const repStr = Object.entries(rep).map(([k,v]) => {
-      const bonus = calcReputationBonus(k);
-      return bonus ? `${k}:${v}(+${bonus})` : `${k}:${v}`;
-    }).join(" ");
-    tpl += `\n[声誉] ${repStr}`;
-  }
+  // 附加声望 — 自然语言叙事，按当前身份过滤
+  const repNarrative = getReputationNarrative();
+  if (repNarrative) tpl += `\n[声誉] ${repNarrative}`;
   // 附加关系（室内 NPC 的玩家关系，LLM 需要知道才能正确叙事）
   const rels = gameState.player.relationships;
   for (const [nname, rel] of Object.entries(rels)) {
@@ -806,11 +917,16 @@ export function growAttribute(attrs: Record<string, number>, key: AttrKey, delta
 // --- 关系 ---
 export function updateRelation(rels: Record<string, Relationship>, name: string, delta: number, note?: string): Record<string, Relationship> {
   if (!rels[name]) {
-    rels[name] = { stage: "陌生", affection: 0, romance: null, notes: "" };
+    rels[name] = { stage: "陌生", affection: 0, romance: null, notes: "", history: [] };
   }
   rels[name].affection = Math.max(0, Math.min(100, rels[name].affection + delta));
   rels[name].stage = affectionToStage(rels[name].affection);
   if (note) rels[name].notes = note;
+  // 记录历史
+  rels[name].history ??= [];
+  rels[name].history!.push({ delta, reason: note || "未记录原因", date: gameState.time.game_date });
+  // 只保留最近20条
+  if (rels[name].history!.length > 20) rels[name].history = rels[name].history!.slice(-20);
   return rels;
 }
 
@@ -886,11 +1002,17 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
 /** 获取 NPC 当前 outfit 的外观描述。已从装备槽移除的物品不显示 */
 export function getNPCOutfitDesc(npcName: string): string {
   const src = (characters as any[]).find((c: any) => c.name === npcName);
-  if (!src?.outfits) return src?.appearance_brief || "";
+  if (!src?.outfits) {
+    const hairDesc = [src?.hair_color, src?.hair_style].filter(Boolean).join("");
+    return hairDesc || src?.appearance_brief || "";
+  }
   const npc = gameState.npcs[npcName];
   const key = npc?.currentOutfit || "school";
   const outfit = src.outfits[key];
-  if (!outfit) return src.appearance_brief || "";
+  if (!outfit) {
+    const hairDesc = [src?.hair_color, src?.hair_style].filter(Boolean).join("");
+    return hairDesc || src.appearance_brief || "";
+  }
   // 分层：内层 vs 外层；跳过已被移除的装备
   const inner: string[] = [];
   const outer: string[] = [];
@@ -916,6 +1038,44 @@ export async function getOrCreateSexState(npcName: string): Promise<SexState | n
     gameState.sexStates[npcName] = createSexState(npcName, profile);
   }
   return gameState.sexStates[npcName];
+}
+
+/** 时间驱动：推进所有 NPC SexState（欲望累积 + 周期推进 + 自主行为） */
+export async function tickSexStates(daysAdvanced: number, minutesPassed: number): Promise<void> {
+  if (!gameState.sexStates) return;
+  const { getCyclePhase, calcDesire, masturbate } = await import("./sex.ts");
+
+  for (const [name, ss] of Object.entries(gameState.sexStates)) {
+    // 1. 推进生理周期
+    if (daysAdvanced > 0) {
+      ss.cycleDay = ((ss.cycleDay + daysAdvanced - 1) % 28) + 1;
+      ss.cyclePhase = getCyclePhase(ss.cycleDay);
+    }
+
+    // 2. 欲望随时间自然累积（每小时 ~0.5~2 取决于周期）
+    const hours = minutesPassed / 60;
+    const phaseMultiplier = ss.cyclePhase === "排卵期" ? 2.0 : ss.cyclePhase === "生理期" ? 0.3 : 1.0;
+    const baselineGain = hours * 0.8 * phaseMultiplier;
+    // 独处加成：NPC 独自一人时欲望累积更快
+    const npc = gameState.npcs[name];
+    const isAlone = npc && !isSameLocation(npc.currentRoom, gameState.player.location);
+    const aloneBonus = isAlone ? 1.5 : 1.0;
+    const desireGain = Math.round(baselineGain * aloneBonus);
+    if (desireGain > 0) {
+      ss.desire = Math.min(100, ss.desire + desireGain);
+    }
+
+    // 3. 重新计算欲望值（考虑开发度等因素）
+    ss.desire = calcDesire(ss.profile, ss);
+
+    // 4. 自主行为：独处 + 高欲望 → 可能自慰
+    if (isAlone && ss.desire >= 60 && minutesPassed >= 30) {
+      const chance = ss.desire >= 85 ? 0.5 : ss.desire >= 70 ? 0.2 : 0.05;
+      if (Math.random() < chance) {
+        masturbate(ss, Math.round(minutesPassed * 0.3));
+      }
+    }
+  }
 }
 
 export function listNPCItems(name: string): Item[] {
@@ -2053,26 +2213,27 @@ export function getGridContext(): string {
 
   // 四周一格：LLM 知道邻格有什么，但不知道邻格之外
   const around: string[] = [];
+  const DIR_LABELS: Record<string, string> = { "北": "北侧", "南": "南侧", "东": "东侧", "西": "西侧" };
   for (const [d, [dx, dy]] of Object.entries(DIRS).slice(0, 4)) {
     const nx = px + dx, ny = py + dy;
     if (nx < 0 || nx >= room.width || ny < 0 || ny >= room.height) continue;
     const c = room.cells[ny][nx];
-    if (c.type === "wall") around.push(`${d}:墙`);
-    else if (c.furniture) around.push(`${d}:${c.furniture}`);
+    const side = DIR_LABELS[d] || d;
+    if (c.type === "wall") around.push(`${side}是墙壁`);
+    else if (c.furniture) around.push(`${side}被${c.furniture}挡住了`);
     else if (c.type === "exit" || c.type === "door") {
       const lockTag = c.locked ? "🔐" : c.isOpen === false ? "🔒" : "";
-      around.push(`${d}:${lockTag}→${c.exitTo || "?"}`);
+      around.push(`${side}${lockTag}通向${c.exitTo || "?"}`);
     }
-    else around.push(`${d}:空`);
+    else around.push(`${side}是空的，可以走`);
   }
 
   let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py})`;
-  if ((room as any).atmosphere) ctx += ` | ${(room as any).atmosphere}`;
   const amb = (room as any).ambient;
   if (amb) ctx += ` | 环境: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`;
   if (exits.length > 0) ctx += ` | 出口:${exits.join(",")}`;
   if (furniture.length > 0) ctx += ` | 家具:${furniture.join(",")}`;
-  ctx += ` | 四周:${around.join(" ")}`;
+  ctx += ` | ${around.join("。")}`;
   return ctx;
 }
 

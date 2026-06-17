@@ -1,40 +1,54 @@
 /**
- * phone-demo.ts — 复古 ASCII 手机桌面原型
+ * phone-demo.ts — 手机桌面（接入 phone.ts 引擎真实数据）
  * pi -e ~/phone-demo.ts → /phone
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
 const C = {
-  border:   "\x1b[38;5;240m",  // 灰边框
-  label:    "\x1b[38;5;250m",  // 浅灰标签
-  title:    "\x1b[1;37m",      // 白标题
-  sel:      "\x1b[48;5;33m\x1b[1;37m", // 蓝底白字选中
-  sms:      "\x1b[48;5;34m\x1b[1;37m", // 绿底 短信
-  gallery:  "\x1b[48;5;202m\x1b[1;37m", // 橙底 相册
-  twitter:  "\x1b[48;5;27m\x1b[1;37m",  // 蓝底 推特
-  darkweb:  "\x1b[48;5;53m\x1b[1;37m", // 紫底 暗网
-  contacts: "\x1b[48;5;99m\x1b[1;37m",  // 紫蓝 联系人
+  border:   "\x1b[38;5;240m",
+  label:    "\x1b[38;5;250m",
+  title:    "\x1b[1;37m",
+  sel:      "\x1b[48;5;33m\x1b[1;37m",
+  sms:      "\x1b[48;5;34m\x1b[1;37m",
+  gallery:  "\x1b[48;5;202m\x1b[1;37m",
+  twitter:  "\x1b[48;5;27m\x1b[1;37m",
+  darkweb:  "\x1b[48;5;53m\x1b[1;37m",
+  contacts: "\x1b[48;5;99m\x1b[1;37m",
   reset:    "\x1b[0m",
 };
 
-const APPS = [
-  { icon: "✉", name: "短信",   color: C.sms,      detail: "3 条未读" },
-  { icon: "📷", name: "相册",   color: C.gallery,  detail: "42 张照片" },
-  { icon: "🐦", name: "推特",   color: C.twitter,  detail: "趋势: #千葉" },
-  { icon: "👤", name: "联系人", color: C.contacts, detail: "12 人" },
-  { icon: "⬛", name: "暗网",   color: C.darkweb,  detail: "🔒" },
-];
-
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("phone", {
-    description: "复古ASCII手机桌面",
+    description: "手机：短信/相册/联系人/掲示板",
     handler: async (_args, ctx) => {
-      let cursor = 0;
-      let subApp: string | null = null; // 当前打开的应用
+      const { gameState, saveState } = await import("../engine/state.ts");
+      const {
+        getPlayerPhoneData, addContact, syncContactsFromRelationships,
+        markAllRead, getUnreadSummary
+      } = await import("../engine/phone.ts");
 
-      const contacts = ["雪之下雪乃", "由比滨结衣", "比企谷八幡", "一色彩羽", "平塚静"];
+      let pd = getPlayerPhoneData();
+      if (!pd) {
+        ctx.ui.notify("你没有手机！需要装备具有 communication 效果的物品。", "warning");
+        return;
+      }
+
+      // 自动同步通讯录
+      syncContactsFromRelationships(pd);
+      saveState();
+
+      let cursor = 0;
+      let subApp: string | null = null;
       let contactSel = 0;
+      let msgSel = 0;
+
+      const APPS = [
+        { icon: "✉", name: "短信",   color: C.sms,      detail: pd.unreadCount > 0 ? `${pd.unreadCount} 条未读` : "无新消息" },
+        { icon: "📷", name: "相册",   color: C.gallery,  detail: `${pd.photos.length} 张照片` },
+        { icon: "🐦", name: "掲示板", color: C.twitter,  detail: `${pd.snsPosts.length} 条动态` },
+        { icon: "👤", name: "联系人", color: C.contacts, detail: `${pd.contacts.length} 人` },
+      ];
 
       ctx.ui.custom(
         (tui: any, _theme: any, _kb: any, done: any) => {
@@ -44,78 +58,96 @@ export default function (pi: ExtensionAPI) {
               w = Math.min(termW, 50);
               const out: string[] = [];
               const h = "─".repeat(w - 2);
-              const p = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "").length;
 
               if (subApp === "短信") {
-                // ── 短信子界面 ──
                 out.push(`┌${h}┐`);
                 out.push(`│${C.title} ✉ 短信`.padEnd(w - 2 + 16) + `${C.reset}${C.border} │${C.reset}`);
                 out.push(`├${C.border}${h}${C.reset}┤`);
-                const msgs = [
-                  { from: "雪之下雪乃", text: "明天的侍奉部活动..." },
-                  { from: "由比滨结衣", text: "小企！便当买多了..." },
-                  { from: "平塚静", text: "八幡，论文交了吗" },
-                ];
-                msgs.forEach((m, i) => {
-                  const marker = i === contactSel ? `${C.sel} ▶` : "  ";
-                  out.push(`│${marker}${C.reset}${C.border} ${m.from.padEnd(8)} ${C.label}${m.text.slice(0, w - 14)}${C.reset}${C.border} │${C.reset}`);
-                });
+                const msgs = pd!.messages.filter(m => m.to === gameState.player.name || m.from === gameState.player.name);
+                if (msgs.length === 0) {
+                  out.push(`│${C.border}  （无消息）${" ".repeat(w - 13)}${C.reset}│`);
+                } else {
+                  const show = msgs.slice(-Math.min(10, msgs.length));
+                  show.forEach((m, i) => {
+                    const marker = i === msgSel ? `${C.sel} ▶` : "  ";
+                    const prefix = m.read ? " " : "●";
+                    const sender = m.from.slice(0, 6);
+                    const body = m.text.slice(0, w - 16);
+                    out.push(`│${marker}${C.reset}${C.border} ${prefix}${sender.padEnd(6)} ${C.label}${body}${C.reset}${C.border} │${C.reset}`);
+                  });
+                }
                 for (let i = msgs.length; i < 8; i++) out.push(`│${C.border}${" ".repeat(w - 2)}${C.reset}│`);
                 out.push(`├${C.border}${h}${C.reset}┤`);
-                out.push(`│${C.border} ← ESC 返回  ↑↓ 选择  ENTER 查看${" ".repeat(w - 24)}${C.reset}│`);
+                out.push(`│${C.border} R 标记已读  ← ESC 返回${" ".repeat(w - 22)}${C.reset}│`);
                 out.push(`└${h}┘`);
 
               } else if (subApp === "相册") {
-                // ── 相册子界面 ──
                 out.push(`┌${h}┐`);
-                out.push(`│${C.title} 📷 相册 (22张)`.padEnd(w - 2 + 16) + `${C.reset}${C.border} │${C.reset}`);
+                out.push(`│${C.title} 📷 相册 (${pd!.photos.length}张)`.padEnd(w - 2 + 16) + `${C.reset}${C.border} │${C.reset}`);
                 out.push(`├${C.border}${h}${C.reset}┤`);
-                const grid = ["🏫学校", "🌸樱花", "🌊海边", "🏠自宅", "🌙夜景", "🎆花火"];
-                for (let row = 0; row < 2; row++) {
-                  let line = `│${C.border} `;
-                  for (let col = 0; col < 3; col++) {
-                    const idx = row * 3 + col;
-                    if (idx < grid.length) {
-                      const isSel = idx === contactSel;
-                      const card = `┌────┐\n│ ${grid[idx].padEnd(2)} │\n└────┘`;
-                      if (isSel) line += `${C.sel}${card}${C.reset}${C.border} `;
-                      else line += `${C.border}${card} │ `;
-                    }
-                  }
-                  // Actually this is too complex for a simple line - simplify
+                if (pd!.photos.length === 0) {
+                  out.push(`│${C.border}  （还没有照片）${" ".repeat(w - 15)}${C.reset}│`);
+                } else {
+                  const show = pd!.photos.slice(-6);
+                  show.forEach((p, i) => {
+                    const marker = i === contactSel ? "▶" : " ";
+                    out.push(`│${C.border} ${marker} ${p.caption.slice(0, w - 20)} ${C.label}${p.takenAt}${C.reset}${C.border} │${C.reset}`);
+                  });
                 }
-                out.push(`│${C.border}  ┌──┐ ┌──┐ ┌──┐ ${" ".repeat(w - 22)}${C.reset}│`);
-                out.push(`│${C.border}  │🏫│ │🌸│ │🌊│ ${" ".repeat(w - 22)}${C.reset}│`);
-                out.push(`│${C.border}  │学校│ │樱花│ │海边│ ${" ".repeat(w - 21)}${C.reset}│`);
-                out.push(`│${C.border}  └──┘ └──┘ └──┘ ${" ".repeat(w - 22)}${C.reset}│`);
-                out.push(`│${C.border}  ┌──┐ ┌──┐ ┌──┐ ${" ".repeat(w - 22)}${C.reset}│`);
-                out.push(`│${C.border}  │🏠│ │🌙│ │🎆│ ${" ".repeat(w - 22)}${C.reset}│`);
-                out.push(`│${C.border}  │自宅│ │夜景│ │花火│ ${" ".repeat(w - 21)}${C.reset}│`);
-                out.push(`│${C.border}  └──┘ └──┘ └──┘ ${" ".repeat(w - 22)}${C.reset}│`);
-                for (let i = 9; i < 12; i++) out.push(`│${C.border}${" ".repeat(w - 2)}${C.reset}│`);
+                for (let i = pd!.photos.length; i < 6; i++) out.push(`│${C.border}${" ".repeat(w - 2)}${C.reset}│`);
+                out.push(`├${C.border}${h}${C.reset}┤`);
+                out.push(`│${C.border} ← ESC 返回${" ".repeat(w - 10)}${C.reset}│`);
+                out.push(`└${h}┘`);
+
+              } else if (subApp === "联系人") {
+                out.push(`┌${h}┐`);
+                out.push(`│${C.title} 👤 联系人 (${pd!.contacts.length}人)`.padEnd(w - 2 + 16) + `${C.reset}${C.border} │${C.reset}`);
+                out.push(`├${C.border}${h}${C.reset}┤`);
+                pd!.contacts.forEach((c, i) => {
+                  const marker = i === contactSel ? `${C.sel} ▶` : "  ";
+                  out.push(`│${marker}${C.reset}${C.border} ${c.name.padEnd(8)} ${C.label}${c.number}  ${c.relation}${C.reset}${C.border} │${C.reset}`);
+                });
+                for (let i = pd!.contacts.length; i < 8; i++) out.push(`│${C.border}${" ".repeat(w - 2)}${C.reset}│`);
+                out.push(`├${C.border}${h}${C.reset}┤`);
+                out.push(`│${C.border} ← ESC 返回${" ".repeat(w - 10)}${C.reset}│`);
+                out.push(`└${h}┘`);
+
+              } else if (subApp === "掲示板") {
+                out.push(`┌${h}┐`);
+                out.push(`│${C.title} 🐦 掲示板 (${pd!.snsPosts.length}条)`.padEnd(w - 2 + 16) + `${C.reset}${C.border} │${C.reset}`);
+                out.push(`├${C.border}${h}${C.reset}┤`);
+                if (pd!.snsPosts.length === 0) {
+                  out.push(`│${C.border}  （还没有帖子）${" ".repeat(w - 15)}${C.reset}│`);
+                } else {
+                  const show = pd!.snsPosts.slice(-8);
+                  show.forEach((p, i) => {
+                    const marker = i === contactSel ? `${C.sel} ▶` : "  ";
+                    out.push(`│${marker}${C.reset}${C.border} ${C.title}${p.author}${C.reset}${C.border}: ${p.text.slice(0, w - 20)}${" ".repeat(Math.max(0, w - 20 - p.text.length))}${C.reset}│`);
+                    out.push(`│${C.border}  ${C.label}${p.platform} · ${p.timestamp} · ♥${p.likes}${C.reset}${" ".repeat(Math.max(0, w - 24 - p.platform.length - p.timestamp.length))}${C.reset}│`);
+                  });
+                }
+                for (let i = pd!.snsPosts.length; i < 6; i++) { out.push(`│${C.border}${" ".repeat(w - 2)}${C.reset}│`); }
                 out.push(`├${C.border}${h}${C.reset}┤`);
                 out.push(`│${C.border} ← ESC 返回${" ".repeat(w - 10)}${C.reset}│`);
                 out.push(`└${h}┘`);
 
               } else {
-                // ── 主桌面 ──
+                // 主桌面
                 out.push(`┌${h}┐`);
-                out.push(`│${C.title} ◆ スマートフォン`.padEnd(w - 2 + 16) + `${C.reset}${C.label} 18:42${" ".repeat(Math.max(0, w - 29))}${C.reset}${C.border} │${C.reset}`);
+                out.push(`│${C.title} ◆ スマートフォン`.padEnd(w - 2 + 16) + `${C.reset}${C.label} ${gameState.time.time_of_day}${" ".repeat(Math.max(0, w - 25))}${C.reset}${C.border} │${C.reset}`);
                 out.push(`│${C.border}${" ".repeat(w - 2)}${C.reset}│`);
-                out.push(`│${C.border}${" ".repeat(Math.floor((w-2-40)/2))}📶 ${C.title}IIII${C.reset}${C.border}      🔋 ${C.title}IIIIIII${C.reset}${C.border}${" ".repeat(Math.floor((w-2-40)/2))}${C.reset}│`);
 
-                // 应用网格 2x3
-                const cardW = 14; // 每个卡片宽
-                const gap = Math.floor((w - 4 - 3 * cardW) / 4);
+                // 应用网格 2x2
+                const cardW = 14;
+                const gap = Math.floor((w - 4 - 2 * cardW) / 3);
                 const pad1 = " ".repeat(gap);
-                const pad2 = " ".repeat(w - 4 - 3 * cardW - 2 * gap);
+                const pad2 = " ".repeat(w - 4 - 2 * cardW - gap);
 
                 for (let row = 0; row < 2; row++) {
                   out.push(`│${C.border}${" ".repeat(w - 2)}${C.reset}│`);
-                  // 卡片顶行
                   let topRow = `│${C.border}`;
-                  for (let col = 0; col < 3; col++) {
-                    const idx = row * 3 + col;
+                  for (let col = 0; col < 2; col++) {
+                    const idx = row * 2 + col;
                     if (idx < APPS.length) {
                       topRow += pad1;
                       if (idx === cursor) topRow += `${C.sel}┌${"─".repeat(cardW - 2)}┐${C.reset}${C.border}`;
@@ -125,10 +157,9 @@ export default function (pi: ExtensionAPI) {
                   topRow += pad2 + `${C.reset}│`;
                   out.push(topRow);
 
-                  // 图标行
                   let iconRow = `│${C.border}`;
-                  for (let col = 0; col < 3; col++) {
-                    const idx = row * 3 + col;
+                  for (let col = 0; col < 2; col++) {
+                    const idx = row * 2 + col;
                     if (idx < APPS.length) {
                       iconRow += pad1;
                       const icon = APPS[idx].icon;
@@ -139,10 +170,9 @@ export default function (pi: ExtensionAPI) {
                   iconRow += pad2 + `${C.reset}│`;
                   out.push(iconRow);
 
-                  // 名字行
                   let nameRow = `│${C.border}`;
-                  for (let col = 0; col < 3; col++) {
-                    const idx = row * 3 + col;
+                  for (let col = 0; col < 2; col++) {
+                    const idx = row * 2 + col;
                     if (idx < APPS.length) {
                       nameRow += pad1;
                       const name = APPS[idx].name;
@@ -154,10 +184,9 @@ export default function (pi: ExtensionAPI) {
                   nameRow += pad2 + `${C.reset}│`;
                   out.push(nameRow);
 
-                  // 详情行
                   let detailRow = `│${C.border}`;
-                  for (let col = 0; col < 3; col++) {
-                    const idx = row * 3 + col;
+                  for (let col = 0; col < 2; col++) {
+                    const idx = row * 2 + col;
                     if (idx < APPS.length) {
                       detailRow += pad1;
                       const det = APPS[idx].detail.slice(0, cardW - 4);
@@ -168,10 +197,9 @@ export default function (pi: ExtensionAPI) {
                   detailRow += pad2 + `${C.reset}│`;
                   out.push(detailRow);
 
-                  // 卡片底行
                   let botRow = `│${C.border}`;
-                  for (let col = 0; col < 3; col++) {
-                    const idx = row * 3 + col;
+                  for (let col = 0; col < 2; col++) {
+                    const idx = row * 2 + col;
                     if (idx < APPS.length) {
                       botRow += pad1;
                       if (idx === cursor) botRow += `${C.sel}└${"─".repeat(cardW - 2)}┘${C.reset}${C.border}`;
@@ -191,24 +219,38 @@ export default function (pi: ExtensionAPI) {
             },
             handleInput(d: string) {
               if (subApp) {
-                // 子界面操作
-                if (d === "\x1b") { subApp = null; if (tui.requestRender) tui.requestRender(); return; }
-                if (subApp === "短信" || subApp === "相册") {
-                  if (d === "\x1b[A" || d === "k") contactSel = Math.max(0, contactSel - 1);
-                  else if (d === "\x1b[B" || d === "j") contactSel = Math.min(5, contactSel + 1);
+                if (d === "\x1b") { subApp = null; msgSel = 0; contactSel = 0; if (tui.requestRender) tui.requestRender(); return; }
+                if (d === "r" && subApp === "短信") {
+                  markAllRead(pd!);
+                  saveState();
+                  APPS[0].detail = "无新消息";
+                  if (tui.requestRender) tui.requestRender();
+                  return;
+                }
+                if (d === "\x1b[A" || d === "k") {
+                  if (subApp === "短信") msgSel = Math.max(0, msgSel - 1);
+                  else contactSel = Math.max(0, contactSel - 1);
+                }
+                else if (d === "\x1b[B" || d === "j") {
+                  const max = subApp === "短信" ? Math.min(9, pd!.messages.length - 1) :
+                    subApp === "相册" ? Math.min(5, pd!.photos.length - 1) :
+                    subApp === "联系人" ? Math.min(7, pd!.contacts.length - 1) :
+                    subApp === "掲示板" ? Math.min(7, pd!.snsPosts.length - 1) : 5;
+                  if (subApp === "短信") msgSel = Math.min(max, msgSel + 1);
+                  else contactSel = Math.min(max, contactSel + 1);
                 }
                 if (tui.requestRender) tui.requestRender();
               } else {
-                // 桌面操作
                 if (d === "q") done();
                 else if (d === "\x1b[D" || d === "h") cursor = Math.max(0, cursor - 1);
                 else if (d === "\x1b[C" || d === "l") cursor = Math.min(APPS.length - 1, cursor + 1);
-                else if (d === "\x1b[A" || d === "k") cursor = Math.max(0, cursor - 3);
-                else if (d === "\x1b[B" || d === "j") cursor = Math.min(APPS.length - 1, cursor + 3);
+                else if (d === "\x1b[A" || d === "k") cursor = Math.max(0, cursor - 2);
+                else if (d === "\x1b[B" || d === "j") cursor = Math.min(APPS.length - 1, cursor + 2);
                 else if (d === "\r" || d === "\n") {
-                  const name = APPS[cursor].name;
-                  if (name === "短信") { subApp = "短信"; contactSel = 0; }
-                  else if (name === "相册") { subApp = "相册"; contactSel = 0; }
+                  subApp = APPS[cursor].name;
+                  contactSel = 0;
+                  msgSel = 0;
+                  if (subApp === "短信") markAllRead(pd!);
                 }
                 if (tui.requestRender) tui.requestRender();
               }
@@ -220,5 +262,5 @@ export default function (pi: ExtensionAPI) {
       );
     },
   });
-  console.log("[phone-demo] /phone 就绪 — 复古ASCII手机桌面");
+  console.log("[phone-demo] /phone 就绪 — 接入 phone.ts 引擎");
 }
