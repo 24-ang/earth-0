@@ -2,7 +2,7 @@
  * 状态引擎 - 角色状态 + HP + 负重 + 物品操作 + 持久化
  */
 
-import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState } from "./types.ts";
+import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, VisibilityLevel } from "./types.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import characters from "../data/characters.json" with { type: "json" };
 import rooms from "../data/rooms.json" with { type: "json" };
@@ -72,7 +72,57 @@ function createInitialState(): GameState {
     weather: { type: "晴", temp: 16 },
     turn: 0,
     roomTimestamps: {},
+    turnLog: [],
+    revealLog: [],
   };
+}
+
+// ── Layer 2 回合台账 ──
+export function recordTurnLog(entry: Omit<TurnLogEntry, "turn" | "timestamp">): TurnLogEntry {
+  const log: TurnLogEntry = {
+    ...entry,
+    turn: gameState.turn,
+    timestamp: `${gameState.time.year}年${gameState.time.month}月${gameState.time.day}日 ${gameState.time.timeOfDay ?? ""}`,
+  };
+  gameState.turnLog.push(log);
+  // 保留最近 50 回合
+  if (gameState.turnLog.length > 50) gameState.turnLog.shift();
+  saveState();
+  return log;
+}
+
+/** 取最近 N 回合的上下文摘要，注入 GM prompt */
+export function getRecentTurnLogContext(n: number = 5): string {
+  const recent = gameState.turnLog.slice(-n);
+  if (recent.length === 0) return "";
+  return recent.map(e =>
+    `[第${e.turn}回合] 玩家:${e.playerAction} | 变化:${e.resolvedChanges} | 场景:${e.sceneResult} | 钩子:${e.openHooks || "无"}`
+  ).join("\n");
+}
+
+// ── Layer 3 秘密防火墙 ──
+export function revealSecret(id: string, content: string, fromLevel: VisibilityLevel, toLevel: VisibilityLevel): RevealEntry {
+  const entry: RevealEntry = {
+    id, content, fromLevel, toLevel,
+    revealedAt: gameState.time.game_date,
+    turn: gameState.turn,
+  };
+  gameState.revealLog.push(entry);
+  saveState();
+  return entry;
+}
+
+/** 获取已揭示为指定级别及以上（可见性从低到高: hidden → protagonist → player → public）的秘密 */
+const VISIBILITY_RANK: Record<VisibilityLevel, number> = {
+  "hidden_canonical": 0,
+  "protagonist_known": 1,
+  "player_known": 2,
+  "scene_public": 3,
+};
+
+export function getRevealedSecrets(minLevel: VisibilityLevel): RevealEntry[] {
+  const minRank = VISIBILITY_RANK[minLevel];
+  return gameState.revealLog.filter(e => VISIBILITY_RANK[e.toLevel] >= minRank);
 }
 
 function createDefaultPlayer(): PlayerState {

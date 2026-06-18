@@ -39,7 +39,7 @@ pi.registerTool({
 
 ## 约定 2：场景→工具映射
 
-在 `extension.ts` 中搜索 `// ── 场景工具分组 ──`（如果已存在），
+在 `engine/state.ts` 的 `buildStatePrompt` 函数的场景检测中（如果已存在），
 为新模块的工具添加映射条目：
 
 ```ts
@@ -140,7 +140,7 @@ pi.registerTool({
 });
 ```
 
-### 4. 场景映射（在 TOOL_HINTS 中）
+### 4. 场景映射（在 engine/state.ts 的 buildStatePrompt 中）
 ```ts
 gamble: ["place_bet", "dice_roll"],
 ```
