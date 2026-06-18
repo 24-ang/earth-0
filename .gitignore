@@ -1,6 +1,7 @@
 state/
 sessions/
 .pi/agent/auth.json
+.pi/agent/models.json
 .pi/npm/
 node_modules/
 *.bak

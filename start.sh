@@ -77,6 +77,12 @@ fi
 
 export PI_CODING_AGENT_DIR=".pi/agent"
 
+# ---- 渲染轮 API key（Layer 4 两段式渲染需要） ----
+# 不提交到 Git。Claude Code 用户可从 CC 配置中读取。
+if [ -z "${DEEPSEEK_API_KEY:-}" ] && [ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]; then
+  export DEEPSEEK_API_KEY="$ANTHROPIC_AUTH_TOKEN"
+fi
+
 # 记录 pi 退出码，但保证提示始终显示
 pi_exit=0
 pi \

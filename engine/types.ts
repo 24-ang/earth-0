@@ -393,6 +393,30 @@ export interface Hook {
   novelty?: string;
 }
 
+// --- 回合台账 (Layer 2) ---
+export interface TurnLogEntry {
+  turn: number;
+  playerAction: string;
+  resolvedChanges: string;
+  sceneResult: string;
+  openHooks: string;
+  nextPressure: string;
+  toolsCalled: string[];
+  timestamp: string; // gameDate
+}
+
+// --- 秘密防火墙 (Layer 3) ---
+export type VisibilityLevel = "player_known" | "protagonist_known" | "scene_public" | "hidden_canonical";
+
+export interface RevealEntry {
+  id: string;           // 秘密标识
+  content: string;       // 揭示内容
+  fromLevel: VisibilityLevel;
+  toLevel: VisibilityLevel;
+  revealedAt: string;    // gameDate
+  turn: number;
+}
+
 // --- 游戏状态 ---
 export interface GameState {
   time: TimeState;
@@ -411,6 +435,8 @@ export interface GameState {
   active_hooks: Hook[];                        // 活跃钩子账本（上限 3）
   completed_events: string[];                  // 已完成/已过期的事件 ID（防重复触发）
   roomTimestamps: Record<string, string>;  // 房间名 → game_date，场景时间戳脏污
+  turnLog: TurnLogEntry[];                 // Layer 2 回合台账
+  revealLog: RevealEntry[];                // Layer 3 秘密揭示日志
 }
 
 // ── 手机数据（存储在 Item.phoneData）──
