@@ -1818,11 +1818,12 @@ export default function (pi: ExtensionAPI) {
   // ── Layer 5 批量并行 NPC Agent ──
   pi.registerTool({
     name: "spawn_npc_agents", label: "批量NPC代理",
-    description: "并行派生多个NPC Agent。npcs:[{npcName,sceneContext}]。多NPC场景用此工具一次并行调用(1-2秒全回)。单人场景用spawn_npc_agent即可。",
+    description: "并行派生多个NPC Agent。npcs:[{npcName,sceneContext,initiative?}]。多NPC场景一次并行(1-2秒)。initiative:true=自主发言不等玩家触发。",
     parameters: Type.Object({
       npcs: Type.Array(Type.Object({
         npcName: Type.String({ description: "NPC 名" }),
         sceneContext: Type.String({ description: "当前场景简述" }),
+        initiative: Type.Optional(Type.Boolean({ description: "是否自主发言" })),
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
@@ -1831,7 +1832,7 @@ export default function (pi: ExtensionAPI) {
       const charStages = await import("./../data/character_stages.json", { with: { type: "json" } });
       const KEY = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
 
-      async function runOne(npcName: string, sceneContext: string): Promise<string> {
+      async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<string> {
         const src = (characters as any).default?.find?.((c: any) => c.name === npcName)
           || (characters as any[]).find?.((c: any) => c.name === npcName);
         if (!src) return `${npcName}（未找到）`;
@@ -1862,6 +1863,7 @@ export default function (pi: ExtensionAPI) {
           `关系: ${stage}（好感${affection}）`,
           memories.length > 0 ? `记忆: ${memories.join("；")}` : "",
           `当前场景: ${sceneContext}`,
+          initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。" : "",
           "",
           "【角色动机】先在内心想三层（不输出，只用于指导回应）：",
           "① 表面意图: 你此刻在说什么/做什么？（可能伪装/嘴硬/习惯/场面话）",
@@ -1887,7 +1889,7 @@ export default function (pi: ExtensionAPI) {
         } catch { return `${npcName}（沉默）`; }
       }
 
-      const results = await Promise.all(params.npcs.map(n => runOne(n.npcName, n.sceneContext)));
+      const results = await Promise.all(params.npcs.map(n => runOne(n.npcName, n.sceneContext, (n as any).initiative)));
       // 自动写入所有 NPC 的记忆（7 天有效期）
       try {
         const { addMemoryTag } = await import("./engine/state.ts");
