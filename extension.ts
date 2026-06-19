@@ -1724,6 +1724,75 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  // ── Layer 5 多角色 Agent ──
+  pi.registerTool({
+    name: "spawn_npc_agent", label: "NPC角色代理",
+    description: "派生独立NPC Agent，用Flash模型扮演角色发言。npcName:NPC名/sceneContext:当前场景。并行调用多个NPC时各自独立，互不串台。返回该NPC的反应/台词/心理。",
+    parameters: Type.Object({
+      npcName: Type.String({ description: "NPC 名" }),
+      sceneContext: Type.String({ description: "当前场景简述，如'维邀请雪乃去便利店买饮料'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
+      const characters = await import("./../data/characters.json", { with: { type: "json" } });
+      const charStages = await import("./../data/character_stages.json", { with: { type: "json" } });
+
+      const src = (characters as any).default?.find?.((c: any) => c.name === params.npcName)
+        || (characters as any[]).find?.((c: any) => c.name === params.npcName);
+      if (!src) {
+        return { content: [{ type: "text", text: `${params.npcName}（角色数据未找到）` }], details: {} };
+      }
+
+      const npc = getOrCreateNPC(params.npcName);
+      const rel = gameState.player.relationships[params.npcName];
+      const affection = rel?.affection ?? 0;
+      const stage = rel?.stage ?? "陌生";
+      const memories = getMemoryTags(params.npcName);
+      const curAge = getNpcCurrentAge(src.base_age || 16);
+      const body = getBodyForAge(src, curAge);
+      const outfit = getNPCOutfitDesc(params.npcName);
+      const app = getAppearanceForAge(src, curAge);
+
+      // 阶段性格
+      const cs = (charStages as any)[params.npcName];
+      const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
+      const personality = cs?.[stageKey] || "";
+
+      const charPrompt = [
+        `你是${params.npcName}。你现在正在${gameState.player.location}。`,
+        "",
+        `你的性格: ${personality || "（暂无）"}`,
+        `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}${app?.hair_accessories ? "，" + app.hair_accessories : ""}`,
+        `穿着: ${outfit}`,
+        `身体: ${body?.height_cm}cm ${body?.build}${body?.cup ? " " + body.cup + "cup" : ""}`,
+        "",
+        `你和玩家的关系: ${stage}（好感${affection}）`,
+        memories.length > 0 ? `你记得: ${memories.join("；")}` : "",
+        "",
+        `当前场景: ${params.sceneContext}`,
+        "",
+        "用你的口吻回应。≤3句话。融入身体语言（动作/表情）。用「」引对话。",
+      ].filter(Boolean).join("\n");
+
+      try {
+        const KEY = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
+        const res = await fetch("https://api.deepseek.com/anthropic/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
+          body: JSON.stringify({ model: "deepseek-v4-flash", max_tokens: 512, messages: [{ role: "user", content: charPrompt }] }),
+        });
+        if (!res.ok) {
+          return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
+        }
+        const data = await res.json() as any;
+        const response = data?.content?.[0]?.text ?? `${params.npcName}（沉默）`;
+        return { content: [{ type: "text", text: response.trim() }], details: {} };
+      } catch {
+        return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
+      }
+    },
+  });
+
   pi.registerTool({
     name: "create_room", label: "创建房间",
     description: "在地图中创建一个新的房间区域。",
