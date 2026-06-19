@@ -267,6 +267,7 @@ export interface NPCRuntimeState {
     reason: string;
     expiresAt: string;            // game_date，过期自动清除
   } | null;
+  npcRelationships?: Record<string, { stage: string; tone: string; notes: string }>;  // 此NPC对其他NPC的关系
 }
 
 // --- 空间系统（棋盘格） ---

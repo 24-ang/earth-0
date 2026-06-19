@@ -1778,6 +1778,10 @@ export default function (pi: ExtensionAPI) {
         `身体: ${body?.height_cm}cm ${body?.build}${body?.cup ? " " + body.cup + "cup" : ""}`,
         "",
         `你和玩家的关系: ${stage}（好感${affection}）`,
+        otherNPCs.length > 0 ? `对在场其他人的态度: ${otherNPCs.map(name => {
+          const rel = npc.npcRelationships?.[name];
+          return rel ? `${name}(${rel.stage}·${rel.tone})` : `${name}(陌生)`;
+        }).join("、")}` : "",
         memories.length > 0 ? `记忆: ${memories.join("；")}` : "",
         "",
         `当前场景: ${params.sceneContext}`,
@@ -2387,6 +2391,26 @@ export default function (pi: ExtensionAPI) {
       addMemoryTag(params.target, params.tag, params.expires_days || 7, params.tone);
       saveState();
       return { content: [{ type: "text", text: `${params.target} 记忆: ${params.tag}${params.tone ? ` [${params.tone}]` : ""}` }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "set_npc_relation", label: "NPC关系",
+    description: "记录NPC之间的态度。from:谁对谁/to:目标/stage:关系阶段/tone:情绪色彩/notes:备注。只在有实际交互时记录。",
+    parameters: Type.Object({
+      from: Type.String({ description: "发起方NPC名" }),
+      to: Type.String({ description: "目标NPC名" }),
+      stage: Type.String({ description: "关系阶段: 陌生/熟人/朋友/亲密/对立/仇敌" }),
+      tone: Type.String({ description: "情绪色彩: 喜欢/信任/尊重/嫉妒/厌恶/恐惧/无感" }),
+      notes: Type.Optional(Type.String({ description: "备注，如'因为同桌三年'" })),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
+      const npc = getOrCreateNPC(params.from);
+      npc.npcRelationships ??= {};
+      npc.npcRelationships[params.to] = { stage: params.stage, tone: params.tone, notes: params.notes || "" };
+      saveState();
+      return { content: [{ type: "text", text: `${params.from} → ${params.to}: ${params.stage}·${params.tone}${params.notes ? " (" + params.notes + ")" : ""}` }], details: {} };
     },
   });
 
