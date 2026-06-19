@@ -1,0 +1,124 @@
+{
+  "description": "体位百科 —— engine读取，按phase和开发度过滤后注入LLM可见列表。LLM训练数据自带体位详情，此处仅存储元数据。",
+  "positions": {
+    "正常位": {
+      "phase": "insertion",
+      "devRequired": 0,
+      "scene": ["bed", "floor"],
+      "tags": ["正面", "躺", "拥抱"],
+      "desc": "面对面平躺。最基础的结合姿势。"
+    },
+    "后入": {
+      "phase": "insertion",
+      "devRequired": 0,
+      "scene": ["bed", "floor", "wall", "desk"],
+      "tags": ["背后", "跪", "深"],
+      "desc": "从后面进入。深度和节奏由后方控制。"
+    },
+    "侧位": {
+      "phase": "insertion",
+      "devRequired": 0,
+      "scene": ["bed", "floor"],
+      "tags": ["侧面", "慢", "亲密"],
+      "desc": "面对面侧躺。节奏慢，适合余韵和低声说话。"
+    },
+    "站立正面": {
+      "phase": "insertion",
+      "devRequired": 1,
+      "scene": ["wall", "standing"],
+      "tags": ["站立", "大腿", "高"],
+      "desc": "站立面对，一方腿抬起。需要一定体力。"
+    },
+    "坐位": {
+      "phase": "insertion",
+      "devRequired": 1,
+      "scene": ["chair", "desk", "bed"],
+      "tags": ["坐", "拥抱", "对视"],
+      "desc": "面对坐，一方跨坐。可拥抱可对视。"
+    },
+    "骑乘": {
+      "phase": "insertion",
+      "devRequired": 2,
+      "scene": ["bed", "chair", "floor"],
+      "tags": ["上方", "主动", "控制"],
+      "desc": "上方跨坐控制节奏。对上方方的主动要求高。"
+    },
+    "桌边": {
+      "phase": "insertion",
+      "devRequired": 2,
+      "scene": ["desk", "table"],
+      "tags": ["边缘", "抬高", "制服"],
+      "desc": "坐在桌边，腿架起。制服Play常见。"
+    },
+    "对坐": {
+      "phase": "insertion",
+      "devRequired": 3,
+      "scene": ["bed", "floor"],
+      "tags": ["对坐", "缠绕", "深结合"],
+      "desc": "两方对坐，腿交缠。最深的结合感。"
+    },
+    "壁上": {
+      "phase": "insertion",
+      "devRequired": 2,
+      "scene": ["wall"],
+      "tags": ["壁", "悬空", "支配"],
+      "desc": "背靠墙壁，双脚离地。完全由支撑方控制。"
+    },
+    "沙发上": {
+      "phase": "insertion",
+      "devRequired": 1,
+      "scene": ["sofa", "chair"],
+      "tags": ["沙发", "放松", "倾斜"],
+      "desc": "沙发上倾斜姿势。介于坐位和躺之间。"
+    },
+    "背后拥抱": {
+      "phase": "insertion",
+      "devRequired": 2,
+      "scene": ["standing", "wall"],
+      "tags": ["背后", "环抱", "慢"],
+      "desc": "从背后环住，站立缓慢结合。颈后亲吻常用。"
+    },
+    "俯卧": {
+      "phase": "insertion",
+      "devRequired": 1,
+      "scene": ["bed", "floor"],
+      "tags": ["趴", "重量", "包容"],
+      "desc": "俯卧结合。身体重量带来压力感。"
+    },
+    "浴室": {
+      "phase": "insertion",
+      "devRequired": 2,
+      "scene": ["bath"],
+      "tags": ["水", "镜", "蒸汽"],
+      "desc": "浴室场景，蒸汽和镜子增加感官层次。"
+    },
+    "跪": {
+      "phase": "service",
+      "devRequired": 0,
+      "scene": ["floor", "bed", "bath"],
+      "tags": ["口", "跪", "服务"],
+      "desc": "跪姿口交。最基础的奉仕姿势。"
+    },
+    "69": {
+      "phase": "service",
+      "devRequired": 2,
+      "scene": ["bed", "floor"],
+      "tags": ["互含", "交叉", "同时"],
+      "desc": "69互含。双方同时给予和接收。开发度高者自然主导。"
+    },
+    "椅下": {
+      "phase": "service",
+      "devRequired": 1,
+      "scene": ["desk", "chair"],
+      "tags": ["桌下", "隐藏", "秘密"],
+      "desc": "藏在桌下口交。秘密感和被发现的风险。"
+    },
+    "镜前": {
+      "phase": "insertion",
+      "devRequired": 2,
+      "scene": ["standing", "desk"],
+      "tags": ["镜", "注视", "羞耻"],
+      "desc": "在镜子前从后面进入。看见自己的表情。"
+    }
+  }
+}
