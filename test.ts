@@ -1570,6 +1570,19 @@ test("疲劳: buildStatePrompt 高疲劳注入状态", async () => {
   if (!prompt.includes("筋疲力尽")) throw new Error("应包含疲劳状态");
 });
 
+console.log("\n── 秘密与世界观附加测试 ──");
+
+test("秘密防火墙: getRevealedSecrets & prompt collector", async () => {
+  resetState();
+  const { revealSecret } = await import("./engine/state.ts");
+  revealSecret("雪乃的秘密", "其实喜欢玩偶潘先生", "hidden_canonical", "player_known");
+  
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("潘先生")) {
+    throw new Error("已揭示的秘密应该被注入到 prompt 中");
+  }
+});
+
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);
 saveState();
 process.exit(failed > 0 ? 1 : 0);

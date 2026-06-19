@@ -5,26 +5,35 @@
 import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, VisibilityLevel } from "./types.ts";
 import { promptCollectors, schedule, type Collector } from "./collectors.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
-import characters from "../data/characters.json" with { type: "json" };
-import rooms from "../data/rooms.json" with { type: "json" };
+import charactersStatic from "../data/characters.json" with { type: "json" };
+import roomsStatic from "../data/rooms.json" with { type: "json" };
 import { lookupRegion } from "./router.ts";
-import charStages from "../data/character_stages.json" with { type: "json" };
+import charStagesStatic from "../data/character_stages.json" with { type: "json" };
 import fs from "node:fs";
 import path from "node:path";
-import titleRules from "../data/title_rules.json" with { type: "json" };
-import namelessNpcTemplates from "../data/nameless_npc_templates.json" with { type: "json" };
-import economyConfig from "../data/economy.json" with { type: "json" };
+import titleRulesStatic from "../data/title_rules.json" with { type: "json" };
+import namelessNpcTemplatesStatic from "../data/nameless_npc_templates.json" with { type: "json" };
+import economyConfigStatic from "../data/economy.json" with { type: "json" };
+
+export let characters = charactersStatic as any[];
+export let rooms = roomsStatic as Record<string, RoomGrid>;
+export let charStages = charStagesStatic as any;
+export let titleRules = titleRulesStatic as any;
+export let namelessNpcTemplates = namelessNpcTemplatesStatic as any;
+export let economyConfig = economyConfigStatic as any;
 
 // --- 空间数据定义 ---
-const ROOMS_BASE = rooms as Record<string, RoomGrid>;
-export let ROOMS = structuredClone(ROOMS_BASE);
+export let ROOMS = structuredClone(rooms);
 
-import locationsData from "../data/locations.json" with { type: "json" };
-import schoolMapData from "../data/school_map.json" with { type: "json" };
-import cityMapData from "../data/city_map.json" with { type: "json" };
-const LOCATIONS_BASE = locationsData as any;
-const SCHOOL_MAP = schoolMapData as any;
-const CITY_MAP = cityMapData as any;
+import locationsDataStatic from "../data/locations.json" with { type: "json" };
+import schoolMapDataStatic from "../data/school_map.json" with { type: "json" };
+import cityMapDataStatic from "../data/city_map.json" with { type: "json" };
+export let locationsData = locationsDataStatic as any;
+export let schoolMapData = schoolMapDataStatic as any;
+export let cityMapData = cityMapDataStatic as any;
+export let LOCATIONS_BASE = locationsData as any;
+export let SCHOOL_MAP = schoolMapData as any;
+export let CITY_MAP = cityMapData as any;
 // 运行时地点覆盖层：LLM 动态创建的地点 { parentName: [childName, ...] }
 export let LOCATIONS_DELTA: Record<string, string[]> = {};
 
@@ -197,10 +206,10 @@ export function loadState(filepath?: string): boolean {
     try {
       ROOMS = JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8"));
     } catch (_) {
-      ROOMS = structuredClone(ROOMS_BASE);
+      ROOMS = structuredClone(rooms);
     }
   } else {
-    ROOMS = structuredClone(ROOMS_BASE);
+    ROOMS = structuredClone(rooms);
   }
 
   loadLocationsDelta();
@@ -251,7 +260,7 @@ export function loadState(filepath?: string): boolean {
 
 export function resetState(): void {
   gameState = createInitialState();
-  ROOMS = structuredClone(ROOMS_BASE);
+  ROOMS = structuredClone(rooms);
   // 删除默认 session 对应的 rooms_delta.json
   const roomsDeltaPath = path.join(STATE_DIR, "rooms_delta.json");
   if (fs.existsSync(roomsDeltaPath)) {
@@ -486,6 +495,23 @@ function ensureCollectors(): void {
       if (f >= 25) return { text: `[状态] 你有一丝倦意。`, priority: 3, layer: "stable", degradeStrategy: "keep", sourceName: "fatigue" };
       return null;
     },
+  });
+
+  // L1-stable: 已揭示的秘密（秘密防火墙）
+  promptCollectors.register({
+    name: "revealed-secrets", priority: 5, layer: "stable", degradeStrategy: "keep",
+    async collect(_gs) {
+      const secrets = getRevealedSecrets("protagonist_known");
+      if (secrets.length === 0) return null;
+      const lines = secrets.map(sec => `  • [${sec.toLevel}] ${sec.id}: ${sec.content} (第${sec.turn}回合由GM通过工具揭示)`);
+      return {
+        text: `[已揭示秘密]\n${lines.join("\n")}`,
+        priority: 5,
+        layer: "stable",
+        degradeStrategy: "keep",
+        sourceName: "revealed-secrets"
+      };
+    }
   });
 
   // L2-enhanced: 在场 NPC 简要列表（轻量）
@@ -1961,9 +1987,10 @@ export function clearScheduleOverride(npcName: string): string {
   return `${npcName}: 日程覆盖已清除`;
 }
 // --- 商店/经济（AIRP风格：引擎只做会计，LLM管市场常识） ---
-import itemsCatalog from "../data/items.json" with { type: "json" };
+import itemsCatalogStatic from "../data/items.json" with { type: "json" };
+export let itemsCatalog = itemsCatalogStatic as any;
 
-const PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
+export let PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
 
 function validatePrice(itemName: string, price: number): string | null {
   let itemType = "tool";
@@ -2559,3 +2586,50 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
   }
   return npcs;
 }
+
+// ── 动态世界观加载 ──
+export function loadActiveWorld(worldName?: string): void {
+  const activeWorldPath = path.resolve(process.cwd(), "data", ".active_world");
+  let world = worldName;
+  if (!world && fs.existsSync(activeWorldPath)) {
+    world = fs.readFileSync(activeWorldPath, "utf-8").trim();
+  }
+  if (!world) world = "oregairu"; // default fallback
+
+  const worldpackDir = path.resolve(process.cwd(), "worldpacks", world);
+  if (!fs.existsSync(worldpackDir)) {
+    return;
+  }
+
+  const loadJSON = (filename: string, fallback: any) => {
+    const fullPath = path.join(worldpackDir, filename);
+    if (fs.existsSync(fullPath)) {
+      try {
+        return JSON.parse(fs.readFileSync(fullPath, "utf-8"));
+      } catch (e) {
+        console.error(`Failed to load worldpack JSON: ${fullPath}`, e);
+      }
+    }
+    return fallback;
+  };
+
+  characters = loadJSON("characters.json", charactersStatic);
+  rooms = loadJSON("rooms.json", roomsStatic);
+  charStages = loadJSON("character_stages.json", charStagesStatic);
+  titleRules = loadJSON("title_rules.json", titleRulesStatic);
+  namelessNpcTemplates = loadJSON("nameless_npc_templates.json", namelessNpcTemplatesStatic);
+  economyConfig = loadJSON("economy.json", economyConfigStatic);
+  locationsData = loadJSON("locations.json", locationsDataStatic);
+  schoolMapData = loadJSON("school_map.json", schoolMapDataStatic);
+  cityMapData = loadJSON("city_map.json", cityMapDataStatic);
+
+  // Re-initialize dependent variables
+  ROOMS = structuredClone(rooms);
+  LOCATIONS_BASE = locationsData as any;
+  SCHOOL_MAP = schoolMapData as any;
+  CITY_MAP = cityMapData as any;
+  PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
+}
+
+// 自动在加载时初始化当前活跃世界观
+loadActiveWorld();
