@@ -48,6 +48,25 @@ function getSchoolRooms(): Set<string> {
   return rooms;
 }
 
+import regionsStatic from "../data/regions.json" with { type: "json" };
+import charactersStatic from "../data/characters.json" with { type: "json" };
+import schoolMapStatic from "../data/school_map.json" with { type: "json" };
+import cityMapStatic from "../data/city_map.json" with { type: "json" };
+
+export let regions = regionsStatic as any;
+export let characters = charactersStatic as any[];
+export let schoolMap = schoolMapStatic as any;
+export let cityMap = cityMapStatic as any;
+export let allChars = charactersStatic as any[];
+
+export function updateRouterData(newRegions: any, newCharacters: any, newSchoolMap: any, newCityMap: any) {
+  regions = newRegions;
+  characters = newCharacters;
+  allChars = newCharacters;
+  schoolMap = newSchoolMap;
+  cityMap = newCityMap;
+}
+
 export interface RegionEntry {
   id: number;
   name: string;

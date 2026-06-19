@@ -14,7 +14,6 @@ export type { SexProfile, SexState };
 /** 动态引用——随 Worldpack 切换自动更新。
  *  如果 worldpack 没有 sex_profiles.json，回退到 data/ 默认文件。 */
 import sexProfilesStatic from "../data/sex_profiles.json" with { type: "json" };
-import type { SexProfile } from "./types.ts";
 export const SEX_PROFILES: Record<string, SexProfile> = new Proxy({} as any, {
   get(_, prop) {
     try {
