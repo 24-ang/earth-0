@@ -5,12 +5,25 @@
  *   player.location → region_entry → character_names → LLM
  */
 
-import regions from "../data/regions.json" with { type: "json" };
-import characters from "../data/characters.json" with { type: "json" };
-import schoolMap from "../data/school_map.json" with { type: "json" };
-import cityMap from "../data/city_map.json" with { type: "json" };
-
-export const allChars = characters as any[];
+/** 动态引用——随 Worldpack 切换自动更新。懒加载避免循环引用。 */
+function getRegions(): any[] {
+  try {
+    const { regionsData } = require("./state.ts");
+    return (regionsData || []);
+  } catch { return []; }
+}
+function getSchoolMap(): any {
+  try {
+    const { schoolMapData } = require("./state.ts");
+    return schoolMapData;
+  } catch { return { buildings: {}, school: "" }; }
+}
+function getCityMap(): any {
+  try {
+    const { cityMapData } = require("./state.ts");
+    return cityMapData;
+  } catch { return {}; }
+}
 
 // 学校房间→学校名映射（路由用）
 // 改为函数动态构建，避免 school_map.json 更新后缓存不一致
@@ -20,7 +33,8 @@ function getSchoolRooms(): Set<string> {
     const clean = r.replace(/[（(].*[）)]/, "").trim().toLowerCase();
     if (clean) rooms.add(clean);
   };
-  for (const [bname, bld] of Object.entries(schoolMap.buildings)) {
+  const sm = getSchoolMap();
+  for (const [bname, bld] of Object.entries(sm.buildings)) {
     addRoom(bname);
     const b = bld as any;
     if (!b.rooms && !b.stairs && !b.bathrooms) continue;
@@ -59,13 +73,13 @@ export function lookupRegion(location: string): RouterResult {
   let expandedLoc = lowerLoc;
   const schoolRooms = getSchoolRooms();
   if (schoolRooms.has(lowerLoc) || [...schoolRooms].some(r => lowerLoc.includes(r))) {
-    expandedLoc = schoolMap.school.toLowerCase(); // 只用学校名，不加房间名
+    expandedLoc = getSchoolMap().school.toLowerCase(); // 只用学校名，不加房间名
   }
   
   const matched: RegionEntry[] = [];
   const broadMatched: RegionEntry[] = []; // 城市级匹配（低优先级）
   
-  for (const region of regions as RegionEntry[]) {
+  for (const region of getRegions()) {
     const allTerms = [...region.keys, ...region.location_hints];
     let exactMatch = false;
     let broadMatch = false;
@@ -90,14 +104,14 @@ export function lookupRegion(location: string): RouterResult {
   // 精确 → 宽泛，去重
   // 宽泛匹配：用 city_map.json 的 parent 层级
   if (matched.length === 0 && broadMatched.length === 0) {
-    const cm = cityMap as any;
+    const cm = getCityMap();
     for (const [rname, reg] of Object.entries(cm.regions)) {
       const r = reg as any;
       const hits = lowerLoc.includes(rname.toLowerCase())
         || (r.landmarks || []).some((l: string) => lowerLoc.includes(l.toLowerCase()));
       if (hits && r.parent) {
         const parentLoc = r.parent.toLowerCase();
-        for (const region of regions as RegionEntry[]) {
+        for (const region of getRegions()) {
           for (const term of [...region.keys, ...region.location_hints]) {
             if (parentLoc.includes(term.toLowerCase()) || term.toLowerCase().includes(parentLoc)) {
               broadMatched.push(region); break;
