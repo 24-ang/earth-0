@@ -76,35 +76,46 @@ async function callLLM(model, prompt, maxTokens = 2048) {
 // ── Pass 1: 粗筛 ──
 // 用 Flash 快速扫描，只输出含角色/场景信息的段落编号
 
-const PASS1_PROMPT = (chunk, startIndex) => `你是小说分析助手。分析以下文本块，识别包含下列信息的段落：
+const PASS1_PROMPT = (chunk) => `你是小说分析助手。分析以下文本，识别包含下列信息的段落：
 
 1. 角色描写（外貌、性格、年龄、身份）
 2. 场景/地点描写
 3. 剧情事件（关键情节节点）
 4. 世界观设定（规则、历史、背景）
 
-段落编号从 ${startIndex} 开始。
-
-只输出符合条件的段落编号（如 "3,7,12,15"），每行一个块。
-不输出编号之外的任何内容。
+每段开头有类似 [123] 的编号。请只输出符合条件的段落编号（例如如果 [123] 和 [125] 符合条件，则只输出 "123, 125"），用逗号分隔。
+不要输出任何其他解释文字。
 
 文本：
 ${chunk}`;
 
 async function pass1CoarseFilter(text) {
+  const paragraphs = text.split(/\r?\n/).map(p => p.trim()).filter(Boolean);
+  
+  // Group paragraphs into chunks of ~15,000 characters
   const chunks = [];
-  for (let i = 0; i < text.length; i += CONFIG.chunkSize) {
-    chunks.push(text.slice(i, i + CONFIG.chunkSize));
+  let currentChunk = [];
+  let currentLength = 0;
+  
+  for (let i = 0; i < paragraphs.length; i++) {
+    const p = paragraphs[i];
+    currentChunk.push({ index: i, text: p });
+    currentLength += p.length;
+    if (currentLength >= CONFIG.chunkSize || i === paragraphs.length - 1) {
+      chunks.push(currentChunk);
+      currentChunk = [];
+      currentLength = 0;
+    }
   }
 
-  console.log(`[Pass 1] 文本共 ${text.length} 字，分 ${chunks.length} 块`);
+  console.log(`[Pass 1] 文本共分 ${paragraphs.length} 个自然段，划分成 ${chunks.length} 块进行粗筛`);
 
   const allPassages = [];
   for (let ci = 0; ci < chunks.length; ci++) {
-    const startIdx = ci * Math.floor(text.length / Math.max(chunks.length, 1));
+    const formattedChunk = chunks[ci].map(item => `[${item.index}] ${item.text}`).join("\n");
     const response = await callLLM(
       CONFIG.pass1Model,
-      PASS1_PROMPT(chunks[ci].slice(0, CONFIG.chunkSize), startIdx),
+      PASS1_PROMPT(formattedChunk),
       CONFIG.pass1MaxTokens
     );
 
@@ -113,11 +124,12 @@ async function pass1CoarseFilter(text) {
     if (nums) {
       for (const n of nums) {
         const idx = parseInt(n);
-        if (!isNaN(idx) && idx >= 0 && idx < text.length) {
-          // 提取该段落周围 ~500 字的上下文
-          const start = Math.max(0, idx - 250);
-          const end = Math.min(text.length, idx + 250);
-          allPassages.push(text.slice(start, end));
+        if (!isNaN(idx) && idx >= 0 && idx < paragraphs.length) {
+          // 提取该段落以及前后各一段，作为上下文提供给 Pass 2
+          const start = Math.max(0, idx - 1);
+          const end = Math.min(paragraphs.length, idx + 2);
+          const sliceText = paragraphs.slice(start, end).join("\n");
+          allPassages.push(sliceText);
         }
       }
     }
