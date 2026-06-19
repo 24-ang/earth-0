@@ -1798,8 +1798,13 @@ export default function (pi: ExtensionAPI) {
           return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
         }
         const data = await res.json() as any;
-        const response = data?.content?.[0]?.text ?? `${params.npcName}（沉默）`;
-        return { content: [{ type: "text", text: response.trim() }], details: {} };
+        const response = data?.content?.[0]?.text?.trim() || `${params.npcName}（沉默）`;
+        // 自动写入 NPC 记忆（7 天有效期）
+        try {
+          const { addMemoryTag } = await import("./engine/state.ts");
+          addMemoryTag(params.npcName, `${params.sceneContext} → ${response.slice(0, 50)}`, 7);
+        } catch (_) {}
+        return { content: [{ type: "text", text: response }], details: {} };
       } catch {
         return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
       }
@@ -1874,6 +1879,15 @@ export default function (pi: ExtensionAPI) {
       }
 
       const results = await Promise.all(params.npcs.map(n => runOne(n.npcName, n.sceneContext)));
+      // 自动写入所有 NPC 的记忆（7 天有效期）
+      try {
+        const { addMemoryTag } = await import("./engine/state.ts");
+        for (let i = 0; i < params.npcs.length; i++) {
+          if (!results[i].includes("（沉默）") && !results[i].includes("（未找到）")) {
+            addMemoryTag(params.npcs[i].npcName, `${params.npcs[i].sceneContext.slice(0, 40)} → ${results[i].slice(0, 40)}`, 7);
+          }
+        }
+      } catch (_) {}
       const text = params.npcs.map((n, i) => `[${n.npcName}] ${results[i]}`).join("\n");
       return { content: [{ type: "text", text }], details: {} };
     },
