@@ -1615,7 +1615,7 @@ export default function (pi: ExtensionAPI) {
 
       if (params.memory_tags && params.memory_tags.length > 0) {
         for (const m of params.memory_tags) {
-          addMemoryTag(m.target, m.tag, 7);
+          addMemoryTag(m.target, m.tag, 365);
         }
       }
 
@@ -1782,7 +1782,8 @@ export default function (pi: ExtensionAPI) {
           const rel = npc.npcRelationships?.[name];
           return rel ? `${name}(${rel.stage}·${rel.tone})` : `${name}(陌生)`;
         }).join("、")}` : "",
-        memories.length > 0 ? `记忆: ${memories.join("；")}` : "",
+        memories.length > 0 ? `关于当前场景的记忆: ${memories.join("；")}` : "你不记得之前发生过什么相关的事。",
+        otherNPCs.length > 0 ? `提示: 如果你想知道其他在场NPC的事，检查上面「对在场其他人的态度」——那是你已知的信息。` : "",
         "",
         `当前场景: ${params.sceneContext}`,
         params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",
