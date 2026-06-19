@@ -1935,7 +1935,7 @@ export function toggleDoor(x: number, y: number): { success: boolean; reason: st
 }
 
 // --- 记忆标签：LLM观察到某事 → 打标签 ---
-export function addMemoryTag(npcName: string, tag: string, expiresDays: number = 3, tone?: string): void {
+export function addMemoryTag(npcName: string, tag: string, expiresDays: number = 365, tone?: string): void {
   const npc = gameState.npcs[npcName];
   if (!npc) return;
   npc.memoryTags ??= [];
