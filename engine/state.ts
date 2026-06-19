@@ -646,6 +646,21 @@ function ensureCollectors(): void {
       } catch { return null; }
     },
   });
+
+  // L2-enhanced: 结构化记忆表（deepRolePlay 移植）
+  promptCollectors.register({
+    name: "scenario-tables", priority: 35, layer: "enhanced", degradeStrategy: "compress",
+    async collect(_gs) {
+      try {
+        const { getAllTables } = await import("./scenario-tables.ts");
+        const text = getAllTables();
+        if (text && text.length > 20) {
+          return { text: `[结构化记忆]\n${text}`, priority: 35, layer: "enhanced", degradeStrategy: "compress", sourceName: "scenario-tables" };
+        }
+      } catch {}
+      return null;
+    },
+  });
 }
 
 /** 注入 collector 注册表产出的上下文（NPC 重段已迁移至 collector） */
