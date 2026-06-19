@@ -1935,17 +1935,17 @@ export function toggleDoor(x: number, y: number): { success: boolean; reason: st
 }
 
 // --- 记忆标签：LLM观察到某事 → 打标签 ---
-export function addMemoryTag(npcName: string, tag: string, expiresDays: number = 3): void {
+export function addMemoryTag(npcName: string, tag: string, expiresDays: number = 3, tone?: string): void {
   const npc = gameState.npcs[npcName];
   if (!npc) return;
   npc.memoryTags ??= [];
-  npc.memoryTags.push({ tag, since: gameState.time.game_date, expires: expiresDays });
+  npc.memoryTags.push({ tag, since: gameState.time.game_date, expires: expiresDays, tone: tone as any });
 }
 
 export function getMemoryTags(npcName: string): string[] {
   const npc = gameState.npcs[npcName];
   if (!npc?.memoryTags) return [];
-  return npc.memoryTags.slice(-5).map(t => t.tag);
+  return npc.memoryTags.slice(-5).map(t => `${t.tag}${t.tone ? ` [${t.tone}]` : ""}`);
 }
 
 // --- 多维声望 ---

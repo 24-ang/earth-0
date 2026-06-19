@@ -259,7 +259,7 @@ export interface NPCRuntimeState {
   scheduleGroup: string;           // 日程模板标签
   scheduleOverrides?: Record<string, string>;
   funds: number;                   // NPC 现金
-  memoryTags: { tag: string; since: string; expires: number }[];
+  memoryTags: { tag: string; since: string; expires: number; tone?: "感激" | "愧疚" | "喜欢" | "厌恶" | "受伤" | "困惑" | "期待" | "无感" }[];
   currentOutfit: OutfitKey;        // 当前激活的服装卡（默认 school）
   pendingOverride?: {              // 一次性最高优先级（生病/约定等）
     location: string;
