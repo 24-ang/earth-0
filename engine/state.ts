@@ -2119,7 +2119,12 @@ export function refreshWeather(): string {
 }
 
 // --- NPC 日程更新 ---
-import scheduleTemplates from "../data/schedule_templates.json" with { type: "json" };
+import scheduleTemplatesStatic from "../data/schedule_templates.json" with { type: "json" };
+import roomTemplatesStatic from "../data/room_templates.json" with { type: "json" };
+import sexProfilesStatic from "../data/sex_profiles.json" with { type: "json" };
+export let scheduleTemplates = scheduleTemplatesStatic as any;
+export let roomTemplates = roomTemplatesStatic as any;
+export let sexProfilesData = sexProfilesStatic as any;
 const TEMPLATES = scheduleTemplates as any;
 
 export function getFallbackRoom(roomName: string): string {
@@ -2636,6 +2641,9 @@ export function loadActiveWorld(worldName?: string): void {
   shopsCatalog = loadJSON("shops.json", shopsCatalogStatic);
   positionsCatalog = loadJSON("positions.json", positionsCatalogStatic);
   phoneAppsCatalog = loadJSON("phone_apps.json", phoneAppsCatalogStatic);
+  scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
+  roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
+  sexProfilesData = loadJSON("sex_profiles.json", sexProfilesStatic);
 
   // 更新 GameState 中的活跃世界观
   gameState.activeWorld = world;

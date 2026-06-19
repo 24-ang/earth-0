@@ -1,0 +1,106 @@
+{
+  "小学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "小学校",
+    "weekday_lunch": "小学校",
+    "weekday_afternoon": "小学校 / 下校",
+    "weekday_evening": "自宅",
+    "weekend": "自宅 / 公园 / 图书馆"
+  },
+  "中学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "自由",
+    "weekday_lunch": "自由",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自宅",
+    "weekend": "自宅"
+  },
+  "高校生": {
+    "reputation_group": "学生",
+    "weekday_morning": "2年J班 / 2年F班",
+    "weekday_lunch": "2年J班 / 2年F班 / 中庭 / 1F南走廊",
+    "weekday_afternoon": "2年J班 / 2年F班 / 侍奉部 / 社团楼1F走廊",
+    "weekday_evening": "自宅",
+    "weekend": "自宅"
+  },
+  "总武高学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "2年J班 / 2年F班",
+    "weekday_lunch": "2年J班 / 2年F班 / 中庭 / 1F南走廊 / 2F南走廊-F班前",
+    "weekday_afternoon": "2年J班 / 2年F班 / 侍奉部 / 社团楼1F走廊",
+    "weekday_evening": "自宅",
+    "weekend": "自由"
+  },
+  "总武高教师": {
+    "reputation_group": "教师",
+    "weekday_morning": "2年J班 / 2年F班 / 职员室",
+    "weekday_lunch": "中庭 / 1F南走廊 / 2F南走廊-F班前",
+    "weekday_afternoon": "2年J班 / 2年F班 / 侍奉部",
+    "weekday_evening": "自宅",
+    "weekend": "自宅"
+  },
+  "运动部员": {
+    "weekday_morning": "2年J班 / 2年F班",
+    "weekday_lunch": "2年J班 / 2年F班 / 中庭",
+    "weekday_afternoon": "操场 / 体育馆",
+    "weekday_evening": "自宅",
+    "weekend": "操场 / 自由",
+    "reputation_group": "学生"
+  },
+  "自由人": {
+    "weekday_morning": "自由",
+    "weekday_lunch": "自由",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自由",
+    "weekend": "自由",
+    "reputation_group": "路人"
+  },
+  "不良": {
+    "reputation_group": "不良",
+    "weekday_morning": "自由",
+    "weekday_lunch": "1F南走廊 / 2F南走廊-F班前 / 中庭",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自宅",
+    "weekend": "自由"
+  },
+  "店员": {
+    "reputation_group": "路人",
+    "weekday_morning": "商店街",
+    "weekday_lunch": "商店街",
+    "weekday_afternoon": "商店街",
+    "weekday_evening": "商店街",
+    "weekend": "商店街"
+  },
+  "社团部员": {
+    "reputation_group": "学生",
+    "weekday_morning": "2年J班 / 2年F班",
+    "weekday_lunch": "2年J班 / 2年F班 / 中庭",
+    "weekday_afternoon": "侍奉部 / 社团楼1F走廊",
+    "weekday_evening": "自宅",
+    "weekend": "自由"
+  },
+  "大学生": {
+    "reputation_group": "学生",
+    "weekday_morning": "自由",
+    "weekday_lunch": "自由",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自宅",
+    "weekend": "自宅"
+  },
+  "海外留学": {
+    "reputation_group": "学生",
+    "weekday_morning": "不在日本",
+    "weekday_lunch": "不在日本",
+    "weekday_afternoon": "不在日本",
+    "weekday_evening": "不在日本",
+    "weekend": "不在日本"
+  },
+  "上班族": {
+    "reputation_group": "社会人",
+    "weekday_morning": "自由",
+    "weekday_lunch": "自由",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自宅",
+    "weekend": "自宅"
+  }
+}

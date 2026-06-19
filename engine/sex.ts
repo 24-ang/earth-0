@@ -7,13 +7,33 @@
  */
 
 import type { SexProfile, SexState, Thought, SettlementReport, SexualMilestones } from "./types.ts";
-import sexProfilesJson from "../data/sex_profiles.json" with { type: "json" };
-
 export type CyclePhase = "生理期" | "安全期" | "排卵期";
 export type SexPhase = "caress" | "service" | "insertion";
 export type { SexProfile, SexState };
 
-export const SEX_PROFILES = sexProfilesJson as Record<string, SexProfile>;
+/** 动态引用——随 Worldpack 切换自动更新 */
+import type { SexProfile } from "./types.ts";
+export const SEX_PROFILES: Record<string, SexProfile> = new Proxy({} as any, {
+  get(_, prop) {
+    try {
+      const { sexProfilesData } = require("./state.ts");
+      return (sexProfilesData || {})[prop];
+    } catch { return undefined; }
+  },
+  ownKeys() {
+    try {
+      const { sexProfilesData } = require("./state.ts");
+      return Reflect.ownKeys(sexProfilesData || {});
+    } catch { return []; }
+  },
+  getOwnPropertyDescriptor(_, prop) {
+    try {
+      const { sexProfilesData } = require("./state.ts");
+      const v = (sexProfilesData || {})[prop];
+      return v ? { configurable: true, enumerable: true, value: v } : undefined;
+    } catch { return undefined; }
+  }
+}) as any;
 
 // --- 周期 ---
 export function getCyclePhase(day: number): CyclePhase {
