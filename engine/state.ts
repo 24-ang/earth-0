@@ -1989,7 +1989,13 @@ export function clearScheduleOverride(npcName: string): string {
 }
 // --- 商店/经济（AIRP风格：引擎只做会计，LLM管市场常识） ---
 import itemsCatalogStatic from "../data/items.json" with { type: "json" };
+import shopsCatalogStatic from "../data/shops.json" with { type: "json" };
+import positionsCatalogStatic from "../data/positions.json" with { type: "json" };
+import phoneAppsCatalogStatic from "../data/phone_apps.json" with { type: "json" };
 export let itemsCatalog = itemsCatalogStatic as any;
+export let shopsCatalog = shopsCatalogStatic as any;
+export let positionsCatalog = positionsCatalogStatic as any;
+export let phoneAppsCatalog = phoneAppsCatalogStatic as any;
 
 export let PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
 
@@ -2623,6 +2629,10 @@ export function loadActiveWorld(worldName?: string): void {
   locationsData = loadJSON("locations.json", locationsDataStatic);
   schoolMapData = loadJSON("school_map.json", schoolMapDataStatic);
   cityMapData = loadJSON("city_map.json", cityMapDataStatic);
+  itemsCatalog = loadJSON("items.json", itemsCatalogStatic);
+  shopsCatalog = loadJSON("shops.json", shopsCatalogStatic);
+  positionsCatalog = loadJSON("positions.json", positionsCatalogStatic);
+  phoneAppsCatalog = loadJSON("phone_apps.json", phoneAppsCatalogStatic);
 
   // 更新 GameState 中的活跃世界观
   gameState.activeWorld = world;

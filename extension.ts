@@ -415,7 +415,8 @@ export default function (pi: ExtensionAPI) {
   async function showPhoneTUI(ctx: any, phoneItem: any) {
     const { getPlayerPhoneData, syncContactsFromRelationships, markAllRead } =
       await import("./engine/phone.ts");
-    const phoneApps: any[] = (await import("./data/phone_apps.json", { with: { type: "json" } })).default;
+    const { phoneAppsCatalog } = await import("./engine/state.ts");
+    const phoneApps: any[] = phoneAppsCatalog;
     const { gameState } = await import("./engine/state.ts");
 
     const pd = getPlayerPhoneData();
@@ -803,7 +804,7 @@ export default function (pi: ExtensionAPI) {
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { allChars } = await import("./engine/router.ts");
       const { getBodyForAge, getNpcCurrentAge, gameState } = await import("./engine/state.ts");
-      const itemsCatalog = (await import("./data/items.json", { with: { type: "json" } })).default;
+      const { itemsCatalog } = await import("./engine/state.ts");
       const c = allChars.find((x: any) => x.name === params.name);
       if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
       const age = getNpcCurrentAge(c.base_age || 16);
@@ -2574,7 +2575,7 @@ export default function (pi: ExtensionAPI) {
           lines.push(`── 装备 ──`);
           const flavorMap = new Map<string, string>();
           try {
-            const itemsCatalog = (await import("./data/items.json", { with: { type: "json" } })).default;
+            const { itemsCatalog } = await import("./engine/state.ts");
             for (const cat of Object.values(itemsCatalog as any)) {
               for (const [iname, item] of Object.entries(cat as any)) {
                 if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
@@ -2662,7 +2663,7 @@ export default function (pi: ExtensionAPI) {
         // 装备 flavor 速查
         const flavorMap = new Map<string, string>();
         try {
-          const itemsCatalog = (await import("./data/items.json", { with: { type: "json" } })).default;
+          const { itemsCatalog } = await import("./engine/state.ts");
           for (const cat of Object.values(itemsCatalog as any)) {
             for (const [iname, item] of Object.entries(cat as any)) {
               if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
@@ -2898,7 +2899,7 @@ export default function (pi: ExtensionAPI) {
         try {
           const { getAvailableActions } = await import("./engine/sex.ts");
           let posDB: any = null;
-          try { posDB = (await import("./data/positions.json", { with: { type: "json" } })).default; } catch (_) {}
+          try { const { positionsCatalog } = await import("./engine/state.ts"); posDB = positionsCatalog; } catch (_) {}
           const avail = getAvailableActions(p, s, posDB);
           if (avail.actions.length > 0 || avail.positions.length > 0) {
             lines.push(``);
@@ -3581,7 +3582,7 @@ export default function (pi: ExtensionAPI) {
 
       // 加载商店数据
       let shops: any = null;
-      try { shops = (await import("./data/shops.json", { with: { type: "json" } })).default; } catch (_) {}
+      try { const { shopsCatalog } = await import("./engine/state.ts"); shops = shopsCatalog; } catch (_) {}
       let economy: any = null;
       try { economy = (await import("./data/economy.json", { with: { type: "json" } })).default; } catch (_) {}
 
