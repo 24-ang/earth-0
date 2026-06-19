@@ -802,10 +802,9 @@ export default function (pi: ExtensionAPI) {
     description: "查询角色属性/装备(含flavor)/技能/身体。描写服装细节前务必调用。",
     parameters: Type.Object({ name: Type.String({ description: "角色名" }) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { allChars } = await import("./engine/router.ts");
-      const { getBodyForAge, getNpcCurrentAge, gameState } = await import("./engine/state.ts");
+      const { findCharacter, getBodyForAge, getNpcCurrentAge, gameState } = await import("./engine/state.ts");
       const { itemsCatalog } = await import("./engine/state.ts");
-      const c = allChars.find((x: any) => x.name === params.name);
+      const c = findCharacter(params.name);
       if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
       const age = getNpcCurrentAge(c.base_age || 16);
       const aged = { ...c, body: getBodyForAge(c, age) };
@@ -883,8 +882,8 @@ export default function (pi: ExtensionAPI) {
       if (params.name === gameState.player.name || params.name === "玩家") {
         return { content: [{ type: "text", text: JSON.stringify(gameState.player, null, 2) }], details: { character: gameState.player } };
       }
-      const { allChars } = await import("./engine/router.ts");
-      const c = allChars.find((x: any) => x.name === params.name);
+      const { findCharacter } = await import("./engine/state.ts");
+      const c = findCharacter(params.name);
       if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
       const age = getNpcCurrentAge(c.base_age || 16);
       const body = getBodyForAge(c, age);
@@ -1254,13 +1253,13 @@ export default function (pi: ExtensionAPI) {
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateNPC, damageItem } = await import("./engine/state.ts");
       const { resolveAttack, defend, attemptFlee, makeDeathSave, getRoundSummary } = await import("./engine/combat.ts");
-      const allChars = (await import("./engine/router.ts")).allChars;
+      const { findCharacter } = await import("./engine/state.ts");
       const p = gameState.player;
 
       // Helper: 构建 NPC 战斗状态
       const buildNPCCombatant = (name: string) => {
         const npc = getOrCreateNPC(name);
-        const src = allChars.find((c: any) => c.name === name);
+        const src = findCharacter(name);
         const npcState = {
           ...structuredClone(p),
           name,
@@ -1751,12 +1750,10 @@ export default function (pi: ExtensionAPI) {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
-      const characters = await import("./../data/characters.json", { with: { type: "json" } });
+      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("./engine/state.ts");
       const charStages = await import("./../data/character_stages.json", { with: { type: "json" } });
 
-      const src = (characters as any).default?.find?.((c: any) => c.name === params.npcName)
-        || (characters as any[]).find?.((c: any) => c.name === params.npcName);
+      const src = findCharacter(params.npcName);
       if (!src) {
         return { content: [{ type: "text", text: `${params.npcName}（角色数据未找到）` }], details: {} };
       }
@@ -1774,7 +1771,7 @@ export default function (pi: ExtensionAPI) {
       // 阶段性格
       const cs = (charStages as any)[params.npcName];
       const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
-      const personality = cs?.[stageKey] || "";
+      const personality = src.personality_text || cs?.[stageKey] || "";
 
       // 获取在场其他 NPC（排除自己），给 NPC 提供场景共识
       const otherNPCs = Object.entries(gameState.npcs)
@@ -1891,14 +1888,12 @@ export default function (pi: ExtensionAPI) {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
-      const characters = await import("./../data/characters.json", { with: { type: "json" } });
+      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("./engine/state.ts");
       const charStages = await import("./../data/character_stages.json", { with: { type: "json" } });
       const KEY = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
 
       async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<string> {
-        const src = (characters as any).default?.find?.((c: any) => c.name === npcName)
-          || (characters as any[]).find?.((c: any) => c.name === npcName);
+        const src = findCharacter(npcName);
         if (!src) return `${npcName}（未找到）`;
 
         const npc = getOrCreateNPC(npcName);
@@ -2036,6 +2031,59 @@ export default function (pi: ExtensionAPI) {
       npc.pendingOverride = { location: params.location, action: params.action, reason: params.reason, expiresAt: params.until || "2099-12-31" };
       saveState();
       return { content: [{ type: "text", text: `${params.npc} 日程覆盖: ${params.location} (${params.reason})` }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "create_character", label: "创建角色",
+    description: "创建新NPC。name必填。gender默认女/base_age默认16。自动获得属性/身体/资金/日程/位置。返回角色卡。",
+    parameters: Type.Object({
+      name: Type.String({ description: "角色名" }),
+      gender: Type.Optional(Type.String({ description: "性别: 男/女，默认女" })),
+      base_age: Type.Optional(Type.Number({ description: "基础年龄，默认16" })),
+      appearance_brief: Type.Optional(Type.String({ description: "外貌简述，如'金发双马尾，总戴着红色发卡'" })),
+      hair_color: Type.Optional(Type.String()),
+      hair_style: Type.Optional(Type.String()),
+      eye_color: Type.Optional(Type.String()),
+      personality: Type.Optional(Type.String({ description: "性格描述，如'开朗但容易紧张，说话偶尔磕巴'" })),
+      schedule_group: Type.Optional(Type.String({ description: "日程组: 学生/教师/不良/店员/自由人，默认自由人" })),
+      default_location: Type.Optional(Type.String({ description: "默认出现地点，默认同玩家当前位置" })),
+      attributes: Type.Optional(Type.Object({
+        力量: Type.Optional(Type.Number()), 敏捷: Type.Optional(Type.Number()), 体质: Type.Optional(Type.Number()),
+        智力: Type.Optional(Type.Number()), 感知: Type.Optional(Type.Number()), 魅力: Type.Optional(Type.Number()),
+      })),
+      source: Type.Optional(Type.String({ description: "世界观来源，如'春物'、'原创'，默认'原创'" })),
+      reason: Type.String({ description: "创建原因，如'在便利店遇到的打工学生'" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { registerDynamicCharacter, findCharacter, saveState } = await import("./engine/state.ts");
+
+      const charData: any = {
+        name: params.name,
+        gender: params.gender || "female",
+        base_age: params.base_age || 16,
+        source: params.source || "原创",
+        tags: ["dynamic"],
+      };
+      if (params.appearance_brief) charData.appearance_brief = params.appearance_brief;
+      if (params.hair_color) charData.hair_color = params.hair_color;
+      if (params.hair_style) charData.hair_style = params.hair_style;
+      if (params.eye_color) charData.eye_color = params.eye_color;
+      if (params.schedule_group) charData.schedule_group = params.schedule_group;
+      if (params.default_location) charData.default_location = params.default_location;
+      if (params.attributes) charData.attributes = params.attributes;
+      // 性格存储到 character_stages 格式
+      if (params.personality) {
+        charData.personality_text = params.personality;
+      }
+
+      const r = registerDynamicCharacter(params.name, charData);
+      saveState();
+
+      return {
+        content: [{ type: "text", text: `${r}\n原因: ${params.reason}\n可通过 lookup_character("${params.name}") 查看完整角色卡。` }],
+        details: { character: findCharacter(params.name) }
+      };
     },
   });
 
@@ -2362,8 +2410,7 @@ export default function (pi: ExtensionAPI) {
       type: Type.Optional(Type.String({ description: "basic(仅身体数据) / full(含器官档案)，默认 full" })),
     }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateSexState } = await import("./engine/state.ts");
-      const { allChars } = await import("./engine/router.ts");
+      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateSexState, findCharacter } = await import("./engine/state.ts");
       const isPlayer = params.name === gameState.player.name || params.name === "玩家";
 
       // 身体数据
@@ -2371,7 +2418,7 @@ export default function (pi: ExtensionAPI) {
       if (isPlayer) {
         body = gameState.player.body;
       } else {
-        const c = allChars.find((x: any) => x.name === params.name);
+        const c = findCharacter(params.name);
         if (!c) return { content: [{ type: "text", text: `无此角色: ${params.name}` }], details: {} };
         const age = getNpcCurrentAge(c.base_age || 16);
         body = getBodyForAge(c, age);
@@ -2839,9 +2886,8 @@ export default function (pi: ExtensionAPI) {
     handler: async (args, ctx) => {
       const name = args.trim();
       if (!name) { ctx.ui.notify("用法: /look <角色名或物品名>", "warning"); return; }
-      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateNPC, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
-      const { allChars } = await import("./engine/router.ts");
-      
+      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateNPC, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("./engine/state.ts");
+
       const isPlayer = name === gameState.player.name || name === "玩家" || name === "我";
       if (isPlayer) {
         const p = gameState.player;
@@ -2897,7 +2943,12 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      const char = allChars.find((c: any) => c.name === name || c.name.includes(name));
+      let char = findCharacter(name);
+      // 精确匹配失败 → 模糊匹配静态库
+      if (!char) {
+        const { allChars } = await import("./engine/router.ts");
+        char = allChars.find((c: any) => c.name === name || c.name.includes(name)) || null;
+      }
       if (char) {
         const age = getNpcCurrentAge(char.base_age || 16);
         const body = getBodyForAge(char, age);
@@ -3052,7 +3103,7 @@ export default function (pi: ExtensionAPI) {
       // 队友卡
       if (p.party && p.party.length > 0) {
         for (const name of p.party) {
-          const char = allChars.find((c: any) => c.name === name);
+          const char = findCharacter(name);
           const npcState = getOrCreateNPC(name);
           if (char) {
             lines.push(`👥 [队友] ${char.name} (${char.gender === "female" ? "女" : "男"})`);
@@ -3249,8 +3300,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("room", {
     description: "视觉观察当前场景：提取空间感、周边NPC大致高度与距离",
     handler: async (_args, ctx) => {
-      const { gameState, getRoom, isSameLocation, getNpcCurrentAge, getBodyForAge } = await import("./engine/state.ts");
-      const { allChars } = await import("./engine/router.ts");
+      const { gameState, getRoom, isSameLocation, getNpcCurrentAge, getBodyForAge, findCharacter } = await import("./engine/state.ts");
       const loc = gameState.player.location;
       const room = getRoom(loc);
       const lines: string[] = [];
@@ -3328,7 +3378,7 @@ export default function (pi: ExtensionAPI) {
 
       if (inRoomNPCs.length > 0) {
         for (const [name, npc] of inRoomNPCs) {
-          const char = allChars.find((c: any) => c.name === name);
+          const char = findCharacter(name);
           let heightStr = "未知";
           if (char) {
             const curAge = getNpcCurrentAge(char.base_age || 16);

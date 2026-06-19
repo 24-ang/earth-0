@@ -39,6 +39,9 @@ export let CITY_MAP = cityMapData as any;
 // 运行时地点覆盖层：LLM 动态创建的地点 { parentName: [childName, ...] }
 export let LOCATIONS_DELTA: Record<string, string[]> = {};
 
+// 运行时角色注册表：LLM 动态创建的角色 { name: StaticCharacter-like }
+export let DYNAMIC_CHARACTERS: Record<string, any> = {};
+
 export function getRoomKey(roomName: string): string | null {
   if (!roomName) return null;
   if (ROOMS[roomName]) return roomName;
@@ -194,6 +197,10 @@ export function saveState(filepath?: string): void {
   const roomsDeltaPath = path.join(path.dirname(fp), "rooms_delta.json");
   fs.writeFileSync(roomsDeltaPath, JSON.stringify(ROOMS, null, 2));
   
+  // 动态角色持久化
+  const dcPath = path.join(STATE_DIR, "dynamic_characters.json");
+  fs.writeFileSync(dcPath, JSON.stringify(DYNAMIC_CHARACTERS, null, 2));
+
   fs.writeFileSync(fp, JSON.stringify(gameState, null, 2));
 }
 
@@ -216,6 +223,11 @@ export function loadState(filepath?: string): boolean {
   }
 
   loadLocationsDelta();
+  // 恢复动态角色
+  const dcPath = path.join(STATE_DIR, "dynamic_characters.json");
+  if (fs.existsSync(dcPath)) {
+    try { DYNAMIC_CHARACTERS = JSON.parse(fs.readFileSync(dcPath, "utf-8")); } catch (_) {}
+  }
   // 迁移：旧存档无 roomTimestamps
   if (!gameState.roomTimestamps) gameState.roomTimestamps = {};
 
@@ -274,6 +286,12 @@ export function resetState(): void {
   const locDeltaPath = path.join(STATE_DIR, "locations_delta.json");
   if (fs.existsSync(locDeltaPath)) {
     try { fs.unlinkSync(locDeltaPath); } catch (_) {}
+  }
+  // 重置动态角色
+  DYNAMIC_CHARACTERS = {};
+  const dcPath = path.join(STATE_DIR, "dynamic_characters.json");
+  if (fs.existsSync(dcPath)) {
+    try { fs.unlinkSync(dcPath); } catch (_) {}
   }
   saveState();
 }
@@ -1163,9 +1181,45 @@ function fillEffectsFromCatalog(equipment: Record<string, any>): Record<string, 
   return result;
 }
 
+/** 注册 LLM 动态创建的角色。返回描述或错误。 */
+export function registerDynamicCharacter(name: string, data: Record<string, any>): string {
+  if ((characters as any[]).find((c: any) => c.name === name)) {
+    return `角色 ${name} 已存在于静态角色库中，不能覆盖`;
+  }
+  if (DYNAMIC_CHARACTERS[name]) {
+    // 更新已有动态角色
+    Object.assign(DYNAMIC_CHARACTERS[name], data);
+    saveState();
+    return `已更新动态角色: ${name}`;
+  }
+  // 自动补全默认值
+  const defaults: any = {
+    name,
+    gender: "female",
+    base_age: 16,
+    appearance_brief: "",
+    attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 },
+    body: { height_cm: 160, weight_kg: 50, build: "标准", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
+    schedule_group: "自由人",
+    default_location: gameState.player.location,
+    funds: 1000,
+    tags: [],
+  };
+  DYNAMIC_CHARACTERS[name] = { ...defaults, ...data, name };
+  saveState();
+  return `创建了动态角色: ${name}（${data.gender || "female"}，${data.base_age || data.age || 16}岁，位于 ${DYNAMIC_CHARACTERS[name].default_location}）`;
+}
+
+/** 查找角色（先静态库 → 动态注册表） */
+export function findCharacter(name: string): any | null {
+  const src = (characters as any[]).find((c: any) => c.name === name);
+  if (src) return src;
+  return DYNAMIC_CHARACTERS[name] || null;
+}
+
 export function getOrCreateNPC(name: string): NPCRuntimeState {
   if (!gameState.npcs[name]) {
-    const src = (characters as any[]).find((c: any) => c.name === name);
+    const src = findCharacter(name);
     gameState.npcs[name] = {
       inventory: src ? structuredClone(src.inventory ?? []) : [],
       equipment: src ? fillEffectsFromCatalog(src.equipment ?? {}) : {},
@@ -1196,7 +1250,7 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
 
 /** NPC 场景服装切换。返回当前 outfit 描述 */
 export function setNPCOutfit(npcName: string, outfitKey: string): string {
-  const src = (characters as any[]).find((c: any) => c.name === npcName);
+  const src = findCharacter(npcName);
   if (!src?.outfits?.[outfitKey]) return `${npcName}没有 ${outfitKey} 服装卡`;
   const npc = getOrCreateNPC(npcName);
   npc.currentOutfit = outfitKey as any;
@@ -1207,7 +1261,7 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
 
 /** 获取 NPC 当前 outfit 的外观描述。已从装备槽移除的物品不显示 */
 export function getNPCOutfitDesc(npcName: string): string {
-  const src = (characters as any[]).find((c: any) => c.name === npcName);
+  const src = findCharacter(npcName);
   if (!src?.outfits) {
     const hairDesc = [src?.hair_color, src?.hair_style].filter(Boolean).join("");
     return hairDesc || src?.appearance_brief || "";

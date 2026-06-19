@@ -441,6 +441,7 @@ export interface GameState {
   turnLog: TurnLogEntry[];                 // Layer 2 回合台账
   storySoFar: string;                      // 前情滚动摘要（旧回合压缩）
   revealLog: RevealEntry[];                // Layer 3 秘密揭示日志
+  dynamicCharacters?: Record<string, any>;   // LLM 运行时创建的角色（name → StaticCharacter 字段）
 }
 
 // ── 手机数据（存储在 Item.phoneData）──
