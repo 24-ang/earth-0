@@ -1,0 +1,56 @@
+{
+  "_note": "场景模板 — 仅提供尺寸约束 + 角色分类 + 一句话工程参考。氛围、家具、四向描述全部交给 LLM 根据剧情上下文自由发挥。create_room(template='...') 套用尺寸；create_room(template='...', atmosphere='...', furniture=[...]) 可覆盖。",
+  "school": {
+    "普通教室":          { "width": 9,  "height": 8,  "role": "room",      "desc": "MEXT標準74㎡。40人学級。6列7排+講台+後部ロッカー" },
+    "社团室·小":          { "width": 6,  "height": 5,  "role": "room",      "desc": "文学·写真·漫画·放送系。4-8人。こぢんまり" },
+    "社团室·中":          { "width": 9,  "height": 8,  "role": "room",      "desc": "美術·科学·茶道·軽音。普通教室大。収納棚多め" },
+    "社团室·大":          { "width": 12, "height": 9,  "role": "room",      "desc": "吹奏楽·演劇·合唱。楽器/衣装/大道具収蔵が必要" },
+    "运动部部室":         { "width": 6,  "height": 5,  "role": "room",      "desc": "運動部の会議·着替え·用具保管。グラウンド隣接" },
+    "更衣室":            { "width": 8,  "height": 6,  "role": "room",      "desc": "ロッカー列+ベンチ+鏡+シャワー。体育館/プール併設" },
+    "理科实验室":         { "width": 12, "height": 9,  "role": "room",      "desc": "MEXT標準108㎡。実験台6台×4人+演示台+準備室" },
+    "音乐教室":           { "width": 12, "height": 9,  "role": "room",      "desc": "ピアノ+指揮台+合唱用階段席。防音壁。40人" },
+    "体育馆":            { "width": 30, "height": 20, "role": "room",      "desc": "MEXT最低600㎡。バスケコート(28×15)+バッファ。運動60人/集会400人" },
+    "游泳池":            { "width": 30, "height": 15, "role": "room",      "desc": "25m×6レーン。プールサイド+飛び込み台+見学ギャラリー。夏限定" },
+    "图书馆":            { "width": 16, "height": 12, "role": "room",      "desc": "書架+閲覧区+自習区。全校生徒の10-15%収容" },
+    "教师办公室":         { "width": 12, "height": 8,  "role": "room",      "desc": "≈30名教師。一人3㎡+複写·給湯コーナー" },
+    "保健室":            { "width": 6,  "height": 5,  "role": "room",      "desc": "病床2+保健医机+薬品棚。緊急時一時収容" },
+    "屋顶":              { "width": 20, "height": 20, "role": "room",      "desc": "校舎屋上。金網+給水塔+室外機。開放感。独り·告白シーン" },
+    "走廊":              { "width": 12, "height": 2,  "role": "connector", "desc": "学校標準廊下幅2m(建築基準法)。水平連結で全長伸ばせる" },
+    "楼梯间":            { "width": 4,  "height": 6,  "role": "transition","desc": "折返し階段。半階プラットフォーム式。上下階連結" },
+    "学校厕所":           { "width": 8,  "height": 4,  "role": "room",      "desc": "男(小便器5+個室2)+女(個室4)+共用洗面台" },
+    "中庭":              { "width": 15, "height": 12, "role": "room",      "desc": "校舎に囲まれた中庭。ベンチ+花壇+水飲み場。昼休み·体育の合間" },
+    "校门":              { "width": 10, "height": 8,  "role": "transition","desc": "門柱+桜の木+駐輪場+掲示板。登下校待合せ。外部との境界" }
+  },
+  "commercial": {
+    "便利店":            { "width": 10, "height": 12, "role": "room",      "desc": "日本平均110㎡(日経MJ 2023)。3列棚+冷蔵+レジ+ATM+雑誌" },
+    "咖啡厅":            { "width": 12, "height": 10, "role": "room",      "desc": "12-16席。カウンター4+2人掛×4+4人掛×1+厨房≈8㎡" },
+    "快餐店":            { "width": 10, "height": 8,  "role": "room",      "desc": "12-16席+カウンター+厨房≈30㎡。総80㎡" },
+    "拉面店":            { "width": 5,  "height": 8,  "role": "room",      "desc": "L字カウンター8席+厨房。食券機+暖簾+冷水ポット" },
+    "卡拉OK包厢":         { "width": 5,  "height": 4,  "role": "room",      "desc": "4-8人。ソファ+L字テーブル+大型モニター+ミラーボール。防音扉" },
+    "书店":              { "width": 10, "height": 10, "role": "room",      "desc": "書架列+雑誌コーナー+レジ+読書角。立ち読みOK" },
+    "游戏中心":           { "width": 12, "height": 10, "role": "room",      "desc": "アーケード列+クレーンゲーム+プリクラ+メダル機。騒音と点滅光" },
+    "商店街":            { "width": 20, "height": 3,  "role": "connector", "desc": "アーケード商店街の一区画。両側店舗。水平連結で全長伸ばせる" }
+  },
+  "residential": {
+    "单身公寓":           { "width": 5,  "height": 5,  "role": "room",      "desc": "1K≈25㎡(15畳)。キッチン+バス+6畳居室+バルコニー。学生/社畜定番" },
+    "高级公寓客厅":        { "width": 8,  "height": 6,  "role": "room",      "desc": "2LDKのLDK部分(≈48㎡)。リビング+ダイニング+オープンキッチン一体" },
+    "传统和室":           { "width": 6,  "height": 6,  "role": "room",      "desc": "≈22畳の大広間。座敷+床の間+縁側付き。日本家屋" },
+    "钱汤":              { "width": 14, "height": 12, "role": "room",      "desc": "浴場60㎡+男女脱衣所各30㎡+番台。富士山壁画。総168㎡" },
+    "家庭浴室":           { "width": 4,  "height": 3,  "role": "room",      "desc": "日本標準ユニットバス≈5㎡。浴槽(1.2×0.8)+洗面+脱衣かご" },
+    "公共トイレ":         { "width": 6,  "height": 4,  "role": "room",      "desc": "商業施設·駅標準。男(小3+個2)+女(個3)+多目的1+洗面" }
+  },
+  "outdoor": {
+    "公园广场":           { "width": 20, "height": 20, "role": "room",      "desc": "街区公園(児童公園)。遊具+噴水+ベンチ。都市公園法·小規模公園" },
+    "神社境内":           { "width": 16, "height": 12, "role": "room",      "desc": "中小神社。鳥居→参道→手水舎→拝殿→本殿の標準配置" },
+    "路地":              { "width": 15, "height": 2,  "role": "connector", "desc": "建物間隙間2m。配管+室外機+蔦。深夜独歩·尾行·喧嘩·タバコ" },
+    "大通り":            { "width": 30, "height": 8,  "role": "connector", "desc": "幹線道路。4車線12m+両側歩道各3m+店舗前各5m。横断歩道·信号" },
+    "住宅街":            { "width": 20, "height": 6,  "role": "connector", "desc": "生活道路。狭車道5m+両側歩道各1.5m+住宅塀各3m。電柱·猫·郵便ポスト" },
+    "河堤":              { "width": 30, "height": 8,  "role": "connector", "desc": "川4m+土手斜面4m+遊歩道2m+草地4m+並木。花火·散歩·告白·サイクリング" },
+    "电车月台":           { "width": 40, "height": 4,  "role": "connector", "desc": "JR在来線ホーム。10両編成(200m)の一部区間。ベンチ+自販機+時刻表" },
+    "都市広場":           { "width": 30, "height": 30, "role": "vista",     "desc": "駅前広場·大規模公開空地。噴水+ベンチ+街灯。新宿·渋谷感。開放空間" },
+    "繁華街交差点":        { "width": 25, "height": 25, "role": "vista",     "desc": "スクランブル交差点型。四面ビル群+大画面ビジョン+信号+人波。渋谷·時代広場感" }
+  },
+  "transport": {
+    "电车车厢":           { "width": 20, "height": 3,  "role": "connector", "desc": "JR通勤電車1両(20×2.8m)。ロングシート。定員140人(実乗車60人)。連結可" }
+  }
+}
