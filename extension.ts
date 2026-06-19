@@ -1782,8 +1782,8 @@ export default function (pi: ExtensionAPI) {
           const rel = npc.npcRelationships?.[name];
           return rel ? `${name}(${rel.stage}·${rel.tone})` : `${name}(陌生)`;
         }).join("、")}` : "",
-        memories.length > 0 ? `关于当前场景的记忆: ${memories.join("；")}` : "你不记得之前发生过什么相关的事。",
-        otherNPCs.length > 0 ? `提示: 如果你想知道其他在场NPC的事，检查上面「对在场其他人的态度」——那是你已知的信息。` : "",
+        memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
+        (() => { try { const { getNPCContext } = require("./engine/scenario-tables.ts"); const ctx = getNPCContext(params.npcName); return ctx.length > 0 ? `你的已知情报:\n${ctx.join("\n")}` : ""; } catch { return ""; } })(),
         "",
         `当前场景: ${params.sceneContext}`,
         params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",
@@ -2412,6 +2412,52 @@ export default function (pi: ExtensionAPI) {
       npc.npcRelationships[params.to] = { stage: params.stage, tone: params.tone, notes: params.notes || "" };
       saveState();
       return { content: [{ type: "text", text: `${params.from} → ${params.to}: ${params.stage}·${params.tone}${params.notes ? " (" + params.notes + ")" : ""}` }], details: {} };
+    },
+  });
+
+  // ── 结构化记忆工具（移植自 deepRolePlay）──
+  pi.registerTool({
+    name: "table_create", label: "表格新增",
+    description: "在结构化记忆表中创建一行。table:情景表/角色身份表/角色状态表/关键实体表/世界观表。row:键值对。",
+    parameters: Type.Object({
+      table: Type.String({ description: "表格名" }),
+      row: Type.Record(Type.String(), Type.String()),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { createRow } = await import("./engine/scenario-tables.ts");
+      const r = createRow(params.table, params.row);
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+  pi.registerTool({
+    name: "table_update", label: "表格更新",
+    description: "更新表格单元格。table+rowId+col+val。",
+    parameters: Type.Object({
+      table: Type.String(), rowId: Type.String(), col: Type.String(), val: Type.String(),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { updateCell } = await import("./engine/scenario-tables.ts");
+      const r = updateCell(params.table, params.rowId, params.col, params.val);
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+  pi.registerTool({
+    name: "table_delete", label: "表格删除",
+    description: "删除表格行。table+rowId。",
+    parameters: Type.Object({ table: Type.String(), rowId: Type.String() }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { deleteRow } = await import("./engine/scenario-tables.ts");
+      const r = deleteRow(params.table, params.rowId);
+      return { content: [{ type: "text", text: r }], details: {} };
+    },
+  });
+  pi.registerTool({
+    name: "table_read", label: "表格读取",
+    description: "读取所有结构化记忆表。GM用此查看当前世界状态。",
+    parameters: Type.Object({}),
+    async execute(_id, _p, _s, _o, _ctx) {
+      const { getAllTables } = await import("./engine/scenario-tables.ts");
+      return { content: [{ type: "text", text: getAllTables() || "表格为空" }], details: {} };
     },
   });
 
