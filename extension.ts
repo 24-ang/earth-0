@@ -1761,8 +1761,15 @@ export default function (pi: ExtensionAPI) {
       const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
       const personality = cs?.[stageKey] || "";
 
+      // 获取在场其他 NPC（排除自己），给 NPC 提供场景共识
+      const otherNPCs = Object.entries(gameState.npcs)
+        .filter(([name, n]) => name !== params.npcName && n.currentRoom && gameState.player.location &&
+          n.currentRoom.replace(/[（(].*[）)]/, "").trim().toLowerCase() === gameState.player.location.replace(/[（(].*[）)]/, "").trim().toLowerCase())
+        .map(([name]) => name);
+
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
+        `在场人物: 玩家${otherNPCs.length > 0 ? "、" + otherNPCs.join("、") : "（仅你一人）"}。`,
         "",
         `性格: ${personality || "（暂无）"}`,
         `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}${app?.hair_accessories ? "，" + app.hair_accessories : ""}`,
@@ -1845,8 +1852,13 @@ export default function (pi: ExtensionAPI) {
         const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
         const personality = cs?.[stageKey] || "";
 
+        const batchOthers = params.npcs
+          .filter((n: any) => n.npcName !== npcName)
+          .map((n: any) => n.npcName);
+
         const prompt = [
           `你是${npcName}。你现在正在${gameState.player.location}。`,
+          `在场人物: 玩家${batchOthers.length > 0 ? "、" + batchOthers.join("、") : "（仅你一人）"}。`,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,
