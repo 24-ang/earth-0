@@ -1777,11 +1777,13 @@ export default function (pi: ExtensionAPI) {
         `穿着: ${outfit}`,
         `身体: ${body?.height_cm}cm ${body?.build}${body?.cup ? " " + body.cup + "cup" : ""}`,
         "",
-        `你和玩家的关系: ${stage}（好感${affection}）`,
-        otherNPCs.length > 0 ? `对在场其他人的态度: ${otherNPCs.map(name => {
+        `关系快照:`,
+        `  玩家: ${stage}（好感${affection}）`,
+        otherNPCs.length > 0 ? `  在场其他人: ${otherNPCs.map(name => {
           const rel = npc.npcRelationships?.[name];
-          return rel ? `${name}(${rel.stage}·${rel.tone})` : `${name}(陌生)`;
-        }).join("、")}` : "",
+          return rel ? `${name}(${rel.stage}·${rel.tone}${rel.notes ? "·因"+rel.notes : ""})` : `${name}(陌生)`;
+        }).join("、")}` : "  在场其他人: 无",
+        `  提示: 对你的态度有明确记忆或长期关系的人，你的回应应自然地体现出来。`,
         memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
         (() => { try { const { getNPCContext } = require("./engine/scenario-tables.ts"); const ctx = getNPCContext(params.npcName); return ctx.length > 0 ? `你的已知情报:\n${ctx.join("\n")}` : ""; } catch { return ""; } })(),
         "",
@@ -1811,7 +1813,8 @@ export default function (pi: ExtensionAPI) {
         // 自动写入 NPC 记忆（7 天有效期）
         try {
           const { addMemoryTag } = await import("./engine/state.ts");
-          addMemoryTag(params.npcName, `${params.sceneContext} → ${response.slice(0, 50)}`, 7);
+          // 自动写入 NPC 状态表
+          try { const { createRow } = await import("./engine/scenario-tables.ts"); createRow("角色状态表", { 角色名: params.npcName, 穿着: (outfit||"").slice(0,30), 精确动作: response.slice(0,60), 情绪: "", 精确位置: gameState.player.location }); } catch(_) {}
         } catch (_) {}
         return { content: [{ type: "text", text: response }], details: {} };
       } catch {
@@ -1900,7 +1903,7 @@ export default function (pi: ExtensionAPI) {
         const { addMemoryTag } = await import("./engine/state.ts");
         for (let i = 0; i < params.npcs.length; i++) {
           if (!results[i].includes("（沉默）") && !results[i].includes("（未找到）")) {
-            addMemoryTag(params.npcs[i].npcName, `${params.npcs[i].sceneContext.slice(0, 40)} → ${results[i].slice(0, 40)}`, 7);
+            try { const { createRow } = await import("./engine/scenario-tables.ts"); createRow("角色状态表", { 角色名: params.npcs[i].npcName, 穿着: "", 精确动作: results[i].slice(0,60), 情绪: "", 精确位置: gameState.player.location }); } catch(_) {}
           }
         }
       } catch (_) {}
