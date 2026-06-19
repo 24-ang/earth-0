@@ -171,13 +171,30 @@ export function makeDeathSave(state: PlayerState): DeathSaveResult {
   const nat20 = roll === 20;
   const nat1 = roll === 1;
   const success = roll >= 10;
+
+  // 累积追踪
+  state.deathSaves ??= { successes: 0, failures: 0 };
+  if (nat20) {
+    state.deathSaves.successes = 3; // 20=立即稳定
+    state.deathSaves.failures = 0;
+  } else if (nat1) {
+    state.deathSaves.failures += 2; // 1=计2次失败
+  } else if (success) {
+    state.deathSaves.successes++;
+  } else {
+    state.deathSaves.failures++;
+  }
+
+  const ss = state.deathSaves.successes;
+  const ff = state.deathSaves.failures;
+
   const narrative = nat20
     ? `${state.name}猛然睁眼——奇迹般地恢复了意识。`
     : nat1
-      ? `${state.name}的身体抽搐了一下，然后不动了。`
+      ? `${state.name}的身体抽搐了一下，然后不动了。（${ss}成功/${ff}失败）`
       : success
-        ? `${state.name}的伤势没有恶化。`
-        : `${state.name}的呼吸变得更微弱了。`;
+        ? `${state.name}的伤势没有恶化。（${ss}成功/${ff}失败）`
+        : `${state.name}的呼吸变得更微弱了。（${ss}成功/${ff}失败）`;
 
   return { roll, success, nat20, nat1, narrative };
 }

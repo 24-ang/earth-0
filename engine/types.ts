@@ -210,6 +210,7 @@ export interface PlayerState {
     speedMul: number;                  // 速度倍率（相对步行1.0）
   };
   fatigue: number;                      // 疲劳值 0-100（0=精力充沛，100=筋疲力尽）
+  deathSaves?: { successes: number; failures: number };  // 死亡豁免累积（3成功=稳定，3失败=死亡）
 }
 
 // --- 静态角色数据结构 ---

@@ -1,7 +1,7 @@
 {
   "price_ranges": {
     "consumable": [80, 800],
-    "tool": [50, 5000],
+    "tool": [50, 2000],
     "weapon": [500, 50000],
     "armor": [500, 30000],
     "clothing": [500, 30000]
