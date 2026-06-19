@@ -70,7 +70,10 @@ async function callLLM(model, prompt, maxTokens = 2048) {
   });
   if (!res.ok) throw new Error(`LLM API ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  return data?.content?.[0]?.text ?? "";
+  for (const block of data?.content || []) {
+    if (block.type === "text" && block.text) return block.text;
+  }
+  return "";
 }
 
 // ── Pass 1: 粗筛 ──
