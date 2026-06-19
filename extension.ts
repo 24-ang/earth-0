@@ -1730,10 +1730,11 @@ export default function (pi: ExtensionAPI) {
   // ── Layer 5 多角色 Agent ──
   pi.registerTool({
     name: "spawn_npc_agent", label: "NPC角色代理",
-    description: "派生独立NPC Agent，用Flash模型扮演角色发言。npcName:NPC名/sceneContext:当前场景。并行调用多个NPC时各自独立，互不串台。返回该NPC的反应/台词/心理。",
+    description: "派生独立NPC Agent。npcName:NPC名/sceneContext:场景/initiative:true=自主发言(不受玩家触发)。并行调用时各自独立，互不串台。",
     parameters: Type.Object({
       npcName: Type.String({ description: "NPC 名" }),
-      sceneContext: Type.String({ description: "当前场景简述，如'维邀请雪乃去便利店买饮料'" }),
+      sceneContext: Type.String({ description: "场景简述，如'维邀请雪乃去便利店'" }),
+      initiative: Type.Optional(Type.Boolean({ description: "是否自主发言（不依赖玩家触发）。true时NPC基于自身性格/环境主动说或做某事。" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
@@ -1780,6 +1781,7 @@ export default function (pi: ExtensionAPI) {
         memories.length > 0 ? `记忆: ${memories.join("；")}` : "",
         "",
         `当前场景: ${params.sceneContext}`,
+        params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",
         "",
         "【角色动机】先在心里想清楚三层（不输出，只用于指导回应）：",
         "① 表面意图: 你现在在说什么/做什么？可能是伪装、嘴硬、习惯、场面话。",
@@ -1787,11 +1789,6 @@ export default function (pi: ExtensionAPI) {
         "③ 行为泄漏: 哪个小动作会出卖你的真心？（停顿、移开视线、放东西时用力过猛、说到一半咽回去）",
         "",
         "【回应规则】",
-        "- 用你的口吻。≤3句话。融入身体语言。用「」引对话。",
-        "- 别直接说内心想法——通过动作和潜台词让玩家感觉出来。",
-        "- 情绪控制: 日常在3~7分。别浑身颤抖、心脏停跳、眼眶泛红。用具体的小反应代替大情绪。",
-        "- 拒绝空洞比喻（如石子投入湖面/惊雷）。写具体的画面。",
-        "- 拒绝OO句式: 不是xx而是xx、一丝、不易察觉、虔诚、沙哑、四肢百骸。",
       ].filter(Boolean).join("\n");
 
       try {
