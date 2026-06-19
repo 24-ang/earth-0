@@ -3,6 +3,7 @@
  */
 
 import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, VisibilityLevel } from "./types.ts";
+import { promptCollectors, schedule, type Collector } from "./collectors.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import characters from "../data/characters.json" with { type: "json" };
 import rooms from "../data/rooms.json" with { type: "json" };
@@ -427,6 +428,192 @@ export function getReputationNarrative(): string {
   return parts.join("。");
 }
 
+// ── Collector 注册（on-demand 懒初始化，首次 buildStatePrompt 时执行）──
+let collectorsRegistered = false;
+function ensureCollectors(): void {
+  if (collectorsRegistered) return;
+  collectorsRegistered = true;
+
+  const s = () => gameState; // 懒引用，注册时不执行
+
+  // L0-survival: 模板变量（不可降级）
+  promptCollectors.register({
+    name: "template-vars", priority: 0, layer: "survival", degradeStrategy: "keep",
+    async collect(_gs) {
+      // 由 buildStatePrompt 的模板替换逻辑处理
+      return null;
+    },
+  });
+
+  // L1-stable: 玩家状态
+  promptCollectors.register({
+    name: "player-status", priority: 2, layer: "stable", degradeStrategy: "keep",
+    async collect(_gs) {
+      const p = s().player;
+      let text = getPlayerStatusNarrative(p);
+      const disguise = getDisguiseIdentity(p);
+      if (disguise) text += `\n[身份认知] 你被认知为: ${disguise}`;
+      else if (p.public_identity) text += `\n[身份认知] 公开身份: ${p.public_identity}`;
+      if (p.titles?.length) text += `\n[称号] ${p.titles.join(" | ")}`;
+      return text.trim() ? { text, priority: 2, layer: "stable", degradeStrategy: "keep", sourceName: "player-status" } : null;
+    },
+  });
+
+  // L1-stable: 疲劳状态
+  promptCollectors.register({
+    name: "fatigue", priority: 3, layer: "stable", degradeStrategy: "keep",
+    async collect(_gs) {
+      const f = s().player.fatigue ?? 0;
+      if (f >= 80) return { text: `[状态] 你已经筋疲力尽，急需休息或提神饮品。`, priority: 3, layer: "stable", degradeStrategy: "keep", sourceName: "fatigue" };
+      if (f >= 50) return { text: `[状态] 你感到明显的疲劳，动作开始变慢。`, priority: 3, layer: "stable", degradeStrategy: "keep", sourceName: "fatigue" };
+      if (f >= 25) return { text: `[状态] 你有一丝倦意。`, priority: 3, layer: "stable", degradeStrategy: "keep", sourceName: "fatigue" };
+      return null;
+    },
+  });
+
+  // L2-enhanced: 在场 NPC 简要列表（轻量）
+  promptCollectors.register({
+    name: "npc-presence", priority: 20, layer: "enhanced", degradeStrategy: "keep",
+    async collect(_gs) {
+      const p = s().player;
+      const lines: string[] = [];
+      const r = lookupRegion(p.location);
+      if (r.all_characters.length > 0) {
+        lines.push(`[周边] ${r.all_characters.slice(0, 8).join(", ")}`);
+      }
+      const inRoom = Object.entries(s().npcs)
+        .filter(([_, n]) => isSameLocation(n.currentRoom, p.location))
+        .map(([name, n]) => `${name}${n.action ? "(" + n.action + ")" : ""}`);
+      if (inRoom.length > 0) lines.push(`[在场] ${inRoom.join(", ")}`);
+      const namelessNPCs = getNamelessNPCs(p.location, s().turn);
+      if (namelessNPCs.length > 0) lines.push(`[在场路人] ${namelessNPCs.map(n => `${n.name}(正在${n.act})`).join(", ")}`);
+      return lines.length > 0 ? { text: lines.join("\n"), priority: 20, layer: "enhanced", degradeStrategy: "compress", sourceName: "npc-presence" } : null;
+    },
+  });
+
+  // L2-enhanced: NPC 详情（身体/穿着/外貌 — 重段，可降级）
+  promptCollectors.register({
+    name: "npc-details", priority: 25, layer: "enhanced", degradeStrategy: "truncate",
+    async collect(_gs) {
+      const p = s().player;
+      const lines: string[] = [];
+      for (const [nname, npc] of Object.entries(s().npcs)) {
+        if (!isSameLocation(npc.currentRoom, p.location)) continue;
+        const src = (characters as any[]).find((c: any) => c.name === nname);
+        if (!src) continue;
+        if (!s().auMode && src.tags?.includes("au")) continue;
+
+        const cs = (charStages as any)[nname];
+        if (cs) {
+          const curAge = getNpcCurrentAge(src.base_age || 16);
+          const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
+          const ifKey = nname + "_if";
+          const ifCs = (charStages as any)[ifKey];
+          let desc = cs[stageKey];
+          if (ifCs?.[stageKey]) {
+            if (s().flags.tachibanaIF && ["橘京香","橘结花","橘小春"].includes(nname)) desc = ifCs[stageKey];
+            if (s().flags.osanaIF && ["樋口円香","浅仓透"].includes(nname)) desc = ifCs[stageKey];
+          }
+          if (desc) lines.push(`[${nname}] ${desc}`);
+        }
+
+        const curAgeBody = getNpcCurrentAge(src.base_age || 16);
+        const body = getBodyForAge(src, curAgeBody);
+        if (body) {
+          let bodyStr = `${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
+          if (body.cup) bodyStr += ` ${body.cup}cup`;
+          if (body.measurements) bodyStr += ` 三围${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
+          if (body.leg_type) bodyStr += ` ${body.leg_type}腿`;
+          lines.push(`[${nname}·身体] ${bodyStr}`);
+        }
+        const outfitDesc = getNPCOutfitDesc(nname);
+        lines.push(`[${nname}·外观] ${outfitDesc}`);
+        const app = getAppearanceForAge(src, curAgeBody);
+        const appParts: string[] = [];
+        const hairDesc = [app.hair_color, app.hair_style].filter(Boolean).join("");
+        if (hairDesc) appParts.push(hairDesc);
+        if (app.eye_color) appParts.push(`${app.eye_color}眼睛`);
+        if (app.hair_accessories) appParts.push(app.hair_accessories);
+        if (appParts.length > 0) lines.push(`[${nname}·外貌] ${appParts.join("、")}`);
+      }
+      return lines.length > 0 ? { text: lines.join("\n"), priority: 25, layer: "enhanced", degradeStrategy: "truncate", sourceName: "npc-details" } : null;
+    },
+  });
+
+  // L2-enhanced: 关系
+  promptCollectors.register({
+    name: "relationships", priority: 26, layer: "enhanced", degradeStrategy: "compress",
+    async collect(_gs) {
+      const p = s().player;
+      const lines: string[] = [];
+      for (const [nname, rel] of Object.entries(p.relationships)) {
+        const npc = s().npcs[nname];
+        if (!npc || !isSameLocation(npc.currentRoom, p.location)) continue;
+        if ((rel as any).affection === 0) continue;
+        let relStr = `${(rel as any).stage}(好感${(rel as any).affection})`;
+        if ((rel as any).romance) relStr += ` ${(rel as any).romance}`;
+        if ((rel as any).notes) relStr += ` — ${(rel as any).notes}`;
+        lines.push(`[${nname}·关系] ${relStr}`);
+      }
+      return lines.length > 0 ? { text: lines.join("\n"), priority: 26, layer: "enhanced", degradeStrategy: "compress", sourceName: "relationships" } : null;
+    },
+  });
+
+  // L2-enhanced: Layer1 印记 + 实时（重段，可 drop）
+  promptCollectors.register({
+    name: "layer1", priority: 30, layer: "enhanced", degradeStrategy: "drop",
+    async collect(_gs) {
+      try {
+        const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, getThoughtsSummary, getMoodHint, SEX_PROFILES } = await import("./sex.ts");
+        const profiles = SEX_PROFILES as Record<string, any>;
+        const lines: string[] = [];
+        const p = s().player;
+
+        if (p.sex) {
+          const sx = p.sex;
+          const prof = sx.profile;
+          const devHint = getDevNarrative(prof);
+          lines.push(`[印记] ${prof.attitude} | ${prof.experience} | ${devHint}`);
+          if (s().layer1Enabled) {
+            const phase = getCyclePhase(sx.cycleDay);
+            if (phase !== "安全期") lines[lines.length-1] += ` | ${phase}`;
+            const dh = getDesireNarrative(sx);
+            const ah = getArousalNarrative(sx);
+            if (dh) lines.push(`  欲望: ${dh}`);
+            if (ah) lines.push(`  兴奋: ${ah}`);
+            const rel = p.relationships[prof.name as string];
+            const affection = rel?.affection ?? 0;
+            const moodHint = getMoodHint(affection, prof.attitude);
+            lines.push(`  [mood_hint] ${moodHint}`);
+            const ts = getThoughtsSummary(sx);
+            if (ts) lines.push(`  [心里话] ${ts}`);
+          }
+        }
+        for (const [nname, npc] of Object.entries(s().npcs)) {
+          if (!isSameLocation(npc.currentRoom, p.location)) continue;
+          const sp = profiles[nname];
+          if (!sp) continue;
+          const devHint = getDevNarrative(sp);
+          lines.push(`[${nname}·印记] ${sp.attitude} | ${sp.experience} | ${devHint}`);
+        }
+        return lines.length > 0 ? { text: lines.join("\n"), priority: 30, layer: "enhanced", degradeStrategy: "drop", sourceName: "layer1" } : null;
+      } catch { return null; }
+    },
+  });
+}
+
+/** 注入 collector 注册表产出的上下文（NPC 重段已迁移至 collector） */
+async function buildCollectorContext(): Promise<string> {
+  ensureCollectors();
+  const nodes = await promptCollectors.collectAll(gameState);
+  const result = schedule(nodes, { targetBytes: 24000, hardBytes: 40000 });
+  if (result.dropped.length > 0) {
+    // 降级日志：调试时取消注释
+    // console.log(`[collector] dropped: ${result.dropped.join(", ")}  total: ${result.totalBytes}b`);
+  }
+  return result.output;
+}
+
 export async function buildStatePrompt(): Promise<string> {
   const tplPath = path.join(AGENTS_DIR, "gm-state.md");
   if (!fs.existsSync(tplPath)) return "";
@@ -564,168 +751,9 @@ export async function buildStatePrompt(): Promise<string> {
     .map(([name, n]) => `${name}${n.action ? "("+n.action+")" : ""}`);
   if (inRoom.length > 0) tpl += `\n[在场] ${inRoom.join(", ")}`;
 
-  // 注入在场路人 (nameless NPCs)
-  const namelessNPCs = getNamelessNPCs(p.location, s.turn);
-  if (namelessNPCs.length > 0) {
-    tpl += `\n[在场路人] ${namelessNPCs.map(n => `${n.name}(正在${n.act})`).join(", ")}`;
-  }
-  // NPC阶段描述 + 实时身材
-  for (const [nname, npc] of Object.entries(gameState.npcs)) {
-    if (!isSameLocation(npc.currentRoom, p.location)) continue;
-    const cs = (charStages as any)[nname];
-    const src = (characters as any[]).find((c: any) => c.name === nname);
-    if (!src) continue;
-    // AU 过滤：非 AU 模式下跳过带 au 标签的角色（不注入 prompt）
-    if (!gameState.auMode && src.tags?.includes("au")) continue;
-    
-    // 阶段性格：按 NPC 当前年龄取 stage，IF 线优先
-    if (cs) {
-      const curAge = getNpcCurrentAge(src.base_age || 16);
-      const stageKey = curAge <= 5 ? "幼儿_小学" : curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
-      // IF 线：检查是否有 {name}_if 版本且对应 flag 激活
-      const ifKey = nname + "_if";
-      const ifCs = (charStages as any)[ifKey];
-      let desc = cs[stageKey];
-      // tachibanaIF → 橘家三人 / osanaIF → 円香透
-      if (ifCs?.[stageKey]) {
-        if (gameState.flags.tachibanaIF && ["橘京香","橘结花","橘小春"].includes(nname)) desc = ifCs[stageKey];
-        if (gameState.flags.osanaIF && ["樋口円香","浅仓透"].includes(nname)) desc = ifCs[stageKey];
-      }
-      if (desc) tpl += `\n[${nname}] ${desc}`;
-    }
-    
-    // 实时身体数据：年龄分层，只用当前年龄档位
-    const curAgeBody = getNpcCurrentAge(src.base_age || 16);
-    const body = getBodyForAge(src, curAgeBody);
-    if (body) {
-      let bodyStr = `${body.height_cm}cm ${body.weight_kg}kg ${body.build}`;
-      if (body.cup) bodyStr += ` ${body.cup}cup`;
-      if (body.measurements) bodyStr += ` 三围${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips}`;
-      if (body.body_shape) {
-         const bs = body.body_shape;
-         bodyStr += ` 提醒:[${bs.chest||""} ${bs.waist||""} ${bs.hips?bs.hips+"臀":""}]`;
-      }
-      if (body.leg_type) bodyStr += ` ${body.leg_type}腿`;
-      if (body.skin) {
-         bodyStr += ` 肤质:${body.skin.texture} 肤色:${body.skin.base_tone}`;
-      }
-      tpl += `\n[${nname}·身体] ${bodyStr.replace(/\s+/g, ' ')}`;
-    }
-    // 服装细节 + 结构化外貌（按年龄分层）
-    const outfitDesc = getNPCOutfitDesc(nname);
-    tpl += `\n[${nname}·外观] ${outfitDesc}`;
-    const app = getAppearanceForAge(src, curAgeBody);
-    const appParts: string[] = [];
-    const hairDesc = [app.hair_color, app.hair_style].filter(Boolean).join("");
-    if (hairDesc) appParts.push(hairDesc);
-    if (app.eye_color) appParts.push(`${app.eye_color}眼睛`);
-    if (app.hair_accessories) appParts.push(app.hair_accessories);
-    if (appParts.length > 0) tpl += `\n[${nname}·外貌] ${appParts.join("、")}`;
-  }
-  // 附加声望 — 自然语言叙事，按当前身份过滤
-  const repNarrative = getReputationNarrative();
-  if (repNarrative) tpl += `\n[声誉] ${repNarrative}`;
-  // 附加关系（室内 NPC 的玩家关系，LLM 需要知道才能正确叙事）
-  const rels = gameState.player.relationships;
-  for (const [nname, rel] of Object.entries(rels)) {
-    // 只注在室内的，跟 NPC 阶段描述同一过滤
-    const npc = gameState.npcs[nname];
-    if (!npc || !isSameLocation(npc.currentRoom, gameState.player.location)) continue;
-    if ((rel as any).affection === 0) continue;
-    let relStr = `${(rel as any).stage}(好感${(rel as any).affection})`;
-    if ((rel as any).romance) relStr += ` ${(rel as any).romance}`;
-    if ((rel as any).notes) relStr += ` — ${(rel as any).notes}`;
-    tpl += `\n[${nname}·关系] ${relStr}`;
-  }
-
-  // 附加 Layer1 — 分两层：
-  //   [印记] 永久属性（态度/经验/开发度），gal/sex 都注入——这是身体记忆
-  //   [实时] 欲望/兴奋/周期，仅 sex 模式注入——这是瞬时状态
-  try {
-    const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, getThoughtsSummary, getMoodHint, SEX_PROFILES } = await import("./sex.ts");
-    const profiles = SEX_PROFILES as Record<string, any>;
-
-    // [印记] 玩家当前 partner（如有）
-    if (gameState.player.sex) {
-      const sx = gameState.player.sex;
-      const prof = sx.profile;
-      const devHint = getDevNarrative(prof);
-      tpl += `\n[印记] ${prof.attitude} | ${prof.experience} | ${devHint}`;
-      // 初体验里程碑
-      if (sx.milestones) {
-        const m = sx.milestones;
-        const mkParts: string[] = [];
-        if (m.firstKiss.given) mkParts.push(`初吻: ${m.firstKiss.partner}`);
-        else mkParts.push("初吻: 未");
-        if (!m.virginity.isVirgin) mkParts.push(`初夜: ${m.virginity.lostTo}`);
-        else mkParts.push("初夜: 未");
-        if (!m.analVirginity.isVirgin) mkParts.push(`菊初: ${m.analVirginity.lostTo}`);
-        tpl += ` | ${mkParts.join(" | ")}`;
-      }
-      // [实时] 仅 sex 模式
-      if (gameState.layer1Enabled) {
-        const phase = getCyclePhase(sx.cycleDay);
-        if (phase !== "安全期") tpl += ` | ${phase}`;
-        const dh = getDesireNarrative(sx);
-        const ah = getArousalNarrative(sx);
-        if (dh) tpl += `\n  欲望: ${dh}`;
-        if (ah) tpl += `\n  兴奋: ${ah}`;
-        // mood_hint — 控制心里话语感倾向（沉溺/动摇/身心分离的绝望）
-        const rel = gameState.player.relationships[prof.name as string];
-        const affection = rel?.affection ?? 0;
-        const moodHint = getMoodHint(affection, prof.attitude);
-        tpl += `\n  [mood_hint] ${moodHint}`;
-        const ts = getThoughtsSummary(sx);
-        if (ts) tpl += `\n  [心里话] ${ts}`;
-      }
-    }
-
-    // [印记] 室内 NPC 永久档案
-    for (const [nname, npc] of Object.entries(gameState.npcs)) {
-      if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
-      const sp = profiles[nname];
-      if (!sp) continue;
-      const devHint = getDevNarrative(sp);
-      tpl += `\n[${nname}·印记] ${sp.attitude} | ${sp.experience} | ${devHint}`;
-      if (gameState.layer1Enabled) {
-        const npcPhase = getCyclePhase(sp.cycleDay);
-        if (npcPhase !== "安全期") tpl += ` | ${npcPhase}`;
-      }
-    }
-
-    if (!gameState.layer1Enabled) {
-      // 在 gal 模式下，对在场且在 gameState.sexStates 中有记录的 NPC，注入其身体语言描述（无具体数值）
-      for (const [nname, npc] of Object.entries(gameState.npcs)) {
-        if (!isSameLocation(npc.currentRoom, gameState.player.location)) continue;
-        const sState = gameState.sexStates?.[nname];
-        if (sState) {
-          const dh = getDesireNarrative(sState);
-          if (dh) {
-            tpl += `\n[${nname}·身体语言] ${dh}`;
-          }
-        }
-      }
-    }
-
-    // 场景sex影响：sex模式下注入房间环境叙事（氛围/声音/视觉）
-    if (gameState.layer1Enabled) {
-      const room = ROOMS[p.location];
-      if (room) {
-        const parts: string[] = [];
-        if ((room as any).atmosphere) parts.push((room as any).atmosphere);
-        const amb = (room as any).ambient;
-        if (amb?.audio) parts.push(`隐约听到${amb.audio}`);
-        if (amb?.visual) parts.push(amb.visual);
-        if (parts.length > 0) {
-          tpl += `\n[环境·亲密] ${parts.join("。")}。`;
-        } else {
-          // 无 atmosphere/ambient 时，按房间类型给默认氛围
-          const defaultAtmo = getDefaultSexAtmosphere(p.location);
-          if (defaultAtmo) tpl += `\n[环境·亲密] ${defaultAtmo}`;
-        }
-      }
-    }
-  } catch (_) {}
+  // 注入 collector 注册表产出的上下文（NPC详情/关系/Layer1 等重段已迁移至 collector）
+  const collectorText = await buildCollectorContext();
+  if (collectorText) tpl += "\n" + collectorText;
 
 /** 按房间名给默认sex氛围描述 */
 function getDefaultSexAtmosphere(location: string): string {
