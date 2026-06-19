@@ -32,6 +32,7 @@ spawn_npc_agents({ npcs: [
   * **NPC 间互动**：她们会互相交谈，不是只跟玩家说话。`sceneContext` 写成 NPC 之间的互动，玩家可以旁观也可以介入
   * **独立于玩家**：玩家站着不动，世界照样转。NPC 有自己的生活，不知道自己是 NPC
 - `initiative: true` 用于上述自主发言
+- **结构化记忆**：NPC Agent 自动写 `角色状态表`。GM 负责写 `情景表`（重大事件）和 `角色身份表`（新角色登场）。用 `table_create/update/delete` 操作。
 
 **角色轮禁止输出玩家可见的叙事正文。**
 
