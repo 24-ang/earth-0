@@ -1681,6 +1681,7 @@ export default function (pi: ExtensionAPI) {
       sceneResult: Type.String({ description: "场景结果，一句话" }),
       openHooks: Type.String({ description: "未收口的钩子，无则写'无'" }),
       nextPressure: Type.String({ description: "下轮推动方向，无则写'无'" }),
+      npcResponses: Type.Optional(Type.String({ description: "NPC Agent 的回应（spawn_npc_agents 的返回值）。渲染轮将其织入叙事，让每个NPC用自己的话说话。" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, getRecentTurnLogContext } = await import("./engine/state.ts");
@@ -1695,6 +1696,7 @@ export default function (pi: ExtensionAPI) {
         `开放钩子: ${params.openHooks || "无"}`,
         `推动方向: ${params.nextPressure || "无"}`,
         "",
+        params.npcResponses ? `NPC 独立回应（以下为各NPC用自己的口吻说的话，请织入叙事，不要复述原文而是融入场景）：\n${params.npcResponses}\n` : "",
         recentContext ? `前情摘要: ${recentContext}\n` : "",
         "规则：≤2段叙事+≤5句对白。融入身体触觉（支撑点）。微观空间定位准确。对话用「」或『』。结尾输出4个扮演选项（按gm-contract格式: ---分割线+> blockquote+[风格]+圈号）。绝对不分析心理。不替玩家说话。",
         "",
