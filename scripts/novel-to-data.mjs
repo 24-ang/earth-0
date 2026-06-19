@@ -145,77 +145,73 @@ async function pass1CoarseFilter(text) {
   return unique;
 }
 
-// ── Pass 2: 精提取 ──
-// 用 Pro 严格按 Schema 输出 JSON
+// ── Pass 1.5: 小说分析 (Pre-Analysis) ──
+// 用 Flash 读开头几章，自动生成世界观提取指南
 
-const PASS2_CHARACTER_PROMPT = (passages, ip) => `你是小说数据提取专家。从以下精选段落中提取所有角色信息，输出 earth-0 兼容的 characters.json 格式。
+async function preAnalysis(text, ip) {
+  const sample = text.slice(0, 3000); // 前 3000 字
+  const prompt = `你是小说分析专家。读以下小说开头，用 3-5 句话概括：
+
+1. 时代背景（古代/近代/现代/未来？具体年代？）
+2. 地理范围（哪个国家/地区？）
+3. 题材类型（历史/科幻/奇幻/现实？）
+4. 主角身份（普通人/军人/政客/商人？）
+5. 语言风格（文言/白话/翻译腔？）
+
+只输出概括，不要建议。
+
+${sample}`;
+
+  console.log("[Pre-Analysis] 分析小说设定...");
+  const analysis = await callLLM(CONFIG.pass1Model, prompt, 512);
+  console.log(`[Pre-Analysis] ${analysis.trim()}`);
+  return analysis.trim();
+}
+
+// ── Pass 2: 精提取 ──
+// 用 Pro 严格按 Schema 输出 JSON，融入世界观上下文
+
+const PASS2_CHARACTER_PROMPT = (passages, ip, context) => `你是小说数据提取专家。${context ? "作品背景: " + context : ""}从以下精选段落中提取所有角色信息。
 
 提取规则：
-- name: 角色名（日文原名优先，中文译名也可）
+- name: 角色名（使用原文中的名字）
 - source: "${ip}"
 - gender: "男"/"女"
 - base_age: 估计年龄数字
-- appearance_brief: 外貌一句话描述（≤50字）
-- hair_color/hair_style/eye_color: 如有则填
-- body: 身高cm/体重kg/build(纤细/标准/结实/丰满/偏胖)
-- tags: 角色标签数组
-- default_location: 经常出现的地点
-- schedule_group: 日程组名
+- appearance_brief: 外貌描述（≤50字，空缺可留空）
+- tags: 角色标签数组（如身份/职业/阵营）
+- default_location: 经常出现的地点或势力范围
 
-严格按以下 JSON 格式输出（不要 markdown 代码块，只要纯 JSON）：
-[{
-  "name": "...",
-  "source": "${ip}",
-  "gender": "...",
-  "base_age": 16,
-  "appearance_brief": "...",
-  "hair_color": "...",
-  "hair_style": "...",
-  "eye_color": "...",
-  "body": { "height_cm": 160, "weight_kg": 50, "build": "标准" },
-  "tags": ["..."],
-  "default_location": "...",
-  "schedule_group": "..."
-}]
+输出 JSON 数组（不要 markdown）。每个元素:
+{"name":"","source":"${ip}","gender":"","base_age":0,"appearance_brief":"","tags":[],"default_location":""}
 
-只输出 JSON 数组。不输出其他内容。
+只输出 JSON 数组。
 
-精选段落：
+段落:
 ${passages.join("\n---\n")}`;
 
-const PASS2_TIMELINE_PROMPT = (passages, ip) => `你是小说剧情分析专家。从以下段落中提取可转化为游戏的剧情事件，输出 earth-0 兼容的 TimelineEvent JSON。
+const PASS2_TIMELINE_PROMPT = (passages, ip, context) => `你是小说剧情分析专家。${context ? "作品背景: " + context : ""}从以下段落中提取可转化为游戏的剧情事件。
 
-每个事件包含：
-- id: 英文标识（snake_case）
-- title: 事件中文标题
-- source: "${ip}"
-- trigger: { min_day, location, affection(可选), time_of_day[] }
-- expires_days: 过期天数
-- repeatable: false
-- hook: { source_npc, hook_text(≤80字), urgency("low"/"medium"/"high") }
-- beats: [{ id, label, prompt, outcomes[] }]
+每个事件: id(英文snake_case), title, source:"${ip}", trigger:{min_day,location,affection?(可选),time_of_day?[]}, expires_days, repeatable:false, hook:{source_npc, hook_text(≤80字), urgency("low"/"medium"/"high")}, beats:[{id,label,prompt,outcomes:[{pick,effects:{flags?{},affection?{}},next_beat?}]}]
 
-按 earth-0 TimelineEvent 格式输出。只输出 JSON 数组。
+输出 JSON 数组。只输出 JSON。
 
-精选段落：
+段落:
 ${passages.join("\n---\n")}`;
 
-const PASS2_LORE_PROMPT = (passages, ip) => `你是世界观整理专家。从以下段落中提取可写入 lore 的设定条目。
+const PASS2_LORE_PROMPT = (passages, ip, context) => `你是世界观整理专家。${context ? "作品背景: " + context : ""}从以下段落中提取可写入 lore 的设定条目。
 
-每条：
-- 键: 标识（英文 snake_case）
-- 值: 描述（中文，≤200字）
-- 类型: "geography"/"faction"/"rule"/"history"/"culture"
+每条用键值对: { "键":"描述" }。键用英文 snake_case。描述用中文 ≤200字。类型(geography/faction/rule/history/culture)存在 typeMap 中。
 
-输出 JSON 对象：{ "键": "描述", ... }
-再附 typeMap: { "键": "类型", ... }
+输出: { "条目": "描述", ... }
+再加 typeMap: { "条目": "类型", ... }
 
-只输出 JSON。不输出其他内容。
+只输出 JSON。
 
-精选段落：
+段落:
 ${passages.join("\n---\n")}`;
 
-async function pass2FineExtract(passages, ip) {
+async function pass2FineExtract(passages, ip, context = "") {
   console.log("[Pass 2] 开始精提取...");
 
   const passageText = passages.join("\n---\n");
@@ -223,9 +219,9 @@ async function pass2FineExtract(passages, ip) {
 
   // 并行提取三类数据
   const [charRaw, timelineRaw, loreRaw] = await Promise.all([
-    callLLM(CONFIG.pass2Model, PASS2_CHARACTER_PROMPT(truncated, ip), CONFIG.pass2MaxTokens).catch(e => { console.error("角色提取失败:", e.message); return "[]"; }),
-    callLLM(CONFIG.pass2Model, PASS2_TIMELINE_PROMPT(truncated, ip), CONFIG.pass2MaxTokens).catch(e => { console.error("时间线提取失败:", e.message); return "[]"; }),
-    callLLM(CONFIG.pass2Model, PASS2_LORE_PROMPT(truncated, ip), CONFIG.pass2MaxTokens).catch(e => { console.error("Lore提取失败:", e.message); return "{}"; }),
+    callLLM(CONFIG.pass2Model, PASS2_CHARACTER_PROMPT(truncated, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("角色提取失败:", e.message); return "[]"; }),
+    callLLM(CONFIG.pass2Model, PASS2_TIMELINE_PROMPT(truncated, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("时间线提取失败:", e.message); return "[]"; }),
+    callLLM(CONFIG.pass2Model, PASS2_LORE_PROMPT(truncated, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("Lore提取失败:", e.message); return "{}"; }),
   ]);
 
   let characters = [];
@@ -327,8 +323,11 @@ async function main() {
     process.exit(0);
   }
 
+  // Pre-Analysis: 自动分析小说设定，用于定制提取提示词
+  const worldContext = await preAnalysis(text, opts.ip);
+
   // Pass 2
-  const data = await pass2FineExtract(passages, opts.ip);
+  const data = await pass2FineExtract(passages, opts.ip, worldContext);
 
   // 输出
   writeOutput(opts.ip, data);
