@@ -22,6 +22,28 @@ export let titleRules = titleRulesStatic as any;
 export let namelessNpcTemplates = namelessNpcTemplatesStatic as any;
 export let economyConfig = economyConfigStatic as any;
 
+import shopsCatalogStatic from "../data/shops.json" with { type: "json" };
+import itemsCatalogStatic from "../data/items.json" with { type: "json" };
+import phoneAppsCatalogStatic from "../data/phone_apps.json" with { type: "json" };
+import positionsCatalogStatic from "../data/positions.json" with { type: "json" };
+import regionsStatic from "../data/regions.json" with { type: "json" };
+import sexProfilesStatic from "../data/sex_profiles.json" with { type: "json" };
+import scheduleTemplatesStatic from "../data/schedule_templates.json" with { type: "json" };
+import roomTemplatesStatic from "../data/room_templates.json" with { type: "json" };
+
+export let shops = shopsCatalogStatic as any;
+export let shopsCatalog = shopsCatalogStatic as any;
+export let itemsCatalog = itemsCatalogStatic as any;
+export let phoneApps = phoneAppsCatalogStatic as any;
+export let phoneAppsCatalog = phoneAppsCatalogStatic as any;
+export let positions = positionsCatalogStatic as any;
+export let positionsCatalog = positionsCatalogStatic as any;
+export let regions = regionsStatic as any;
+export let scheduleTemplates = scheduleTemplatesStatic as any;
+export let roomTemplates = roomTemplatesStatic as any;
+export let activeWorldName = "oregairu";
+
+
 // --- 空间数据定义 ---
 export let ROOMS = structuredClone(rooms);
 
@@ -2064,14 +2086,6 @@ export function clearScheduleOverride(npcName: string): string {
   return `${npcName}: 日程覆盖已清除`;
 }
 // --- 商店/经济（AIRP风格：引擎只做会计，LLM管市场常识） ---
-import itemsCatalogStatic from "../data/items.json" with { type: "json" };
-import shopsCatalogStatic from "../data/shops.json" with { type: "json" };
-import positionsCatalogStatic from "../data/positions.json" with { type: "json" };
-import phoneAppsCatalogStatic from "../data/phone_apps.json" with { type: "json" };
-export let itemsCatalog = itemsCatalogStatic as any;
-export let shopsCatalog = shopsCatalogStatic as any;
-export let positionsCatalog = positionsCatalogStatic as any;
-export let phoneAppsCatalog = phoneAppsCatalogStatic as any;
 
 export let PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
 
@@ -2193,11 +2207,6 @@ export function refreshWeather(): string {
 }
 
 // --- NPC 日程更新 ---
-import scheduleTemplatesStatic from "../data/schedule_templates.json" with { type: "json" };
-import roomTemplatesStatic from "../data/room_templates.json" with { type: "json" };
-import sexProfilesStatic from "../data/sex_profiles.json" with { type: "json" };
-export let scheduleTemplates = scheduleTemplatesStatic as any;
-export let roomTemplates = roomTemplatesStatic as any;
 export let sexProfilesData = sexProfilesStatic as any;
 const TEMPLATES = scheduleTemplates as any;
 
@@ -2674,7 +2683,6 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
   }
   return npcs;
 }
-
 // ── 动态世界观加载 ──
 export function loadActiveWorld(worldName?: string): void {
   const activeWorldPath = path.resolve(process.cwd(), "data", ".active_world");
@@ -2683,6 +2691,8 @@ export function loadActiveWorld(worldName?: string): void {
     world = fs.readFileSync(activeWorldPath, "utf-8").trim();
   }
   if (!world) world = "oregairu"; // default fallback
+  activeWorldName = world;
+  gameState.activeWorld = world;
 
   const worldpackDir = path.resolve(process.cwd(), "worldpacks", world);
   if (!fs.existsSync(worldpackDir)) {
@@ -2711,16 +2721,17 @@ export function loadActiveWorld(worldName?: string): void {
   schoolMapData = loadJSON("school_map.json", schoolMapDataStatic);
   cityMapData = loadJSON("city_map.json", cityMapDataStatic);
   regionsData = loadJSON("regions.json", regionsDataStatic);
+  regions = regionsData;
   itemsCatalog = loadJSON("items.json", itemsCatalogStatic);
   shopsCatalog = loadJSON("shops.json", shopsCatalogStatic);
+  shops = shopsCatalog;
   positionsCatalog = loadJSON("positions.json", positionsCatalogStatic);
+  positions = positionsCatalog;
   phoneAppsCatalog = loadJSON("phone_apps.json", phoneAppsCatalogStatic);
+  phoneApps = phoneAppsCatalog;
   scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
   roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
   sexProfilesData = loadJSON("sex_profiles.json", sexProfilesStatic);
-
-  // 更新 GameState 中的活跃世界观
-  gameState.activeWorld = world;
 
   // Re-initialize dependent variables
   ROOMS = structuredClone(rooms);
@@ -2729,7 +2740,21 @@ export function loadActiveWorld(worldName?: string): void {
   CITY_MAP = cityMapData as any;
   PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
 
-}
+  // Dynamically update router.ts and sex.ts modules
+  import("./router.js").then(routerModule => {
+    routerModule.updateRouterData(regions, characters, schoolMapData, cityMapData);
+  }).catch(() => {
+    import("./router.ts").then(routerModule => {
+      routerModule.updateRouterData(regions, characters, schoolMapData, cityMapData);
+    }).catch(() => {});
+  });
 
-// 自动在加载时初始化当前活跃世界观
+  import("./sex.js").then(sexModule => {
+    sexModule.setSexProfiles(sexProfilesData);
+  }).catch(() => {
+    import("./sex.ts").then(sexModule => {
+      sexModule.setSexProfiles(sexProfilesData);
+    }).catch(() => {});
+  });
+}
 loadActiveWorld();
