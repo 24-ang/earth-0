@@ -76,6 +76,7 @@ function createInitialState(): GameState {
     npcs: {},
     sexStates: {},
     mode: "gal",
+    activeWorld: "oregairu",
     layer1Enabled: false,
     auMode: false,
     flags: {},
@@ -2623,12 +2624,16 @@ export function loadActiveWorld(worldName?: string): void {
   schoolMapData = loadJSON("school_map.json", schoolMapDataStatic);
   cityMapData = loadJSON("city_map.json", cityMapDataStatic);
 
+  // 更新 GameState 中的活跃世界观
+  gameState.activeWorld = world;
+
   // Re-initialize dependent variables
   ROOMS = structuredClone(rooms);
   LOCATIONS_BASE = locationsData as any;
   SCHOOL_MAP = schoolMapData as any;
   CITY_MAP = cityMapData as any;
   PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
+
 }
 
 // 自动在加载时初始化当前活跃世界观

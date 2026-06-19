@@ -1,0 +1,4840 @@
+{
+  "2年J班": {
+    "width": 8,
+    "height": 9,
+    "cellSize": 1,
+    "floor": 1,
+    "origin": [
+      4,
+      8
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F南走廊-J班前",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "讲台",
+          "label": "PD"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "黑板",
+          "label": "BB"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "黑板",
+          "label": "BB"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "储物柜",
+          "label": "LK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "atmosphere": "南侧窗边，阳光从左边照进来。窗外是操场和中庭。东墙是走廊门，西墙是黑板",
+    "directions": {
+      "北": "黑板 (上方挂着国旗，黑板上写着今日课表和值日生姓名)",
+      "南": "窗台 (整排的玻璃窗，阳光照进课室，窗外是中庭操场)",
+      "东": "前门与布告栏 (挂着班级布告栏)",
+      "西": "后门与卫生角 (后门被后面的杂物凳子挡住，墙角摆放着扫帚)"
+    }
+  },
+  "2年F班": {
+    "width": 8,
+    "height": 9,
+    "cellSize": 1,
+    "floor": 1,
+    "origin": [
+      4,
+      8
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F南走廊-F班前",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "讲台",
+          "label": "PD"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "黑板",
+          "label": "BB"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "黑板",
+          "label": "BB"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "课桌",
+          "label": "DK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "储物柜",
+          "label": "LK"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "atmosphere": "南侧窗边，窗外是操场。东墙黑板，西墙走廊门",
+    "directions": {
+      "北": "黑板 (上面残留着上节课的数学公式投影痕迹)",
+      "南": "窗台 (明亮的窗户，可以望见学校大门和操场)",
+      "东": "前门与时钟 (前拉门和静静走动的班级时钟)",
+      "西": "后门与卫生角 (后门敞开通往走廊，墙角有垃圾桶)"
+    }
+  },
+  "自宅（千叶市高级公寓）": {
+    "width": 5,
+    "height": 4,
+    "origin": [
+      2,
+      3
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "exitTo": "千叶_住宅区",
+          "block": false,
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "furniture": "沙发",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "furniture": "茶几",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "label": "WL"
+        }
+      ]
+    ],
+    "cellSize": 1,
+    "floor": 3,
+    "atmosphere": "三楼角落的房间。窗外是住宅区的街景，能看见远处的便利店灯光",
+    "directions": {
+      "北": "客厅墙面 (挂着大屏电视和抽象挂画)",
+      "南": "落地窗 (通往小阳台，能望见住宅区的霓虹夜景)",
+      "东": "卧室拉门 (木质的推拉门通往睡房)",
+      "西": "玄关墙面 (摆着鞋柜和防盗铁门)"
+    }
+  },
+  "操场": {
+    "width": 10,
+    "height": 8,
+    "origin": [
+      5,
+      7
+    ],
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "exitTo": "1F南走廊",
+          "block": false,
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "label": "  "
+        }
+      ]
+    ],
+    "cellSize": 5,
+    "floor": 0,
+    "atmosphere": "开阔的沙土操场。北边是教学楼，南边是校门，东边是体育馆，西边是社团楼。跑道环绕，中央是足球场",
+    "horizon": {
+      "北": "总武高教学楼，窗户整齐排列",
+      "南": "校门和通往千叶市街的道路",
+      "西": "社团楼，偶尔有学生进出",
+      "东": "体育馆外墙上褪色的校训"
+    },
+    "ambient": {
+      "audio": "口哨声和跑步的脚步声",
+      "visual": "一群学生在跑步"
+    }
+  },
+  "2F南走廊-J班前": {
+    "width": 8,
+    "height": 4,
+    "cellSize": 2,
+    "floor": 2,
+    "origin": [
+      4,
+      2
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2年J班",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F楼梯间",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "侍奉部",
+          "label": "DR",
+          "isOpen": true
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "atmosphere": "走廊南侧整面落地窗，操场和校门尽收眼底。北侧是2年J班后门"
+  },
+  "2F楼梯间": {
+    "width": 4,
+    "height": 5,
+    "cellSize": 2,
+    "floor": 2,
+    "origin": [
+      1,
+      4
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F南走廊-J班前",
+          "label": "DR"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F南走廊-F班前",
+          "label": "DR"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "3F楼梯间",
+          "label": "ST"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "1F楼梯间",
+          "label": "ST"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "1F楼梯间",
+          "label": "ST"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "atmosphere": "楼梯转角，上下两层。墙上有学生会的告示板"
+  },
+  "2F南走廊-F班前": {
+    "width": 8,
+    "height": 4,
+    "cellSize": 2,
+    "floor": 2,
+    "origin": [
+      4,
+      2
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F楼梯间",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2年F班",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "atmosphere": "走廊南侧落地窗，能看见操场和远处的街道。北侧是2年F班前门"
+  },
+  "1F楼梯间": {
+    "width": 4,
+    "height": 5,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      1,
+      4
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "1F南走廊",
+          "label": "DR"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "1F南走廊",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "2F楼梯间",
+          "label": "ST"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "2F楼梯间",
+          "label": "ST"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "atmosphere": "一层楼梯口，通往二楼。旁边是职员室的磨砂玻璃门"
+  },
+  "1F南走廊": {
+    "width": 10,
+    "height": 4,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      5,
+      2
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "1F楼梯间",
+          "label": "DR"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2年J班",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2年F班",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "操场",
+          "label": "DR"
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "atmosphere": "一层走廊，北侧是教室门，南侧通操场。鞋柜靠墙排列"
+  },
+  "天台": {
+    "width": 10,
+    "height": 7,
+    "cellSize": 3,
+    "floor": 3,
+    "origin": [
+      5,
+      3
+    ],
+    "horizon": {
+      "北": "俯瞰操场，远方是千叶市天际线",
+      "南": "教学楼背面，几扇窗户亮着灯",
+      "西": "郁郁葱葱的总武高后山树林",
+      "东": "体育馆的半圆形屋顶在阴云下泛着光"
+    },
+    "atmosphere": "开阔的学校天台。生锈的铁丝网围住边缘，冷风微拂",
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "空调外机",
+          "label": "AC"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "空调外机",
+          "label": "AC"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "3F楼梯间",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "3F楼梯间": {
+    "width": 4,
+    "height": 5,
+    "cellSize": 2,
+    "floor": 3,
+    "origin": [
+      1,
+      4
+    ],
+    "atmosphere": "楼梯顶层，通往天台。墙上贴着旧海报",
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F楼梯间",
+          "label": "DR"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F楼梯间",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "天台",
+          "label": "ST"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "天台",
+          "label": "ST"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "中庭": {
+    "width": 6,
+    "height": 5,
+    "cellSize": 2,
+    "floor": 0,
+    "atmosphere": "教学楼环绕的中庭。几棵樱花树下散落着长凳，自动贩卖机嗡嗡作响",
+    "origin": [
+      3,
+      4
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "1F南走廊",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "自动贩卖机",
+          "label": "VM"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "长凳",
+          "label": "BN"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "长凳",
+          "label": "BN"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "体育馆": {
+    "width": 8,
+    "height": 6,
+    "cellSize": 3,
+    "floor": 0,
+    "atmosphere": "高大的体育馆。木地板在灯光下反着光，球架靠在墙边，回声很大",
+    "origin": [
+      4,
+      5
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "操场",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "更衣室",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "舞台",
+          "label": "ST"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "舞台",
+          "label": "ST"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "校门": {
+    "width": 4,
+    "height": 3,
+    "cellSize": 2,
+    "floor": 0,
+    "atmosphere": "总武高正门。门柱上刻着校名，旁边是自行车棚。门外是通往千叶市街的坡道",
+    "origin": [
+      1,
+      2
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "操场",
+          "label": "DR"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "操场",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "千叶市街",
+          "label": "DR"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "千叶市街",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "社团楼1F走廊": {
+    "width": 6,
+    "height": 3,
+    "cellSize": 2,
+    "floor": 0,
+    "atmosphere": "社团楼的走廊。空气中飘着颜料、茶和旧书混合的味道",
+    "origin": [
+      3,
+      2
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "中庭",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "美术室",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "侍奉部": {
+    "width": 8,
+    "height": 9,
+    "cellSize": 1,
+    "floor": 2,
+    "atmosphere": "空置教室改造的社团活动室。几张旧桌子拼在一起，地上堆着没拆封的纸箱。窗外的光线很柔和",
+    "origin": [
+      4,
+      8
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "2F南走廊-J班前",
+          "label": "DR",
+          "isOpen": true
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "靠墙的书架",
+          "label": "BK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "侍奉部茶桌",
+          "label": "TB"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "窗台下的旧课桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "directions": {
+      "北": "前隔墙 (通往走廊的木拉门)",
+      "南": "窗台 (大玻璃窗，柔和的夕阳洒入，挂着浅蓝色的旧窗帘)",
+      "东": "右隔墙 (空置的教室白墙，略显斑驳)",
+      "西": "后隔墙 (摆放着靠墙的书架和一堆未拆封的社团纸箱)"
+    }
+  },
+  "家_玩家房间": {
+    "width": 4,
+    "height": 3,
+    "cellSize": 1,
+    "floor": 0,
+    "atmosphere": "你自己的房间。书桌上摊着作业本，窗外是安静的住宅区街道",
+    "origin": [
+      1,
+      2
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "千叶_住宅区",
+          "label": "DR"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "书桌",
+          "label": "DK"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ],
+    "directions": {
+      "北": "书桌墙面 (贴着动漫海报，桌上摆着双屏电脑)",
+      "南": "窗台 (挂着米色窗帘，推开可以俯瞰公寓楼下的街道)",
+      "东": "门墙壁 (通往客厅的拉门，旁边挂着衣帽架)",
+      "西": "床头背景墙 (单人木床靠在墙边，床头柜上有台灯)"
+    }
+  },
+  "如月家": {
+    "width": 5,
+    "height": 4,
+    "cellSize": 1,
+    "floor": 0,
+    "atmosphere": "温馨的独栋小楼。客厅的沙发上随意搭着毛毯，茶几上放着两杯没喝完的茶",
+    "origin": [
+      2,
+      3
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "exitTo": "千叶_住宅区",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": true,
+          "furniture": "沙发",
+          "label": "SF"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "如月家_2F",
+          "label": "ST"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "如月家_2F": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 1,
+    "floor": 2,
+    "atmosphere": "二楼走廊。浴室门虚掩着，能闻到洗发水的香气。走廊尽头是真绫的房间",
+    "origin": [
+      2,
+      2
+    ],
+    "cells": [
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "stairs",
+          "block": false,
+          "exitTo": "如月家",
+          "label": "ST"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "door",
+          "block": false,
+          "exitTo": "如月家_浴室",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "如月家_浴室": {
+    "width": 2,
+    "height": 2,
+    "cellSize": 1,
+    "floor": 2,
+    "atmosphere": "狭小的家庭浴室。镜子上还有水雾，浴缸边缘放着洗发水和沐浴露",
+    "origin": [
+      0,
+      1
+    ],
+    "cells": [
+      [
+        {
+          "type": "door",
+          "block": false,
+          "exitTo": "如月家_2F",
+          "label": "DR"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ],
+      [
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        },
+        {
+          "type": "wall",
+          "block": true,
+          "label": "WL"
+        }
+      ]
+    ]
+  },
+  "千葉市街": {
+    "width": 30,
+    "height": 5,
+    "cellSize": 10,
+    "floor": 0,
+    "origin": [
+      15,
+      2
+    ],
+    "ambient": {
+      "audio": "远处车辆驶过的声音",
+      "visual": "两旁是住宅和店铺，路面上偶尔有汽车经过"
+    },
+    "atmosphere": "千葉市街——连接住宅区和商业街的主干道。坡道起伏，两侧电线杆上挂着竞选海报",
+    "capacity": 50,
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "label": "  "
+        }
+      ]
+    ]
+  }
+}

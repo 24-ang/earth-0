@@ -435,6 +435,7 @@ export interface GameState {
   active_hooks: Hook[];                        // 活跃钩子账本（上限 3）
   completed_events: string[];                  // 已完成/已过期的事件 ID（防重复触发）
   roomTimestamps: Record<string, string>;  // 房间名 → game_date，场景时间戳脏污
+  activeWorld: string;                     // 当前活跃世界观（用于过滤时间线/日历/lore）
   turnLog: TurnLogEntry[];                 // Layer 2 回合台账
   storySoFar: string;                      // 前情滚动摘要（旧回合压缩）
   revealLog: RevealEntry[];                // Layer 3 秘密揭示日志
