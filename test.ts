@@ -1129,12 +1129,11 @@ test("getCalendarEvents location特定值=仅匹配该地点", () => {
   if (atHome.find(e => e.date === "4月7日" && e.location === "总武高")) throw new Error("在住宅区不应有总武高专属条目");
 });
 
-test("getCalendarEvents 多个来源合并", () => {
+test("getCalendarEvents 按世界观过滤", () => {
   clearCalendarCache();
   const entries = getCalendarEvents("2018-04-07", "总武高");
-  if (entries.length < 2) throw new Error(`应至少2条（春物+橘家），实际: ${entries.length}`);
-  const sources = new Set(entries.map(e => e.text.slice(0, 4)));
-  if (sources.size < 2) throw new Error(`应有不同来源的条目，实际: ${entries.length}条`);
+  // 当前 activeWorld=oregairu，只加载春物日历
+  if (entries.length < 1) throw new Error(`应至少1条（当前世界观），实际: ${entries.length}`);
 });
 
 test("getTodayCalendar 返回1-2条合并文本", () => {

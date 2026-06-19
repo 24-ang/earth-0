@@ -16,22 +16,28 @@ import path from "node:path";
 const TIMELINES_DIR = path.resolve(process.cwd(), "data", "timelines");
 const CALENDAR_DIR = path.resolve(process.cwd(), "data", "calendar");
 
-/** 加载所有日历文件（data/calendar/*.json）→ 扁平化为 CalendarEntry[] */
-let _calendarCache: CalendarEntry[] | null = null;
+/** 加载当前活跃世界观的日历文件 → 扁平化为 CalendarEntry[] */
+let _calendarCache: Record<string, CalendarEntry[]> = {};
 function loadCalendar(): CalendarEntry[] {
-  if (_calendarCache) return _calendarCache;
+  const world = gameState.activeWorld || "oregairu";
+  if (_calendarCache[world]) return _calendarCache[world];
   const entries: CalendarEntry[] = [];
-  if (!fs.existsSync(CALENDAR_DIR)) { _calendarCache = entries; return entries; }
+  if (!fs.existsSync(CALENDAR_DIR)) { _calendarCache[world] = entries; return entries; }
+  // 只加载当前世界观 + 通用（无前缀）的日历
   for (const f of fs.readdirSync(CALENDAR_DIR)) {
     if (!f.endsWith(".json")) continue;
+    const name = f.replace(".json", "");
+    if (name !== world && !name.startsWith("_")) continue; // _ 前缀 = 通用
     try {
       const data = JSON.parse(fs.readFileSync(path.join(CALENDAR_DIR, f), "utf-8"));
       if (Array.isArray(data)) entries.push(...data);
     } catch (_) {}
   }
-  _calendarCache = entries;
+  _calendarCache[world] = entries;
   return entries;
 }
+/** 世界观切换时清除日历缓存 */
+export function clearCalendarCache(): void { _calendarCache = {}; }
 
 /** 提取 game_date 中的 M月D日 字符串 */
 function parseMonthDay(gameDate: string): string {
@@ -57,29 +63,31 @@ export function getCalendarEvents(date: string, location: string): CalendarEntry
   });
 }
 
-/** 递归加载所有 timeline 文件（支持子目录分片） */
+/** 递归加载当前活跃世界观的 timeline 文件（只加载 data/timelines/{activeWorld}/） */
 function loadAllTimelines(): TimelineEvent[] {
   const events: TimelineEvent[] = [];
   if (!fs.existsSync(TIMELINES_DIR)) return events;
 
+  const world = gameState.activeWorld || "oregairu";
+  const worldDir = path.join(TIMELINES_DIR, world);
+
   function scanDir(dir: string) {
+    if (!fs.existsSync(dir)) return;
     for (const f of fs.readdirSync(dir)) {
       const full = path.join(dir, f);
-      // 跳过禁用目录和非JSON文件
       if (f.startsWith("_")) continue;
       if (fs.statSync(full).isDirectory()) {
         scanDir(full);
       } else if (f.endsWith(".json")) {
         try {
           const data = JSON.parse(fs.readFileSync(full, "utf-8"));
-          // 单条 TimelineEvent 或数组都支持
           if (Array.isArray(data)) events.push(...data);
           else if (data.id) events.push(data);
         } catch (_) {}
       }
     }
   }
-  scanDir(TIMELINES_DIR);
+  scanDir(worldDir);
   return events;
 }
 
@@ -337,11 +345,6 @@ export function getTodayCalendar(): string {
   // 最多取 2 条，location match 优先
   const picked = [...locationMatch, ...anyMatch].slice(0, 2);
   return picked.map(e => e.text).join(" ");
-}
-
-/** 清除日历缓存（测试用） */
-export function clearCalendarCache(): void {
-  _calendarCache = null;
 }
 
 function applyBeatEffects(effects: { flags?: Record<string, boolean>; affection?: Record<string, number> }): void {
