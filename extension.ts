@@ -2074,8 +2074,9 @@ export default function (pi: ExtensionAPI) {
       hours: Type.Number({ description: "工作时长（小时）" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { workJob, saveState } = await import("./engine/state.ts");
+      const { workJob, saveState, gameState } = await import("./engine/state.ts");
       const r = workJob(params.jobName, params.hours);
+      await advanceTimeMinutes(params.hours * 60, _ctx, gameState, saveState);
       return { content: [{ type: "text", text: r }], details: {} };
     },
   });
@@ -3379,15 +3380,17 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("weather", {
     description: "查看当前天气与未来趋势",
     handler: async (_args, ctx) => {
-      const { gameState, refreshWeather } = await import("./engine/state.ts");
+      const { gameState } = await import("./engine/state.ts");
       const lines: string[] = [];
       const t = gameState.time;
+      const m = Number(t.game_date.split("-")[1]);
+      const season = m >= 3 && m <= 5 ? "春" : m >= 6 && m <= 8 ? "夏" : m >= 9 && m <= 11 ? "秋" : "冬";
 
       lines.push(`🌈 天气面板`);
       lines.push("────────────────────────────────────────");
       lines.push(`📅 ${t.game_date} ${t.day_of_week}曜日 ${t.time_of_day}`);
-      lines.push(`🌤 当前: ${t.weather || gameState.flags?.weather || "晴"}`);
-      lines.push(`🌡 季节: ${t.season || "春"} | 温度: ${t.temperature ?? "?"}°C`);
+      lines.push(`🌤 当前: ${gameState.weather?.type || "晴"}`);
+      lines.push(`🌡 季节: ${season} | 温度: ${gameState.weather?.temp ?? "?"}°C`);
       lines.push("────────────────────────────────────────");
       lines.push(`下次天气更新: 游戏内约4小时后`);
       lines.push("────────────────────────────────────────");
@@ -3677,6 +3680,60 @@ export default function (pi: ExtensionAPI) {
       const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "📋 NPC日程", lines);
     },
+  });
+
+  // ── /world 世界观热插拔 ──
+  pi.registerCommand("world", {
+    description: "切换世界观。用法: /world load [世界名] 或 /world list",
+    handler: async (args, ctx) => {
+      const fs = await import("node:fs");
+      const path = await import("node:path");
+      const { loadActiveWorld, saveState } = await import("./engine/state.ts");
+
+      const action = args[0] || "list";
+      const dataDir = path.resolve(process.cwd(), "data");
+
+      if (action === "list") {
+        const lines: string[] = ["🌍 可用世界观列表："];
+        lines.push("────────────────────────────────────────");
+        const wpDir = path.resolve(process.cwd(), "worldpacks");
+        if (fs.existsSync(wpDir)) {
+          for (const d of fs.readdirSync(wpDir)) {
+            const readme = path.join(wpDir, d, "README.md");
+            if (fs.existsSync(readme)) {
+              lines.push(`  • ${d}`);
+            }
+          }
+        }
+        lines.push("────────────────────────────────────────");
+        const activeFile = path.join(dataDir, ".active_world");
+        const current = fs.existsSync(activeFile) ? fs.readFileSync(activeFile, "utf-8").trim() : "oregairu";
+        lines.push(`当前活跃世界观: ${current}`);
+        const { showPanel } = await import("./engine/router.ts");
+        await showPanel(ctx, "🌍 世界观", lines);
+        return;
+      }
+
+      if (action === "load") {
+        const targetWorld = args[1];
+        if (!targetWorld) {
+          ctx.ui.notify("错误: 必须指定世界观名称，如 /world load oregairu", "error");
+          return;
+        }
+
+        const wpDir = path.resolve(process.cwd(), "worldpacks", targetWorld);
+        if (!fs.existsSync(wpDir)) {
+          ctx.ui.notify(`错误: 世界观 ${targetWorld} 不存在`, "error");
+          return;
+        }
+
+        // 写入 active_world 并加载
+        fs.writeFileSync(path.join(dataDir, ".active_world"), targetWorld);
+        loadActiveWorld(targetWorld);
+        saveState();
+        ctx.ui.notify(`✅ 成功切换世界观为: ${targetWorld}。刷新存档完毕。`, "info");
+      }
+    }
   });
 
   // ── Lifecycle ──
