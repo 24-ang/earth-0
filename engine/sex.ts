@@ -268,6 +268,103 @@ export function getMoodHint(affection: number, attitude: SexProfile["attitude"])
   return "动摇";
 }
 
+// ── 社交情境标签系统（注入 NPC Agent / GM prompt，约束而非剧本）──
+// 原则：引擎提供情境事实 + 行为约束，LLM 在约束内自由生成。
+// 参考 Ena/Shiro 系统：告诉 LLM 什么不该做 > 告诉它该做什么。
+
+export type ExposureLevel = "clothed" | "partially_undressed" | "topless" | "underwear_only" | "fully_nude";
+export type SocialSetting = "private" | "semi_public" | "public";
+
+export interface SocialContext {
+  /** 触发情境类型 */
+  trigger: "undress" | "seen_naked" | "caught_changing" | "accidental_exposure" | "wardrobe_malfunction"
+         | "intimate_touch" | "sexual_topic" | "seeing_body" | "general_embarrassment";
+  /** 当前穿着/暴露程度 */
+  exposure: ExposureLevel;
+  /** 场景私密性 */
+  setting: SocialSetting;
+  /** 在场的人（名列表，空则仅玩家） */
+  present: string[];
+  /** 第一次在此人/这些人面前处于此状态 */
+  firstTime: boolean;
+  /** 该 NPC 的「世故度」——对性/身体话题的认知水平 */
+  worldliness?: "纯真" | "普通" | "早熟" | "老练";
+}
+
+/** 生成轻量社交情境标签（1-3 行）。
+ *  这些是「约束性提示」——告诉 LLM 当前的身体/认知状态，
+ *  但不预设具体反应。LLM 在约束内自由发挥。 */
+export function getSocialContextTags(
+  profile: SexProfile,
+  state: SexState,
+  ctx: SocialContext
+): string {
+  const tags: string[] = [];
+  const att = profile.attitude;
+  const exp = profile.experience;
+  const wl = ctx.worldliness ?? (
+    exp === "未开发" ? "纯真" : exp === "生涩" ? "普通" : exp === "熟练" ? "早熟" : "老练"
+  );
+
+  // ── 身体状态标签 ──
+  if (ctx.exposure !== "clothed") {
+    const expMod = exp === "未开发" ? "身体对触碰反应剧烈、不加掩饰" :
+                   exp === "生涩" ? "会紧张但试着配合，身体反应诚实" :
+                   exp === "熟练" ? "熟悉自己的身体，不慌张但也不会假装没感觉" :
+                   "完全掌控自己的身体反应，会主动引导";
+
+    if (ctx.firstTime) {
+      tags.push(`[初次裸露] 第一次在${ctx.present.join("、") || "此人"}面前暴露到${ctx.exposure}程度。本能防御机制激活。`);
+    }
+    tags.push(`[身体状态] 穿着:${ctx.exposure} | 身体经验:${expMod} | 性格底色:${att}`);
+  }
+
+  // ── 认知标签（知道多少、对性/身体话题的理解水平）──
+  if (ctx.trigger === "sexual_topic" || ctx.trigger === "seeing_body") {
+    if (wl === "纯真") {
+      tags.push(`[认知] 对性/身体话题几乎一无所知。听不懂暗示，看到异性身体可能只是好奇而非兴奋。反应是「这是正常的吗？」而非「这很色情」。`);
+    } else if (wl === "普通") {
+      tags.push(`[认知] 有基本的性知识但缺乏实际经验。能听懂暗示但会脸红。看到异性身体知道意味着什么，但不确定自己该怎么反应。`);
+    } else if (wl === "早熟") {
+      tags.push(`[认知] 知识+经验都有。能自然地谈论身体/性话题。看到异性的身体反应知道自己想要什么。`);
+    } else {
+      tags.push(`[认知] 什么都见过。对性/身体话题不尴尬、不回避。能坦率评价、引导或调侃。`);
+    }
+  }
+
+  // ── 社交压力标签 ──
+  if (ctx.setting === "public") {
+    tags.push(`[⚠️ 公开场合] 随时可能被外人看到。反应会被压抑——小动作代替大动作。越克制越有张力。禁止: 夸张反应、大声。`);
+  } else if (ctx.setting === "semi_public") {
+    tags.push(`[半公开] 有被看到的可能。紧张感让身体更敏感。偶尔瞥向门/窗。`);
+  }
+
+  if (ctx.present.length > 1) {
+    tags.push(`[旁观者] ${ctx.present.join("、")}在场。NPC的反应会被旁观者影响——对熟人更尴尬，对陌生人更警惕。`);
+  }
+
+  // ── 禁止事项（Shiro 模式 — 告诉 LLM 什么绝对不要写）──
+  const bans: string[] = [];
+  if (ctx.firstTime && att !== "沉溺") {
+    bans.push("禁止: 坦然接受、主动配合、游刃有余。这是第一次——应该有紧张/犹豫/笨拙。");
+  }
+  if (att === "抗拒") {
+    bans.push("禁止: 享受、迎合、主动。她的身体语言是关闭的——即使不反抗也是僵硬的。");
+  }
+  if (ctx.setting !== "private") {
+    bans.push("禁止: 完全放松、大声呻吟、忘我状态。有人在附近。");
+  }
+  if (wl === "纯真" && (ctx.trigger === "sexual_topic" || ctx.trigger === "seeing_body")) {
+    bans.push("禁止: 老练的评价、性暗示、主动调情。她根本不懂这些——反应是困惑或天真。");
+  }
+
+  if (bans.length > 0) {
+    tags.push(`[禁止] ${bans.join(" | ")}`);
+  }
+
+  return tags.join("\n");
+}
+
 // --- 心里话（LLM生成 → engine存储） ---
 export function recordThought(state: SexState, text: string, gameDate: string, context: "climax_after" | "scene_end"): void {
   if (!state.thoughts) state.thoughts = [];

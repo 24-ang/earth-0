@@ -1308,8 +1308,14 @@ export default function (pi: ExtensionAPI) {
         else {
           const ds = makeDeathSave(p);
           r = ds.narrative;
-          if (ds.nat20) { p.alive = true; p.hp.current = 1; r += ` ${p.name}恢复了意识！HP=1。`; }
-          else if (ds.nat1) { r += ` 这是第1次失败……`; }
+          if (ds.nat20) { p.alive = true; p.hp.current = 1; p.deathSaves = undefined; r += ` ${p.name}恢复了意识！HP=1。`; }
+          else if (p.deathSaves && p.deathSaves.failures >= 3) {
+            r += `\n💀 三次死亡豁免失败。${p.name}的生命走到了尽头。`;
+          }
+          else if (p.deathSaves && p.deathSaves.successes >= 3) {
+            p.alive = true; p.hp.current = 1; p.deathSaves = undefined;
+            r += `\n✅ 三次死亡豁免成功。${p.name}稳定了下来。HP=1。`;
+          }
         }
       } else if (params.action === "defend") {
         r = defend(playerCombatant);
@@ -1709,7 +1715,7 @@ export default function (pi: ExtensionAPI) {
         const res = await fetch("https://api.deepseek.com/anthropic/v1/messages", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-api-key": DEEPSEEK_KEY, "anthropic-version": "2023-06-01" },
-          body: JSON.stringify({ model: "deepseek-v4-pro", max_tokens: 4096, messages: [{ role: "user", content: renderPrompt }] }),
+          body: JSON.stringify({ model: "deepseek-v4-flash", max_tokens: 4096, messages: [{ role: "user", content: renderPrompt }] }),
         });
         if (!res.ok) {
           // 降级：返回渲染提示给 GM 自己写
@@ -1730,11 +1736,19 @@ export default function (pi: ExtensionAPI) {
   // ── Layer 5 多角色 Agent ──
   pi.registerTool({
     name: "spawn_npc_agent", label: "NPC角色代理",
-    description: "派生独立NPC Agent。npcName:NPC名/sceneContext:场景/initiative:true=自主发言(不受玩家触发)。并行调用时各自独立，互不串台。",
+    description: "派生独立NPC Agent。npcName:NPC名/sceneContext:场景/initiative:true=自主发言。intimacyContext传入时自动注入真实身体反应指导(暴露程度/私密性/初次)。",
     parameters: Type.Object({
       npcName: Type.String({ description: "NPC 名" }),
       sceneContext: Type.String({ description: "场景简述，如'维邀请雪乃去便利店'" }),
       initiative: Type.Optional(Type.Boolean({ description: "是否自主发言（不依赖玩家触发）。true时NPC基于自身性格/环境主动说或做某事。" })),
+      socialContext: Type.Optional(Type.Object({
+        trigger: Type.String({ description: "触发情境: undress|seen_naked|caught_changing|accidental_exposure|wardrobe_malfunction|intimate_touch|sexual_topic|seeing_body|general_embarrassment" }),
+        exposure: Type.String({ description: "穿着/暴露程度: clothed|partially_undressed|topless|underwear_only|fully_nude" }),
+        setting: Type.String({ description: "场景私密性: private|semi_public|public" }),
+        present: Type.Optional(Type.Array(Type.String(), { description: "在场其他人名列表，默认仅玩家" })),
+        firstTime: Type.Optional(Type.Boolean({ description: "是否第一次在此情境下。默认根据milestones推断" })),
+        worldliness: Type.Optional(Type.String({ description: "该NPC的世故度（对性/身体话题的认知）: 纯真|普通|早熟|老练。默认根据experience推断" })),
+      })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
@@ -1768,6 +1782,29 @@ export default function (pi: ExtensionAPI) {
           n.currentRoom.replace(/[（(].*[）)]/, "").trim().toLowerCase() === gameState.player.location.replace(/[（(].*[）)]/, "").trim().toLowerCase())
         .map(([name]) => name);
 
+      // 社交情境 → 生成约束标签（而非剧本）
+      let socialTags = "";
+      if (params.socialContext) {
+        try {
+          const { SEX_PROFILES, getSocialContextTags } = await import("./engine/sex.ts");
+          const { getOrCreateSexState } = await import("./engine/state.ts");
+          const profile = SEX_PROFILES[params.npcName];
+          if (profile) {
+            const sState = await getOrCreateSexState(params.npcName);
+            if (sState) {
+              socialTags = getSocialContextTags(profile, sState, {
+                trigger: params.socialContext.trigger as any,
+                exposure: params.socialContext.exposure as any,
+                setting: params.socialContext.setting as any,
+                present: params.socialContext.present || [],
+                firstTime: params.socialContext.firstTime ?? true,
+                worldliness: params.socialContext.worldliness as any,
+              });
+            }
+          }
+        } catch (_) {}
+      }
+
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
         `在场人物: 玩家${otherNPCs.length > 0 ? "、" + otherNPCs.join("、") : "（仅你一人）"}。`,
@@ -1790,12 +1827,23 @@ export default function (pi: ExtensionAPI) {
         `当前场景: ${params.sceneContext}`,
         params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",
         "",
-        "【角色动机】先在心里想清楚三层（不输出，只用于指导回应）：",
-        "① 表面意图: 你现在在说什么/做什么？可能是伪装、嘴硬、习惯、场面话。",
-        "② 内心潜台词: 你真正想要什么？被认可/怕冷落/想保护/试探/掩饰不安？",
-        "③ 行为泄漏: 哪个小动作会出卖你的真心？（停顿、移开视线、放东西时用力过猛、说到一半咽回去）",
+        socialTags ? `【情境约束】以下是引擎给出的当前情境事实和禁止事项。在此约束内自由发挥，不要复述这些标签本身：\n${socialTags}\n` : "",
+        "【角色动机 — 嘴上那套不是动机】",
+        "先想清楚：你现在说的/做的不一定是真心的——那可能是保护壳。追问：你在保护什么？",
+        "① 嘴上那套: 你此刻在说什么/做什么？（嘴硬/傲娇/冷淡/说教/岔开话题——这些都是防御，不是目标）",
+        "② 真正想要的（内驱力）: 你内心深处在追什么？（被认可/怕被冷落/想保护某人/试探底线/掩饰不安/确认自己的位置）",
+        "  提示: 如果你嘴上在挑刺，你可能怕被拒绝；如果你在说教，你可能想确认自己的价值；如果你沉默，你可能在等对方先表态。",
+        "③ 潜台词强度(beneath 0-3): 这轮你的真心藏得多深？",
+        "  0-1 = 淡淡的小心思，一个微妙的停顿或移开视线就够了。",
+        "  2-3 = 嘴上说的和心里想的完全相反。表面一套+深层一套，用两个互相矛盾的小动作泄漏真相。",
+        "④ 行为泄漏: 哪个具体的小动作会出卖你？（停顿的时长、移开视线的方向、放杯子力道重了一点、话说到一半咽回去）",
         "",
-        "【回应规则】",
+        "【回应规则 — beat响应链 ≥2步】",
+        "你的回应不是单步反应。按这个链条输出：",
+        "第1步·本能反应: 听到/看到/被问到→身体先于大脑的反应（缩肩/愣住/手停了一下）。这是你无法控制的。",
+        "第2步·消化: 你意识到自己的本能反应，迅速调整——可能掩饰、可能放大、可能放弃抵抗。",
+        "第3步·有意识的回应: 你决定怎么回答/怎么做。这时候才说出台词或做出动作。",
+        "例: 被夸了→先愣了一下(1)→垂下眼睛不让对方看到自己嘴角(2)→「……只是恰好会做而已。」(3)",
       ].filter(Boolean).join("\n");
 
       try {
@@ -1810,10 +1858,10 @@ export default function (pi: ExtensionAPI) {
         }
         const data = await res.json() as any;
         const response = data?.content?.[0]?.text?.trim() || `${params.npcName}（沉默）`;
-        // 自动写入 NPC 记忆（7 天有效期）
+        // 自动写入 NPC 记忆 + 结构化状态表
         try {
           const { addMemoryTag } = await import("./engine/state.ts");
-          // 自动写入 NPC 状态表
+          addMemoryTag(params.npcName, `[Agent自主发言] ${response.slice(0, 80)}`, 7);
           try { const { createRow } = await import("./engine/scenario-tables.ts"); createRow("角色状态表", { 角色名: params.npcName, 穿着: (outfit||"").slice(0,30), 精确动作: response.slice(0,60), 情绪: "", 精确位置: gameState.player.location }); } catch(_) {}
         } catch (_) {}
         return { content: [{ type: "text", text: response }], details: {} };
@@ -1826,12 +1874,20 @@ export default function (pi: ExtensionAPI) {
   // ── Layer 5 批量并行 NPC Agent ──
   pi.registerTool({
     name: "spawn_npc_agents", label: "批量NPC代理",
-    description: "并行派生多个NPC Agent。npcs:[{npcName,sceneContext,initiative?}]。多NPC场景一次并行(1-2秒)。initiative:true=自主发言不等玩家触发。",
+    description: "并行派生多个NPC Agent。npcs:[{npcName,sceneContext,initiative?}]。intimacyContext批量应用于所有NPC(同一场景共享)。",
     parameters: Type.Object({
       npcs: Type.Array(Type.Object({
         npcName: Type.String({ description: "NPC 名" }),
         sceneContext: Type.String({ description: "当前场景简述" }),
         initiative: Type.Optional(Type.Boolean({ description: "是否自主发言" })),
+      })),
+      socialContext: Type.Optional(Type.Object({
+        trigger: Type.String({ description: "触发情境: undress|seen_naked|caught_changing|accidental_exposure|wardrobe_malfunction|intimate_touch|sexual_topic|seeing_body|general_embarrassment" }),
+        exposure: Type.String({ description: "穿着/暴露程度: clothed|partially_undressed|topless|underwear_only|fully_nude" }),
+        setting: Type.String({ description: "场景私密性: private|semi_public|public" }),
+        present: Type.Optional(Type.Array(Type.String(), { description: "在场其他人名列表，默认仅玩家" })),
+        firstTime: Type.Optional(Type.Boolean({ description: "是否第一次在此情境下" })),
+        worldliness: Type.Optional(Type.String({ description: "世故度: 纯真|普通|早熟|老练" })),
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
@@ -1862,6 +1918,29 @@ export default function (pi: ExtensionAPI) {
           .filter((n: any) => n.npcName !== npcName)
           .map((n: any) => n.npcName);
 
+        // 社交情境 → 按 NPC 个体生成约束标签
+        let socialTags = "";
+        if (params.socialContext) {
+          try {
+            const { SEX_PROFILES, getSocialContextTags } = await import("./engine/sex.ts");
+            const { getOrCreateSexState } = await import("./engine/state.ts");
+            const profile = SEX_PROFILES[npcName];
+            if (profile) {
+              const sState = await getOrCreateSexState(npcName);
+              if (sState) {
+                socialTags = getSocialContextTags(profile, sState, {
+                  trigger: params.socialContext.trigger as any,
+                  exposure: params.socialContext.exposure as any,
+                  setting: params.socialContext.setting as any,
+                  present: params.socialContext.present || [],
+                  firstTime: params.socialContext.firstTime ?? true,
+                  worldliness: params.socialContext.worldliness as any,
+                });
+              }
+            }
+          } catch (_) {}
+        }
+
         const prompt = [
           `你是${npcName}。你现在正在${gameState.player.location}。`,
           `在场人物: 玩家${batchOthers.length > 0 ? "、" + batchOthers.join("、") : "（仅你一人）"}。`,
@@ -1873,15 +1952,24 @@ export default function (pi: ExtensionAPI) {
           `当前场景: ${sceneContext}`,
           initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。" : "",
           "",
-          "【角色动机】先在内心想三层（不输出，只用于指导回应）：",
-          "① 表面意图: 你此刻在说什么/做什么？（可能伪装/嘴硬/习惯/场面话）",
-          "② 内心潜台词: 你真正想要什么？（被认可/怕冷落/想保护/试探/掩饰不安）",
-          "③ 行为泄漏: 哪个小动作会出卖真心？（停顿/移开视线/放东西用力过猛/说到一半咽回去）",
+          socialTags ? `【情境约束】以下是引擎给出的当前情境事实和禁止事项。在此约束内自由发挥，不要复述这些标签本身：\n${socialTags}\n` : "",
+          "【角色动机 — 嘴上那套不是动机】",
+          "先想清楚：你现在说的/做的不一定是真心的——那可能是保护壳。追问：你在保护什么？",
+          "① 嘴上那套: 你此刻在说什么/做什么？（嘴硬/傲娇/冷淡/说教/岔开话题——这些都是防御，不是目标）",
+          "② 真正想要的（内驱力）: 你内心深处在追什么？（被认可/怕被冷落/想保护某人/试探底线/掩饰不安/确认自己的位置）",
+          "  提示: 如果你嘴上在挑刺，你可能怕被拒绝；如果你在说教，你可能想确认自己的价值；如果你沉默，你可能在等对方先表态。",
+          "③ 潜台词强度(beneath 0-3): 这轮你的真心藏得多深？",
+          "  0-1 = 淡淡的小心思，一个微妙的停顿或移开视线就够了。",
+          "  2-3 = 嘴上说的和心里想的完全相反。表面一套+深层一套，用两个互相矛盾的小动作泄漏真相。",
+          "④ 行为泄漏: 哪个具体的小动作会出卖你？（停顿的时长、移开视线的方向、放杯子力道重了一点、话说到一半咽回去）",
           "",
-          "【回应规则】",
-          "- 用你的口吻。≤3句话。融入身体语言。用「」引对话。",
-          "- 别直接说内心想法——通过动作和潜台词让玩家感觉出来。",
-          "- 情绪控制: 日常在3~7分。别浑身颤抖、心脏停跳、眼眶泛红。用小反应代替大情绪。",
+          "【回应规则 — beat响应链 ≥2步】",
+          "你的回应不是单步反应。按这个链条输出：",
+          "第1步·本能反应: 听到/看到/被问到→身体先于大脑的反应（缩肩/愣住/手停了一下）。这是你无法控制的。",
+          "第2步·消化: 你意识到自己的本能反应，迅速调整——可能掩饰、可能放大、可能放弃抵抗。",
+          "第3步·有意识的回应: 你决定怎么回答/怎么做。这时候才说出台词或做出动作。",
+          "例: 被夸了→先愣了一下(1)→垂下眼睛不让对方看到自己嘴角(2)→「……只是恰好会做而已。」(3)",
+          "- 情绪控制: 日常在3~7分。用小反应代替大情绪。",
           "- 拒绝空洞比喻（石子入湖/惊雷）和OO句式（不是xx而是xx、一丝、不易察觉）。",
         ].filter(Boolean).join("\n");
 
@@ -1898,11 +1986,12 @@ export default function (pi: ExtensionAPI) {
       }
 
       const results = await Promise.all(params.npcs.map(n => runOne(n.npcName, n.sceneContext, (n as any).initiative)));
-      // 自动写入所有 NPC 的记忆（7 天有效期）
+      // 自动写入所有 NPC 的记忆 + 结构化状态表
       try {
         const { addMemoryTag } = await import("./engine/state.ts");
         for (let i = 0; i < params.npcs.length; i++) {
           if (!results[i].includes("（沉默）") && !results[i].includes("（未找到）")) {
+            addMemoryTag(params.npcs[i].npcName, `[Agent自主发言] ${results[i].slice(0, 80)}`, 7);
             try { const { createRow } = await import("./engine/scenario-tables.ts"); createRow("角色状态表", { 角色名: params.npcs[i].npcName, 穿着: "", 精确动作: results[i].slice(0,60), 情绪: "", 精确位置: gameState.player.location }); } catch(_) {}
           }
         }
@@ -2100,11 +2189,15 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: "sell_item", label: "出售",
-    description: "出售物品。LLM定价，引擎校验价格范围(economy.json)。",
-    parameters: Type.Object({ item: Type.String(), price: Type.Number() }),
+    description: "出售物品。LLM定价，引擎校验价格范围(economy.json)。可指定buyer卖给NPC（扣NPC资金）。",
+    parameters: Type.Object({
+      item: Type.String(),
+      price: Type.Number(),
+      buyer: Type.Optional(Type.String({ description: "买家NPC名。不传则卖给系统商店。" })),
+    }),
     async execute(_id, params, _s, _o, _ctx) {
       const { sellItem } = await import("./engine/state.ts");
-      const r = sellItem(params.item, params.price);
+      const r = sellItem(params.item, params.price, params.buyer);
       return { content: [{ type: "text", text: r }], details: {} };
     },
   });
@@ -2515,6 +2608,45 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  // ── 队伍管理 ──
+
+  pi.registerTool({
+    name: "add_to_party", label: "加入队伍",
+    description: "将NPC加入玩家队伍。NPC须在场。同场景战斗/探索时自动参与。",
+    parameters: Type.Object({
+      npc: Type.String({ description: "要邀请加入队伍的NPC名称" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, saveState, getOrCreateNPC } = await import("./engine/state.ts");
+      const npc = getOrCreateNPC(params.npc);
+      if (!npc) return { content: [{ type: "text", text: `未找到NPC: ${params.npc}` }], details: {} };
+      const p = gameState.player;
+      p.party ??= [];
+      if (p.party.includes(params.npc)) return { content: [{ type: "text", text: `${params.npc} 已在队伍中` }], details: {} };
+      p.party.push(params.npc);
+      saveState();
+      return { content: [{ type: "text", text: `${params.npc} 加入了队伍。（当前队伍: ${p.party.join("、")}）` }], details: {} };
+    },
+  });
+
+  pi.registerTool({
+    name: "remove_from_party", label: "移出队伍",
+    description: "将NPC移出玩家队伍。",
+    parameters: Type.Object({
+      npc: Type.String({ description: "要移出队伍的NPC名称" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { gameState, saveState } = await import("./engine/state.ts");
+      const p = gameState.player;
+      p.party ??= [];
+      const idx = p.party.indexOf(params.npc);
+      if (idx < 0) return { content: [{ type: "text", text: `${params.npc} 不在队伍中` }], details: {} };
+      p.party.splice(idx, 1);
+      saveState();
+      return { content: [{ type: "text", text: `${params.npc} 离开了队伍。（当前队伍: ${p.party.join("、") || "空"}）` }], details: {} };
+    },
+  });
+
   // ── 手机工具（使用 phone.ts 引擎）──
 
   pi.registerTool({
@@ -2594,6 +2726,37 @@ export default function (pi: ExtensionAPI) {
         `[${p.platform}] ${p.author}: ${p.text}  ❤️${p.likes}  ${p.timestamp}`
       ).join("\n");
       return { content: [{ type: "text", text }], details: { posts: recent } };
+    },
+  });
+
+  pi.registerTool({
+    name: "post_sns", label: "发帖",
+    description: "NPC或玩家发社交媒体帖。author:NPC名或'玩家'/platform:mixi|twitter/text:内容/likes:初始赞数。",
+    parameters: Type.Object({
+      author: Type.String({ description: "发帖人：NPC名 或 '玩家'" }),
+      platform: Type.String({ description: "'mixi' 或 'twitter'" }),
+      text: Type.String({ description: "帖子内容" }),
+      likes: Type.Optional(Type.Number({ description: "初始赞数，默认0" })),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { getPlayerPhoneData, syncContactsFromRelationships } = await import("./engine/phone.ts");
+      const { gameState, saveState } = await import("./engine/state.ts");
+      const pd = getPlayerPhoneData();
+      if (!pd) {
+        return { content: [{ type: "text", text: "你没有手机。无法发布SNS帖。" }], details: {} };
+      }
+      syncContactsFromRelationships(pd);
+      const post = {
+        id: Date.now(),
+        author: params.author,
+        text: params.text,
+        timestamp: gameState.time.game_date,
+        platform: params.platform as "mixi" | "twitter",
+        likes: params.likes || 0,
+      };
+      pd.snsPosts.push(post);
+      saveState();
+      return { content: [{ type: "text", text: `[${params.platform}] ${params.author} 发布了: "${params.text}"` }], details: { post } };
     },
   });
 
@@ -3434,21 +3597,21 @@ export default function (pi: ExtensionAPI) {
       
       if (activeQuests.length > 0) {
         for (const q of activeQuests) {
-          items.push({ label: `▶ [${q.eventId}] ${q.description || ""}`, detail: "" });
+          items.push({ label: `▶ [${q.id}] ${q.title || ""}`, detail: "" });
         }
       } else {
         items.push({ label: "  (当前没有正在进行的任务)", detail: "" });
       }
-      
+
       items.push({ label: "────────────────────────────────────────", detail: "" });
-      items.push({ label: `🔗 等待触发的剧情钩子: (${gameState.timeline_events?.length || 0})`, detail: "" });
-      if (gameState.timeline_events && gameState.timeline_events.length > 0) {
-        for (const ev of gameState.timeline_events) {
-          items.push({ label: `  - ${ev.eventId} (优先级: ${ev.priority}, ${ev.type})`, detail: "" });
+      const hooks = gameState.active_hooks || [];
+      items.push({ label: `🔗 等待触发的剧情钩子: (${hooks.length})`, detail: "" });
+      if (hooks.length > 0) {
+        for (const h of hooks) {
+          items.push({ label: `  - ${h.event_id} (${h.urgency})`, detail: h.hook_text.slice(0, 40) });
         }
       }
-      
-      const { showMenu } = await import("./engine/router.ts");
+
       await showMenu(ctx, `任务与剧情`, items);
     }
   });
@@ -3464,8 +3627,8 @@ export default function (pi: ExtensionAPI) {
       } else {
         // 弹窗菜单选择
         const items: MenuItem[] = [
-          { label: "default (标准)", detail: "完整系统提示，含规则+输出+状态+模式", action: () => { gameState.preset = "default"; saveState(); ctx.ui.notify("模式切换为: default", "info"); } },
-          { label: "lite (轻量)", detail: "省略硬规则，日常场景节省 Token", action: () => { gameState.preset = "lite"; saveState(); ctx.ui.notify("模式切换为: lite", "info"); } },
+          { label: "default (标准)", detail: "完整系统提示，含规则+输出+状态+模式", action: (done) => { gameState.preset = "default"; saveState(); ctx.ui.notify("模式切换为: default", "info"); done(); } },
+          { label: "lite (轻量)", detail: "省略硬规则，日常场景节省 Token", action: (done) => { gameState.preset = "lite"; saveState(); ctx.ui.notify("模式切换为: lite", "info"); done(); } },
         ];
         await showMenu(ctx, "系统提示词预设", items);
       }
@@ -3497,21 +3660,21 @@ export default function (pi: ExtensionAPI) {
       items.push({ label: `📋 进行中的任务 (${quests.length})`, detail: "" });
       if (quests.length > 0) {
         for (const q of quests) {
-          items.push({ label: `  ▶ ${q.eventId}`, detail: q.description || "" });
+          items.push({ label: `  ▶ ${q.id}`, detail: q.title || "" });
         }
       } else {
         items.push({ label: "  (无)", detail: "" });
       }
 
       items.push({ label: "────────────────────────────────────────", detail: "" });
-      items.push({ label: `🔗 待触发事件: ${gameState.timeline_events?.length || 0}`, detail: "" });
-      if (gameState.timeline_events && gameState.timeline_events.length > 0) {
-        for (const ev of gameState.timeline_events.slice(0, 10)) {
-          items.push({ label: `  • ${ev.eventId}`, detail: `优先级:${ev.priority} ${ev.type}` });
+      const hooks = gameState.active_hooks || [];
+      items.push({ label: `🔗 待触发事件: ${hooks.length}`, detail: "" });
+      if (hooks.length > 0) {
+        for (const h of hooks.slice(0, 10)) {
+          items.push({ label: `  • ${h.event_id}`, detail: `${h.urgency} | ${h.source_npc}` });
         }
       }
 
-      const { showMenu } = await import("./engine/router.ts");
       await showMenu(ctx, "📅 日历与事件", items);
     },
   });
@@ -3537,7 +3700,6 @@ export default function (pi: ExtensionAPI) {
       lines.push("提示: 天气影响移动速度、NPC出没、事件触发。");
       lines.push("暴雨天NPC倾向待在室内，下雪天操场不可用。");
 
-      const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "🌈 天气", lines);
     },
   });
@@ -3576,7 +3738,6 @@ export default function (pi: ExtensionAPI) {
       const disguise = getDisguiseIdentity(gameState.player);
       if (disguise) lines.push(`🎭 装备伪装: ${disguise}`);
 
-      const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "🚨 警报", lines);
     },
   });
@@ -3611,7 +3772,6 @@ export default function (pi: ExtensionAPI) {
         lines.push("会被注入后续对话的NPC上下文中。");
       }
 
-      const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "🧠 NPC记忆", lines);
     },
   });
@@ -3637,8 +3797,8 @@ export default function (pi: ExtensionAPI) {
         }
       }
       lines.push("────────────────────────────────────────");
-      lines.push(`🍽 饮食方案: ${p.diet || "普通"}`);
-      lines.push(`🏃 运动方案: ${p.exercise || "普通"}`);
+      lines.push(`🍽 饮食方案: ${p.body?.diet || "普通"}`);
+      lines.push(`🏃 运动方案: ${p.body?.exercise || "普通"}`);
       lines.push("────────────────────────────────────────");
       lines.push("方案说明:");
       lines.push("  饮食: 普通 | 节食 | 高蛋白 | 丰胸食谱");
@@ -3646,7 +3806,6 @@ export default function (pi: ExtensionAPI) {
       lines.push("每月末自动结算发育（/sleep 到月末触发）");
       lines.push("或调用 monthly_growth 工具手动结算。");
 
-      const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "📈 发育", lines);
     },
   });
@@ -3675,12 +3834,14 @@ export default function (pi: ExtensionAPI) {
 
       // 死亡豁免
       lines.push("────────────────────────────────────────");
-      lines.push(`💀 死亡豁免: ${p.deathSaves?.successes || 0} 成功 / ${p.deathSaves?.failures || 0} 失败`);
+      const ds = p.deathSaves;
+      lines.push(`💀 死亡豁免: ${ds?.successes || 0} 成功 / ${ds?.failures || 0} 失败${!p.alive ? " ⚠️濒死中" : ""}`);
 
       // 周边NPC战力
       lines.push("────────────────────────────────────────");
       lines.push("👥 周边 NPC 战力评估:");
       const { isSameLocation } = await import("./engine/state.ts");
+      const { allChars } = await import("./engine/router.ts");
       const nearbyNPCs = Object.entries(gameState.npcs)
         .filter(([_, n]) => isSameLocation(n.currentRoom, p.location));
 
@@ -3688,12 +3849,12 @@ export default function (pi: ExtensionAPI) {
         lines.push("  (周围没有NPC)");
       } else {
         for (const [name, npc] of nearbyNPCs) {
-          const npcState = getOrCreateNPC(name);
-          const hp = npcState.hp || { current: 10, max: 10 };
-          const attr = npcState.attributes || { 力量: 10, 敏捷: 10, 体质: 10 };
-          const weapon = npcState.equipment?.right_hand || npcState.equipment?.left_hand;
+          const src = allChars.find((c: any) => c.name === name);
+          const srcHp = src?.hp || { current: 10, max: 10 };
+          const srcAttr = src?.attributes || { 力量: 10, 敏捷: 10, 体质: 10 };
+          const weapon = npc.equipment?.right_hand || npc.equipment?.left_hand;
           const wpnStr = weapon?.damage ? `${weapon.name}(${weapon.damage.dice})` : "徒手";
-          lines.push(`  ${name}: HP${hp.current}/${hp.max} AC${10 + Math.floor((attr.敏捷 - 10) / 2)} ${wpnStr}`);
+          lines.push(`  ${name}: HP${srcHp.current}/${srcHp.max} AC${10 + Math.floor(((srcAttr.敏捷 || 10) - 10) / 2)} ${wpnStr}`);
         }
       }
 
@@ -3702,7 +3863,6 @@ export default function (pi: ExtensionAPI) {
       if ((flags as any).steal_alert) lines.push("⚠️ 偷窃警报生效中，NPC可能敌对！");
       if ((flags as any).school_alert) lines.push("⚠️ 校园警戒中！");
 
-      const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "⚔️ 战斗", lines);
     },
   });
@@ -3768,7 +3928,6 @@ export default function (pi: ExtensionAPI) {
       lines.push(`💰 你的余额: ¥${gameState.player.funds}`);
       lines.push("使用 buy_item / sell_item / work_job 工具进行交易。");
 
-      const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "🏪 商店", lines);
     },
   });
@@ -3817,7 +3976,6 @@ export default function (pi: ExtensionAPI) {
       lines.push("🔶 = 日程覆盖中 | 🏷 = 有记忆标签");
       lines.push("📍 = 当前位置");
 
-      const { showPanel } = await import("./engine/router.ts");
       await showPanel(ctx, "📋 NPC日程", lines);
     },
   });
@@ -3849,7 +4007,6 @@ export default function (pi: ExtensionAPI) {
         const activeFile = path.join(dataDir, ".active_world");
         const current = fs.existsSync(activeFile) ? fs.readFileSync(activeFile, "utf-8").trim() : "oregairu";
         lines.push(`当前活跃世界观: ${current}`);
-        const { showPanel } = await import("./engine/router.ts");
         await showPanel(ctx, "🌍 世界观", lines);
         return;
       }

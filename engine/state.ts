@@ -844,7 +844,7 @@ function getDefaultSexAtmosphere(location: string): string {
 
   // combat模式 → 战斗工具优先
   if (s.mode === "combat") {
-    sceneHints.push("战斗场景: combat_action, dice_roll, move, use_item, equip_item, inflict_damage");
+    sceneHints.push("战斗场景: combat_action, dice_roll, move, use_item, equip_item, inflict_damage, add_to_party, remove_from_party");
   }
   // sex/Layer1模式
   if (s.layer1Enabled || s.mode === "sex") {
@@ -872,12 +872,12 @@ function getDefaultSexAtmosphere(location: string): string {
   }
   // 在学校/社交场所
   if (p.location.includes("校") || p.location.includes("部室") || p.location.includes("侍奉部")) {
-    sceneHints.push("社交场景: adjust_relation, lookup_character, set_npc_outfit, add_memory_tag");
+    sceneHints.push("社交场景: adjust_relation, lookup_character, set_npc_outfit, add_memory_tag, post_sns, browse_sns");
   }
 
   if (sceneHints.length > 0) {
     // 始终提醒可用的核心工具（不随场景变）
-    const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn";
+    const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn, add_to_party, remove_from_party";
     tpl += `\n[工具提示] ${[...sceneHints, always].join(" | ")}`;
   }
 
@@ -1814,14 +1814,19 @@ export async function createRoom(roomName: string, width: number, height: number
     capacity: undefined
   };
 
-  // 物理约束：施工需要时间（引擎不查钱——GM判断经济）
+  // 物理约束：施工需要时间和金钱
   const constructionMinutes = width * height * 5;
+  const constructionCost = width * height * 100; // ¥100/m²
+  if (gameState.player.funds < constructionCost) {
+    return { success: false, reason: `资金不足。建造${width}×${height}房间需要¥${constructionCost}，当前余额¥${gameState.player.funds}` };
+  }
+  gameState.player.funds -= constructionCost;
   const { advanceMinutes } = await import("./time.ts");
   // 确保 minute_of_day 存在
   if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
   advanceMinutes(gameState.time, constructionMinutes);
   saveState();
-  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})，施工耗时${constructionMinutes}分钟。` };
+  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})，花费¥${constructionCost}，施工耗时${constructionMinutes}分钟。` };
 }
 
 export function editCellType(x: number, y: number, type: "floor" | "wall" | "door" | "exit" | "stairs", exitTo?: string, material?: string): { success: boolean; reason: string } {
