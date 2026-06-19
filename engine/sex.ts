@@ -11,27 +11,33 @@ export type CyclePhase = "生理期" | "安全期" | "排卵期";
 export type SexPhase = "caress" | "service" | "insertion";
 export type { SexProfile, SexState };
 
-/** 动态引用——随 Worldpack 切换自动更新 */
+/** 动态引用——随 Worldpack 切换自动更新。
+ *  如果 worldpack 没有 sex_profiles.json，回退到 data/ 默认文件。 */
+import sexProfilesStatic from "../data/sex_profiles.json" with { type: "json" };
 import type { SexProfile } from "./types.ts";
 export const SEX_PROFILES: Record<string, SexProfile> = new Proxy({} as any, {
   get(_, prop) {
     try {
       const { sexProfilesData } = require("./state.ts");
-      return (sexProfilesData || {})[prop];
-    } catch { return undefined; }
+      const data = sexProfilesData || sexProfilesStatic;
+      return data[prop];
+    } catch { return (sexProfilesStatic as any)[prop]; }
   },
   ownKeys() {
     try {
       const { sexProfilesData } = require("./state.ts");
-      return Reflect.ownKeys(sexProfilesData || {});
-    } catch { return []; }
+      return Reflect.ownKeys(sexProfilesData || sexProfilesStatic || {});
+    } catch { return Reflect.ownKeys(sexProfilesStatic || {}); }
   },
   getOwnPropertyDescriptor(_, prop) {
     try {
       const { sexProfilesData } = require("./state.ts");
-      const v = (sexProfilesData || {})[prop];
+      const v = (sexProfilesData || sexProfilesStatic || {})[prop];
       return v ? { configurable: true, enumerable: true, value: v } : undefined;
-    } catch { return undefined; }
+    } catch {
+      const v = (sexProfilesStatic as any)[prop];
+      return v ? { configurable: true, enumerable: true, value: v } : undefined;
+    }
   }
 }) as any;
 
