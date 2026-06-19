@@ -74,6 +74,7 @@ function createInitialState(): GameState {
     turn: 0,
     roomTimestamps: {},
     turnLog: [],
+    storySoFar: "",
     revealLog: [],
   };
 }
@@ -86,19 +87,35 @@ export function recordTurnLog(entry: Omit<TurnLogEntry, "turn" | "timestamp">): 
     timestamp: `${gameState.time.year}年${gameState.time.month}月${gameState.time.day}日 ${gameState.time.timeOfDay ?? ""}`,
   };
   gameState.turnLog.push(log);
-  // 保留最近 50 回合
-  if (gameState.turnLog.length > 50) gameState.turnLog.shift();
+  // 滚动压缩：超过 10 条时，把最旧 5 条压成摘要
+  if (gameState.turnLog.length > 10) {
+    const batch = gameState.turnLog.splice(0, 5);
+    const summary = batch.map(e =>
+      `第${e.turn}回合${e.playerAction}，${e.sceneResult}。${e.resolvedChanges !== "无" ? e.resolvedChanges + "。" : ""}`
+    ).join(" ");
+    gameState.storySoFar = gameState.storySoFar
+      ? `${gameState.storySoFar} ${summary}`
+      : summary;
+    // storySoFar 保留最近 500 字
+    if (gameState.storySoFar.length > 500) {
+      gameState.storySoFar = gameState.storySoFar.slice(-500).replace(/^[^\s]+\s/, "");
+    }
+  }
   saveState();
   return log;
 }
 
-/** 取最近 N 回合的上下文摘要，注入 GM prompt */
+/** 取最近 N 回合上下文 + 前情摘要 */
 export function getRecentTurnLogContext(n: number = 5): string {
+  const parts: string[] = [];
+  if (gameState.storySoFar) parts.push(`[前情] ${gameState.storySoFar}`);
   const recent = gameState.turnLog.slice(-n);
-  if (recent.length === 0) return "";
-  return recent.map(e =>
-    `[第${e.turn}回合] 玩家:${e.playerAction} | 变化:${e.resolvedChanges} | 场景:${e.sceneResult} | 钩子:${e.openHooks || "无"}`
-  ).join("\n");
+  if (recent.length > 0) {
+    parts.push(recent.map(e =>
+      `[第${e.turn}回合] 玩家:${e.playerAction} | 变化:${e.resolvedChanges} | 场景:${e.sceneResult} | 钩子:${e.openHooks || "无"}`
+    ).join("\n"));
+  }
+  return parts.join("\n");
 }
 
 // ── Layer 3 秘密防火墙 ──
