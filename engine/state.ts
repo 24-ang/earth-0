@@ -306,14 +306,21 @@ export function loadState(filepath?: string): boolean {
     gameState.time.timeline_origin.year = Number(gameState.time.game_date.split("-")[0]);
   }
 
-  // 迁移：旧存档 npcs 属性/技能/生命值/存活状态补齐
+  // 迁移：旧存档 npcs 属性/技能/生命值/存活状态补齐 (包含针对旧字段格式及 partial 对象的容错处理)
   if (gameState.npcs) {
     for (const [name, npc] of Object.entries(gameState.npcs)) {
       const src = findCharacter(name);
       const defaultAttrs: Attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
-      if (!npc.attributes) {
-        npc.attributes = src?.attributes ? { ...defaultAttrs, ...src.attributes } : defaultAttrs;
+      
+      // 1. 补齐属性 (防范局部属性缺失)
+      npc.attributes ??= { ...defaultAttrs };
+      for (const key of Object.keys(defaultAttrs) as (keyof Attributes)[]) {
+        if (npc.attributes[key] === undefined || typeof npc.attributes[key] !== "number") {
+          npc.attributes[key] = src?.attributes?.[key] ?? defaultAttrs[key];
+        }
       }
+
+      // 2. 补齐生命值
       if (!npc.hp) {
         const npcAge = src ? getNpcCurrentAge(src.base_age || 16) : 16;
         const maxHP = src?.hp?.max ?? calcMaxHP(npc.attributes.体质, npcAge);
@@ -323,18 +330,38 @@ export function loadState(filepath?: string): boolean {
       if (npc.alive === undefined) {
         npc.alive = true;
       }
-      if (!npc.skills) {
-        const runtimeSkills: Record<string, Skill> = {};
-        if (src && src.skills) {
-          for (const [sName, sLevel] of Object.entries(src.skills)) {
-            runtimeSkills[sName] = {
+
+      // 3. 补齐并归一化技能映射 (支持旧版 Record<string, number> 格式)
+      if (!npc.skills || typeof npc.skills !== "object") {
+        npc.skills = {};
+      }
+      for (const [sName, sVal] of Object.entries(npc.skills) as any) {
+        if (typeof sVal === "number") {
+          npc.skills[sName] = {
+            level: sVal,
+            exp: 0,
+            nextLevel: sVal * 10
+          };
+        } else if (!sVal || typeof sVal.level !== "number") {
+          const defaultLevel = src?.skills?.[sName] ?? 1;
+          npc.skills[sName] = {
+            level: defaultLevel,
+            exp: 0,
+            nextLevel: defaultLevel * 10
+          };
+        }
+      }
+      // 从模板合并缺失的技能
+      if (src && src.skills) {
+        for (const [sName, sLevel] of Object.entries(src.skills)) {
+          if (!npc.skills[sName]) {
+            npc.skills[sName] = {
               level: sLevel as number,
               exp: 0,
               nextLevel: (sLevel as number) * 10
             };
           }
         }
-        npc.skills = runtimeSkills;
       }
     }
   }
@@ -2984,6 +3011,14 @@ export function loadActiveWorld(worldName?: string): void {
     });
   } catch (e) {
     console.error("Failed to load active world:", e);
+    if (worldName !== "oregairu") {
+      console.warn("Falling back to load 'oregairu' worldpack...");
+      try {
+        loadActiveWorld("oregairu");
+      } catch (fallbackError) {
+        console.error("Critical: Failed to load fallback worldpack 'oregairu':", fallbackError);
+      }
+    }
   }
 }
 try {
