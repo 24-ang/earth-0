@@ -11,7 +11,8 @@
         "dice": "1d6",
         "damageType": "钝击"
       },
-      "flavor": "握柄磨得发亮，刻着「甲子園」三个字。"
+      "flavor": "握柄磨得发亮，刻着「甲子園」三个字。",
+      "volume": 2
     },
     "金属球棒": {
       "name": "金属球棒",
@@ -24,7 +25,8 @@
         "dice": "1d8",
         "damageType": "钝击"
       },
-      "flavor": "冷冰冰的铝合金，敲上去有闷响。"
+      "flavor": "冷冰冰的铝合金，敲上去有闷响。",
+      "volume": 2
     },
     "木刀": {
       "name": "木刀",
@@ -37,7 +39,8 @@
         "dice": "1d6",
         "damageType": "钝击"
       },
-      "flavor": "剑道部练习用的木刀，刀身有几道浅痕。"
+      "flavor": "剑道部练习用的木刀，刀身有几道浅痕。",
+      "volume": 2
     },
     "菜刀": {
       "name": "菜刀",
@@ -50,7 +53,8 @@
         "dice": "1d4",
         "damageType": "切割"
       },
-      "flavor": "普通家用菜刀，刀身有些使用痕迹。"
+      "flavor": "普通家用菜刀，刀身有些使用痕迹。",
+      "volume": 2
     },
     "剪刀": {
       "name": "剪刀",
@@ -63,7 +67,8 @@
         "dice": "1d3",
         "damageType": "穿刺"
       },
-      "flavor": "裁缝课用的剪刀。"
+      "flavor": "裁缝课用的剪刀。",
+      "volume": 2
     },
     "铁管": {
       "name": "铁管",
@@ -76,7 +81,8 @@
         "dice": "1d6",
         "damageType": "钝击"
       },
-      "flavor": "从工地捡的空心铁管，一头有点扁。"
+      "flavor": "从工地捡的空心铁管，一头有点扁。",
+      "volume": 2
     },
     "防狼喷雾": {
       "name": "防狼喷雾",
@@ -89,7 +95,8 @@
         "dice": "0",
         "damageType": "特殊"
       },
-      "flavor": "小瓶辣椒水喷雾。命中面部使目标丧失一轮行动。"
+      "flavor": "小瓶辣椒水喷雾。命中面部使目标丧失一轮行动。",
+      "volume": 2
     },
     "电击枪": {
       "name": "电击枪",
@@ -102,7 +109,8 @@
         "dice": "1d6",
         "damageType": "电击"
       },
-      "flavor": "民用防身电击器，接触时发出滋滋声。命中成功目标麻痹一轮。"
+      "flavor": "民用防身电击器，接触时发出滋滋声。命中成功目标麻痹一轮。",
+      "volume": 2
     },
     "拳头": {
       "name": "拳头",
@@ -115,7 +123,8 @@
         "dice": "1d2",
         "damageType": "钝击"
       },
-      "flavor": "自己的双手。"
+      "flavor": "自己的双手。",
+      "volume": 2
     },
     "踢腿": {
       "name": "踢腿",
@@ -128,7 +137,8 @@
         "dice": "1d4",
         "damageType": "钝击"
       },
-      "flavor": "格斗技术的基础。"
+      "flavor": "格斗技术的基础。",
+      "volume": 2
     }
   },
   "armor": {
@@ -143,7 +153,8 @@
           "value": 0
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "厚外套": {
       "name": "厚外套",
@@ -161,7 +172,8 @@
           "value": "轻"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "安全帽": {
       "name": "安全帽",
@@ -175,7 +187,8 @@
           "condition": "vs_blunt_head"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "护膝": {
       "name": "护膝",
@@ -189,7 +202,8 @@
           "condition": "vs_blunt_legs"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     }
   },
   "tools": {
@@ -204,7 +218,8 @@
           "value": "通话/短信/网络"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "钱包": {
       "name": "钱包",
@@ -217,7 +232,8 @@
           "value": 5
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "书包": {
       "name": "书包",
@@ -230,7 +246,8 @@
           "value": 10
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "钥匙": {
       "name": "钥匙",
@@ -244,7 +261,8 @@
         }
       ],
       "state": "intact",
-      "flavor": "自家钥匙。能开如月家区域的门。"
+      "flavor": "自家钥匙。能开如月家区域的门。",
+      "volume": 0.5
     },
     "手电筒": {
       "name": "手电筒",
@@ -257,7 +275,8 @@
           "value": "10m"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "打火机": {
       "name": "打火机",
@@ -270,24 +289,52 @@
           "value": "点火"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "自行车": {
-      "name": "自行车", "type": "tool", "slot": "back",
-      "weight": 12, "volume": 50,
-      "effects": [{ "type": "vehicle", "value": "bicycle" }], "state": "intact",
+      "name": "自行车",
+      "type": "tool",
+      "slot": "back",
+      "weight": 12,
+      "volume": 50,
+      "effects": [
+        {
+          "type": "vehicle",
+          "value": "bicycle"
+        }
+      ],
+      "state": "intact",
       "flavor": "普通通学用自行车，车篮能放书包。千叶坡道多，骑上去有点费劲。"
     },
     "摩托车": {
-      "name": "摩托车", "type": "tool", "slot": "back",
-      "weight": 150, "volume": 150,
-      "effects": [{ "type": "vehicle", "value": "motorcycle" }], "state": "intact",
+      "name": "摩托车",
+      "type": "tool",
+      "slot": "back",
+      "weight": 150,
+      "volume": 150,
+      "effects": [
+        {
+          "type": "vehicle",
+          "value": "motorcycle"
+        }
+      ],
+      "state": "intact",
       "flavor": "中古本田CB400，漆面有点旧但引擎很稳。"
     },
     "轻自动车": {
-      "name": "轻自动车", "type": "tool", "slot": "back",
-      "weight": 800, "volume": 600,
-      "effects": [{ "type": "vehicle", "value": "car" }], "state": "intact",
+      "name": "轻自动车",
+      "type": "tool",
+      "slot": "back",
+      "weight": 800,
+      "volume": 600,
+      "effects": [
+        {
+          "type": "vehicle",
+          "value": "car"
+        }
+      ],
+      "state": "intact",
       "flavor": "黄色牌照的轻自动车，千叶最常见的车型。停商场免费，但去市中心要找停车场。"
     },
     "绷带": {
@@ -301,7 +348,8 @@
           "value": "1d4"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "急救包": {
       "name": "急救包",
@@ -314,7 +362,8 @@
           "value": "2d6"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     }
   },
   "consumables": {
@@ -330,7 +379,8 @@
         }
       ],
       "state": "intact",
-      "flavor": "千叶发祥的咖啡饮料，比企谷八幡的最爱。甜到让人怀疑人生。"
+      "flavor": "千叶发祥的咖啡饮料，比企谷八幡的最爱。甜到让人怀疑人生。",
+      "volume": 0.3
     },
     "能量饮料": {
       "name": "能量饮料",
@@ -343,7 +393,8 @@
           "value": "强提神"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.3
     },
     "饭团": {
       "name": "饭团",
@@ -356,7 +407,8 @@
           "value": "1"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.3
     },
     "便当": {
       "name": "便当",
@@ -369,7 +421,8 @@
           "value": "1d4"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.3
     },
     "矿泉水": {
       "name": "矿泉水",
@@ -378,7 +431,8 @@
       "weight": 0.5,
       "effects": [],
       "state": "intact",
-      "flavor": "塑料瓶装水，标签上写着千叶市水道局"
+      "flavor": "塑料瓶装水，标签上写着千叶市水道局",
+      "volume": 0.3
     }
   },
   "clothing": {
@@ -399,7 +453,8 @@
           "group": "学生"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "总武高女生制服": {
       "name": "总武高女生制服",
@@ -418,7 +473,8 @@
           "group": "学生"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "运动服": {
       "name": "运动服",
@@ -432,7 +488,8 @@
           "condition": "敏捷相关检定"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "便服": {
       "name": "便服",
@@ -446,7 +503,8 @@
           "group": "路人"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "牛仔裤": {
       "name": "牛仔裤",
@@ -460,7 +518,8 @@
           "group": "路人"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "短裙": {
       "name": "短裙",
@@ -468,7 +527,8 @@
       "slot": "bottom",
       "weight": 0.3,
       "effects": [],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "运动鞋": {
       "name": "运动鞋",
@@ -482,7 +542,8 @@
           "condition": "运动相关"
         }
       ],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     },
     "皮鞋": {
       "name": "皮鞋",
@@ -490,7 +551,8 @@
       "slot": "feet",
       "weight": 0.5,
       "effects": [],
-      "state": "intact"
+      "state": "intact",
+      "volume": 0.5
     }
   }
 }

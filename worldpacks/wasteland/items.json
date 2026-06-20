@@ -1,0 +1,41 @@
+{
+  "weapons": {
+    "废土砍刀": {
+      "name": "废土砍刀",
+      "type": "weapon",
+      "slot": "right_hand",
+      "weight": 2,
+      "effects": [],
+      "state": "intact",
+      "damage": {
+        "dice": "1d8",
+        "damageType": "挥砍"
+      },
+      "flavor": "用废铁片打磨成的砍刀。"
+    }
+  },
+  "armors": {},
+  "tools": {
+    "废旧电池": {
+      "name": "废旧电池",
+      "type": "tool",
+      "slot": "acc",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "flavor": "一个有些漏液的干电池。"
+    }
+  },
+  "consumables": {
+    "辐射药": {
+      "name": "辐射药",
+      "type": "consumable",
+      "slot": "use",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "flavor": "能够清除微量辐射的药片。"
+    }
+  },
+  "clothings": {}
+}

@@ -1,0 +1,10 @@
+{
+  "wasteland": {
+    "营地帐篷": {
+      "width": 5,
+      "height": 5,
+      "role": "room",
+      "desc": "简陋的布质帐篷"
+    }
+  }
+}

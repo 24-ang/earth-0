@@ -22,6 +22,14 @@ export let titleRules = titleRulesStatic as any;
 export let namelessNpcTemplates = namelessNpcTemplatesStatic as any;
 export let economyConfig = economyConfigStatic as any;
 
+export function getCurrency(): string {
+  return economyConfig.currency ?? "¥";
+}
+
+export function getConstructionMultiplier(): number {
+  return economyConfig.construction_multiplier ?? 100;
+}
+
 import shopsCatalogStatic from "../data/shops.json" with { type: "json" };
 import itemsCatalogStatic from "../data/items.json" with { type: "json" };
 import phoneAppsCatalogStatic from "../data/phone_apps.json" with { type: "json" };
@@ -113,6 +121,7 @@ function createInitialState(): GameState {
     turnLog: [],
     storySoFar: "",
     revealLog: [],
+    calendarEvents: [],
   };
 }
 
@@ -248,7 +257,11 @@ export function loadState(filepath?: string): boolean {
   // 恢复动态角色
   const dcPath = path.join(STATE_DIR, "dynamic_characters.json");
   if (fs.existsSync(dcPath)) {
-    try { DYNAMIC_CHARACTERS = JSON.parse(fs.readFileSync(dcPath, "utf-8")); } catch (_) {}
+    try {
+      DYNAMIC_CHARACTERS = JSON.parse(fs.readFileSync(dcPath, "utf-8"));
+    } catch (e) {
+      console.error("Failed to parse dynamic_characters.json:", e);
+    }
   }
   // 迁移：旧存档无 roomTimestamps
   if (!gameState.roomTimestamps) gameState.roomTimestamps = {};
@@ -292,6 +305,40 @@ export function loadState(filepath?: string): boolean {
     gameState.time.timeline_origin.age = gameState.time.player_age;
     gameState.time.timeline_origin.year = Number(gameState.time.game_date.split("-")[0]);
   }
+
+  // 迁移：旧存档 npcs 属性/技能/生命值/存活状态补齐
+  if (gameState.npcs) {
+    for (const [name, npc] of Object.entries(gameState.npcs)) {
+      const src = findCharacter(name);
+      const defaultAttrs: Attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
+      if (!npc.attributes) {
+        npc.attributes = src?.attributes ? { ...defaultAttrs, ...src.attributes } : defaultAttrs;
+      }
+      if (!npc.hp) {
+        const npcAge = src ? getNpcCurrentAge(src.base_age || 16) : 16;
+        const maxHP = src?.hp?.max ?? calcMaxHP(npc.attributes.体质, npcAge);
+        const currentHP = src?.hp?.current ?? maxHP;
+        npc.hp = { current: currentHP, max: maxHP };
+      }
+      if (npc.alive === undefined) {
+        npc.alive = true;
+      }
+      if (!npc.skills) {
+        const runtimeSkills: Record<string, Skill> = {};
+        if (src && src.skills) {
+          for (const [sName, sLevel] of Object.entries(src.skills)) {
+            runtimeSkills[sName] = {
+              level: sLevel as number,
+              exp: 0,
+              nextLevel: (sLevel as number) * 10
+            };
+          }
+        }
+        npc.skills = runtimeSkills;
+      }
+    }
+  }
+
   return true;
 }
 
@@ -426,43 +473,6 @@ export function getDisguiseIdentity(player: PlayerState): string | null {
 }
 
 // ── 声誉 → 自然语言 ──
-const REPUTATION_TIERS: [number, string][] = [
-  [5, "人尽皆知——走在路上人人都认识你"],
-  [4, "声望很高，常有人侧目或低声议论"],
-  [3, "声望不错"],
-  [2, "有些正面印象"],
-  [1, "偶尔有人对你有好感"],
-  [-3, "名声很差——走到哪里都有人警惕"],
-  [-2, "名声不太好"],
-  [-1, "有些负面传闻"],
-];
-
-const GROUP_LABELS: Record<string, string> = {
-  "学生": "在学生中",
-  "教师": "在老师中",
-  "不良": "在不良圈子里",
-  "路人": "在附近居民中",
-  "社会人": "在职场人士中",
-};
-
-/** 从 public_identity 字符串推断相关的声望组。未知身份 → 空数组（新人效应）。 */
-function identityToReputationGroups(identity: string | undefined): string[] {
-  if (!identity) return ["学生", "教师"]; // 默认：总武高学生
-  if (identity.includes("学生") || identity.includes("校")) return ["学生", "教师"];
-  if (identity.includes("不良")) return ["不良", "学生"];
-  if (identity.includes("教师") || identity.includes("老师")) return ["教师", "学生"];
-  if (identity.includes("社会人") || identity.includes("职场")) return ["社会人", "路人"];
-  return []; // 转校生 / 陌生人 / 无法推断 → 新人，无声望
-}
-
-function reputationValueToNarrative(value: number): string | null {
-  if (value === 0) return null;
-  for (const [threshold, text] of REPUTATION_TIERS) {
-    if (value >= threshold && threshold > 0) return text;
-    if (value <= threshold && threshold < 0) return text;
-  }
-  return null;
-}
 
 /** 将玩家的多维声望转为 LLM 可引用的自然语言。根据当前身份过滤可见组。 */
 export function getReputationNarrative(): string {
@@ -470,31 +480,12 @@ export function getReputationNarrative(): string {
   const rep = p.reputation;
   if (!rep || Object.keys(rep).length === 0) return "";
 
-  // disguise 模式 → 伪装压力叙事，不暴露声望
   const disguise = getDisguiseIdentity(p);
   if (disguise) {
-    return `你正伪装成${disguise}。每一个眼神交汇、每一次盘问都可能戳穿这层假面——身份检定的骰子将决定一切。`;
+    return `你当前伪装为${disguise}。`;
   }
 
-  const groups = identityToReputationGroups(p.public_identity);
-  if (groups.length === 0) return ""; // 新人，没人在意你
-
-  const parts: string[] = [];
-  for (const g of groups) {
-    const v = rep[g];
-    if (v === undefined || v === 0) continue;
-    const label = GROUP_LABELS[g] || g;
-    const narrative = reputationValueToNarrative(v);
-    if (narrative) parts.push(`${label}${narrative}`);
-  }
-
-  if (parts.length === 0) {
-    // 有声望组但值都是 0 → 给一句中性的
-    const label = GROUP_LABELS[groups[0]] || groups[0];
-    return `${label}你是个普通面孔，没人特别注意你。`;
-  }
-
-  return parts.join("。");
+  return Object.entries(rep).map(([group, val]) => `${group}声望:${val}`).join("，");
 }
 
 // ── Collector 注册（on-demand 懒初始化，首次 buildStatePrompt 时执行）──
@@ -538,6 +529,64 @@ function ensureCollectors(): void {
       if (f >= 25) return { text: `[状态] 你有一丝倦意。`, priority: 3, layer: "stable", degradeStrategy: "keep", sourceName: "fatigue" };
       return null;
     },
+  });
+
+  // L1-stable: 玩家声望数据
+  promptCollectors.register({
+    name: "reputation-status", priority: 4, layer: "stable", degradeStrategy: "keep",
+    async collect(_gs) {
+      const p = s().player;
+      const rep = p.reputation;
+      if (!rep || Object.keys(rep).length === 0) return null;
+      const disguise = getDisguiseIdentity(p);
+      if (disguise) {
+        return {
+          text: `[声望与伪装] 你当前伪装为${disguise}，本尊的声望已被隐藏。一旦伪装败露，你的真实声望和身份将会暴露。`,
+          priority: 4,
+          layer: "stable",
+          degradeStrategy: "keep",
+          sourceName: "reputation-status"
+        };
+      }
+      const lines = Object.entries(rep).map(([group, val]) => `  • ${group}: ${val}`);
+      return {
+        text: `[声望数值]\n${lines.join("\n")}`,
+        priority: 4,
+        layer: "stable",
+        degradeStrategy: "keep",
+        sourceName: "reputation-status"
+      };
+    }
+  });
+
+  // L1-stable: 队友状态详情
+  promptCollectors.register({
+    name: "party-details", priority: 15, layer: "stable", degradeStrategy: "keep",
+    async collect(_gs) {
+      const p = s().player;
+      if (!p.party || p.party.length === 0) return null;
+      const lines: string[] = [];
+      for (const name of p.party) {
+        const npc = s().npcs[name];
+        if (!npc) continue;
+        const attrStr = Object.entries(npc.attributes)
+          .map(([k, v]) => `${k}:${v}`)
+          .join(", ");
+        const skillsStr = Object.entries(npc.skills)
+          .filter(([_, sk]) => (sk as any).level > 0)
+          .map(([k, sk]) => `${k}:Lv${(sk as any).level}`)
+          .join(", ") || "无";
+        lines.push(`  • ${name}: HP ${npc.hp.current}/${npc.hp.max} | 属性: ${attrStr} | 技能: ${skillsStr} | 当前行动: ${npc.action || "跟随玩家"}`);
+      }
+      if (lines.length === 0) return null;
+      return {
+        text: `[队伍成员]\n${lines.join("\n")}`,
+        priority: 15,
+        layer: "stable",
+        degradeStrategy: "keep",
+        sourceName: "party-details"
+      };
+    }
   });
 
   // L1-stable: 已揭示的秘密（秘密防火墙）
@@ -1079,9 +1128,9 @@ export function calcPocketVolume(equipment: EquipmentSlots): number {
 /** 计算背包+装备的总体积 */
 export function calcInventoryVolume(inventory: Item[], equipment: EquipmentSlots): number {
   let total = 0;
-  for (const item of inventory) total += item.volume;
+  for (const item of inventory) total += item.volume || 0;
   for (const item of Object.values(equipment)) {
-    if (item) total += item.volume;
+    if (item) total += item.volume || 0;
   }
   return Math.round(total * 10) / 10;
 }
@@ -1242,6 +1291,24 @@ export function findCharacter(name: string): any | null {
 export function getOrCreateNPC(name: string): NPCRuntimeState {
   if (!gameState.npcs[name]) {
     const src = findCharacter(name);
+    const defaultAttrs: Attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
+    const runtimeAttrs = src?.attributes ? { ...defaultAttrs, ...src.attributes } : defaultAttrs;
+
+    const npcAge = src ? getNpcCurrentAge(src.base_age || 16) : 16;
+    const maxHP = src?.hp?.max ?? calcMaxHP(runtimeAttrs.体质, npcAge);
+    const currentHP = src?.hp?.current ?? maxHP;
+
+    const runtimeSkills: Record<string, Skill> = {};
+    if (src && src.skills) {
+      for (const [sName, sLevel] of Object.entries(src.skills)) {
+        runtimeSkills[sName] = {
+          level: sLevel as number,
+          exp: 0,
+          nextLevel: (sLevel as number) * 10
+        };
+      }
+    }
+
     gameState.npcs[name] = {
       inventory: src ? structuredClone(src.inventory ?? []) : [],
       equipment: src ? fillEffectsFromCatalog(src.equipment ?? {}) : {},
@@ -1252,6 +1319,11 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
       scheduleOverrides: src?.schedule_overrides,
       currentOutfit: "school",
       funds: src?.funds !== undefined ? src.funds : 1000,
+      memoryTags: [],
+      hp: { current: currentHP, max: maxHP },
+      alive: true,
+      attributes: runtimeAttrs,
+      skills: runtimeSkills
     };
     // 魅力→初始印象：NPC首次创建时自动写入关系
     if (!gameState.player.relationships[name]) {
@@ -1701,7 +1773,11 @@ export function createDynamicLocation(parentName: string, name: string): string 
 export function loadLocationsDelta(): void {
   const deltaPath = path.join(STATE_DIR, "locations_delta.json");
   if (fs.existsSync(deltaPath)) {
-    try { LOCATIONS_DELTA = JSON.parse(fs.readFileSync(deltaPath, "utf-8")); } catch (_) {}
+    try {
+      LOCATIONS_DELTA = JSON.parse(fs.readFileSync(deltaPath, "utf-8"));
+    } catch (e) {
+      console.error("Failed to parse locations_delta.json:", e);
+    }
   }
 }
 
@@ -1891,10 +1967,12 @@ export async function createRoom(roomName: string, width: number, height: number
   };
 
   // 物理约束：施工需要时间和金钱
+  const multiplier = getConstructionMultiplier();
+  const currencySymbol = getCurrency();
   const constructionMinutes = width * height * 5;
-  const constructionCost = width * height * 100; // ¥100/m²
+  const constructionCost = width * height * multiplier;
   if (gameState.player.funds < constructionCost) {
-    return { success: false, reason: `资金不足。建造${width}×${height}房间需要¥${constructionCost}，当前余额¥${gameState.player.funds}` };
+    return { success: false, reason: `资金不足。建造${width}×${height}房间需要${currencySymbol}${constructionCost}，当前余额${currencySymbol}${gameState.player.funds}` };
   }
   gameState.player.funds -= constructionCost;
   const { advanceMinutes } = await import("./time.ts");
@@ -1902,7 +1980,7 @@ export async function createRoom(roomName: string, width: number, height: number
   if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
   advanceMinutes(gameState.time, constructionMinutes);
   saveState();
-  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})，花费¥${constructionCost}，施工耗时${constructionMinutes}分钟。` };
+  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})，花费${currencySymbol}${constructionCost}，施工耗时${constructionMinutes}分钟。` };
 }
 
 export function editCellType(x: number, y: number, type: "floor" | "wall" | "door" | "exit" | "stairs", exitTo?: string, material?: string): { success: boolean; reason: string } {
@@ -1917,23 +1995,38 @@ export function editCellType(x: number, y: number, type: "floor" | "wall" | "doo
     if (!material) {
       return { success: false, reason: `建造${type}需要指定材料。请通过 material 参数传入材料物品名（如"砖"、"木板"、"门框"）。` };
     }
-    const idx = gameState.player.inventory.findIndex((i: any) => i.name === material);
+    const invalidMaterials = ["锤子", "铲子", "撬棍", "手机", "钱包", "书包", "钥匙", "手电筒", "打火机", "自行车", "摩托车", "轻自动车", "绷带", "急救包"];
+    if (invalidMaterials.includes(material)) {
+      return { success: false, reason: `${material}是功能性装备或工具，无法作为建材消耗。` };
+    }
+    const idx = gameState.player.inventory.findIndex((i: any) => i.name === material && i.state !== "ruined");
     if (idx < 0) {
       return { success: false, reason: `背包里没有${material}。需要先获取该材料。` };
     }
-    gameState.player.inventory.splice(idx, 1);  // 扣除材料
+
+    // 建造也需要工具（耐久消耗）
+    const buildingTools = ["锤子", "铲子", "撬棍"];
+    const tool = gameState.player.inventory.find((i: any) => buildingTools.includes(i.name) && i.state !== "ruined");
+    if (!tool && gameState.player.attributes.力量 < 5) {
+      return { success: false, reason: `力量不足（需要≥5），且背包里没有合适的建造工具（如"锤子"、"铲子"、"撬棍"）。` };
+    }
+
+    // 扣除材料
+    gameState.player.inventory.splice(idx, 1);
+
+    if (tool) {
+      damageItem(tool); // 消耗工具耐久而非直接删除！
+    }
   }
 
   // 物理约束：拆墙需要力量或工具
   if (type === "floor" && cell.type === "wall") {
-    const hasTool = material && gameState.player.inventory.some((i: any) => i.name === material);
-    if (!hasTool && gameState.player.attributes.力量 < 5) {
+    const tool = material ? gameState.player.inventory.find((i: any) => i.name === material && i.state !== "ruined") : null;
+    if (!tool && gameState.player.attributes.力量 < 5) {
       return { success: false, reason: `力量不足（需要≥5），且背包里没有合适的工具。请指定 material 参数传入工具名（如"锤子"、"撬棍"）。` };
     }
-    if (hasTool) {
-      // 扣除工具（耐久消耗）
-      const idx = gameState.player.inventory.findIndex((i: any) => i.name === material);
-      if (idx >= 0) gameState.player.inventory.splice(idx, 1);
+    if (tool) {
+      damageItem(tool); // 消耗工具耐久而非直接删除！
     }
   }
 
@@ -1979,6 +2072,26 @@ export function placeFurniture(x: number, y: number, itemName: string): { succes
   return { success: true, reason: `放置了${itemName}（已从背包扣除）` };
 }
 
+export function getItemTemplate(itemName: string): Item {
+  let itemData: any = null;
+  for (const cat of Object.values(itemsCatalog)) {
+    if ((cat as any)[itemName]) { itemData = (cat as any)[itemName]; break; }
+  }
+  if (itemData) {
+    return structuredClone(itemData);
+  }
+  // Fallback for dynamic materials/items like 砖 or 废铁板
+  return {
+    name: itemName,
+    type: "tool",
+    slot: "back",
+    weight: 1.0,
+    effects: [],
+    state: "intact",
+    volume: 0.5
+  };
+}
+
 export function removeFurniture(x: number, y: number): { success: boolean; reason: string; item?: string } {
   const room = ROOMS[gameState.player.location];
   if (!room) return { success: false, reason: "当前位置没有地图" };
@@ -1989,8 +2102,13 @@ export function removeFurniture(x: number, y: number): { success: boolean; reaso
   const item = cell.furniture;
   cell.furniture = null;
   cell.block = false;
+
+  // 将家具放回背包
+  const template = getItemTemplate(item);
+  gameState.player.inventory.push(template);
+
   saveState();
-  return { success: true, reason: `拆除了${item}`, item };
+  return { success: true, reason: `拆除了${item}（已放回背包）`, item };
 }
 
 // --- 钥匙匹配 ---
@@ -2098,8 +2216,9 @@ function validatePrice(itemName: string, price: number): string | null {
     }
   }
   const [min, max] = PRICE_RANGE[itemType] || [10, 50000];
-  if (price < min) return `${itemName}价格通常不低于¥${min}`;
-  if (price > max) return `${itemName}价格通常不超过¥${max}`;
+  const currencySymbol = getCurrency();
+  if (price < min) return `${itemName}价格通常不低于${currencySymbol}${min}`;
+  if (price > max) return `${itemName}价格通常不超过${currencySymbol}${max}`;
   return null;
 }
 
@@ -2115,12 +2234,13 @@ export function buyItem(itemName: string, price: number): string {
   const chaBonus = attrMod(gameState.player.attributes.魅力);
   const discount = Math.round(price * chaBonus * 0.01);
   const finalPrice = Math.max(price - discount, price * 0.85);
-  if (gameState.player.funds < finalPrice) return `钱不够。需要¥${finalPrice}，余额¥${gameState.player.funds}`;
+  const currencySymbol = getCurrency();
+  if (gameState.player.funds < finalPrice) return `钱不够。需要${currencySymbol}${finalPrice}，余额${currencySymbol}${gameState.player.funds}`;
   gameState.player.funds -= finalPrice;
   gameState.player.inventory.push(structuredClone(itemData));
   saveState();
-  const discountStr = discount > 0 ? ` (魅力砍价-¥${discount})` : "";
-  return `买了${itemName}，花费¥${finalPrice}${discountStr}。余额¥${gameState.player.funds}`;
+  const discountStr = discount > 0 ? ` (魅力砍价-${currencySymbol}${discount})` : "";
+  return `买了${itemName}，花费${currencySymbol}${finalPrice}${discountStr}。余额${currencySymbol}${gameState.player.funds}`;
 }
 
 export function sellItem(itemName: string, price: number, buyerName?: string): string {
@@ -2132,17 +2252,18 @@ export function sellItem(itemName: string, price: number, buyerName?: string): s
   const chaBonus = attrMod(gameState.player.attributes.魅力);
   const premium = Math.round(price * chaBonus * 0.005);
   const finalPrice = Math.min(price + premium, price * 1.1);
+  const currencySymbol = getCurrency();
   if (buyerName) {
     const npc = getOrCreateNPC(buyerName);
-    if (npc.funds < finalPrice) return `${buyerName}只有¥${npc.funds}，买不起¥${finalPrice}的${itemName}`;
+    if (npc.funds < finalPrice) return `${buyerName}只有${currencySymbol}${npc.funds}，买不起${currencySymbol}${finalPrice}的${itemName}`;
     npc.funds -= finalPrice;
   }
   gameState.player.inventory.splice(idx, 1);
   gameState.player.funds += finalPrice;
   saveState();
   const buyerMsg = buyerName ? `（卖给${buyerName}）` : "";
-  const premiumStr = premium > 0 ? ` (魅力谈价+¥${premium})` : "";
-  return `卖了${itemName}${buyerMsg}，获得¥${finalPrice}${premiumStr}。余额¥${gameState.player.funds}`;
+  const premiumStr = premium > 0 ? ` (魅力谈价+${currencySymbol}${premium})` : "";
+  return `卖了${itemName}${buyerMsg}，获得${currencySymbol}${finalPrice}${premiumStr}。余额${currencySymbol}${gameState.player.funds}`;
 }
 
 export function workJob(jobName: string, hours: number): string {
@@ -2151,7 +2272,8 @@ export function workJob(jobName: string, hours: number): string {
   const pay = rate * hours;
   gameState.player.funds += pay;
   saveState();
-  return `工作${hours}小时（${jobName}），获得¥${pay}。余额¥${gameState.player.funds}`;
+  const currencySymbol = getCurrency();
+  return `工作${hours}小时（${jobName}），获得${currencySymbol}${pay}。余额${currencySymbol}${gameState.player.funds}`;
 }
 
 // --- 生长发育（月末结算） ---
@@ -2402,28 +2524,83 @@ export async function updateNPCSchedules(): Promise<string[]> {
     if (!roomNPCs[npc.currentRoom]) roomNPCs[npc.currentRoom] = [];
     roomNPCs[npc.currentRoom].push(name);
   }
+
+  const deduplicateTags = (tags: any[]): any[] => {
+    const seen = new Set<string>();
+    const res: any[] = [];
+    for (let k = tags.length - 1; k >= 0; k--) {
+      const t = tags[k];
+      if (!t || !t.tag) continue;
+      if (!seen.has(t.tag)) {
+        seen.add(t.tag);
+        res.unshift(t);
+      }
+    }
+    return res;
+  };
+
+  const isPrivateTag = (tagText: string): boolean => {
+    const privateKeywords = ["自慰", "处女", "非处", "初吻", "初夜", "秘密", "性感", "隐私", "[秘密]", "[性]"];
+    return privateKeywords.some(kw => tagText.includes(kw));
+  };
+
+  const canShareTag = (tag: any, relStage?: string, relTone?: string): boolean => {
+    if (isPrivateTag(tag.tag)) {
+      const closeStages = ["闺蜜", "恋人", "夫妻"];
+      if (closeStages.includes(relStage || "")) return true;
+      if (relStage === "朋友" && (relTone === "喜欢" || relTone === "感激")) return true;
+      return false;
+    }
+    return relTone !== "厌恶";
+  };
+
+  const checkExpiry = (t: any) => {
+    const time = new Date(t.since).getTime();
+    if (isNaN(time)) return true; // 解析失败则安全保留，不直接过滤
+    const daysSince = (Date.now() - time) / 86400000;
+    return daysSince < t.expires;
+  };
+
   const socialEvents: string[] = [];
   for (const [room, names] of Object.entries(roomNPCs)) {
     if (names.length < 2) continue;
     for (let i = 0; i < names.length; i++) {
       for (let j = i + 1; j < names.length; j++) {
-        const a = gameState.npcs[names[i]];
-        const b = gameState.npcs[names[j]];
+        const nameA = names[i];
+        const nameB = names[j];
+        const a = gameState.npcs[nameA];
+        const b = gameState.npcs[nameB];
         a.memoryTags ??= [];
         b.memoryTags ??= [];
-        // 交换标签——干净的数据过滤
-        const newTags = [...a.memoryTags, ...b.memoryTags].filter(t => {
-          const daysSince = (Date.now() - new Date(t.since).getTime()) / 86400000;
-          return daysSince < t.expires;
-        });
-        a.memoryTags = [...newTags];
-        b.memoryTags = [...newTags];
+
+        // 1. 社交过滤：过期标签清理
+        const activeA = a.memoryTags.filter(checkExpiry);
+        const activeB = b.memoryTags.filter(checkExpiry);
+
+        // 2. 关系检测：获取 NPC 对彼此的关系状态
+        const relAtoB = (a as any).npcRelationships?.[nameB];
+        const relBtoA = (b as any).npcRelationships?.[nameA];
+
+        // 3. 交换标签（限额 2 个对方没有的最新 Tag）
+        const shareableFromA = activeA.filter(t => canShareTag(t, relAtoB?.stage, relAtoB?.tone));
+        const shareableFromB = activeB.filter(t => canShareTag(t, relBtoA?.stage, relBtoA?.tone));
+
+        const toAddtoB = shareableFromA
+          .filter(t => !activeB.some(bt => bt.tag === t.tag))
+          .slice(-2); // 取最新的 2 个
+        const toAddtoA = shareableFromB
+          .filter(t => !activeA.some(at => at.tag === t.tag))
+          .slice(-2); // 取最新的 2 个
+
+        a.memoryTags = deduplicateTags([...activeA, ...toAddtoA]);
+        b.memoryTags = deduplicateTags([...activeB, ...toAddtoB]);
+
         // 生成碰面事件
-        const rel = gameState.player.relationships[names[i]];
+        const rel = gameState.player.relationships[nameA];
         const knowA = rel && rel.affection > 0;
-        const knowB = gameState.player.relationships[names[j]]?.affection > 0;
+        const knowB = gameState.player.relationships[nameB]?.affection > 0;
         if (knowA || knowB) {
-          socialEvents.push(`${names[i]}和${names[j]}在${room}碰面`);
+          socialEvents.push(`${nameA}和${nameB}在${room}碰面`);
         }
       }
     }
@@ -2483,17 +2660,21 @@ export function getGridContext(): string {
 
   const [px, py] = gameState.player.gridPos;
 
-  // 出口列表
+  // 出口与窗户开口列表
   const exits: string[] = [];
   const furniture: string[] = [];
+  const facingViews: string[] = [];
   for (let y = 0; y < room.height; y++) {
     for (let x = 0; x < room.width; x++) {
       const c = room.cells[y][x];
+      const tagStr = c.tags && c.tags.length > 0 ? `[${c.tags.join(",")}]` : "";
+      const heightStr = c.height !== undefined ? `[h:${c.height}m]` : "";
       if (c.type === "exit" || c.type === "door") {
         const lockTag = c.locked ? "{锁}" : c.isOpen === false ? "{关}" : "";
-        exits.push(`${c.exitTo || "出口"}(${x},${y})${lockTag}`);
+        exits.push(`${c.exitTo || "出口"}(${x},${y})${lockTag}${tagStr}${heightStr}`);
       }
-      if (c.furniture) furniture.push(`${c.furniture}(${x},${y})`);
+      if (c.furniture) furniture.push(`${c.furniture}(${x},${y})${tagStr}${heightStr}`);
+      if (c.faces) facingViews.push(`坐标(${x},${y})的窗户朝向【${c.faces}】`);
     }
   }
 
@@ -2505,19 +2686,54 @@ export function getGridContext(): string {
     if (nx < 0 || nx >= room.width || ny < 0 || ny >= room.height) continue;
     const c = room.cells[ny][nx];
     const side = DIR_LABELS[d] || d;
-    if (c.type === "wall") around.push(`${side}是墙壁`);
-    else if (c.furniture) around.push(`${side}被${c.furniture}挡住了`);
+    const tagStr = c.tags && c.tags.length > 0 ? `[${c.tags.join(",")}]` : "";
+    const heightStr = c.height !== undefined ? `[h:${c.height}m]` : "";
+    if (c.type === "wall") {
+      if (c.faces) {
+        around.push(`${side}是墙壁(有窗户朝向【${c.faces}】)${tagStr}${heightStr}`);
+      } else {
+        around.push(`${side}是墙壁${tagStr}${heightStr}`);
+      }
+    }
+    else if (c.furniture) around.push(`${side}被${c.furniture}挡住了${tagStr}${heightStr}`);
     else if (c.type === "exit" || c.type === "door") {
       const lockTag = c.locked ? "🔐" : c.isOpen === false ? "🔒" : "";
-      around.push(`${side}${lockTag}通向${c.exitTo || "?"}`);
+      const facingTag = c.faces ? `，朝向【${c.faces}】` : "";
+      around.push(`${side}${lockTag}通向${c.exitTo || "?"}${facingTag}${tagStr}${heightStr}`);
     }
-    else around.push(`${side}是空的，可以走`);
+    else {
+      if (c.faces) {
+        around.push(`${side}是空的(有开口朝向【${c.faces}】)${tagStr}${heightStr}`);
+      } else {
+        around.push(`${side}是空的，可以走${tagStr}${heightStr}`);
+      }
+    }
   }
 
-  let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py})`;
+  const playerCell = room.cells[py][px];
+  const pTagStr = playerCell.tags && playerCell.tags.length > 0 ? `[${playerCell.tags.join(",")}]` : "";
+  const pHeightStr = playerCell.height !== undefined ? `[h:${playerCell.height}m]` : "";
+
+  let ctx = `[空间] ${gameState.player.location} ${room.width}×${room.height}格 ${room.cellSize}m/格 F${room.floor} 你在(${px},${py})${pTagStr}${pHeightStr}`;
   const amb = (room as any).ambient;
   if (amb) ctx += ` | 环境: ${[amb.visual, amb.audio].filter(Boolean).join("，")}`;
+  
+  // 注入远景视野 (Horizon)
+  if (room.horizon) {
+    const DIR_ENG_TO_CHN: Record<string, string> = {
+      "north": "北面", "south": "南面", "east": "东面", "west": "西面",
+      "n": "北面", "s": "南面", "e": "东面", "w": "西面"
+    };
+    const horStrings: string[] = [];
+    for (const [dir, text] of Object.entries(room.horizon)) {
+      const chnDir = DIR_ENG_TO_CHN[dir.toLowerCase()] || dir;
+      horStrings.push(`${chnDir}望去:${text}`);
+    }
+    if (horStrings.length > 0) ctx += ` | 远景视野: ${horStrings.join("，")}`;
+  }
+
   if (exits.length > 0) ctx += ` | 出口:${exits.join(",")}`;
+  if (facingViews.length > 0) ctx += ` | 窗外视野: ${facingViews.join(",")}`;
   if (furniture.length > 0) ctx += ` | 家具:${furniture.join(",")}`;
   ctx += ` | ${around.join("。")}`;
   return ctx;
@@ -2544,7 +2760,8 @@ export function stealFunds(player: PlayerState, targetName: string): StealResult
     const actual = Math.min(stolen, npc.funds);
     npc.funds -= actual;
     player.funds += actual;
-    return { success: true, caught: false, narrative: "从" + targetName + "身上偷到了¥" + actual + "。", roll: { kept: d, mod, total, dc } };
+    const currencySymbol = getCurrency();
+    return { success: true, caught: false, narrative: "从" + targetName + "身上偷到了" + currencySymbol + actual + "。", roll: { kept: d, mod, total, dc } };
   }
   if (caught) {
     return { success: false, caught: true, narrative: "手被" + targetName + "抓住了。", roll: { kept: d, mod, total, dc } };
@@ -2685,76 +2902,92 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
 }
 // ── 动态世界观加载 ──
 export function loadActiveWorld(worldName?: string): void {
-  const activeWorldPath = path.resolve(process.cwd(), "data", ".active_world");
-  let world = worldName;
-  if (!world && fs.existsSync(activeWorldPath)) {
-    world = fs.readFileSync(activeWorldPath, "utf-8").trim();
-  }
-  if (!world) world = "oregairu"; // default fallback
-  activeWorldName = world;
-  gameState.activeWorld = world;
-
-  const worldpackDir = path.resolve(process.cwd(), "worldpacks", world);
-  if (!fs.existsSync(worldpackDir)) {
-    return;
-  }
-
-  const loadJSON = (filename: string, fallback: any) => {
-    const fullPath = path.join(worldpackDir, filename);
-    if (fs.existsSync(fullPath)) {
-      try {
-        return JSON.parse(fs.readFileSync(fullPath, "utf-8"));
-      } catch (e) {
-        console.error(`Failed to load worldpack JSON: ${fullPath}`, e);
-      }
+  try {
+    const activeWorldPath = path.resolve(process.cwd(), "data", ".active_world");
+    let world = worldName;
+    if (!world && fs.existsSync(activeWorldPath)) {
+      world = fs.readFileSync(activeWorldPath, "utf-8").trim();
     }
-    return fallback;
-  };
+    if (!world) world = "oregairu"; // default fallback
+    activeWorldName = world;
+    gameState.activeWorld = world;
 
-  characters = loadJSON("characters.json", charactersStatic);
-  rooms = loadJSON("rooms.json", roomsStatic);
-  charStages = loadJSON("character_stages.json", charStagesStatic);
-  titleRules = loadJSON("title_rules.json", titleRulesStatic);
-  namelessNpcTemplates = loadJSON("nameless_npc_templates.json", namelessNpcTemplatesStatic);
-  economyConfig = loadJSON("economy.json", economyConfigStatic);
-  locationsData = loadJSON("locations.json", locationsDataStatic);
-  schoolMapData = loadJSON("school_map.json", schoolMapDataStatic);
-  cityMapData = loadJSON("city_map.json", cityMapDataStatic);
-  regionsData = loadJSON("regions.json", regionsDataStatic);
-  regions = regionsData;
-  itemsCatalog = loadJSON("items.json", itemsCatalogStatic);
-  shopsCatalog = loadJSON("shops.json", shopsCatalogStatic);
-  shops = shopsCatalog;
-  positionsCatalog = loadJSON("positions.json", positionsCatalogStatic);
-  positions = positionsCatalog;
-  phoneAppsCatalog = loadJSON("phone_apps.json", phoneAppsCatalogStatic);
-  phoneApps = phoneAppsCatalog;
-  scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
-  roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
-  sexProfilesData = loadJSON("sex_profiles.json", sexProfilesStatic);
+    const worldpackDir = path.resolve(process.cwd(), "worldpacks", world);
+    if (!fs.existsSync(worldpackDir)) {
+      return;
+    }
 
-  // Re-initialize dependent variables
-  ROOMS = structuredClone(rooms);
-  LOCATIONS_BASE = locationsData as any;
-  SCHOOL_MAP = schoolMapData as any;
-  CITY_MAP = cityMapData as any;
-  PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
+    const loadJSON = (filename: string, fallback: any) => {
+      const fullPath = path.join(worldpackDir, filename);
+      if (fs.existsSync(fullPath)) {
+        try {
+          return JSON.parse(fs.readFileSync(fullPath, "utf-8"));
+        } catch (e) {
+          console.error(`Failed to load worldpack JSON: ${fullPath}`, e);
+        }
+      }
+      return fallback;
+    };
 
-  // Dynamically update router.ts and sex.ts modules
-  import("./router.js").then(routerModule => {
-    routerModule.updateRouterData(regions, characters, schoolMapData, cityMapData);
-  }).catch(() => {
-    import("./router.ts").then(routerModule => {
+    characters = loadJSON("characters.json", charactersStatic);
+    rooms = loadJSON("rooms.json", roomsStatic);
+    charStages = loadJSON("character_stages.json", charStagesStatic);
+    titleRules = loadJSON("title_rules.json", titleRulesStatic);
+    namelessNpcTemplates = loadJSON("nameless_npc_templates.json", namelessNpcTemplatesStatic);
+    economyConfig = loadJSON("economy.json", economyConfigStatic);
+    locationsData = loadJSON("locations.json", locationsDataStatic);
+    schoolMapData = loadJSON("school_map.json", schoolMapDataStatic);
+    cityMapData = loadJSON("city_map.json", cityMapDataStatic);
+    regionsData = loadJSON("regions.json", regionsDataStatic);
+    regions = regionsData;
+    itemsCatalog = loadJSON("items.json", itemsCatalogStatic);
+    shopsCatalog = loadJSON("shops.json", shopsCatalogStatic);
+    shops = shopsCatalog;
+    positionsCatalog = loadJSON("positions.json", positionsCatalogStatic);
+    positions = positionsCatalog;
+    phoneAppsCatalog = loadJSON("phone_apps.json", phoneAppsCatalogStatic);
+    phoneApps = phoneAppsCatalog;
+    scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
+    roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
+    sexProfilesData = loadJSON("sex_profiles.json", sexProfilesStatic);
+
+    // Re-initialize dependent variables
+    ROOMS = structuredClone(rooms);
+    LOCATIONS_BASE = locationsData as any;
+    SCHOOL_MAP = schoolMapData as any;
+    CITY_MAP = cityMapData as any;
+    PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
+
+    // Dynamically update router.ts and sex.ts modules
+    import("./router.js").then(routerModule => {
       routerModule.updateRouterData(regions, characters, schoolMapData, cityMapData);
-    }).catch(() => {});
-  });
+    }).catch(() => {
+      import("./router.ts").then(routerModule => {
+        routerModule.updateRouterData(regions, characters, schoolMapData, cityMapData);
+      }).catch(() => {});
+    });
 
-  import("./sex.js").then(sexModule => {
-    sexModule.setSexProfiles(sexProfilesData);
-  }).catch(() => {
-    import("./sex.ts").then(sexModule => {
+    import("./sex.js").then(sexModule => {
       sexModule.setSexProfiles(sexProfilesData);
-    }).catch(() => {});
-  });
+    }).catch(() => {
+      import("./sex.ts").then(sexModule => {
+        sexModule.setSexProfiles(sexProfilesData);
+      }).catch(() => {});
+    });
+
+    import("./timeline.js").then(timelineModule => {
+      timelineModule.clearCalendarCache();
+    }).catch(() => {
+      import("./timeline.ts").then(timelineModule => {
+        timelineModule.clearCalendarCache();
+      }).catch(() => {});
+    });
+  } catch (e) {
+    console.error("Failed to load active world:", e);
+  }
 }
-loadActiveWorld();
+try {
+  loadActiveWorld();
+} catch (e) {
+  console.error("Failed to execute loadActiveWorld at startup:", e);
+}

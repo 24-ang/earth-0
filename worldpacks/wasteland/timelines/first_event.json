@@ -1,0 +1,12 @@
+[
+  {
+    "id": "wasteland_intro",
+    "priority": 1,
+    "trigger": {
+      "type": "always"
+    },
+    "title": "荒野降临",
+    "description": "你来到了风沙肆虐的废土营地。",
+    "actions": []
+  }
+]

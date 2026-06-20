@@ -1,0 +1,10 @@
+{
+  "自由人": {
+    "weekday_morning": "自由",
+    "weekday_lunch": "自由",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自由",
+    "weekend": "自由",
+    "reputation_group": "路人"
+  }
+}

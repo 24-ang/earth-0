@@ -1,0 +1,18 @@
+{
+  "description": "废土体位",
+  "positions": {
+    "正常位": {
+      "phase": "insertion",
+      "devRequired": 0,
+      "scene": [
+        "bed",
+        "floor"
+      ],
+      "tags": [
+        "正面",
+        "躺"
+      ],
+      "desc": "最基础的姿势。"
+    }
+  }
+}

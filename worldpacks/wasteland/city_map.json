@@ -1,0 +1,19 @@
+{
+  "city": "废土荒野",
+  "regions": {
+    "荒野营地": {
+      "label": "安全区",
+      "parent": "废土",
+      "landmarks": [
+        "Wasteland Camp",
+        "废土集市"
+      ],
+      "feel": "黄沙漫天，营地周围拉着铁丝网。"
+    }
+  },
+  "transit": {},
+  "travel": {
+    "walk_speed": 50,
+    "description": "步行50m/分钟。风沙大时行走困难。"
+  }
+}

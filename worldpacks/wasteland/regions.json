@@ -1,0 +1,19 @@
+[
+  {
+    "id": 99,
+    "name": "废土世界",
+    "keys": [
+      "废土世界",
+      "Wasteland Camp",
+      "Wasteland Ranger"
+    ],
+    "location_hints": [
+      "Wasteland Camp"
+    ],
+    "character_count": 1,
+    "characters": [
+      "Wasteland Ranger"
+    ],
+    "fallback_room": "Wasteland Camp"
+  }
+]
