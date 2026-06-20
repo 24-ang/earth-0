@@ -1,0 +1,45 @@
+[
+  {
+    "name": "Wasteland Ranger",
+    "source": "Wasteland Camp",
+    "base_age": 25,
+    "gender": "female",
+    "default_location": "Wasteland Camp",
+    "funds": 5000,
+    "appearance_brief": "脸上有一道疤，戴着防沙斗篷，眼神犀利。",
+    "hair_color": "褐色",
+    "hair_style": "短发",
+    "eye_color": "灰色",
+    "hair_accessories": "防风镜",
+    "outfits": {
+      "school": {
+        "top": "防沙风衣",
+        "bottom": "工装裤",
+        "legs": "皮靴",
+        "feet": "马靴",
+        "inner_top": "运动抹胸",
+        "inner_bot": "平角裤",
+        "shirt": "紧身T恤"
+      }
+    },
+    "body": {
+      "height_cm": 175,
+      "weight_kg": 60,
+      "build": "健美",
+      "measurements": {
+        "bust": 88,
+        "waist": 62,
+        "hips": 90
+      },
+      "cup": "C",
+      "leg_type": "结实"
+    },
+    "body_by_age": {
+      "25": {
+        "height_cm": 175,
+        "weight_kg": 60,
+        "build": "健美"
+      }
+    }
+  }
+]

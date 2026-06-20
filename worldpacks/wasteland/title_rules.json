@@ -1,0 +1,10 @@
+[
+  {
+    "title": "荒野猎手",
+    "condition": {
+      "type": "attribute",
+      "attr": "力量",
+      "min": 15
+    }
+  }
+]

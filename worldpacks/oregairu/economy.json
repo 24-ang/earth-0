@@ -1,4 +1,6 @@
 {
+  "currency": "¥",
+  "construction_multiplier": 100,
   "price_ranges": {
     "consumable": [80, 800],
     "tool": [50, 5000],

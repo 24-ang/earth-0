@@ -1,0 +1,38 @@
+{
+  "Wasteland Ranger": {
+    "baselineDesire": 50,
+    "attitude": "抗拒",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "C",
+        "shape": "水滴",
+        "nipple_size": "普通",
+        "nipple_color": "淡褐",
+        "areola_size": "普通",
+        "feel": "结实"
+      },
+      "vagina": {
+        "type": "普通",
+        "labia_size": "小",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "粉褐",
+        "feel": "结实"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "褐色",
+        "style": "自然"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      }
+    }
+  }
+}

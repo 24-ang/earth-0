@@ -1,0 +1,10 @@
+[
+  {
+    "id": "messages",
+    "type": "messaging",
+    "icon": "✉",
+    "label": "短信",
+    "era": "all",
+    "region": "all"
+  }
+]

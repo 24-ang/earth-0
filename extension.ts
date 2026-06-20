@@ -3,12 +3,118 @@
  */
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { Type } from "typebox";
-import { gameState, getNamelessNPCs } from "./engine/state.ts";
+import { gameState, getNamelessNPCs, getCurrency } from "./engine/state.ts";
+import { getNPCContext } from "./engine/scenario-tables.ts";
+
+export interface MenuItem { label: string; detail?: string; action?: (done: () => void) => void | Promise<void>; }
+
+export let showPanel: (ctx: any, title: string, lines: string[]) => Promise<void>;
+export let showMenu: (ctx: any, title: string, itemsOrBuilder: MenuItem[] | (() => MenuItem[])) => Promise<void>;
+
+export function getStringWidth(str: string): number {
+  return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);
+}
+
+export function truncateToWidth(str: string, maxWidth: number): string {
+  let w = 0;
+  let res = "";
+  for (const c of str) {
+    const charW = c.charCodeAt(0) > 0x7f ? 2 : 1;
+    if (w + charW > maxWidth) break;
+    res += c;
+    w += charW;
+  }
+  return res;
+}
+
+export function wrapLine(text: string, maxW: number): string[] {
+  const res: string[] = [];
+  let cur = "";
+  let curW = 0;
+  for (const c of text) {
+    const cw = c.charCodeAt(0) > 0x7f ? 2 : 1;
+    if (curW + cw > maxW) {
+      res.push(cur);
+      cur = c;
+      curW = cw;
+    } else {
+      cur += c;
+      curW += cw;
+    }
+  }
+  if (cur) res.push(cur);
+  return res;
+}
 
 export default function (pi: ExtensionAPI) {
-  // ── 辅助 ──
-  interface MenuItem { label: string; detail?: string; action?: (done: () => void) => void | Promise<void>; }
+  pi.registerFlag("render-model", {
+    description: "渲染场景所用的模型，如 'deepseek/deepseek-v4-pro' 或 'anthropic/claude-3-5-sonnet'",
+    type: "string",
+  });
 
+  async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string): Promise<string> {
+    try {
+      const { streamSimple } = await import("@earendil-works/pi-ai");
+      let model = ctx.model ? ctx.modelRegistry.find(ctx.model.provider, ctx.model.id) : undefined;
+      const targetStr = flagModel || process.env.PI_RENDER_MODEL || process.env.FATE_RENDER_MODEL;
+      if (targetStr) {
+        if (targetStr.includes("/")) {
+          const [prov, id] = targetStr.split("/");
+          model = ctx.modelRegistry.find(prov, id);
+        } else {
+          model = ctx.modelRegistry.getAll().find((m: any) => m.id === targetStr || m.name === targetStr);
+        }
+      }
+
+      if (model) {
+        const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+        if (auth.ok) {
+          const context = {
+            messages: [{ role: "user" as const, content: promptText, timestamp: Date.now() }]
+          };
+          const stream = streamSimple(model, context, {
+            apiKey: auth.apiKey,
+            headers: auth.headers,
+            maxTokens
+          });
+          const msg = await stream.result();
+          const text = msg.content
+            .filter((c: any) => c.type === "text")
+            .map((c: any) => c.text)
+            .join("");
+          if (text) return text.trim();
+        }
+      }
+    } catch (e) {
+      console.error("generateCompletion stream error:", e);
+    }
+
+    // Fallback: Fetch directly using environment variables
+    const apiKey = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
+    const baseUrl = process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/anthropic/v1/messages";
+    const modelName = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+
+    const res = await fetch(baseUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify({
+        model: modelName,
+        max_tokens: maxTokens,
+        messages: [{ role: "user", content: promptText }]
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Direct fetch failed with status ${res.status}`);
+    }
+    const data = await res.json() as any;
+    return data?.content?.[0]?.text?.trim() || "";
+  }
+
+  // ── 辅助 ──
   function updateChatHUD(ctx: any) {
     try {
       if (gameState && gameState.time && gameState.player) {
@@ -29,42 +135,9 @@ export default function (pi: ExtensionAPI) {
         const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
         ctx.ui.setWidget("hud-status-bar", [statusBarText]);
       }
-    } catch (_) {}
-  }
-
-  function getStringWidth(str: string): number {
-    return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);
-  }
-
-  function truncateToWidth(str: string, maxWidth: number): string {
-    let w = 0;
-    let res = "";
-    for (const c of str) {
-      const charW = c.charCodeAt(0) > 0x7f ? 2 : 1;
-      if (w + charW > maxWidth) break;
-      res += c;
-      w += charW;
+    } catch (e) {
+      console.error("updateChatHUD error:", e);
     }
-    return res;
-  }
-
-  function wrapLine(text: string, maxW: number): string[] {
-    const res: string[] = [];
-    let cur = "";
-    let curW = 0;
-    for (const c of text) {
-      const cw = c.charCodeAt(0) > 0x7f ? 2 : 1;
-      if (curW + cw > maxW) {
-        res.push(cur);
-        cur = c;
-        curW = cw;
-      } else {
-        cur += c;
-        curW += cw;
-      }
-    }
-    if (cur) res.push(cur);
-    return res;
   }
 
   async function moveTo(loc: string, ctx: any, gs: any, save: any) {
@@ -78,16 +151,16 @@ export default function (pi: ExtensionAPI) {
     updateChatHUD(ctx);
   }
 
-  function showPanel(ctx: any, title: string, lines: string[]): Promise<void> {
+  showPanel = async function(ctx: any, title: string, lines: string[]): Promise<void> {
     const finalLines: string[] = [];
     for (const line of lines) {
       finalLines.push(...wrapLine(line, 65));
     }
     const items: MenuItem[] = finalLines.map(l => ({ label: l, detail: "", action: undefined }));
     return showMenu(ctx, title, items);
-  }
+  };
 
-  function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem[] | (() => MenuItem[])): Promise<void> {
+  showMenu = async function(ctx: any, title: string, itemsOrBuilder: MenuItem[] | (() => MenuItem[])): Promise<void> {
     return ctx.ui.custom(
       (tui: any, _theme: any, _kb: any, done: any) => {
         let sel = 0;
@@ -122,7 +195,9 @@ export default function (pi: ExtensionAPI) {
                 out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
                 out.push("├" + "─".repeat(w - 2) + "┤");
               }
-            } catch (_) {}
+            } catch (e) {
+              console.error("showMenu render status bar error:", e);
+            }
 
             const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
             for (let i = start; i < end; i++) {
@@ -152,7 +227,8 @@ export default function (pi: ExtensionAPI) {
       },
       { overlay: true }
     );
-  }
+  };
+
 
   async function advanceTimeMinutes(mins: number, ctx: any, gs: any, save: any) {
     const { advanceMinutes } = await import("./engine/time.ts");
@@ -613,7 +689,7 @@ export default function (pi: ExtensionAPI) {
       // 1. 玩家基本状态
       const identityStr = p.public_identity ? ` | 🎭 伪装: ${p.public_identity}` : "";
       items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁${identityStr}`, detail: "" });
-      items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ¥${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`, detail: "" });
+      items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ${getCurrency()}${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`, detail: "" });
       items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""} | 📦 体积: ${invVol}${pocketVol > 0 ? `/${pocketVol}` : ""}L`, detail: "" });
       items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
       const woundStr = p.wounds && p.wounds.length > 0 
@@ -962,7 +1038,9 @@ export default function (pi: ExtensionAPI) {
             sState.desire = Math.min(100, sState.desire + desireDelta);
             r += `，欲望+${desireDelta}`;
           }
-        } catch (_) {}
+        } catch (e) {
+          console.error("adjust_relation desire update error:", e);
+        }
       }
 
       saveState();
@@ -1142,7 +1220,9 @@ export default function (pi: ExtensionAPI) {
       if (gameState.flags[flagKey]) {
         try {
           touchedParts = JSON.parse(gameState.flags[flagKey] as string);
-        } catch (_) {}
+        } catch (e) {
+          console.error("sex_touch parse touchedParts error:", e);
+        }
       }
       if (!touchedParts.includes(params.part)) {
         touchedParts.push(params.part);
@@ -1223,7 +1303,9 @@ export default function (pi: ExtensionAPI) {
         if (gameState.flags[flagKey]) {
           try {
             touchedParts = JSON.parse(gameState.flags[flagKey] as string);
-          } catch (_) {}
+          } catch (e) {
+            console.error("masturbate parse touchedParts error:", e);
+          }
         }
         if (!touchedParts.includes("秘部")) {
           touchedParts.push("秘部");
@@ -1251,7 +1333,7 @@ export default function (pi: ExtensionAPI) {
       actor: Type.Optional(Type.String({ description: "行动者，默认玩家。设为 NPC 名则 NPC 执行该动作" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, getOrCreateNPC, damageItem } = await import("./engine/state.ts");
+      const { gameState, saveState, getOrCreateNPC, damageItem, calcAC } = await import("./engine/state.ts");
       const { resolveAttack, defend, attemptFlee, makeDeathSave, getRoundSummary } = await import("./engine/combat.ts");
       const { findCharacter } = await import("./engine/state.ts");
       const p = gameState.player;
@@ -1260,16 +1342,33 @@ export default function (pi: ExtensionAPI) {
       const buildNPCCombatant = (name: string) => {
         const npc = getOrCreateNPC(name);
         const src = findCharacter(name);
+        const attributes = npc.attributes || src?.attributes || { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
+        const hp = npc.hp || src?.hp || { current: 10, max: 10 };
+
+        const skills: Record<string, any> = {};
+        const sourceSkills = npc.skills || src?.skills || {};
+        for (const [sName, sVal] of Object.entries(sourceSkills)) {
+          if (sVal && typeof sVal === "object" && "level" in sVal) {
+            skills[sName] = sVal;
+          } else {
+            skills[sName] = {
+              level: Number(sVal),
+              exp: 0,
+              nextLevel: Number(sVal) * 10
+            };
+          }
+        }
+
         const npcState = {
           ...structuredClone(p),
           name,
-          attributes: src?.attributes || { 力量:5,敏捷:5,体质:5,智力:5,感知:5,魅力:5 },
-          skills: src?.skills || {},
-          hp: src?.hp ? { ...src.hp } : { current: 10, max: 10 },
-          ac: src?.ac || 10,
+          attributes,
+          skills,
+          hp: { ...hp },
+          ac: calcAC(attributes.敏捷, npc.equipment),
           equipment: npc.equipment || {},
         };
-        return { name, state: npcState, cover: "无掩体" as any };
+        return { name, state: npcState as any, cover: "无掩体" as any };
       };
 
       const playerCombatant = { name: p.name, state: p, cover: "无掩体" as any };
@@ -1294,6 +1393,12 @@ export default function (pi: ExtensionAPI) {
         if (result.hit && result.damage) {
           if (defender === playerCombatant) {
             p.hp.current = Math.max(0, p.hp.current - result.damage);
+          } else {
+            const npc = getOrCreateNPC(defender.name);
+            npc.hp.current = defender.state.hp.current;
+            if (npc.hp.current <= 0) {
+              npc.alive = false;
+            }
           }
         }
 
@@ -1710,24 +1815,14 @@ export default function (pi: ExtensionAPI) {
       ].join("\n");
 
       try {
-        const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
-        const res = await fetch("https://api.deepseek.com/anthropic/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-api-key": DEEPSEEK_KEY, "anthropic-version": "2023-06-01" },
-          body: JSON.stringify({ model: "deepseek-v4-flash", max_tokens: 4096, messages: [{ role: "user", content: renderPrompt }] }),
-        });
-        if (!res.ok) {
-          // 降级：返回渲染提示给 GM 自己写
-          return { content: [{ type: "text", text: renderPrompt + "\n(渲染模型调用失败，请GM自行输出叙事)" }], details: {} };
-        }
-        const data = await res.json() as any;
-        const prose = data?.content?.[0]?.text ?? "";
+        const flagModel = pi.getFlag("render-model") as string | undefined;
+        const prose = await generateCompletion(renderPrompt, 4096, _ctx, flagModel);
         if (!prose) {
           return { content: [{ type: "text", text: renderPrompt + "\n(渲染模型返回为空，请GM自行输出叙事)" }], details: {} };
         }
         return { content: [{ type: "text", text: prose }], details: {} };
-      } catch {
-        return { content: [{ type: "text", text: renderPrompt + "\n(渲染模型调用失败，请GM自行输出叙事)" }], details: {} };
+      } catch (e) {
+        return { content: [{ type: "text", text: renderPrompt + `\n(渲染模型调用失败: ${e instanceof Error ? e.message : e}，请GM自行输出叙事)` }], details: {} };
       }
     },
   });
@@ -1799,7 +1894,9 @@ export default function (pi: ExtensionAPI) {
               });
             }
           }
-        } catch (_) {}
+        } catch (e) {
+          console.error("spawn_npc_agent socialTags extraction error:", e);
+        }
       }
 
       const charPrompt = [
@@ -1819,7 +1916,7 @@ export default function (pi: ExtensionAPI) {
         }).join("、")}` : "  在场其他人: 无",
         `  提示: 对你的态度有明确记忆或长期关系的人，你的回应应自然地体现出来。`,
         memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
-        (() => { try { const { getNPCContext } = require("./engine/scenario-tables.ts"); const ctx = getNPCContext(params.npcName); return ctx.length > 0 ? `你的已知情报:\n${ctx.join("\n")}` : ""; } catch { return ""; } })(),
+        (() => { const ctx = getNPCContext(params.npcName); return ctx.length > 0 ? `你的已知情报:\n${ctx.join("\n")}` : ""; })(),
         "",
         `当前场景: ${params.sceneContext}`,
         params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",
@@ -1844,25 +1941,26 @@ export default function (pi: ExtensionAPI) {
       ].filter(Boolean).join("\n");
 
       try {
-        const KEY = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
-        const res = await fetch("https://api.deepseek.com/anthropic/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
-          body: JSON.stringify({ model: "deepseek-v4-flash", max_tokens: 512, messages: [{ role: "user", content: charPrompt }] }),
-        });
-        if (!res.ok) {
+        const response = await generateCompletion(charPrompt, 512, _ctx, "deepseek-v4-flash");
+        if (!response) {
           return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
         }
-        const data = await res.json() as any;
-        const response = data?.content?.[0]?.text?.trim() || `${params.npcName}（沉默）`;
         // 自动写入 NPC 记忆 + 结构化状态表
         try {
           const { addMemoryTag } = await import("./engine/state.ts");
           addMemoryTag(params.npcName, `[Agent自主发言] ${response.slice(0, 80)}`, 7);
-          try { const { createRow } = await import("./engine/scenario-tables.ts"); createRow("角色状态表", { 角色名: params.npcName, 穿着: (outfit||"").slice(0,30), 精确动作: response.slice(0,60), 情绪: "", 精确位置: gameState.player.location }); } catch(_) {}
-        } catch (_) {}
+          try {
+            const { createRow } = await import("./engine/scenario-tables.ts");
+            createRow("角色状态表", { 角色名: params.npcName, 穿着: (outfit||"").slice(0,30), 精确动作: response.slice(0,60), 情绪: "", 精确位置: gameState.player.location });
+          } catch (err) {
+            console.error("createRow error in spawn_npc_agent:", err);
+          }
+        } catch (err) {
+          console.error("addMemoryTag error in spawn_npc_agent:", err);
+        }
         return { content: [{ type: "text", text: response }], details: {} };
-      } catch {
+      } catch (err) {
+        console.error("generateCompletion error in spawn_npc_agent:", err);
         return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
       }
     },
@@ -1890,7 +1988,6 @@ export default function (pi: ExtensionAPI) {
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("./engine/state.ts");
       const charStages = await import("./../data/character_stages.json", { with: { type: "json" } });
-      const KEY = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
 
       async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<string> {
         const src = findCharacter(npcName);
@@ -1933,7 +2030,9 @@ export default function (pi: ExtensionAPI) {
                 });
               }
             }
-          } catch (_) {}
+          } catch (e) {
+            console.error("spawn_npc_agents socialTags extraction error:", e);
+          }
         }
 
         const prompt = [
@@ -1969,15 +2068,13 @@ export default function (pi: ExtensionAPI) {
         ].filter(Boolean).join("\n");
 
         try {
-          const res = await fetch("https://api.deepseek.com/anthropic/v1/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
-            body: JSON.stringify({ model: "deepseek-v4-flash", max_tokens: 512, messages: [{ role: "user", content: prompt }] }),
-          });
-          if (!res.ok) return `${npcName}（沉默）`;
-          const data = await res.json() as any;
-          return data?.content?.[0]?.text?.trim() || `${npcName}（沉默）`;
-        } catch { return `${npcName}（沉默）`; }
+          const response = await generateCompletion(prompt, 512, _ctx, "deepseek-v4-flash");
+          if (!response) return `${npcName}（沉默）`;
+          return response;
+        } catch (e) {
+          console.error("generateCompletion error in spawn_npc_agents runOne:", e);
+          return `${npcName}（沉默）`;
+        }
       }
 
       const results = await Promise.all(params.npcs.map(n => runOne(n.npcName, n.sceneContext, (n as any).initiative)));
@@ -1987,10 +2084,17 @@ export default function (pi: ExtensionAPI) {
         for (let i = 0; i < params.npcs.length; i++) {
           if (!results[i].includes("（沉默）") && !results[i].includes("（未找到）")) {
             addMemoryTag(params.npcs[i].npcName, `[Agent自主发言] ${results[i].slice(0, 80)}`, 7);
-            try { const { createRow } = await import("./engine/scenario-tables.ts"); createRow("角色状态表", { 角色名: params.npcs[i].npcName, 穿着: "", 精确动作: results[i].slice(0,60), 情绪: "", 精确位置: gameState.player.location }); } catch(_) {}
+            try {
+              const { createRow } = await import("./engine/scenario-tables.ts");
+              createRow("角色状态表", { 角色名: params.npcs[i].npcName, 穿着: "", 精确动作: results[i].slice(0,60), 情绪: "", 精确位置: gameState.player.location });
+            } catch (err) {
+              console.error("createRow error in spawn_npc_agents:", err);
+            }
           }
         }
-      } catch (_) {}
+      } catch (err) {
+        console.error("addMemoryTag error in spawn_npc_agents:", err);
+      }
       const text = params.npcs.map((n, i) => `[${n.npcName}] ${results[i]}`).join("\n");
       return { content: [{ type: "text", text }], details: {} };
     },
@@ -2454,11 +2558,13 @@ export default function (pi: ExtensionAPI) {
               };
             }
             safe.bodyParts = profile.bodyParts;
-            safe.attitude = profile.attitude;
             safe.experience = profile.experience;
+            safe.attitude = profile.attitude;
             result.sex_profile = safe;
           }
-        } catch (_) {}
+        } catch (e) {
+          console.error("get_partner_state profile extraction error:", e);
+        }
       }
 
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], details: result };
@@ -2493,7 +2599,9 @@ export default function (pi: ExtensionAPI) {
                 results.push({ title, text: entry.text?.slice(0, 500) || "", source: "lore" });
               }
             }
-          } catch (_) {}
+          } catch (e) {
+            console.error(`lookup_lore failed to parse data file ${f}:`, e);
+          }
         }
       }
 
@@ -2511,7 +2619,9 @@ export default function (pi: ExtensionAPI) {
             }
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        console.error("lookup_lore worldbooks search failed:", e);
+      }
 
       if (results.length === 0) {
         return { content: [{ type: "text", text: `未找到与「${params.keyword}」相关的设定资料。` }], details: {} };
@@ -2807,6 +2917,107 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
+  pi.registerTool({
+    name: "make_call", label: "打电话",
+    description: "NPC或玩家拨打/接听/挂断电话。caller:拨打方姓名/callee:接听方姓名/action:dial(拨打)|answer(接听)|decline(拒接)|hangup(挂断)。",
+    parameters: Type.Object({
+      caller: Type.String({ description: "拨打方姓名（例如：'玩家'，或 NPC 名字）" }),
+      callee: Type.String({ description: "接听方姓名（例如：'玩家'，或 NPC 名字）" }),
+      action: Type.String({ description: "操作类型：dial(拨打) | answer(接听) | decline(拒接) | hangup(挂断)" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { getPlayerPhoneData, initiateCall, endCall, canContact } = await import("./engine/phone.ts");
+      const { saveState } = await import("./engine/state.ts");
+      const pd = getPlayerPhoneData();
+      if (!pd) {
+        return { content: [{ type: "text", text: "你没有手机。无法进行通话操作。" }], details: {} };
+      }
+
+      const action = params.action.toLowerCase();
+      if (action === "dial") {
+        if (params.caller === "玩家" || params.caller === pd.owner) {
+          const { syncContactsFromRelationships } = await import("./engine/phone.ts");
+          syncContactsFromRelationships(pd);
+          if (!canContact(pd, params.callee)) {
+            return { content: [{ type: "text", text: `你与 ${params.callee} 关系不够亲密，无法主动拨打电话。` }], details: {} };
+          }
+        }
+        
+        const call = initiateCall(pd, params.caller, params.callee);
+        saveState();
+        return { content: [{ type: "text", text: `${params.caller} 拨打了 ${params.callee} 的电话...` }], details: { call } };
+      } 
+      
+      if (action === "answer") {
+        const call = endCall(pd, "answered");
+        if (!call) {
+          return { content: [{ type: "text", text: "当前没有正在呼叫的电话。" }], details: {} };
+        }
+        saveState();
+        return { content: [{ type: "text", text: `通话接通。${call.caller} 与 ${call.callee} 开始通话。` }], details: { call } };
+      }
+
+      if (action === "decline") {
+        const call = endCall(pd, "rejected");
+        if (!call) {
+          return { content: [{ type: "text", text: "当前没有正在呼叫的电话。" }], details: {} };
+        }
+        saveState();
+        return { content: [{ type: "text", text: `已拒接 ${call.caller} 的来电。` }], details: { call } };
+      }
+
+      if (action === "hangup") {
+        const ongoing = pd.callLog.find(c => c.status === "ongoing");
+        if (ongoing) {
+          const call = endCall(pd, "missed");
+          saveState();
+          return { content: [{ type: "text", text: `通话已结束（未接听，挂断）。` }], details: { call } };
+        }
+        
+        const lastCall = pd.callLog[pd.callLog.length - 1];
+        if (lastCall && lastCall.status === "answered") {
+          return { content: [{ type: "text", text: `通话已挂断。` }], details: { call: lastCall } };
+        }
+        
+        return { content: [{ type: "text", text: "当前没有活跃的通话。" }], details: {} };
+      }
+
+      return { content: [{ type: "text", text: `未知的通话动作: ${params.action}` }], details: {} };
+    }
+  });
+
+  pi.registerTool({
+    name: "add_calendar_event", label: "添加日程事件",
+    description: "动态添加一个未来的日程日历事件。LLM用于规划相约、生日或期限限制。",
+    parameters: Type.Object({
+      year: Type.Optional(Type.Number({ description: "年份，缺省则任意年份生效" })),
+      date: Type.String({ description: "日期，格式如：'4月7日'" }),
+      location: Type.Optional(Type.String({ description: "地点，缺省则任意地点生效" })),
+      text: Type.String({ description: "日程说明内容" }),
+    }),
+    async execute(_id, params, _s, _o, _ctx) {
+      const { clearCalendarCache } = await import("./engine/timeline.ts");
+      const { gameState, saveState } = await import("./engine/state.ts");
+      if (!gameState.calendarEvents) {
+        gameState.calendarEvents = [];
+      }
+      
+      const newEvent = {
+        year: params.year ?? null,
+        date: params.date,
+        location: params.location ?? null,
+        text: params.text,
+        world: gameState.activeWorld || "oregairu",
+      };
+      
+      gameState.calendarEvents.push(newEvent);
+      clearCalendarCache();
+      saveState();
+      
+      return { content: [{ type: "text", text: `已成功在日历中添加日程: ${params.date} [${params.location || "任意地点"}] ${params.text}` }], details: { event: newEvent } };
+    }
+  });
+
   // ── Commands ──
   pi.registerCommand("relations", {
     description: "查看所有NPC关系与恋爱阶段",
@@ -2894,7 +3105,7 @@ export default function (pi: ExtensionAPI) {
         const lines = [
           `${p.name} | ${p.gender} | ${p.age}岁 | ${gameState.time.player_stage}`,
           `── 基本 ──`,
-          `位置: ${p.location}  资金: ¥${p.funds}  疲劳: ${p.fatigue ?? 0}/100`,
+          `位置: ${p.location}  资金: ${getCurrency()}${p.funds}  疲劳: ${p.fatigue ?? 0}/100`,
           `HP: ${p.hp.current}/${p.hp.max}  AC: ${p.ac}`,
         ];
         if (p.body) {
@@ -2929,7 +3140,9 @@ export default function (pi: ExtensionAPI) {
                 if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
               }
             }
-          } catch (_) {}
+          } catch (e) {
+            console.error("showMenu status bar itemsCatalog flavor lookup error:", e);
+          }
           const SLOT_NAMES: Record<string, string> = {
             top: "外套", shirt: "内搭", inner_top: "胸罩", bottom: "下装", inner_bot: "内裤",
             legs: "袜", feet: "鞋", head: "头饰", acc: "配饰", left_hand: "副手", right_hand: "主手", back: "背"
@@ -3022,7 +3235,9 @@ export default function (pi: ExtensionAPI) {
               if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
             }
           }
-        } catch (_) {}
+        } catch (e) {
+          console.error("showMenu character status itemsCatalog flavor lookup error:", e);
+        }
 
         const clothingSlots = ['top', 'shirt', 'inner_top', 'bottom', 'inner_bot', 'legs', 'feet'];
         const eq = Object.entries(npcState.equipment).filter(([k, v]) => v && !clothingSlots.includes(k));
@@ -3252,7 +3467,12 @@ export default function (pi: ExtensionAPI) {
         try {
           const { getAvailableActions } = await import("./engine/sex.ts");
           let posDB: any = null;
-          try { const { positionsCatalog } = await import("./engine/state.ts"); posDB = positionsCatalog; } catch (_) {}
+          try {
+            const { positionsCatalog } = await import("./engine/state.ts");
+            posDB = positionsCatalog;
+          } catch (e) {
+            console.error("positionsCatalog lookup error in showMenu status:", e);
+          }
           const avail = getAvailableActions(p, s, posDB);
           if (avail.actions.length > 0 || avail.positions.length > 0) {
             lines.push(``);
@@ -3261,7 +3481,9 @@ export default function (pi: ExtensionAPI) {
             if (avail.locked.length > 0) lines.push(`🔒 锁定: ${avail.locked.join("、")}`);
             if (avail.lockedPositions.length > 0) lines.push(`🔒 体位解锁: ${avail.lockedPositions.join("、")}`);
           }
-        } catch (_) {}
+        } catch (e) {
+          console.error("getAvailableActions error in showMenu status:", e);
+        }
         if (s.thoughts && s.thoughts.length > 0) {
           lines.push(``);
           lines.push(`心里话:`);
@@ -3435,7 +3657,11 @@ export default function (pi: ExtensionAPI) {
 
       // 加载车站数据
       let cityMap: any = null;
-      try { cityMap = (await import("./data/city_map.json", { with: { type: "json" } })).default; } catch (_) {}
+      try {
+        cityMap = (await import("./data/city_map.json", { with: { type: "json" } })).default;
+      } catch (e) {
+        console.error("train command cityMap loading error:", e);
+      }
 
       // 在 city_map 中搜索当前位置所在区域的车站
       const findStations = (): { region: string; stationName: string; station: any }[] => {
@@ -3487,11 +3713,11 @@ export default function (pi: ExtensionAPI) {
           }
           const destItems: MenuItem[] = destEntries.map(([dest, mins]) => ({
             label: `🎫 → ${dest}`,
-            detail: `约${mins}分钟 | ¥${Math.round(mins * 20)}`,
+            detail: `约${mins}分钟 | ${getCurrency()}${Math.round(mins * 20)}`,
             action: async (destDone) => {
               const fare = Math.round(mins * 20);
               if (gameState.player.funds < fare) {
-                ctx.ui.notify(`资金不足！需要 ¥${fare}，当前 ¥${gameState.player.funds}`, "warning");
+                ctx.ui.notify(`资金不足！需要 ${getCurrency()}${fare}，当前 ${getCurrency()}${gameState.player.funds}`, "warning");
                 destDone();
                 return;
               }
@@ -3505,7 +3731,7 @@ export default function (pi: ExtensionAPI) {
                 timeOfDay: gameState.time.time_of_day
               };
               saveState();
-              ctx.ui.notify(`🚃 从 ${s.stationName} 出发，前往 ${dest}。¥${fare}`, "info");
+              ctx.ui.notify(`🚃 从 ${s.stationName} 出发，前往 ${dest}。${getCurrency()}${fare}`, "info");
               ctx.chat.addSystemMessage(`玩家乘坐电车从 ${s.stationName} 前往 ${dest}，约${mins}分钟。描述车窗外的风景，到达前调用 complete_travel。`);
               updateChatHUD(ctx);
               destDone();
@@ -3543,7 +3769,7 @@ export default function (pi: ExtensionAPI) {
         const lines: string[] = [];
         const volUsed = p.inventory.reduce((s: number, i: any) => s + (i.volume || 0), 0);
         const volMax = 30; // 默认背包容量
-        lines.push(`🎒 背包 (${p.inventory.length}件 | ${volUsed.toFixed(1)}/${volMax}L) | 资金 ¥${p.funds}`);
+        lines.push(`🎒 背包 (${p.inventory.length}件 | ${volUsed.toFixed(1)}/${volMax}L) | 资金 ${getCurrency()}${p.funds}`);
         lines.push(`筛选: ${filter === "all" ? "全部" : filter} | 排序: ${sort === "name" ? "名称" : sort === "weight" ? "重量" : "默认"}`);
         lines.push("────────────────────────────────────────");
 
@@ -3872,7 +4098,7 @@ export default function (pi: ExtensionAPI) {
       lines.push("────────────────────────────────────────");
       lines.push(`❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac}`);
       lines.push(`💪 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质}`);
-      lines.push(`💰 资金: ¥${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`);
+      lines.push(`💰 资金: ${getCurrency()}${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`);
 
       // 装备武器
       const weapon = p.equipment.right_hand || p.equipment.left_hand;
@@ -3931,9 +4157,18 @@ export default function (pi: ExtensionAPI) {
 
       // 加载商店数据
       let shops: any = null;
-      try { const { shopsCatalog } = await import("./engine/state.ts"); shops = shopsCatalog; } catch (_) {}
+      try {
+        const { shopsCatalog } = await import("./engine/state.ts");
+        shops = shopsCatalog;
+      } catch (e) {
+        console.error("shop command shopsCatalog loading error:", e);
+      }
       let economy: any = null;
-      try { economy = (await import("./data/economy.json", { with: { type: "json" } })).default; } catch (_) {}
+      try {
+        economy = (await import("./data/economy.json", { with: { type: "json" } })).default;
+      } catch (e) {
+        console.error("shop command economy loading error:", e);
+      }
 
       // 匹配附近商店
       const nav = getLocationNav(loc);
@@ -3954,7 +4189,7 @@ export default function (pi: ExtensionAPI) {
           lines.push(`🏬 ${shop.name} (${shop.type || "杂货"})`);
           if (shop.inventory && shop.inventory.length > 0) {
             for (const item of shop.inventory.slice(0, 8)) {
-              const price = item.price ? `¥${item.price}` : "?";
+              const price = item.price ? `${getCurrency()}${item.price}` : "?";
               lines.push(`  • ${item.name} — ${price}`);
             }
             if (shop.inventory.length > 8) lines.push(`  ... 还有 ${shop.inventory.length - 8} 件`);
@@ -3971,11 +4206,11 @@ export default function (pi: ExtensionAPI) {
       lines.push("💼 可打工种 (2010千叶时薪):");
       if (economy?.job_rates) {
         for (const [job, rate] of Object.entries(economy.job_rates) as any) {
-          lines.push(`  • ${job}: ¥${rate}/小时`);
+          lines.push(`  • ${job}: ${getCurrency()}${rate}/小时`);
         }
       }
       lines.push("────────────────────────────────────────");
-      lines.push(`💰 你的余额: ¥${gameState.player.funds}`);
+      lines.push(`💰 你的余额: ${getCurrency()}${gameState.player.funds}`);
       lines.push("使用 buy_item / sell_item / work_job 工具进行交易。");
 
       await showPanel(ctx, "🏪 商店", lines);
@@ -4111,58 +4346,45 @@ export default function (pi: ExtensionAPI) {
   // 每轮组装 GM 系统提示词
   pi.on("before_agent_start", async (event) => {
     const { buildStatePrompt, gameState } = await import("./engine/state.ts");
-    const fs = await import("node:fs");
-    const path = await import("node:path");
-    const agentsDir = path.resolve(process.cwd(), "agents");
-
-    // 状态简报（含 NPC 懒初始化）
     const statePrompt = await buildStatePrompt();
-
-    // 按 mode 选叙事规则 — mode=sex 自动启用 Layer1
     if (gameState.mode === "sex") gameState.layer1Enabled = true;
+    const gmPrompt = await buildSystemPrompt(gameState, statePrompt);
+    return { systemPrompt: gmPrompt };
+  });
+}
 
-    // 读取 preset.json，动态组装
-    let gmPrompt = "";
-    const presetPath = path.join(agentsDir, "preset.json");
-    if (fs.existsSync(presetPath)) {
-      try {
-        const presetData = JSON.parse(fs.readFileSync(presetPath, "utf-8"));
-        const presetName = gameState.preset || "default";
-        const layers = presetData.assembly[presetName] || presetData.assembly["default"];
-        const parts: string[] = [];
+// 顶层导出系统提示词组装逻辑，以便进行单元测试
+export async function buildSystemPrompt(gameState: any, statePrompt: string): Promise<string> {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const agentsDir = path.resolve(process.cwd(), "agents");
+
+  let gmPrompt = "";
+  const presetPath = path.join(agentsDir, "preset.json");
+  if (fs.existsSync(presetPath)) {
+    try {
+      const presetData = JSON.parse(fs.readFileSync(presetPath, "utf-8"));
+      const presetName = gameState.preset || "default";
+      const layers = presetData.assembly[presetName] || presetData.assembly["default"];
+      const parts: string[] = [];
+      
+      for (const key of layers) {
+        const layerKey = key.replace("{mode}", gameState.mode);
+        const layerConfig = presetData.layers[layerKey];
+        if (!layerConfig) continue;
         
-        for (const key of layers) {
-          const layerKey = key.replace("{mode}", gameState.mode);
-          const layerConfig = presetData.layers[layerKey];
-          if (!layerConfig) continue;
-          
-          if (layerKey === "state") {
-            parts.push(statePrompt);
-          } else {
-            const filePath = path.resolve(process.cwd(), layerConfig.file);
-            const content = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8").trim() : "";
-            if (content) parts.push(content);
-          }
+        if (layerKey === "state") {
+          parts.push(statePrompt);
+        } else {
+          const fileResolved = layerConfig.file.replace("{mode}", gameState.mode);
+          const filePath = path.resolve(process.cwd(), fileResolved);
+          const content = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8").trim() : "";
+          if (content) parts.push(content);
         }
-        gmPrompt = parts.filter(Boolean).join("\n\n---\n\n");
-      } catch (e) {
-        // fallback to default hardcoded assembly if parsing preset.json fails
-        const read = (name: string) => {
-          const p = path.join(agentsDir, name);
-          return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
-        };
-        const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
-          : gameState.mode === "rpg" ? "gm-mode-rpg.md"
-          : "gm-mode-gal.md";
-        gmPrompt = [
-          read("gm-pre.md"),
-          read("gm-rules.md"),
-          read("gm-contract.md"),
-          statePrompt,
-          read(modeFile),
-        ].filter(Boolean).join("\n\n---\n\n");
       }
-    } else {
+      gmPrompt = parts.filter(Boolean).join("\n\n---\n\n");
+    } catch (e) {
+      console.error("Failed to parse preset.json, falling back to hardcoded default:", e);
       const read = (name: string) => {
         const p = path.join(agentsDir, name);
         return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
@@ -4178,7 +4400,22 @@ export default function (pi: ExtensionAPI) {
         read(modeFile),
       ].filter(Boolean).join("\n\n---\n\n");
     }
+  } else {
+    const read = (name: string) => {
+      const p = path.join(agentsDir, name);
+      return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+    };
+    const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
+      : gameState.mode === "rpg" ? "gm-mode-rpg.md"
+      : "gm-mode-gal.md";
+    gmPrompt = [
+      read("gm-pre.md"),
+      read("gm-rules.md"),
+      read("gm-contract.md"),
+      statePrompt,
+      read(modeFile),
+    ].filter(Boolean).join("\n\n---\n\n");
+  }
 
-    return { systemPrompt: gmPrompt };
-  });
+  return gmPrompt;
 }

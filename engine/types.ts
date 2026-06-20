@@ -269,6 +269,10 @@ export interface NPCRuntimeState {
     expiresAt: string;            // game_date，过期自动清除
   } | null;
   npcRelationships?: Record<string, { stage: string; tone: string; notes: string }>;  // 此NPC对其他NPC的关系
+  hp: { current: number; max: number };
+  alive: boolean;
+  attributes: Attributes;
+  skills: Record<string, Skill>;
 }
 
 // --- 空间系统（棋盘格） ---
@@ -284,6 +288,7 @@ export interface CellData {
   outsideView?: string;
   faces?: string;            // 窗户面对的房间名（跨节点感知）
   locked?: boolean;          // 门是否锁着（需要匹配钥匙 unlock 值）
+  tags?: string[];
 }
 
 export interface RoomGrid {
@@ -340,6 +345,7 @@ export interface TimelineEvent {
     affection?: Record<string, number>;
     time_of_day?: string[];
     flags?: Record<string, boolean>;
+    calendar_event?: string;
   };
   expires_days: number;
   repeatable: boolean;
@@ -382,6 +388,7 @@ export interface CalendarEntry {
   date: string;              // "M月D日" 格式，如 "4月7日"
   location: string | null;   // null = 任意地点均生效
   text: string;              // 叙事风味文本
+  world?: string;            // 关联的世界观，如 'oregairu'
 }
 
 export interface Hook {
@@ -442,6 +449,7 @@ export interface GameState {
   storySoFar: string;                      // 前情滚动摘要（旧回合压缩）
   revealLog: RevealEntry[];                // Layer 3 秘密揭示日志
   dynamicCharacters?: Record<string, any>;   // LLM 运行时创建的角色（name → StaticCharacter 字段）
+  calendarEvents?: CalendarEntry[];          // 动态可写日历事件
 }
 
 // ── 手机数据（存储在 Item.phoneData）──

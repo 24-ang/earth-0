@@ -1,0 +1,11 @@
+{
+  "wasteland": {
+    "name": "废土",
+    "regions": {
+      "camp": {
+        "name": "营地",
+        "prefectures": {}
+      }
+    }
+  }
+}

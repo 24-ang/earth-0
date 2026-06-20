@@ -8,7 +8,7 @@
 import {
   gameState, saveState, loadState, resetState,
   movePlayer, placeFurniture, removeFurniture, toggleDoor,
-  editCellType, createRoom, getRoom, initPlayerGrid, getGridContext,
+  editCellType, createRoom, getRoom, initPlayerGrid, getGridContext, ROOMS,
   buyItem, sellItem, workJob, stealItem, stealFunds,
   monthlyGrowth, refreshWeather, updateNPCSchedules,
   buildStatePrompt, getBodyForAge, getNpcCurrentAge,
@@ -19,7 +19,8 @@ import {
   stampRoom, getRoomAgingLine,
   setNPCOutfit, getNPCOutfitDesc,
   getLocationNav, createDynamicLocation,
-  mountVehicle, dismountVehicle, getVehicleMul,
+  mountVehicle, dismountVehicle, getVehicleMul, calcInventoryVolume,
+  getCurrency, getConstructionMultiplier, loadActiveWorld,
 } from "./engine/state.ts";
 
 import { check, attackRoll, rollDamage } from "./engine/dice.ts";
@@ -831,16 +832,23 @@ test("combat_action NPC 可攻击玩家", () => {
 console.log("\n── Phase 3: Scene Macro 层 ──");
 
 const registeredTools: Record<string, any> = {};
+const mockFlags: Record<string, any> = {};
 const mockPi = {
   registerTool(tool: any) {
     registeredTools[tool.name] = tool;
   },
   registerCommand() {},
+  registerFlag(name: string, config: any) {
+    mockFlags[name] = config;
+  },
+  getFlag(name: string) {
+    return mockFlags[name]?.default;
+  },
   on() {}
 };
 
-test("加载 extension 并初始化 mockPi", () => {
-  const registerExtension = require("./extension.ts").default;
+test("加载 extension 并初始化 mockPi", async () => {
+  const registerExtension = (await import("./extension.ts")).default;
   registerExtension(mockPi);
   if (!registeredTools["world_interact"]) throw new Error("world_interact 未注册");
   if (!registeredTools["settle_scene"]) throw new Error("settle_scene 未注册");
@@ -1580,6 +1588,574 @@ test("秘密防火墙: getRevealedSecrets & prompt collector", async () => {
   if (!prompt.includes("潘先生")) {
     throw new Error("已揭示的秘密应该被注入到 prompt 中");
   }
+});
+
+test("世界线切换: loadActiveWorld(wasteland) 切换并校验解耦数据", async () => {
+  const { loadActiveWorld, findCharacter, getRoom, activeWorldName, itemsCatalog, shopsCatalog } = await import("./engine/state.ts");
+  
+  // 1. 切换到废土
+  loadActiveWorld("wasteland");
+  
+  if (activeWorldName !== "wasteland") {
+    throw new Error(`世界线名称应为 wasteland，但实际为: ${activeWorldName}`);
+  }
+  
+  const ranger = findCharacter("Wasteland Ranger");
+  if (!ranger || ranger.name !== "Wasteland Ranger") {
+    throw new Error("应该能查到 Wasteland Ranger 角色");
+  }
+  
+  const yukino = findCharacter("雪之下雪乃");
+  if (yukino) {
+    throw new Error("在废土世界线不应该查到 雪之下雪乃");
+  }
+  
+  const camp = getRoom("Wasteland Camp");
+  if (!camp) {
+    throw new Error("应该能查到 Wasteland Camp 房间");
+  }
+  
+  const club = getRoom("侍奉部");
+  if (club) {
+    throw new Error("在废土世界线不应该查到 侍奉部");
+  }
+  
+  if (!itemsCatalog.weapons || !itemsCatalog.weapons["废土砍刀"]) {
+    throw new Error("itemsCatalog 应包含废土砍刀");
+  }
+  
+  if (itemsCatalog.weapons["木刀"]) {
+    throw new Error("在废土世界线不应该有木刀");
+  }
+  
+  if (!shopsCatalog["废土集市"]) {
+    throw new Error("shopsCatalog 应包含废土集市");
+  }
+  
+  if (shopsCatalog["便利店"]) {
+    throw new Error("在废土世界线不应该有便利店商店");
+  }
+
+  // 2. 切回默认的 oregairu
+  loadActiveWorld("oregairu");
+  
+  if (activeWorldName !== "oregairu") {
+    throw new Error(`世界线名称应恢复为 oregairu，但实际为: ${activeWorldName}`);
+  }
+  
+  const rangerBack = findCharacter("Wasteland Ranger");
+  if (rangerBack) {
+    throw new Error("切回后不应该再有 Wasteland Ranger");
+  }
+  
+  const yukinoBack = findCharacter("雪之下雪乃");
+  if (!yukinoBack) {
+    throw new Error("切回后应该重新有 雪之下雪乃");
+  }
+  
+  const clubBack = getRoom("侍奉部");
+  if (!clubBack) {
+    throw new Error("切回后应该重新有 侍奉部");
+  }
+  
+  if (!itemsCatalog.weapons["木刀"]) {
+    throw new Error("切回后 itemsCatalog 应该重新有木刀");
+  }
+});
+
+test("通话工具 make_call: 拨打、接听、拒接与好感度限制", async () => {
+  resetState();
+  const { createDefaultPhoneData, getPlayerPhoneData } = await import("./engine/phone.ts");
+  
+  // 1. 给玩家配个手机
+  gameState.player.equipment.right_hand = {
+    name: "手机", type: "tool", slot: "right_hand", weight: 0.2,
+    effects: [{ type: "communication", value: "通话/短信/网络" }],
+    state: "intact",
+    phoneData: createDefaultPhoneData(gameState.player.name),
+  };
+
+  const tool = registeredTools["make_call"];
+  if (!tool) throw new Error("make_call tool not registered");
+
+  // 2. NPC 呼叫玩家 (不需要亲密度限制)
+  const resDialNpc = await tool.execute("id", { caller: "雪之下雪乃", callee: "玩家", action: "dial" }, null, null, null);
+  if (resDialNpc.content[0].text.includes("不够亲密")) {
+    throw new Error(`NPC拨打玩家不应受亲密度限制: ${resDialNpc.content[0].text}`);
+  }
+  
+  const pd = getPlayerPhoneData()!;
+  if (pd.callLog.length !== 1 || pd.callLog[0].status !== "ongoing") {
+    throw new Error("电话应处于 ongoing 状态");
+  }
+
+  // 3. 玩家接听
+  await tool.execute("id", { caller: "雪之下雪乃", callee: "玩家", action: "answer" }, null, null, null);
+  if (pd.callLog[0].status !== "answered") {
+    throw new Error("电话应处于 answered 状态");
+  }
+
+  // 4. 玩家挂断已接听的电话
+  await tool.execute("id", { caller: "雪之下雪乃", callee: "玩家", action: "hangup" }, null, null, null);
+
+  // 5. 玩家拨打 NPC (未同步/好感度不足 -> 拒绝)
+  const resDialFail = await tool.execute("id", { caller: "玩家", callee: "雪之下雪乃", action: "dial" }, null, null, null);
+  if (!resDialFail.content[0].text.includes("关系不够亲密")) {
+    throw new Error("好感度不足时拨打应该被拒绝");
+  }
+
+  // 6. 好感度足够 -> 成功
+  gameState.player.relationships["雪之下雪乃"] = { affection: 50, stage: "朋友", tone: "普通", lastInteractionDay: 0 };
+  const resDialSuccess = await tool.execute("id", { caller: "玩家", callee: "雪之下雪乃", action: "dial" }, null, null, null);
+  if (resDialSuccess.content[0].text.includes("关系不够亲密")) {
+    throw new Error("好感度足够时拨打不应被拒绝");
+  }
+
+  // 7. 拒接
+  await tool.execute("id", { caller: "玩家", callee: "雪之下雪乃", action: "decline" }, null, null, null);
+  if (pd.callLog[pd.callLog.length - 1].status !== "rejected") {
+    throw new Error("电话应处于 rejected 状态");
+  }
+});
+
+test("日历工具 add_calendar_event: 动态写入日程与世界线隔离", async () => {
+  resetState();
+  const { getCalendarEvents } = await import("./engine/timeline.ts");
+  
+  const tool = registeredTools["add_calendar_event"];
+  if (!tool) throw new Error("add_calendar_event tool not registered");
+
+  // 1. 玩家添加一个日程
+  await tool.execute("id", { date: "12月25日", text: "圣诞派对", location: "部室" }, null, null, null);
+  
+  // 2. 查询该日期事件
+  const events = getCalendarEvents("2026-12-25", "部室");
+  const found = events.some(e => e.text === "圣诞派对");
+  if (!found) {
+    throw new Error("查询到的日历事件应包含 圣诞派对");
+  }
+
+  // 3. 切换世界线 -> 隐藏该日程
+  const { loadActiveWorld } = await import("./engine/state.ts");
+  loadActiveWorld("wasteland");
+  const eventsWasteland = getCalendarEvents("2026-12-25", "部室");
+  if (eventsWasteland.some(e => e.text === "圣诞派对")) {
+    throw new Error("切换至废土世界线后不应查到 圣诞派对 日程");
+  }
+
+  // 4. 切回默认 -> 重新出现
+  loadActiveWorld("oregairu");
+  const eventsOregairu = getCalendarEvents("2026-12-25", "部室");
+  if (!eventsOregairu.some(e => e.text === "圣诞派对")) {
+    throw new Error("切回默认世界线后应重新查到 圣诞派对 日程");
+  }
+});
+
+test("空间感知: horizon 与 faces 跨节点感知", async () => {
+  resetState();
+  const { ROOMS } = await import("./engine/state.ts");
+  
+  // 1. 注册一个测试房间，配置 horizon 远景和 faces 窗外感知
+  ROOMS["测试感知房"] = {
+    width: 3,
+    height: 3,
+    cellSize: 1,
+    floor: 1,
+    origin: [0, 0],
+    cells: [
+      [
+        { type: "wall", block: true, label: "WL", faces: "小花园" },
+        { type: "floor", block: false, label: "  " },
+        { type: "floor", block: false, label: "  " }
+      ],
+      [
+        { type: "floor", block: false, label: "  " },
+        { type: "floor", block: false, label: "  " },
+        { type: "floor", block: false, label: "  " }
+      ],
+      [
+        { type: "floor", block: false, label: "  " },
+        { type: "floor", block: false, label: "  " },
+        { type: "floor", block: false, label: "  " }
+      ]
+    ],
+    horizon: {
+      "north": "远远的北面有高山",
+      "south": "南面是无尽的荒漠"
+    }
+  };
+
+  // 2. 玩家处于中间 (1, 1)，测试全局远景与窗户
+  setPlayerLocation("测试感知房");
+  gameState.player.gridPos = [1, 1];
+  
+  const ctxGlobal = getGridContext();
+  if (!ctxGlobal.includes("北面望去:远远的北面有高山")) {
+    throw new Error(`远景北面未被注入: ${ctxGlobal}`);
+  }
+  if (!ctxGlobal.includes("南面望去:南面是无尽的荒漠")) {
+    throw new Error(`远景南面未被注入: ${ctxGlobal}`);
+  }
+  if (!ctxGlobal.includes("窗外视野: 坐标(0,0)的窗户朝向【小花园】")) {
+    throw new Error(`窗户全局朝向未被注入: ${ctxGlobal}`);
+  }
+
+  // 3. 玩家走到窗户墙壁格的邻格 (1, 0)，测试局部西侧墙壁窗户朝向
+  gameState.player.gridPos = [1, 0];
+  const ctxLocal = getGridContext();
+  if (!ctxLocal.includes("西侧是墙壁(有窗户朝向【小花园】)")) {
+    throw new Error(`邻格窗外感知未被注入: ${ctxLocal}`);
+  }
+});
+
+test("体积容错: 缺失 volume 字段的物品不产生 NaN", () => {
+  resetState();
+  
+  // 无体积属性的道具
+  const stone = {
+    name: "普通石头",
+    type: "tool",
+    slot: "acc",
+    weight: 1.0,
+    effects: [],
+    state: "intact"
+  } as any;
+
+  const vol = calcInventoryVolume([stone], {});
+  if (isNaN(vol)) {
+    throw new Error("物品没有 volume 字段时计算总体积不应返回 NaN");
+  }
+  if (vol !== 0) {
+    throw new Error(`默认体积应为 0, 实际计算为: ${vol}`);
+  }
+});
+
+test("社交八卦: NPC 碰面记忆标签排重、隐私过滤与额度限制", async () => {
+  resetState();
+  const { getOrCreateNPC, updateNPCSchedules } = await import("./engine/state.ts");
+
+  // 1. 初始化三个 NPC，雪乃、结衣、阳乃
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  const yui = getOrCreateNPC("由比滨结衣");
+  const haruno = getOrCreateNPC("雪之下阳乃");
+
+  // 让雪乃和结衣是闺蜜关系
+  yukino.npcRelationships = {
+    "由比滨结衣": { stage: "闺蜜", tone: "喜欢", notes: "" }
+  };
+  yui.npcRelationships = {
+    "雪之下雪乃": { stage: "闺蜜", tone: "喜欢", notes: "" }
+  };
+
+  // 阳乃是陌生人 (无关系记录)
+  yukino.npcRelationships["雪之下阳乃"] = undefined as any;
+  haruno.npcRelationships = {};
+
+  // 给雪乃添加三个记忆，一个私密，两个公开，一个重复
+  const dateStr = gameState.time.game_date;
+  yukino.memoryTags = [
+    { tag: "[性] 敏感部位自慰", since: dateStr, expires: 7, tone: "困惑" },
+    { tag: "[八卦] 便利店打折", since: dateStr, expires: 7, tone: "无感" },
+    { tag: "[日常] 喜欢潘先生玩偶", since: dateStr, expires: 7, tone: "期待" },
+    { tag: "[日常] 喜欢潘先生玩偶", since: dateStr, expires: 7, tone: "期待" } // 重复项
+  ];
+
+  // 结衣和阳乃初始没有记忆，并且大家都在“侍奉部”
+  yui.memoryTags = [];
+  haruno.memoryTags = [];
+
+  yukino.currentRoom = "侍奉部";
+  yui.currentRoom = "侍奉部";
+  haruno.currentRoom = "侍奉部";
+
+  // 2. 跑一轮更新，触发社交碰面
+  await updateNPCSchedules();
+
+  // 3. 校验排重：雪乃自己的重复项应该被剔除
+  const ykTags = yukino.memoryTags.map(t => t.tag);
+  const dupCount = ykTags.filter(t => t === "[日常] 喜欢潘先生玩偶").length;
+  if (dupCount !== 1) {
+    throw new Error(`排重失败，雪乃依然有重复的标签，数量为: ${dupCount}`);
+  }
+
+  // 4. 校验隐私过滤与额度限制：
+  const yuiTags = yui.memoryTags.map(t => t.tag);
+  if (yuiTags.length > 2) {
+    throw new Error(`额度限制失效，结衣学到了多于 2 个标签: ${yuiTags.join(", ")}`);
+  }
+
+  // 阳乃 (陌生人) 不管怎样都不应该学到私密标签，只能学到公开标签
+  const harunoTags = haruno.memoryTags.map(t => t.tag);
+  if (harunoTags.includes("[性] 敏感部位自慰")) {
+    throw new Error("隐私泄漏！陌生人阳乃学到了雪乃的私密标签");
+  }
+  if (harunoTags.length > 2) {
+    throw new Error(`额度限制失效，阳乃学到了多于 2 个标签: ${harunoTags.join(", ")}`);
+  }
+});
+
+test("建造与拆除：消耗材料与工具耐久退化，非建材拒绝，Ruined拒绝，家具拆除退回", () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+
+  const [px, py] = gameState.player.gridPos || [0, 0];
+  const tx = px + 1, ty = py;
+
+  // 1. 设置力量为4，测试工具需求
+  gameState.player.attributes.力量 = 4;
+
+  // 2. 只有材料(砖)没有工具，建造应该失败
+  gameState.player.inventory.push({ name: "砖", type: "tool", weight: 2, effects: [], state: "intact", volume: 0.5 });
+  const r1 = editCellType(tx, ty, "wall", undefined, "砖");
+  if (r1.success) throw new Error("力量不足且没有锤子时，建造墙壁应该失败");
+
+  // 3. 有材料(砖)且有工具(锤子)，建造应该成功，并且材料减少，锤子退化为damaged
+  gameState.player.inventory.push({ name: "锤子", type: "tool", weight: 1.5, effects: [], state: "intact", volume: 0.5 });
+  const r2 = editCellType(tx, ty, "wall", undefined, "砖");
+  if (!r2.success) throw new Error(`建墙失败: ${r2.reason}`);
+
+  // 检查砖是否扣除
+  const hasBrick = gameState.player.inventory.some((i: any) => i.name === "砖");
+  if (hasBrick) throw new Error("建造完成后材料(砖)应该被扣除");
+
+  // 检查锤子状态
+  const hammer = gameState.player.inventory.find((i: any) => i.name === "锤子");
+  if (!hammer || hammer.state !== "damaged") {
+    throw new Error(`锤子应该退化为 damaged 状态，实际为: ${hammer?.state}`);
+  }
+
+  // 4. 再次用 砖 建造（再加一个砖），由于锤子是 damaged 状态，可以继续使用并退化为 ruined
+  gameState.player.inventory.push({ name: "砖", type: "tool", weight: 2, effects: [], state: "intact", volume: 0.5 });
+  const tx2 = px, ty2 = py + 1;
+  const r3 = editCellType(tx2, ty2, "wall", undefined, "砖");
+  if (!r3.success) throw new Error(`第二次建墙失败: ${r3.reason}`);
+
+  if (hammer.state !== "ruined") {
+    throw new Error(`锤子应该退化为 ruined 状态，实际为: ${hammer.state}`);
+  }
+
+  // 5. 试图再次建墙，因为锤子已经 ruined 且力量为4，应该被拒绝
+  gameState.player.inventory.push({ name: "砖", type: "tool", weight: 2, effects: [], state: "intact", volume: 0.5 });
+  const tx3 = px - 1, ty3 = py;
+  const r4 = editCellType(tx3, ty3, "wall", undefined, "砖");
+  if (r4.success) throw new Error("使用 ruined 锤子且力量不足，建造应该被拒绝");
+
+  // 6. 试图使用功能性道具（如手机）作为建材，应该被拒绝
+  const r5 = editCellType(tx3, ty3, "wall", undefined, "手机");
+  if (r5.success) throw new Error("使用手机作为建材应该被拒绝");
+
+  // 7. 测试拆除墙壁：使用 ruined 锤子拆除墙壁应该失败（力量为4）
+  const r6 = editCellType(tx, ty, "floor", undefined, "锤子");
+  if (r6.success) throw new Error("力量不足且使用 ruined 锤子拆墙应该被拒绝");
+
+  // 8. 放入一个新的 intact 锤子，拆墙应该成功，且该锤子退化为 damaged
+  gameState.player.inventory.push({ name: "锤子", type: "tool", weight: 1.5, effects: [], state: "intact", volume: 0.5 });
+  // 这时有两个锤子，一个 ruined，一个 intact
+  const activeHammer = gameState.player.inventory.find((i: any) => i.name === "锤子" && i.state === "intact")!;
+  const r7 = editCellType(tx, ty, "floor", undefined, "锤子");
+  if (!r7.success) throw new Error(`用新锤子拆墙失败: ${r7.reason}`);
+  if (activeHammer.state !== "damaged") {
+    throw new Error(`新锤子拆墙后应退化为 damaged，实际为: ${activeHammer.state}`);
+  }
+
+  // 9. 测试放置家具与拆除家具退回背包
+  gameState.player.inventory.push({ name: "台灯", type: "tool", weight: 0.5, effects: [], state: "intact", volume: 0.5 });
+  const rPlace = placeFurniture(tx, ty, "台灯");
+  if (!rPlace.success) throw new Error(`放置台灯失败: ${rPlace.reason}`);
+  if (gameState.player.inventory.some((i: any) => i.name === "台灯")) {
+    throw new Error("放置后背包应该扣除台灯");
+  }
+
+  const rRemove = removeFurniture(tx, ty);
+  if (!rRemove.success) throw new Error(`拆除台灯失败: ${rRemove.reason}`);
+  const returnedLamp = gameState.player.inventory.find((i: any) => i.name === "台灯");
+  if (!returnedLamp) {
+    throw new Error("拆除后背包没有退回台灯");
+  }
+});
+
+// ── Phase 7: 新特性测试 (Issue ⑥, ⑯, ⑧, ⑪) ──
+console.log("\n── 新特性与机制测试 ──");
+
+test("空间 z-axis/Wall Tags: 单元格标签与高度扫描", () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const room = ROOMS[gameState.player.location];
+  if (!room) throw new Error("没有当前房间数据");
+  gameState.player.gridPos = [0, 0];
+  room.cells[0][0].tags = ["window", "high_shelf"];
+  room.cells[0][0].height = 2.5;
+  const ctxStr = getGridContext();
+  if (!ctxStr.includes("[window,high_shelf]")) {
+    throw new Error(`getGridContext 应包含标签window,high_shelf，实际: ${ctxStr}`);
+  }
+  if (!ctxStr.includes("[h:2.5m]")) {
+    throw new Error(`getGridContext 应包含高度信息h:2.5m，实际: ${ctxStr}`);
+  }
+});
+
+test("动态货币与施工倍率: 切换世界线校验", async () => {
+  loadActiveWorld("oregairu");
+  if (getCurrency() !== "¥") throw new Error(`oregairu 货币应为 ¥，实际: ${getCurrency()}`);
+  if (getConstructionMultiplier() !== 100) throw new Error(`oregairu 施工倍率应为 100，实际: ${getConstructionMultiplier()}`);
+  loadActiveWorld("wasteland");
+  if (getCurrency() !== "Caps") throw new Error(`wasteland 货币应为 Caps，实际: ${getCurrency()}`);
+  if (getConstructionMultiplier() !== 10) throw new Error(`wasteland 施工倍率应为 10，实际: ${getConstructionMultiplier()}`);
+  loadActiveWorld("oregairu");
+});
+
+test("NPC 运行时状态初始化与存档读取", () => {
+  resetState();
+  const npc = getOrCreateNPC("由比滨结衣");
+  if (!npc.attributes || npc.attributes.力量 === undefined) {
+    throw new Error("NPC 运行时状态应正确初始化属性");
+  }
+  if (!npc.hp || npc.hp.max <= 0) {
+    throw new Error("NPC 运行时状态应根据体质计算或读取模板初始化 HP");
+  }
+  if (!npc.skills) {
+    throw new Error("NPC 运行时状态应初始化技能");
+  }
+  saveState();
+  const loaded = loadState();
+  if (!loaded) throw new Error("重新加载存档失败");
+  const loadedNpc = gameState.npcs["由比滨结衣"];
+  if (!loadedNpc || !loadedNpc.attributes || !loadedNpc.hp) {
+    throw new Error("重新加载后 NPC 运行时状态应正确保存并迁移补齐");
+  }
+});
+
+test("队友状态详情 prompt 收集器", async () => {
+  resetState();
+  const p = gameState.player;
+  p.party = ["雪之下雪乃"];
+  const npc = getOrCreateNPC("雪之下雪乃");
+  const prompt = await buildStatePrompt();
+  if (!prompt.includes("[队伍成员]")) {
+    throw new Error(`StatePrompt 应包含队伍成员信息，实际: ${prompt}`);
+  }
+  if (!prompt.includes("雪之下雪乃: HP")) {
+    throw new Error(`StatePrompt 应包含队友详细状态，实际: ${prompt}`);
+  }
+});
+
+test("战斗伤害结算写回 NPC 运行时状态", async () => {
+  resetState();
+  const p = gameState.player;
+  const tool = registeredTools["combat_action"];
+  const npc = getOrCreateNPC("雪之下雪乃");
+  npc.hp.current = npc.hp.max;
+  p.equipment.right_hand = {
+    name: "无名神刀",
+    type: "weapon",
+    slot: "right_hand",
+    weight: 2.0,
+    effects: [],
+    state: "intact",
+    damage: { dice: "1d6+5", damageType: "切割" }
+  };
+  const res = await tool.execute("combat-test", {
+    action: "attack",
+    target: "雪之下雪乃"
+  }, null, null, null);
+  if (npc.hp.current >= npc.hp.max) {
+    throw new Error(`雪乃的运行时 HP 不应仍为最大值: ${npc.hp.current}/${npc.hp.max}。战斗结果: ${res.content[0].text}`);
+  }
+});
+
+test("日历层级穿透与时间线整合 (Issue ⑱)", async () => {
+  resetState();
+  const { loadActiveWorld, setPlayerLocation, getCalendarEvents, checkTimelineEvents, getActiveHooks } = await import("./engine/state.ts");
+  const { parseMonthDay } = await import("./engine/timeline.ts");
+
+  loadActiveWorld("oregairu");
+  setPlayerLocation("侍奉部"); // "侍奉部" 属于 "总武高" 层次结构
+  
+  gameState.time.game_date = "2018-04-07";
+  
+  // 1. 验证 getCalendarEvents 是否正确穿透位置层级（"侍奉部" 能匹配到 "总武高" 上的入学式）
+  const events = getCalendarEvents(gameState.time.game_date, gameState.player.location);
+  const hasAdmission = events.some(e => e.text.includes("入学式"));
+  if (!hasAdmission) {
+    throw new Error(`侍奉部单元格应该能匹配到总武高入学式日历事件`);
+  }
+
+  // 2. 模拟一个配置有 calendar_event: "入学式" 条件的时间线剧情事件
+  const mockEvent = {
+    id: "test_calendar_trigger",
+    title: "测试日历事件触发时间线",
+    source: "test",
+    trigger: {
+      calendar_event: "入学式"
+    },
+    expires_days: 3,
+    repeatable: false,
+    hook: {
+      source_npc: "雪之下雪乃",
+      hook_text: "雪乃正看着入学式的人群发呆",
+      urgency: "low" as const
+    },
+    beats: []
+  };
+
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const tempPath = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_temp_calendar.json");
+  
+  fs.mkdirSync(path.dirname(tempPath), { recursive: true });
+  fs.writeFileSync(tempPath, JSON.stringify(mockEvent), "utf-8");
+
+  try {
+    gameState.active_hooks = [];
+    checkTimelineEvents();
+    const hooks = getActiveHooks();
+    const hasHook = hooks.some(h => h.event_id === "test_calendar_trigger");
+    if (!hasHook) {
+      throw new Error("时间线事件未能通过日历事件触发");
+    }
+  } finally {
+    if (fs.existsSync(tempPath)) {
+      fs.unlinkSync(tempPath);
+    }
+  }
+});
+
+test("preset.json 动态组装与模式替换 (Issue ⑲)", async () => {
+  const { buildSystemPrompt } = await import("./extension.ts");
+  
+  // 1. 测试 RPG 探索模式组装
+  const state1 = { preset: "default", mode: "rpg" };
+  const prompt1 = await buildSystemPrompt(state1, "MOCK_STATE_PROMPT");
+  if (!prompt1.includes("MOCK_STATE_PROMPT")) {
+    throw new Error("组装提示词应该包含状态简报");
+  }
+  if (!prompt1.includes("探索") && !prompt1.includes("检定")) {
+    throw new Error("RPG 探索模式下应该正确引入 RPG 规则描述文件");
+  }
+  
+  // 2. 测试 GAL 日常模式组装
+  const state2 = { preset: "default", mode: "gal" };
+  const prompt2 = await buildSystemPrompt(state2, "MOCK_STATE_PROMPT");
+  if (!prompt2.includes("MOCK_STATE_PROMPT")) {
+    throw new Error("组装提示词应该包含状态简报");
+  }
+  
+  // 3. 测试 Lite 轻量预设
+  const state3 = { preset: "lite", mode: "rpg" };
+  const prompt3 = await buildSystemPrompt(state3, "MOCK_STATE_PROMPT");
+  if (prompt3.length >= prompt1.length) {
+    throw new Error("Lite 预设组装的提示词长度应该比 Default 预设短");
+  }
+});
+
+test("loadActiveWorld 防崩溃 (Issue ⑮)", () => {
+  const { loadActiveWorld } = require("./engine/state.ts");
+  // 应不抛出任何异常，安静地容错返回
+  loadActiveWorld("non_existent_worldpack_12345");
+  // 恢复为正常世界线
+  loadActiveWorld("oregairu");
 });
 
 console.log(`\n=== ${passed} passed, ${failed} failed ===`);

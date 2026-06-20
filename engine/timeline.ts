@@ -9,7 +9,7 @@
  */
 
 import type { TimelineEvent, Hook, QuestState, CalendarEntry } from "./types.ts";
-import { gameState, getOrCreateNPC, updateRelation } from "./state.ts";
+import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation } from "./state.ts";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -22,17 +22,35 @@ function loadCalendar(): CalendarEntry[] {
   const world = gameState.activeWorld || "oregairu";
   if (_calendarCache[world]) return _calendarCache[world];
   const entries: CalendarEntry[] = [];
-  if (!fs.existsSync(CALENDAR_DIR)) { _calendarCache[world] = entries; return entries; }
-  // 只加载当前世界观 + 通用（无前缀）的日历
-  for (const f of fs.readdirSync(CALENDAR_DIR)) {
-    if (!f.endsWith(".json")) continue;
-    const name = f.replace(".json", "");
-    if (name !== world && !name.startsWith("_")) continue; // _ 前缀 = 通用
+
+  // 0. Load dynamic calendar events from GameState
+  if (gameState.calendarEvents) {
+    const worldEvents = gameState.calendarEvents.filter(e => !e.world || e.world === world);
+    entries.push(...worldEvents);
+  }
+
+  // 1. Try worldpacks/[worldName]/calendar.json
+  const wpPath = path.resolve(process.cwd(), "worldpacks", world, "calendar.json");
+  if (fs.existsSync(wpPath)) {
     try {
-      const data = JSON.parse(fs.readFileSync(path.join(CALENDAR_DIR, f), "utf-8"));
+      const data = JSON.parse(fs.readFileSync(wpPath, "utf-8"));
       if (Array.isArray(data)) entries.push(...data);
     } catch (_) {}
   }
+
+  // 2. Try data/calendar/
+  if (fs.existsSync(CALENDAR_DIR)) {
+    for (const f of fs.readdirSync(CALENDAR_DIR)) {
+      if (!f.endsWith(".json")) continue;
+      const name = f.replace(".json", "");
+      if (name !== world && !name.startsWith("_")) continue; // _ 前缀 = 通用
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(CALENDAR_DIR, f), "utf-8"));
+        if (Array.isArray(data)) entries.push(...data);
+      } catch (_) {}
+    }
+  }
+
   _calendarCache[world] = entries;
   return entries;
 }
@@ -50,15 +68,28 @@ function parseYear(gameDate: string): number {
   return Number(gameDate.split("-")[0]);
 }
 
-/** 获取今日匹配的日历条目（按日期+年份+地点过滤） */
+/** 获取今日匹配的日历条目（按日期+年份+地点过滤，且支持位置层级匹配） */
 export function getCalendarEvents(date: string, location: string): CalendarEntry[] {
   const all = loadCalendar();
   const year = parseYear(date);
   const mmdd = date.includes("-") ? parseMonthDay(date) : date;
+  let breadcrumb: string[] = [];
+  try {
+    const nav = getLocationNav(location);
+    if (nav && nav.breadcrumb) {
+      breadcrumb = nav.breadcrumb;
+    }
+  } catch (e) {
+    console.error("getCalendarEvents getLocationNav error:", e);
+  }
+
   return all.filter(e => {
     if (e.date !== mmdd) return false;
     if (e.year !== null && e.year !== year) return false;
-    if (e.location !== null && e.location !== location) return false;
+    if (e.location !== null) {
+      const match = isSameLocation(e.location, location) || breadcrumb.some(b => isSameLocation(e.location!, b));
+      if (!match) return false;
+    }
     return true;
   });
 }
@@ -66,10 +97,11 @@ export function getCalendarEvents(date: string, location: string): CalendarEntry
 /** 递归加载当前活跃世界观的 timeline 文件（只加载 data/timelines/{activeWorld}/） */
 function loadAllTimelines(): TimelineEvent[] {
   const events: TimelineEvent[] = [];
-  if (!fs.existsSync(TIMELINES_DIR)) return events;
-
   const world = gameState.activeWorld || "oregairu";
-  const worldDir = path.join(TIMELINES_DIR, world);
+  const pathsToScan = [
+    path.resolve(process.cwd(), "worldpacks", world, "timelines"),
+    path.join(TIMELINES_DIR, world)
+  ];
 
   function scanDir(dir: string) {
     if (!fs.existsSync(dir)) return;
@@ -87,7 +119,10 @@ function loadAllTimelines(): TimelineEvent[] {
       }
     }
   }
-  scanDir(worldDir);
+
+  for (const p of pathsToScan) {
+    scanDir(p);
+  }
   return events;
 }
 
@@ -122,6 +157,13 @@ function checkTrigger(event: TimelineEvent, day: number): boolean {
     for (const [k, v] of Object.entries(t.flags)) {
       if (!!gameState.flags[k] !== v) return false;
     }
+  }
+  // 关联日历事件
+  if (t.calendar_event) {
+    const todayEvents = getCalendarEvents(gameState.time.game_date, gameState.player.location);
+    const mmdd = parseMonthDay(gameState.time.game_date);
+    const matchesEvent = todayEvents.some(e => e.text.includes(t.calendar_event!) || e.date === t.calendar_event) || mmdd === t.calendar_event;
+    if (!matchesEvent) return false;
   }
   return true;
 }

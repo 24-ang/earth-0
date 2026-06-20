@@ -7,22 +7,13 @@
 
 /** 动态引用——随 Worldpack 切换自动更新。懒加载避免循环引用。 */
 function getRegions(): any[] {
-  try {
-    const { regionsData } = require("./state.ts");
-    return (regionsData || []);
-  } catch { return []; }
+  return regions || [];
 }
 function getSchoolMap(): any {
-  try {
-    const { schoolMapData } = require("./state.ts");
-    return schoolMapData;
-  } catch { return { buildings: {}, school: "" }; }
+  return schoolMap || { buildings: {}, school: "" };
 }
 function getCityMap(): any {
-  try {
-    const { cityMapData } = require("./state.ts");
-    return cityMapData;
-  } catch { return {}; }
+  return cityMap || {};
 }
 
 // 学校房间→学校名映射（路由用）
