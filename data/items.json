@@ -342,6 +342,7 @@
       "type": "tool",
       "slot": "back",
       "weight": 0.1,
+      "price": 50,
       "effects": [
         {
           "type": "heal",

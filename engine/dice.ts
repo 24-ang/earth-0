@@ -12,12 +12,32 @@ const DC: Record<Difficulty, number> = { "简单": 8, "普通": 12, "困难": 16
 
 function d20(): number { return Math.floor(Math.random() * 20) + 1; }
 
+// --- 通用检定（数字DC版，引擎底层通用工具） ---
+export function checkDC(dc: number, attribute: number, skillLv: number, advantage: Advantage = "平") {
+  const d = d20();
+  const d2 = (advantage !== "平") ? d20() : d;
+  const kept = advantage === "优势" ? Math.max(d,d2) : advantage === "劣势" ? Math.min(d,d2) : d;
+  const mod = attrMod(attribute) + skillLv * 2;
+  const total = kept + mod;
+  const crit = d === 20;
+  const fumble = d === 1;
+
+  let outcome: "success" | "success-with-cost" | "failure";
+  if (crit) outcome = "success";
+  else if (fumble) outcome = "failure";
+  else if (total >= dc) outcome = "success";
+  else if (total >= dc - 3) outcome = "success-with-cost";
+  else outcome = "failure";
+
+  return { success: outcome !== "failure", partial: outcome === "success-with-cost", outcome, roll: { kept, mod, total, dc, crit, fumble }, margin: total - dc };
+}
+
 // --- 通用检定 ---
 export function check(difficulty: Difficulty, attribute: number, skillLv: number, advantage: Advantage = "平") {
   const d = d20();
   const d2 = (advantage !== "平") ? d20() : d;
   const kept = advantage === "优势" ? Math.max(d,d2) : advantage === "劣势" ? Math.min(d,d2) : d;
-  const mod = attrMod(attribute) + skillLv;
+  const mod = attrMod(attribute) + skillLv * 2;
   const total = kept + mod;
   const dc = DC[difficulty];
   const crit = d === 20;
@@ -51,7 +71,7 @@ export function attackRoll(
   
   if (advantage === "平" && cover === "半掩体") kept = Math.min(kept, d20());
   
-  const mod = attrMod(attackerDexOrStr) + attackerSkill;
+  const mod = attrMod(attackerDexOrStr) + attackerSkill * 2;
   const total = kept + mod;
   const crit = d === 20;
   const fumble = d === 1;
@@ -61,10 +81,22 @@ export function attackRoll(
 
 // --- 伤害 ---
 export function rollDamage(dice: string, strMod: number): number {
-  const [count, sides] = dice.split("d").map(Number);
+  const match = dice.match(/^(\d+)d(\d+)(?:([+-]\d+))?$/);
+  if (!match) {
+    const [count, sides] = dice.split("d").map(Number);
+    let total = 0;
+    for (let i = 0; i < count; i++) total += Math.floor(Math.random() * sides) + 1;
+    return total + strMod;
+  }
+  const count = parseInt(match[1], 10);
+  const sides = parseInt(match[2], 10);
+  const modifier = match[3] ? parseInt(match[3], 10) : 0;
+
   let total = 0;
-  for (let i = 0; i < count; i++) total += Math.floor(Math.random() * sides) + 1;
-  return total + strMod;
+  for (let i = 0; i < count; i++) {
+    total += Math.floor(Math.random() * sides) + 1;
+  }
+  return total + modifier + strMod;
 }
 
 // --- 减伤 ---
