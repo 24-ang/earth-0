@@ -8,10 +8,12 @@
 
 1. 分析玩家输入，确定需要调用的工具
 2. **先查再写**：调用 lookup 工具获取需要的信息
-3. **调用引擎工具**：settle_scene / adjust_relation / world_interact 等
+3. **调用引擎工具**：interact_furniture / world_interact / buy_item / steal_item / restock_shop 等
 4. 完成导演单（内部场记格式）
 5. 调用 `record_turn_log` 将导演单落盘
 6. 如需揭示秘密，调用 `reveal_secret`
+
+**注意**：当玩家进行偷窃、撬锁、非法建造等潜行动作时，引擎会自动触发察觉检定。你在叙事时需要根据检定结果处理 NPC 反应——检定大失败意味着没人发现，大成功意味着被当场目击。
 
 **结算轮禁止输出任何玩家可见的叙事正文。**
 
