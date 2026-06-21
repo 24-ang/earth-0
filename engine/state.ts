@@ -2,7 +2,7 @@
  * 状态引擎 - 角色状态 + HP + 负重 + 物品操作 + 持久化
  */
 
-import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, VisibilityLevel } from "./types.ts";
+import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, VisibilityLevel, ContainerState, ContainerDef } from "./types.ts";
 import { promptCollectors, schedule, type Collector } from "./collectors.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import charactersStatic from "../data/characters.json" with { type: "json" };
@@ -14,6 +14,7 @@ import path from "node:path";
 import titleRulesStatic from "../data/title_rules.json" with { type: "json" };
 import namelessNpcTemplatesStatic from "../data/nameless_npc_templates.json" with { type: "json" };
 import economyConfigStatic from "../data/economy.json" with { type: "json" };
+import { getSeason, mapChineseWeather, transitionWeather } from "./weather.ts";
 
 export let characters = charactersStatic as any[];
 export let rooms = roomsStatic as Record<string, RoomGrid>;
@@ -94,12 +95,20 @@ export function isSameLocation(loc1: string, loc2: string): boolean {
   if (k1 && k2) return k1 === k2;
   
   const clean = (s: string) => s.replace(/[（(].*[）)]/, "").trim().toLowerCase();
-  return clean(loc1) === clean(loc2);
+  const c1 = clean(loc1);
+  const c2 = clean(loc2);
+  if (c1 === c2) return true;
+
+  if (c1.includes("总武") && c2.includes("总武")) return true;
+  return false;
 }
 
 // --- 模块级游戏状态（单例，整个 session 一份） ---
 const STATE_DIR = path.resolve(process.cwd(), "state");
 const STATE_FILE = path.join(STATE_DIR, "session.json");
+const TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
+const SAVES_DIR = path.join(STATE_DIR, "saves");
+const MAX_BACKUPS = 5;
 const AGENTS_DIR = path.resolve(process.cwd(), "agents");
 
 export let gameState: GameState = createInitialState();
@@ -122,6 +131,7 @@ function createInitialState(): GameState {
     storySoFar: "",
     revealLog: [],
     calendarEvents: [],
+    world_states: {},
   };
 }
 
@@ -216,21 +226,27 @@ function createDefaultPlayer(): PlayerState {
     reputation: {},
     known_locations: ["住宅区"],
     titles: [],
+    properties: {},
   };
 }
 
 // --- 持久化 ---
 export function saveState(filepath?: string): void {
   const fp = filepath ?? STATE_FILE;
-  fs.mkdirSync(path.dirname(fp), { recursive: true });
+  const targetDir = path.dirname(fp);
+  fs.mkdirSync(targetDir, { recursive: true });
   
   // 房间修改也持久化，保存到 session 目录下的 rooms_delta.json，而不覆写 data/rooms.json
-  const roomsDeltaPath = path.join(path.dirname(fp), "rooms_delta.json");
+  const roomsDeltaPath = path.join(targetDir, "rooms_delta.json");
   fs.writeFileSync(roomsDeltaPath, JSON.stringify(ROOMS, null, 2));
   
   // 动态角色持久化
-  const dcPath = path.join(STATE_DIR, "dynamic_characters.json");
+  const dcPath = path.join(targetDir, "dynamic_characters.json");
   fs.writeFileSync(dcPath, JSON.stringify(DYNAMIC_CHARACTERS, null, 2));
+
+  // 动态地点持久化
+  const deltaPath = path.join(targetDir, "locations_delta.json");
+  fs.writeFileSync(deltaPath, JSON.stringify(LOCATIONS_DELTA, null, 2));
 
   fs.writeFileSync(fp, JSON.stringify(gameState, null, 2));
 }
@@ -238,11 +254,12 @@ export function saveState(filepath?: string): void {
 export function loadState(filepath?: string): boolean {
   const fp = filepath ?? STATE_FILE;
   if (!fs.existsSync(fp)) return false;
+  const targetDir = path.dirname(fp);
   const raw = fs.readFileSync(fp, "utf-8");
   gameState = JSON.parse(raw) as GameState;
   
   // 读取 rooms_delta.json 并覆盖 ROOMS
-  const roomsDeltaPath = path.join(path.dirname(fp), "rooms_delta.json");
+  const roomsDeltaPath = path.join(targetDir, "rooms_delta.json");
   if (fs.existsSync(roomsDeltaPath)) {
     try {
       ROOMS = JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8"));
@@ -253,18 +270,23 @@ export function loadState(filepath?: string): boolean {
     ROOMS = structuredClone(rooms);
   }
 
-  loadLocationsDelta();
+  loadLocationsDelta(targetDir);
   // 恢复动态角色
-  const dcPath = path.join(STATE_DIR, "dynamic_characters.json");
+  const dcPath = path.join(targetDir, "dynamic_characters.json");
   if (fs.existsSync(dcPath)) {
     try {
       DYNAMIC_CHARACTERS = JSON.parse(fs.readFileSync(dcPath, "utf-8"));
     } catch (e) {
       console.error("Failed to parse dynamic_characters.json:", e);
+      DYNAMIC_CHARACTERS = {};
     }
+  } else {
+    DYNAMIC_CHARACTERS = {};
   }
   // 迁移：旧存档无 roomTimestamps
   if (!gameState.roomTimestamps) gameState.roomTimestamps = {};
+  if (!gameState.world_states) gameState.world_states = {};
+  if (!gameState.player.properties) gameState.player.properties = {};
 
   // 还原 player.sex 引用，保障跨会话内存修改同步
   if (gameState.player.sex && gameState.sexStates) {
@@ -367,6 +389,85 @@ export function loadState(filepath?: string): boolean {
   }
 
   return true;
+}
+
+// ── 手动存档槽位 + 回合自动备份 ──
+
+/** 创建手动存档 */
+export function createSave(name: string): string {
+  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50) || "quick";
+  fs.mkdirSync(SAVES_DIR, { recursive: true });
+  const fp = path.join(SAVES_DIR, `${safeName}.json`);
+  saveState(fp);
+  const data = JSON.parse(fs.readFileSync(fp, "utf-8"));
+  data._save_meta = { name: safeName, date: gameState.time.game_date, turn: gameState.turn, location: gameState.player.location, created: new Date().toISOString() };
+  fs.writeFileSync(fp, JSON.stringify(data, null, 2));
+  return safeName;
+}
+
+/** 载入手动存档 */
+export function loadSave(name: string): boolean {
+  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
+  const fp = path.join(SAVES_DIR, `${safeName}.json`);
+  if (!fs.existsSync(fp)) return false;
+  const ok = loadState(fp);
+  if (ok) { backupBeforeTurn(); saveState(); }
+  return ok;
+}
+
+/** 删除手动存档 */
+export function deleteSave(name: string): boolean {
+  const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
+  const fp = path.join(SAVES_DIR, `${safeName}.json`);
+  if (!fs.existsSync(fp)) return false;
+  fs.unlinkSync(fp);
+  return true;
+}
+
+/** 列出所有手动存档 */
+export function listSaves(): { name: string; date: string; turn: number; location: string }[] {
+  const result: { name: string; date: string; turn: number; location: string }[] = [];
+  if (!fs.existsSync(SAVES_DIR)) return result;
+  for (const f of fs.readdirSync(SAVES_DIR)) {
+    if (!f.endsWith(".json")) continue;
+    try {
+      const raw = fs.readFileSync(path.join(SAVES_DIR, f), "utf-8");
+      const meta = JSON.parse(raw)._save_meta;
+      if (meta) result.push(meta);
+    } catch (_) {}
+  }
+  result.sort((a, b) => b.turn - a.turn);
+  return result;
+}
+
+/** 备份当前存档（commit_turn 前自动调用），滚动保留最近 N 个 */
+export function backupBeforeTurn(): void {
+  fs.mkdirSync(TURN_BACKUP_DIR, { recursive: true });
+  for (let i = MAX_BACKUPS - 1; i >= 1; i--) {
+    const older = path.join(TURN_BACKUP_DIR, `turn_${i}.json`);
+    const newer = path.join(TURN_BACKUP_DIR, `turn_${i + 1}.json`);
+    if (fs.existsSync(older)) {
+      try { fs.renameSync(older, newer); } catch (_) { try { fs.copyFileSync(older, newer); fs.unlinkSync(older); } catch (_) {} }
+    }
+  }
+  saveState(path.join(TURN_BACKUP_DIR, "turn_1.json"));
+}
+
+/** 还原到倒数第 N 回合的存档（1=上一回合） */
+export function restoreLastTurn(n: number = 1): boolean {
+  const safeN = Math.max(1, Math.min(n, MAX_BACKUPS));
+  const fp = path.join(TURN_BACKUP_DIR, `turn_${safeN}.json`);
+  if (!fs.existsSync(fp)) return false;
+  return loadState(fp);
+}
+
+/** 列出可用的备份 */
+export function listBackups(): number[] {
+  const result: number[] = [];
+  for (let i = 1; i <= MAX_BACKUPS; i++) {
+    if (fs.existsSync(path.join(TURN_BACKUP_DIR, `turn_${i}.json`))) result.push(i);
+  }
+  return result;
 }
 
 export function resetState(): void {
@@ -735,7 +836,19 @@ function ensureCollectors(): void {
           const sx = p.sex;
           const prof = sx.profile;
           const devHint = getDevNarrative(prof);
-          lines.push(`[印记] ${prof.attitude} | ${prof.experience} | ${devHint}`);
+          let tagLine = `[印记] ${prof.attitude} | ${prof.experience} | ${devHint}`;
+          if (sx.milestones) {
+            const m = sx.milestones;
+            const mkParts: string[] = [];
+            if (m.firstKiss?.given) mkParts.push(`初吻: ${m.firstKiss.partner}`);
+            else mkParts.push("初吻: 未");
+            if (!m.virginity?.isVirgin) mkParts.push(`初夜: ${m.virginity?.lostTo || "已失"}`);
+            else mkParts.push("初夜: 未");
+            if (m.analVirginity && !m.analVirginity.isVirgin) mkParts.push(`菊初: ${m.analVirginity.lostTo || "已失"}`);
+            tagLine += ` | ${mkParts.join(" | ")}`;
+          }
+          lines.push(tagLine);
+
           if (s().layer1Enabled) {
             const phase = getCyclePhase(sx.cycleDay);
             if (phase !== "安全期") lines[lines.length-1] += ` | ${phase}`;
@@ -757,6 +870,18 @@ function ensureCollectors(): void {
           if (!sp) continue;
           const devHint = getDevNarrative(sp);
           lines.push(`[${nname}·印记] ${sp.attitude} | ${sp.experience} | ${devHint}`);
+        }
+        if (!s().layer1Enabled) {
+          for (const [nname, npc] of Object.entries(s().npcs)) {
+            if (!isSameLocation(npc.currentRoom, p.location)) continue;
+            const sxState = s().sexStates?.[nname];
+            if (sxState) {
+              const dh = getDesireNarrative(sxState);
+              if (dh) {
+                lines.push(`[${nname}·身体语言] ${dh}`);
+              }
+            }
+          }
         }
         return lines.length > 0 ? { text: lines.join("\n"), priority: 30, layer: "enhanced", degradeStrategy: "drop", sourceName: "layer1" } : null;
       } catch { return null; }
@@ -891,6 +1016,17 @@ export async function buildStatePrompt(): Promise<string> {
       tpl += `\n  • ${q.title} (${q.current_beat || "未开始"}) — 状态: ${q.status}`;
     }
   }
+  // 房产安全屋注入
+  const props = p.properties || {};
+  if (Object.keys(props).length > 0) {
+    tpl += `\n[安全屋] 你拥有以下房产：`;
+    for (const prop of Object.values(props)) {
+      const typeStr = prop.type === "own" ? "永久产权" : "租赁契约";
+      tpl += `\n  • ${prop.name} (位于 ${prop.regionId}) — 类型: ${typeStr}`;
+      if (prop.type === "rent") tpl += ` | 租期至 ${prop.rent_due_date}`;
+      if (prop.arrears_days > 0) tpl += ` (已欠费 ${prop.arrears_days} 天)`;
+    }
+  }
   // 附加空间上下文
   const gridCtx = getGridContext();
   if (gridCtx) tpl += `\n${gridCtx}`;
@@ -991,9 +1127,19 @@ function getDefaultSexAtmosphere(location: string): string {
     sceneHints.push("社交场景: adjust_relation, lookup_character, set_npc_outfit, add_memory_tag, post_sns, browse_sns");
   }
 
+  // 灰色博弈与黑市
+  if (p.location.includes("赌场") || p.location.includes("地下") || p.location.includes("酒馆") || p.location.includes("黑市")) {
+    sceneHints.push("地下博弈/黑市: gamble_bet, black_market_trade");
+  }
+  // 安全屋内容器
+  const isInsideOwnedProperty = Object.values(p.properties || {}).some(prop => prop.regionId === p.location);
+  if (isInsideOwnedProperty) {
+    sceneHints.push("安全屋内: housing_storage");
+  }
+
   if (sceneHints.length > 0) {
     // 始终提醒可用的核心工具（不随场景变）
-    const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn, add_to_party, remove_from_party";
+    const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn, add_to_party, remove_from_party, lookup_weather";
     tpl += `\n[工具提示] ${[...sceneHints, always].join(" | ")}`;
   }
 
@@ -1212,6 +1358,237 @@ export function checkAddVolume(
 /** 装备 locker 容量时检查是否会损坏容器 */
 export function checkContainerDamage(totalVolume: number, maxVolume: number): boolean {
   return maxVolume > 0 && totalVolume > maxVolume * 1.3;
+}
+
+// --- 容器统一模型 ---
+
+/** 查找玩家背包容器 */
+function getBackpackContainer(): ContainerState {
+  const p = gameState.player;
+  const totalVol = calcInventoryVolume(p.inventory, p.equipment);
+  const totalWt = calcCurrentWeight(p.inventory, p.equipment);
+  const maxCarry = calcMaxCarry(p.attributes.力量);
+  return {
+    id: "backpack",
+    ownerType: "player",
+    ownerId: p.name,
+    def: {
+      id: "backpack",
+      visible: false,
+      max_volume: calcPocketVolume(p.equipment),
+      max_weight: maxCarry,
+    },
+    items: [...p.inventory],
+    current_volume: totalVol,
+    current_weight: totalWt,
+  };
+}
+
+/** 查找房间地板容器（物品散落在地上） */
+function getFloorContainer(location: string): ContainerState {
+  const room = ROOMS[location];
+  const floorItems: any[] = [];
+  if (room) {
+    for (let y = 0; y < room.height; y++) {
+      for (let x = 0; x < room.width; x++) {
+        const cell = room.cells[y][x];
+        if (cell.furniture) {
+          // 家具作为地板物品（简化：仅存名字）
+          floorItems.push({ name: cell.furniture, gridPos: [x, y] });
+        }
+      }
+    }
+  }
+  return {
+    id: `floor-${location}`,
+    ownerType: "room",
+    ownerId: location,
+    def: {
+      id: `floor-${location}`,
+      visible: true,
+      max_volume: 9999,   // 地板理论上无限空间
+      max_weight: 9999,
+    },
+    items: floorItems,
+    current_volume: floorItems.length,
+    current_weight: floorItems.length,
+  };
+}
+
+/** 查找指定位置的所有可访问容器（地板 + 相邻家具 + 玩家背包） */
+// 家具容器持久化存储（key=containerId, value=items数组）
+const _furnitureContainerStore: Record<string, any[]> = {};
+
+export function getContainersAt(location: string, gridPos?: [number, number]): ContainerState[] {
+  const containers: ContainerState[] = [];
+
+  // 1. 玩家背包始终可访问
+  containers.push(getBackpackContainer());
+
+  // 2. 房间地板
+  const key = getRoomKey(location) || location;
+  if (ROOMS[key]) {
+    containers.push(getFloorContainer(key));
+  }
+
+  // 3. 相邻家具（读取 furniture.json 容器定义）
+  if (gridPos) {
+    const room = ROOMS[key];
+    if (room) {
+      const [px, py] = gridPos;
+      const dirs: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+      for (const [dx, dy] of dirs) {
+        const nx = px + dx;
+        const ny = py + dy;
+        if (nx >= 0 && nx < room.width && ny >= 0 && ny < room.height) {
+          const cell = room.cells[ny][nx];
+          if (cell.furniture) {
+            const name = cell.furniture;
+            // 尝试从 furniture.json 读取容器定义
+            let furnitureDef: any = null;
+            try {
+              const { findFurnitureDef } = require("./furniture.ts");
+              furnitureDef = findFurnitureDef(name, gameState.activeWorld);
+            } catch (_) {}
+
+            if (furnitureDef?.containers && furnitureDef.containers.length > 0) {
+              // 为每个子容器创建 ContainerState
+              for (const sub of furnitureDef.containers) {
+                const cid = `furniture-${location}-${nx}-${ny}-${sub.id}`;
+                // 兼容两种命名：locked_${id}（多容器）或 locked（单容器）
+                const locked = furnitureDef.state?.[`locked_${sub.id}`] ?? furnitureDef.state?.locked ?? false;
+                const items = _furnitureContainerStore[cid] || [];
+                let vol = 0, wt = 0;
+                for (const it of items) {
+                  vol += (it.volume || 0);
+                  wt += (it.weight || 0);
+                }
+                containers.push({
+                  id: cid,
+                  ownerType: "furniture",
+                  ownerId: `${name}·${sub.id}`,
+                  def: {
+                    id: cid,
+                    visible: sub.visible !== false,
+                    lockable: sub.lockable || false,
+                    locked,
+                    max_volume: sub.max_volume || 20,
+                    max_weight: sub.max_weight || 50,
+                    can_hold_person: sub.can_hold_person || false,
+                  },
+                  items,
+                  current_volume: vol,
+                  current_weight: wt,
+                });
+              }
+            } else {
+              // 回退：无容器定义的家具使用默认容器
+              containers.push({
+                id: `furniture-${location}-${nx}-${ny}`,
+                ownerType: "furniture",
+                ownerId: name,
+                def: {
+                  id: `furniture-${location}-${nx}-${ny}`,
+                  visible: true,
+                  max_volume: 20,
+                  max_weight: 50,
+                },
+                items: _furnitureContainerStore[`furniture-${location}-${nx}-${ny}`] || [],
+                current_volume: 0,
+                current_weight: 0,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return containers;
+}
+
+/** 按 ID 查找容器 */
+export function findContainerById(id: string): ContainerState | null {
+  // 尝试从当前场景查找
+  const p = gameState.player;
+  const containers = getContainersAt(p.location, p.gridPos || undefined);
+  const found = containers.find(c => c.id === id);
+  if (found) return found;
+  // 玩家背包
+  if (id === "backpack") return getBackpackContainer();
+  return null;
+}
+
+/** 在容器间转移物品（校验体积/重量限制，支持家具容器+锁检查） */
+export function transferBetweenContainers(fromId: string, toId: string, itemName: string): string {
+  const from = findContainerById(fromId);
+  if (!from) return `源容器 ${fromId} 未找到`;
+
+  const to = findContainerById(toId);
+  if (!to) return `目标容器 ${toId} 未找到`;
+
+  // 检查目标容器锁定状态
+  if (to.def.locked) {
+    return `目标容器 ${to.ownerId} 是锁着的，不能存取`;
+  }
+  if (from.def.locked) {
+    return `源容器 ${from.ownerId} 是锁着的，不能存取`;
+  }
+
+  // 查找物品在源容器中的索引
+  let itemIdx = -1;
+  let item: any = null;
+
+  if (from.ownerType === "player" && fromId === "backpack") {
+    itemIdx = gameState.player.inventory.findIndex((i: any) => i.name === itemName);
+    if (itemIdx >= 0) item = gameState.player.inventory[itemIdx];
+  } else if (from.ownerType === "room") {
+    // 从地板取走：需要 world_interact removeFurniture 逻辑
+    item = { name: itemName, volume: 0.5, weight: 1.0 };
+  } else if (from.ownerType === "furniture") {
+    // 从家具容器取走
+    const items = _furnitureContainerStore[fromId] || [];
+    itemIdx = items.findIndex((i: any) => i.name === itemName);
+    if (itemIdx >= 0) item = items[itemIdx];
+  }
+
+  if (!item) return `在源容器中未找到 ${itemName}`;
+
+  const itemVolume = (item as any).volume || 0;
+  const itemWeight = (item as any).weight || 0;
+
+  // 校验目标容器体积/重量限制
+  if (to.def.max_volume > 0 && to.current_volume + itemVolume > to.def.max_volume) {
+    return `目标容器 ${toId} 空间不足（需${itemVolume}L，剩余${to.def.max_volume - to.current_volume}L）`;
+  }
+  if (to.def.max_weight > 0 && to.current_weight + itemWeight > to.def.max_weight) {
+    return `目标容器 ${toId} 承重不足（${itemWeight}kg 超限）`;
+  }
+
+  // 执行转移 — 从源容器移除
+  if (from.ownerType === "player" && fromId === "backpack") {
+    gameState.player.inventory.splice(itemIdx, 1);
+  } else if (from.ownerType === "furniture") {
+    const items = _furnitureContainerStore[fromId] || [];
+    items.splice(itemIdx, 1);
+    _furnitureContainerStore[fromId] = items;
+  }
+
+  // 执行转移 — 加入目标容器
+  if (to.ownerType === "player" && toId === "backpack") {
+    gameState.player.inventory.push(item);
+  } else if (to.ownerType === "furniture") {
+    if (!_furnitureContainerStore[toId]) _furnitureContainerStore[toId] = [];
+    _furnitureContainerStore[toId].push(item);
+  }
+
+  to.current_volume += itemVolume;
+  to.current_weight += itemWeight;
+  from.current_volume -= itemVolume;
+  from.current_weight -= itemWeight;
+
+  saveState();
+  return `${itemName}: ${fromId} → ${toId} 转移成功`;
 }
 
 // --- 技能EXP ---
@@ -1785,9 +2162,6 @@ export function createDynamicLocation(parentName: string, name: string): string 
   LOCATIONS_DELTA[parentName] ??= [];
   if (LOCATIONS_DELTA[parentName].includes(name)) return `${name} 已存在`;
   LOCATIONS_DELTA[parentName].push(name);
-  // 持久化到 session 目录
-  const deltaPath = path.join(STATE_DIR, "locations_delta.json");
-  fs.writeFileSync(deltaPath, JSON.stringify(LOCATIONS_DELTA, null, 2));
   // 自动加入已知地点
   if (!gameState.player.known_locations.includes(name)) {
     gameState.player.known_locations.push(name);
@@ -1797,14 +2171,18 @@ export function createDynamicLocation(parentName: string, name: string): string 
 }
 
 /** 恢复 locations delta */
-export function loadLocationsDelta(): void {
-  const deltaPath = path.join(STATE_DIR, "locations_delta.json");
+export function loadLocationsDelta(targetDir?: string): void {
+  const baseDir = targetDir ?? STATE_DIR;
+  const deltaPath = path.join(baseDir, "locations_delta.json");
   if (fs.existsSync(deltaPath)) {
     try {
       LOCATIONS_DELTA = JSON.parse(fs.readFileSync(deltaPath, "utf-8"));
     } catch (e) {
       console.error("Failed to parse locations_delta.json:", e);
+      LOCATIONS_DELTA = {};
     }
+  } else {
+    LOCATIONS_DELTA = {};
   }
 }
 
@@ -1876,6 +2254,49 @@ const DIRS: Record<string, [number, number]> = {
 export function getRoom(roomName: string): RoomGrid | null {
   const key = getRoomKey(roomName);
   return key ? ROOMS[key] : null;
+}
+
+/**
+ * 扫描房间中玩家附近的所有 NPC，返回距离和中间墙壁数。
+ * 用于察觉检定（偷窃/改造/撬锁/搬东西）。
+ */
+export function getNearbyNPCs(roomName: string, gridPos: [number, number], maxRange = 10): Array<{ name: string; distance: number; walls: number }> {
+  const room = getRoom(roomName);
+  if (!room) return [];
+
+  const [px, py] = gridPos;
+  const result: Array<{ name: string; distance: number; walls: number }> = [];
+
+  for (const [npcName, npc] of Object.entries(gameState.npcs)) {
+    if (!npc.alive || !npc.gridPos || !npc.currentRoom) continue;
+    // 判断 NPC 是否在同一房间
+    if (!isSameLocation(npc.currentRoom, roomName)) continue;
+    const [nx, ny] = npc.gridPos;
+    const dist = Math.sqrt((nx - px) ** 2 + (ny - py) ** 2) * (room.cellSize || 1);
+    if (dist > maxRange) continue;
+
+    // 计算中间墙壁数（Bresenham 射线）
+    let walls = 0;
+    let cx = px, cy = py;
+    const dx = nx - px, dy = ny - py;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy));
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const sx = Math.round(px + dx * t);
+      const sy = Math.round(py + dy * t);
+      if (sx === nx && sy === ny) break;
+      if (sx >= 0 && sx < room.width && sy >= 0 && sy < room.height) {
+        const cell = room.cells[sy]?.[sx];
+        if (cell && (cell.type === "wall" || (cell.type === "door" && cell.locked))) {
+          walls++;
+        }
+      }
+    }
+
+    result.push({ name: npcName, distance: Math.round(dist * 10) / 10, walls });
+  }
+
+  return result;
 }
 
 export function initPlayerGrid(): void {
@@ -1954,14 +2375,45 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
     return { success: false, newX: cx, newY: cy, blocked: true, reason: "门打不开", distance: 0, seconds: 0 };
   }
   
-  // 阻挡
-  if (cell.block || cell.type === "wall") {
+  // 高度阻挡检查（优先于通用阻挡，处理低障碍/可攀爬墙）
+  let heightSeconds = 0;
+  if (cell.block && cell.height !== undefined) {
+    if (cell.height < 0.4) {
+      // 只是个小台阶，直接跨过，无减速
+    } else if (cell.height < 1.0) {
+      // 低障碍物：可以跨过，但减速1秒
+      heightSeconds = 1;
+    } else {
+      // height >= 1.0m：高障碍
+      if (cell.tags && cell.tags.includes("climbable")) {
+        const str = gameState.player.attributes.力量 + getEquipmentBonus(gameState.player.equipment, "attribute_bonus", "力量");
+        const athletics = (gameState.player.skills["运动"]?.level ?? 0) + getEquipmentBonus(gameState.player.equipment, "skill_bonus", "运动");
+        const d = Math.floor(Math.random() * 20) + 1;
+        const dc = 15;
+        const total = d + attrMod(str) + athletics;
+        if (total < dc) {
+          return { success: false, newX: cx, newY: cy, blocked: true, reason: "攀爬失败——手滑了", distance: 0, seconds: 0 };
+        }
+        heightSeconds = 2; // 攀爬耗时
+      } else {
+        return { success: false, newX: cx, newY: cy, blocked: true, reason: "前方是不可翻越的高墙", distance: 0, seconds: 0 };
+      }
+    }
+  }
+
+  // 通用阻挡（仅当无 height 字段时保持原行为；有 height 的已在上方处理）
+  if ((cell.block || cell.type === "wall") && cell.height === undefined) {
     return { success: false, newX: cx, newY: cy, blocked: true, reason: cell.furniture ? `被${cell.furniture}挡住了` : "前方是墙壁", distance: 0, seconds: 0 };
   }
-  
+
   // 通行
   gameState.player.gridPos = [nx, ny];
-  return { success: true, newX: nx, newY: ny, blocked: false, reason: "", distance: cellDist, seconds };
+
+  // holding_in_hands 减速：搬运重物时移动速度减半（耗时加倍）
+  const holdingHeavy = gameState.player.inventory.some((i: any) => i.holding_in_hands);
+  const finalSeconds = holdingHeavy ? (seconds + heightSeconds) * 2 : seconds + heightSeconds;
+
+  return { success: true, newX: nx, newY: ny, blocked: false, reason: "", distance: cellDist, seconds: Math.round(finalSeconds * 10) / 10 };
 }
 
 export async function createRoom(roomName: string, width: number, height: number, floor: number): Promise<{ success: boolean; reason: string }> {
@@ -2075,7 +2527,7 @@ export function editCellType(x: number, y: number, type: "floor" | "wall" | "doo
   return { success: true, reason: `在(${x},${y})建造了${type}${exitTo ? ` 通往${exitTo}` : ""}${material ? `（消耗${material}）` : ""}` };
 }
 
-export function placeFurniture(x: number, y: number, itemName: string): { success: boolean; reason: string } {
+export function placeFurniture(x: number, y: number, itemName: string, furnitureActions?: Record<string, any>): { success: boolean; reason: string } {
   if (!gameState.player.gridPos) return { success: false, reason: "当前位置不可建造" };
   const room = ROOMS[gameState.player.location];
   if (!room) return { success: false, reason: "当前位置没有地图" };
@@ -2095,6 +2547,9 @@ export function placeFurniture(x: number, y: number, itemName: string): { succes
   cell.furniture = itemName;
   cell.label = itemName.slice(0, 4);  // 简单缩写，用于棋盘格显示
   cell.block = true;
+  if (furnitureActions && Object.keys(furnitureActions).length > 0) {
+    (cell as any).furniture_actions = furnitureActions;
+  }
   saveState();
   return { success: true, reason: `放置了${itemName}（已从背包扣除）` };
 }
@@ -2249,12 +2704,28 @@ function validatePrice(itemName: string, price: number): string | null {
   return null;
 }
 
-export function buyItem(itemName: string, price: number): string {
+export function buyItem(itemName: string, price: number, shopName?: string): string {
   let itemData: any = null;
   for (const cat of Object.values(itemsCatalog)) {
     if ((cat as any)[itemName]) { itemData = (cat as any)[itemName]; break; }
   }
   if (!itemData) return `LLM必须指定有效物品名`;
+
+  // 货架校验：如果指定了商店，检查该商店是否售卖此物品
+  if (shopName) {
+    const activeShops: Record<string, { items: string[] }> =
+      (gameState as any).shops && Object.keys((gameState as any).shops).length > 0
+        ? (gameState as any).shops   // 运行时货架（restock_shop写入）
+        : shops;                     // 文件货架（worldpack/data/shops.json）
+    const shopEntry = activeShops[shopName];
+    if (!shopEntry || !Array.isArray(shopEntry.items)) {
+      return `${shopName}没有货架信息`;
+    }
+    if (!shopEntry.items.includes(itemName)) {
+      return `${shopName}不卖${itemName}`;
+    }
+  }
+
   const err = validatePrice(itemName, price);
   if (err) return err;
   // 魅力谈判：高魅力砍价
@@ -2270,9 +2741,25 @@ export function buyItem(itemName: string, price: number): string {
   return `买了${itemName}，花费${currencySymbol}${finalPrice}${discountStr}。余额${currencySymbol}${gameState.player.funds}`;
 }
 
-export function sellItem(itemName: string, price: number, buyerName?: string): string {
+export function sellItem(itemName: string, price: number, buyerName?: string, shopName?: string): string {
   const idx = gameState.player.inventory.findIndex(i => i.name === itemName);
   if (idx < 0) return `背包里没有${itemName}`;
+
+  // 货架校验：如果指定了商店，检查该商店是否接收此物品类型
+  if (shopName) {
+    const activeShops: Record<string, { items: string[] }> =
+      (gameState as any).shops && Object.keys((gameState as any).shops).length > 0
+        ? (gameState as any).shops
+        : shops;
+    const shopEntry = activeShops[shopName];
+    if (!shopEntry || !Array.isArray(shopEntry.items)) {
+      return `${shopName}没有货架信息`;
+    }
+    if (!shopEntry.items.includes(itemName)) {
+      return `${shopName}不收${itemName}`;
+    }
+  }
+
   const err = validatePrice(itemName, price);
   if (err) return err;
   // 魅力谈判：高魅力卖更高价
@@ -2346,11 +2833,7 @@ const SEASONS: Record<string, { types: string[]; temps: [number, number] }> = {
 };
 
 export function refreshWeather(): string {
-  const m = Number(gameState.time.game_date.split("-")[1]);
-  const s = m >= 3 && m <= 5 ? "春" : m >= 6 && m <= 8 ? "夏" : m >= 9 && m <= 11 ? "秋" : "冬";
-  const p = SEASONS[s];
-  gameState.weather.type = p.types[Math.floor(Math.random() * p.types.length)];
-  gameState.weather.temp = p.temps[0] + Math.floor(Math.random() * (p.temps[1] - p.temps[0]));
+  transitionWeather(gameState);
   saveState();
   return `${gameState.weather.type} ${gameState.weather.temp}°C`;
 }
@@ -2466,8 +2949,18 @@ export async function updateNPCSchedules(): Promise<string[]> {
         effectiveGroup = src.schedule_group_by_age[String(best)] || effectiveGroup;
       }
       const tpl = TEMPLATES[effectiveGroup];
-      if (tpl?.[timeKey]) {
-        const opts = tpl[timeKey].split("/");
+      let routeStr = tpl?.[timeKey];
+      if (tpl) {
+        const season = getSeason(gameState.time.game_date);
+        const wKey = mapChineseWeather(gameState.weather?.type || "晴");
+        if (tpl.weather_overrides?.[wKey]?.[timeKey]) {
+          routeStr = tpl.weather_overrides[wKey][timeKey];
+        } else if (tpl.seasonal_overrides?.[season]?.[timeKey]) {
+          routeStr = tpl.seasonal_overrides[season][timeKey];
+        }
+      }
+      if (routeStr) {
+        const opts = routeStr.split("/");
         targetRoom = opts[Math.floor(Math.random() * opts.length)].trim();
       }
     }
@@ -2584,9 +3077,18 @@ export async function updateNPCSchedules(): Promise<string[]> {
   const checkExpiry = (t: any) => {
     const time = new Date(t.since).getTime();
     if (isNaN(time)) return true; // 解析失败则安全保留，不直接过滤
-    const daysSince = (Date.now() - time) / 86400000;
+    const currentDate = gameState.time?.game_date ? new Date(gameState.time.game_date).getTime() : Date.now();
+    const daysSince = (currentDate - time) / 86400000;
     return daysSince < t.expires;
   };
+
+  // 预先清理并排重所有 NPC 的记忆标签
+  for (const npc of Object.values(gameState.npcs)) {
+    if (npc.memoryTags) {
+      const active = npc.memoryTags.filter(checkExpiry);
+      npc.memoryTags = deduplicateTags(active);
+    }
+  }
 
   const socialEvents: string[] = [];
   for (const [room, names] of Object.entries(roomNPCs)) {
@@ -2926,6 +3428,64 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
     });
   }
   return npcs;
+}
+
+// ── 世界状态冻结与热挂载 ──
+export function freezeWorldState(worldName: string): void {
+  const npcsSnapshot = structuredClone(gameState.npcs);
+  const roomDeltasSnapshot = structuredClone(ROOMS);
+  const locationsDeltaSnapshot = structuredClone(LOCATIONS_DELTA);
+  const knownLocationsSnapshot = structuredClone(gameState.player.known_locations);
+
+  let snsFeedSnapshot: any[] = [];
+  const phone = gameState.player.inventory.find(i => i.phoneData !== undefined)
+    || Object.values(gameState.player.equipment).find(item => item && item.phoneData !== undefined);
+  if (phone && phone.phoneData) {
+    snsFeedSnapshot = structuredClone(phone.phoneData.snsPosts || []);
+  }
+
+  gameState.world_states[worldName] = {
+    npcs: npcsSnapshot,
+    room_deltas: roomDeltasSnapshot,
+    dynamic_locations: locationsDeltaSnapshot,
+    known_locations: knownLocationsSnapshot,
+    sns_feed: snsFeedSnapshot,
+  };
+}
+
+export function switchActiveWorld(targetWorld: string): void {
+  const oldWorld = gameState.activeWorld || "oregairu";
+  if (oldWorld === targetWorld) return;
+
+  freezeWorldState(oldWorld);
+
+  gameState.activeWorld = targetWorld;
+  loadActiveWorld(targetWorld);
+
+  const snapshot = gameState.world_states[targetWorld];
+  if (snapshot) {
+    gameState.npcs = structuredClone(snapshot.npcs);
+    ROOMS = structuredClone(snapshot.room_deltas);
+    LOCATIONS_DELTA = structuredClone(snapshot.dynamic_locations);
+    gameState.player.known_locations = structuredClone(snapshot.known_locations || []);
+
+    const phone = gameState.player.inventory.find(i => i.phoneData !== undefined)
+      || Object.values(gameState.player.equipment).find(item => item && item.phoneData !== undefined);
+    if (phone && phone.phoneData) {
+      phone.phoneData.snsPosts = structuredClone(snapshot.sns_feed || []);
+    }
+  } else {
+    gameState.npcs = {};
+    ROOMS = structuredClone(rooms);
+    LOCATIONS_DELTA = {};
+    gameState.player.known_locations = [];
+
+    const phone = gameState.player.inventory.find(i => i.phoneData !== undefined)
+      || Object.values(gameState.player.equipment).find(item => item && item.phoneData !== undefined);
+    if (phone && phone.phoneData) {
+      phone.phoneData.snsPosts = [];
+    }
+  }
 }
 // ── 动态世界观加载 ──
 export function loadActiveWorld(worldName?: string): void {

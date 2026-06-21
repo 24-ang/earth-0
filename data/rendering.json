@@ -1,0 +1,6 @@
+{
+  "model_mappings": {
+    "logic_engine_model": "model_pro_default",
+    "narrative_render_model": "model_flash_default"
+  }
+}

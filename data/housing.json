@@ -1,0 +1,18 @@
+{
+  "chiba_apartment_202": {
+    "name": "千叶单身公寓 202 室",
+    "regionId": "千叶_公寓202",
+    "purchase_price": 120000,
+    "rent_price": 1500,
+    "max_volume": 100.0,
+    "max_weight": 200.0
+  },
+  "wasteland_shelter": {
+    "name": "废土地下避难所",
+    "regionId": "沙尘暴绿洲_避难所",
+    "purchase_price": 5000,
+    "rent_price": 200,
+    "max_volume": 150.0,
+    "max_weight": 400.0
+  }
+}

@@ -109,8 +109,22 @@
       ]
     }
   },
-  "travel": {
-    "walk_speed": 80,
-    "description": "步行80m/分钟。跨区需坐电车。末班车约23:30"
+  "connections": {
+    "sobu_line": {
+      "name": "JR总武线快车",
+      "stations": ["千叶", "东京"],
+      "price": 640,
+      "duration": 45,
+      "source_world": "oregairu",
+      "target_world": "persona"
+    },
+    "wasteland_caravan": {
+      "name": "废土商队巴士",
+      "stations": ["千叶遗迹", "沙尘暴绿洲"],
+      "price": 2000,
+      "duration": 180,
+      "source_world": "oregairu",
+      "target_world": "wasteland"
+    }
   }
 }

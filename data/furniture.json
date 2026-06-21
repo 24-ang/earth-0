@@ -1,0 +1,158 @@
+{
+  "床": {
+    "physical": ["bed", "surface"],
+    "actions": {
+      "睡觉": { "effect": "sleep", "hours": 8, "restore_hp": "full", "restore_fatigue": "full" },
+      "躺下": { "effect": "rest", "fatigue_reduction": 20, "narrative": "你躺在床上，浑身放松下来。" }
+    }
+  },
+  "布団": {
+    "physical": ["bed", "surface"],
+    "actions": {
+      "睡觉": { "effect": "sleep", "hours": 8, "restore_hp": "full", "restore_fatigue": "full" },
+      "躺下": { "effect": "rest", "fatigue_reduction": 15, "narrative": "你钻进被窝，温暖包围了全身。" }
+    }
+  },
+  "沙发": {
+    "physical": ["seat", "surface"],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 15, "narrative": "沙发柔软地接住了你。" },
+      "躺下": { "effect": "rest", "fatigue_reduction": 20, "narrative": "你在沙发上舒展身体，闭了一会儿眼。" }
+    }
+  },
+  "椅子": {
+    "physical": ["seat"],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 10 }
+    }
+  },
+  "长凳": {
+    "physical": ["seat"],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 8 }
+    }
+  },
+  "课桌": {
+    "physical": ["surface", "seat", "container"],
+    "containers": [
+      { "id": "桌面", "visible": true, "max_volume": 30, "max_weight": 10 },
+      { "id": "抽屉", "visible": false, "lockable": true, "max_volume": 15, "max_weight": 5 }
+    ],
+    "state": { "locked_抽屉": false, "key_id": "desk_key" },
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 5 },
+      "趴着": { "effect": "rest", "fatigue_reduction": 10, "narrative": "你趴在课桌上，脸贴着冰凉的桌面。" }
+    }
+  },
+  "书桌": {
+    "physical": ["surface", "seat", "container"],
+    "containers": [
+      { "id": "桌面", "visible": true, "max_volume": 25, "max_weight": 8 },
+      { "id": "抽屉", "visible": false, "lockable": true, "max_volume": 12, "max_weight": 4 }
+    ],
+    "state": { "locked_抽屉": false, "key_id": "desk_key" },
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 5 }
+    }
+  },
+  "窗台下的旧课桌": {
+    "physical": ["surface", "seat", "container"],
+    "containers": [
+      { "id": "抽屉", "visible": false, "lockable": false, "max_volume": 10, "max_weight": 3 }
+    ],
+    "state": {},
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 5 },
+      "趴着": { "effect": "rest", "fatigue_reduction": 10 }
+    }
+  },
+  "侍奉部茶桌": {
+    "physical": ["surface", "table"],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 8, "narrative": "你在茶桌旁坐下，侍奉部的空气总有种让人安心的味道。" }
+    }
+  },
+  "储物柜": {
+    "physical": ["storage", "container", "lockable"],
+    "containers": [
+      { "id": "储物格", "visible": true, "max_volume": 50, "max_weight": 20 }
+    ],
+    "state": { "locked": false, "key_id": "locker_key" },
+    "actions": {
+      "打开": { "effect": "storage", "narrative": "你打开了储物柜。" }
+    }
+  },
+  "靠墙的书架": {
+    "physical": ["surface", "readable", "display"],
+    "actions": {
+      "浏览": { "effect": "narrative", "narrative": "书架上整齐排列着各种参考书和小说。有几本看起来被翻过很多次。" }
+    }
+  },
+  "茶几": {
+    "physical": ["surface", "table"],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 5 }
+    }
+  },
+  "讲台": {
+    "physical": ["surface", "readable"],
+    "actions": {
+      "查看": { "effect": "narrative", "narrative": "讲台上放着教案和粉笔盒。" }
+    }
+  },
+  "黑板": {
+    "physical": ["surface", "readable"],
+    "actions": {
+      "查看": { "effect": "narrative", "narrative": "黑板上还留着上一节课的板书，没有擦干净。" }
+    }
+  },
+  "自动贩卖机": {
+    "physical": ["machine", "interface"],
+    "actions": {
+      "购买饮料": { "effect": "shop", "shop_type": "vending", "narrative": "自动贩卖机的灯光在走廊里格外显眼。" }
+    }
+  },
+  "舞台": {
+    "physical": ["surface", "climbable"],
+    "state": { "height_m": 1.0 },
+    "actions": {
+      "查看": { "effect": "narrative", "narrative": "舞台很宽敞，幕布半掩着。站在这里能想象出学园祭时的热闹。" },
+      "练习": { "effect": "train", "skill": "魅力", "exp": 3, "narrative": "你站在舞台上练了一会儿台風，感觉自信了一些。" }
+    }
+  },
+  "空调外机": {
+    "physical": ["machine"],
+    "actions": {
+      "查看": { "effect": "narrative", "narrative": "空调外机嗡嗡作响，不断排出热风。没什么特别的。" }
+    }
+  },
+  "电灯": {
+    "physical": ["switchable", "light_source"],
+    "state": { "isOn": true },
+    "actions": {
+      "打开": { "effect": "toggle", "stateKey": "isOn", "narrative": "灯亮了，房间明亮起来。" },
+      "关闭": { "effect": "toggle", "stateKey": "isOn", "narrative": "灯灭了，房间暗了下来。" }
+    }
+  },
+  "电脑": {
+    "physical": ["interface", "switchable", "surface"],
+    "state": { "isOn": false },
+    "actions": {
+      "打开": { "effect": "toggle", "stateKey": "isOn", "narrative": "屏幕亮起，风扇开始转动。" },
+      "关闭": { "effect": "toggle", "stateKey": "isOn", "narrative": "屏幕暗了下去。" },
+      "使用": { "effect": "narrative", "narrative": "你坐在电脑前，开始操作。" }
+    }
+  },
+  "保险箱": {
+    "physical": ["container", "lockable", "concealable"],
+    "containers": [
+      { "id": "内部", "visible": false, "lockable": true, "max_volume": 20, "max_weight": 30 }
+    ],
+    "state": { "locked": true, "key_id": "safe_key" },
+    "actions": {
+      "打开": { "effect": "storage", "narrative": "保险箱的厚重门打开了。" },
+      "锁上": { "effect": "lock", "key_id": "safe_key", "narrative": "保险箱锁上了。" },
+      "解锁": { "effect": "unlock", "key_id": "safe_key", "narrative": "你尝试打开保险箱的锁。" }
+    }
+  }
+}

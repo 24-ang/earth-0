@@ -55,6 +55,8 @@ export interface Item {
   weight: number;      // kg
   effects: ItemEffect[];
   state: ItemState;
+  holding_in_hands?: boolean;  // 双手搬运重物（占双手装备槽，移动减速）
+  volume?: number;     // 体积（升）
   flavor?: string;     // 品质/来由描述，/look时显示
   damage?: {           // weapon专用
     dice: string;      // "1d6" / "2d6"
@@ -177,6 +179,24 @@ export interface SexState {
 }
 
 // --- 装备槽 ---
+export interface PropertyState {
+  propertyId: string;
+  name: string;
+  regionId: string;
+  type: "rent" | "own";
+  rent_fee?: number;
+  rent_due_date?: string;
+  arrears_days: number;
+  storage: Array<{
+    name: string;
+    quantity: number;
+    volume: number;
+    weight: number;
+  }>;
+  max_volume: number;
+  max_weight: number;
+}
+
 export type EquipmentSlots = Partial<Record<SlotType, Item | null>>;
 
 // --- 玩家 ---
@@ -204,6 +224,7 @@ export interface PlayerState {
   known_locations: string[];           // 已探索地点
   titles: string[];                    // 引擎自动授予的称号（只加不删）
   public_identity?: string;            // 伪装身份/公开身份
+  properties: Record<string, PropertyState>; // 拥有的房产
   vehicle?: {                          // 当前载具
     type: "bicycle" | "motorcycle" | "car";
     name: string;                      // 物品名
@@ -211,7 +232,10 @@ export interface PlayerState {
   };
   fatigue: number;                      // 疲劳值 0-100（0=精力充沛，100=筋疲力尽）
   deathSaves?: { successes: number; failures: number };  // 死亡豁免累积（3成功=稳定，3失败=死亡）
+  concealed?: boolean;                   // 躲藏状态（视觉察觉自动失败）
+  hiding_in?: string;                    // 躲藏的家具名
 }
+
 
 // --- 静态角色数据结构 ---
 export interface StaticCharacter {
@@ -313,6 +337,28 @@ export interface MoveResult {
   reason: string;
   distance: number;       // 移动距离（米）
   seconds: number;        // 耗时（秒）
+}
+
+// --- 容器系统 ---
+export interface ContainerDef {
+  id: string;
+  visible: boolean;
+  lockable?: boolean;
+  locked?: boolean;
+  key_id?: string;
+  max_volume: number;
+  max_weight: number;
+  can_hold_person?: boolean;
+}
+
+export interface ContainerState {
+  id: string;
+  ownerType: "furniture" | "room" | "player" | "npc" | "vehicle";
+  ownerId: string;
+  def: ContainerDef;
+  items: any[];  // items inside (simplified — full ItemData for now)
+  current_volume: number;
+  current_weight: number;
 }
 
 // --- 旅行系统 ---
@@ -426,6 +472,14 @@ export interface RevealEntry {
   turn: number;
 }
 
+export interface WorldStateSnapshot {
+  npcs: Record<string, NPCRuntimeState>;
+  room_deltas: Record<string, any>;
+  dynamic_locations: Record<string, any>;
+  known_locations: string[];
+  sns_feed: any[];
+}
+
 // --- 游戏状态 ---
 export interface GameState {
   time: TimeState;
@@ -450,6 +504,8 @@ export interface GameState {
   revealLog: RevealEntry[];                // Layer 3 秘密揭示日志
   dynamicCharacters?: Record<string, any>;   // LLM 运行时创建的角色（name → StaticCharacter 字段）
   calendarEvents?: CalendarEntry[];          // 动态可写日历事件
+  world_states: Record<string, WorldStateSnapshot>; // 冷冻世界线的状态快照
+  shops?: Record<string, { items: string[] }>;       // 运行时货架覆盖（由restock_shop写入，优先级高于shops.json）
 }
 
 // ── 手机数据（存储在 Item.phoneData）──

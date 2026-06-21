@@ -1,0 +1,840 @@
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { Type } from "typebox";
+import { gameState, getNamelessNPCs, getCurrency } from "../engine/state.ts";
+import { getNPCContext } from "../engine/scenario-tables.ts";
+
+export let pi: ExtensionAPI | null = null;
+export function setPi(piInstance: ExtensionAPI) {
+  pi = piInstance;
+}
+
+export interface MenuItem { label: string; detail?: string; action?: (done: () => void) => void | Promise<void>; }
+
+export let lastRenderParams: {
+  playerAction: string;
+  resolvedChanges: string;
+  sceneResult: string;
+  openHooks: string;
+  nextPressure: string;
+  npcResponses?: string;
+} | null = null;
+
+export function setLastRenderParams(params: typeof lastRenderParams) {
+  lastRenderParams = params;
+}
+
+export function getStringWidth(str: string): number {
+  return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);
+}
+
+export function truncateToWidth(str: string, maxWidth: number): string {
+  let w = 0;
+  let res = "";
+  for (const c of str) {
+    const charW = c.charCodeAt(0) > 0x7f ? 2 : 1;
+    if (w + charW > maxWidth) break;
+    res += c;
+    w += charW;
+  }
+  return res;
+}
+
+export function wrapLine(text: string, maxW: number): string[] {
+  const res: string[] = [];
+  let cur = "";
+  let curW = 0;
+  for (const c of text) {
+    const cw = c.charCodeAt(0) > 0x7f ? 2 : 1;
+    if (curW + cw > maxW) {
+      res.push(cur);
+      cur = c;
+      curW = cw;
+    } else {
+      cur += c;
+      curW += cw;
+    }
+  }
+  if (cur) res.push(cur);
+  return res;
+}
+
+export async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string): Promise<string> {
+  try {
+    const { streamSimple } = await import("@earendil-works/pi-ai");
+    let model = ctx.model ? ctx.modelRegistry.find(ctx.model.provider, ctx.model.id) : undefined;
+    const targetStr = flagModel || process.env.PI_RENDER_MODEL || process.env.FATE_RENDER_MODEL;
+    if (targetStr) {
+      if (targetStr.includes("/")) {
+        const [prov, id] = targetStr.split("/");
+        model = ctx.modelRegistry.find(prov, id);
+      } else {
+        model = ctx.modelRegistry.getAll().find((m: any) => m.id === targetStr || m.name === targetStr);
+      }
+    }
+
+    if (model) {
+      const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+      if (auth.ok) {
+        const context = {
+          messages: [{ role: "user" as const, content: promptText, timestamp: Date.now() }]
+        };
+        const stream = streamSimple(model, context, {
+          apiKey: auth.apiKey,
+          headers: auth.headers,
+          maxTokens
+        });
+        const msg = await stream.result();
+        const text = msg.content
+          .filter((c: any) => c.type === "text")
+          .map((c: any) => c.text)
+          .join("");
+        if (text) return text.trim();
+      }
+    }
+  } catch (e) {
+    console.error("generateCompletion stream error:", e);
+  }
+
+  // Fallback: Fetch directly using environment variables
+  const apiKey = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
+  const baseUrl = process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/anthropic/v1/messages";
+  const modelName = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+
+  const res = await fetch(baseUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model: modelName,
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content: promptText }]
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Direct fetch failed with status ${res.status}`);
+  }
+  const data = await res.json() as any;
+  return data?.content?.[0]?.text?.trim() || "";
+}
+
+export function updateChatHUD(ctx: any) {
+  try {
+    if (gameState && gameState.time && gameState.player) {
+      const timeOfDayZH: Record<string, string> = {
+        morning: "午前",
+        lunch: "昼",
+        afternoon: "午後",
+        evening: "夕方",
+        night: "夜"
+      };
+      const loc = gameState.player.location;
+      const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
+      const cLoc = clean(loc);
+      const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
+      const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
+      const totalCount = npcsHereCount + namelessCount;
+      
+      const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
+      ctx.ui.setWidget("hud-status-bar", [statusBarText]);
+    }
+  } catch (e) {
+    console.error("updateChatHUD error:", e);
+  }
+}
+
+export async function moveTo(loc: string, ctx: any, gs: any, save: any) {
+  gs.player.location = loc;
+  if (!gs.player.known_locations) gs.player.known_locations = ["千叶_住宅区"];
+  if (!gs.player.known_locations.includes(loc)) gs.player.known_locations.push(loc);
+  const { initPlayerGrid, stampRoom } = await import("../engine/state.ts");
+  initPlayerGrid();
+  stampRoom(loc);
+  save(); ctx.ui.notify("📍 " + loc, "info");
+  updateChatHUD(ctx);
+}
+
+export async function showPanel(ctx: any, title: string, lines: string[]): Promise<void> {
+  const finalLines: string[] = [];
+  for (const line of lines) {
+    finalLines.push(...wrapLine(line, 65));
+  }
+  const items: MenuItem[] = finalLines.map(l => ({ label: l, detail: "", action: undefined }));
+  return showMenu(ctx, title, items);
+}
+
+export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem[] | (() => MenuItem[])): Promise<void> {
+  return ctx.ui.custom(
+    (tui: any, _theme: any, _kb: any, done: any) => {
+      let sel = 0;
+      const getItems = (): MenuItem[] => typeof itemsOrBuilder === "function" ? itemsOrBuilder() : itemsOrBuilder;
+      let items = getItems();
+      const comp = {
+        render(width: number): string[] {
+          const out: string[] = [];
+          const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
+          const titleW = getStringWidth(title);
+          out.push("┌─" + title + " " + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐");
+          
+          // TUI HUD Status Bar
+          try {
+            if (gameState && gameState.time && gameState.player) {
+              const timeOfDayZH: Record<string, string> = {
+                morning: "午前",
+                lunch: "昼",
+                afternoon: "午後",
+                evening: "夕方",
+                night: "夜"
+              };
+              const loc = gameState.player.location;
+              const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
+              const cLoc = clean(loc);
+              const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
+              const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
+              const totalCount = npcsHereCount + namelessCount;
+              const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
+              const barTrunc = truncateToWidth(statusBarText, w - 4);
+              const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
+              out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
+              out.push("├" + "─".repeat(w - 2) + "┤");
+            }
+          } catch (e) {
+            console.error("showMenu render status bar error:", e);
+          }
+
+          const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
+          for (let i = start; i < end; i++) {
+            const it = items[i];
+            const line = (i === sel ? "▶ " : "  ") + it.label + (it.detail ? "  " + it.detail : "");
+            const t = tui.truncateToWidth ? tui.truncateToWidth(line, w - 2) : truncateToWidth(line, w - 2);
+            const pad = Math.max(0, (w - 4) - getStringWidth(t));
+            out.push("│ " + t + " ".repeat(pad) + " │");
+          }
+          out.push("└" + "─".repeat(w - 2) + "┘");
+          out.push((sel+1 + "/" + items.length + " 方向键选择 Enter确认 q退出").slice(0, w));
+          return out;
+        },
+        handleInput(d: string) {
+          if (d === "\x1b" || d === "q") { done(); return; }
+          if (d === "\x1b[A" || d === "\x1bOA" || d === "k" || d === "w") sel = Math.max(0, sel - 1);
+          else if (d === "\x1b[B" || d === "\x1bOB" || d === "j" || d === "s") sel = Math.min(items.length - 1, sel + 1);
+          else if (d === "\r" || d === "\n") {
+            const it = items[sel];
+            if (it?.action) Promise.resolve(it.action(done)).then(() => { items = getItems(); sel = Math.min(sel, items.length-1); });
+            else done();
+          }
+        },
+        invalidate() {},
+      };
+      return comp;
+    },
+    { overlay: true }
+  );
+}
+
+export async function advanceTimeMinutes(mins: number, ctx: any, gs: any, save: any) {
+  const { advanceMinutes } = await import("../engine/time.ts");
+  const { updateNPCSchedules, refreshWeather } = await import("../engine/state.ts");
+  if (gs.time.minute_of_day === undefined) gs.time.minute_of_day = 480;
+  const result = advanceMinutes(gs.time, mins);
+  gs.player.age = gs.time.player_age;
+  gs.turn++;
+  if (gs.turn % 4 === 0) refreshWeather();
+  const events = await updateNPCSchedules();
+  const { tickSexStates } = await import("../engine/state.ts");
+  await tickSexStates(result.daysAdvanced, mins);
+  const { checkTimelineEvents, expireHooks } = await import("../engine/timeline.ts");
+  checkTimelineEvents();
+  expireHooks();
+  gs.player.fatigue = Math.min(100, (gs.player.fatigue ?? 0) + Math.round(mins / 12));
+  save();
+
+  const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
+  ctx.ui.notify(`⏱️ 时间推进了 ${mins} 分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}`, "info");
+  if (events.length > 0) {
+    ctx.ui.notify(`📢 事件: ${events.join("; ")}`, "info");
+  }
+  updateChatHUD(ctx);
+}
+
+export async function runNavigation(ctx: any, fastTravel = false) {
+  const { gameState, saveState, isSameLocation, getLocationNav, getRoom } = await import("../engine/state.ts");
+
+  const doMove = async (to: string, mins: number, subDone: () => void, parentDone: () => void) => {
+    const actualMins = Math.max(1, Math.round(mins / vehicleMul));
+
+    if (!fastTravel && mins >= 15) {
+      gameState.pendingTravel = {
+        from: gameState.player.location,
+        to,
+        route: vehicleName ? `${vehicleName}（约${actualMins}分钟）` : `步行/短途（约${mins}分钟）`,
+        minutes: actualMins,
+        timeOfDay: gameState.time.time_of_day
+      };
+      saveState();
+      ctx.ui.notify(`[旅行中] 正在前往 ${to}，行程 ${actualMins} 分钟。引擎已暂停移动。`, "info");
+      const vehicleHint = vehicleName ? `骑${vehicleName}，预计${actualMins}分钟到达。` : `步行约${mins}分钟。`;
+      ctx.chat.addSystemMessage(`玩家已出发前往 ${to}。${vehicleHint}不要立即让他们到达目的地！请描述路上的见闻、风景。等剧情差不多了，再调用 complete_travel 工具。`);
+      updateChatHUD(ctx);
+    } else {
+      await moveTo(to, ctx, gameState, saveState);
+      await advanceTimeMinutes(actualMins, ctx, gameState, saveState);
+      if (mins >= 2) {
+        const vHint = vehicleName ? `（骑${vehicleName}）` : "";
+        ctx.chat.addSystemMessage(`[移动] ${gameState.player.location} → ${to}，耗时 ${actualMins} 分钟${vHint}。`);
+      }
+    }
+    subDone();
+    parentDone();
+  };
+
+  const loc = gameState.player.location;
+  const known = gameState.player.known_locations || [];
+  const nav = getLocationNav(loc);
+  const vehicleMul = gameState.player.vehicle?.speedMul || 1;
+  const vehicleName = gameState.player.vehicle?.name;
+
+  const estTravel = (from: string, to: string): number => {
+    const fromRoom = getRoom(from);
+    const toRoom = getRoom(to);
+
+    if (fromRoom && toRoom && fromRoom.floor === toRoom.floor) {
+      const toOrigin = toRoom.origin;
+      const fromPos = gameState.player.gridPos || fromRoom.origin;
+      const dx = fromPos[0] - toOrigin[0];
+      const dy = fromPos[1] - toOrigin[1];
+      const cells = Math.sqrt(dx * dx + dy * dy);
+      return Math.max(1, Math.round(cells * fromRoom.cellSize / 1.5));
+    }
+    if (fromRoom && toRoom) {
+      const toOrigin = toRoom.origin;
+      const fromOrigin = fromRoom.origin;
+      const dx = fromOrigin[0] - toOrigin[0];
+      const dy = fromOrigin[1] - toOrigin[1];
+      const cells = Math.sqrt(dx * dx + dy * dy);
+      const floorPenalty = Math.abs(fromRoom.floor - toRoom.floor);
+      return Math.max(2, Math.round(cells * fromRoom.cellSize / 1.5) + floorPenalty);
+    }
+
+    const fromNav = getLocationNav(from);
+    const toNav = getLocationNav(to);
+    const sharePrefix = fromNav.breadcrumb.filter(b => toNav.breadcrumb.includes(b)).length;
+    const maxDepth = Math.max(fromNav.breadcrumb.length, toNav.breadcrumb.length, 5);
+    const shareRatio = sharePrefix / maxDepth;
+
+    if (shareRatio >= 0.9) return 1 + hashDist(from, to, 0, 5);
+    if (shareRatio >= 0.7) return 2 + hashDist(from, to, 0, 6);
+    if (shareRatio >= 0.5) return 3 + hashDist(from, to, 0, 27);
+    if (shareRatio >= 0.3) return 30 + hashDist(from, to, 0, 60);
+    return 60 + hashDist(from, to, 0, 120);
+  };
+
+  const hashDist = (a: string, b: string, min: number, range: number): number => {
+    const h = (a + b).split("").reduce((s, c) => s + c.charCodeAt(0), 0);
+    return min + (h % range);
+  };
+
+  const buildNavMenu = (parentDone: () => void): MenuItem[] => {
+    const items: MenuItem[] = [];
+
+    if (nav.parent) {
+      items.push({
+        label: `🔼 返回 ${nav.parent}`,
+        action: async (subDone) => { await doMove(nav.parent!, estTravel(loc, nav.parent!), subDone, parentDone); }
+      });
+    }
+
+    if (nav.schoolTree && nav.schoolTree.length > 0) {
+      items.push({ label: `── 校内建筑 ──` });
+      for (const bld of nav.schoolTree) {
+        items.push({
+          label: `  🏫 ${bld.name}`,
+          detail: `${bld.children.length} 层`,
+          action: async (subDone) => {
+            const floorItems: MenuItem[] = [];
+            for (const fl of bld.children) {
+              floorItems.push({
+                label: `  📶 ${fl.name}`,
+                detail: `${fl.children.length} 个房间`,
+                action: async (floorDone) => {
+                  const roomItems: MenuItem[] = [];
+                  for (const rm of fl.children) {
+                    const rmName = rm.name;
+                    const here = isSameLocation(loc, rmName);
+                    const rmKnown = known.some(k => isSameLocation(k, rmName));
+                    const npcs = Object.entries(gameState.npcs).filter(([_, n]: any) => isSameLocation(n.currentRoom, rmName)).map(([n]) => n);
+                    if (rmKnown) {
+                      roomItems.push({
+                        label: `  ${here ? "📍" : "🚪"} ${rmName}`,
+                        detail: npcs.length > 0 ? `👥 ${npcs.join(" ")}` : "",
+                        action: here ? undefined : async (roomDone) => { await doMove(rmName, 2, roomDone, floorDone); }
+                      });
+                    } else {
+                      roomItems.push({ label: `  ❓ ${rmName}`, detail: "未探索" });
+                    }
+                  }
+                  await showMenu(ctx, `${bld.name} ${fl.name}`, roomItems);
+                }
+              });
+            }
+            await showMenu(ctx, bld.name, floorItems);
+          }
+        });
+      }
+    }
+
+    if (nav.rooms.length > 0) {
+      items.push({ label: `── 同层房间 ──` });
+      for (const r of nav.rooms) {
+        if (!known.some(k => isSameLocation(k, r))) continue;
+        const here = isSameLocation(loc, r);
+        const npcs = Object.entries(gameState.npcs).filter(([_, n]: any) => isSameLocation(n.currentRoom, r)).map(([n]) => n);
+        items.push({
+          label: `  🚪 ${r}`,
+          detail: (here ? "📍当前" : "") + (npcs.length > 0 ? ` 👥 ${npcs.join(" ")}` : ""),
+          action: here ? undefined : async (subDone) => { await doMove(r, 2, subDone, parentDone); }
+        });
+      }
+    }
+
+    if (nav.children.length > 0 && !nav.schoolTree) {
+      items.push({ label: `── 下属地点 ──` });
+      for (const c of nav.children) {
+        if (!known.some(k => isSameLocation(k, c))) continue;
+        items.push({
+          label: `  📂 ${c}`,
+          action: async (subDone) => { await doMove(c, estTravel(loc, c), subDone, parentDone); }
+        });
+      }
+      const unknownKids = nav.children.filter(c => !known.some(k => isSameLocation(k, c)));
+      if (unknownKids.length > 0) {
+        items.push({ label: `  ❓ ${unknownKids.length} 个未探索`, detail: "LLM 可以带你去" });
+      }
+    }
+
+    if (nav.level === "prefecture" || nav.level === "region") {
+      items.push({ label: `── 其他地区 ──` });
+      const allKnown = known.filter(k => {
+        const kn = getLocationNav(k);
+        return kn.breadcrumb.length > 0 && !nav.breadcrumb.some(b => isSameLocation(b, k));
+      });
+      for (const k of allKnown.slice(0, 6)) {
+        items.push({
+          label: `  🗺️ ${k}`,
+          action: async (subDone) => { await doMove(k, estTravel(loc, k), subDone, parentDone); }
+        });
+      }
+    }
+
+    if (nav.stations && nav.stations.length > 0) {
+      for (const st of nav.stations) {
+        items.push({ label: `── 🚃 ${st.name} | ${st.lines.join("/")} ──` });
+        for (const d of st.destinations) {
+          items.push({
+            label: `  🚃 → ${d.name}`,
+            detail: `${d.minutes}分钟`,
+            action: async (subDone) => { await doMove(d.name, d.minutes, subDone, parentDone); }
+          });
+        }
+      }
+    }
+
+    const nearbyClose = (nav.nearby || []).filter(n => n.minutes <= 8);
+    if (nearbyClose.length > 0) {
+      const modeIcon = vehicleName ? "🚲" : "🚶";
+      const modeLabel = vehicleName ? ` | ${vehicleName}` : "";
+      const speedLabel = vehicleMul > 1 ? `×${vehicleMul}` : "";
+      items.push({ label: `── 周边${modeLabel} ${speedLabel} ──` });
+      for (const n of nearbyClose) {
+        const nKnown = known.some(k => isSameLocation(k, n.name));
+        const displayMins = vehicleMul > 1 ? Math.max(1, Math.round(n.minutes / vehicleMul)) : n.minutes;
+        const unit = vehicleMul > 1 ? "分" : "分钟";
+        items.push({
+          label: `  ${modeIcon} ${n.name}`,
+          detail: `${displayMins}${unit}`,
+          action: nKnown ? async (subDone) => { await doMove(n.name, n.minutes, subDone, parentDone); } : undefined
+        });
+      }
+    }
+
+    if (items.length === 0) {
+      items.push({ label: "  （当前没有可导航的地点——LLM 可以用 create_location 扩展世界）" });
+    }
+
+    return items;
+  };
+
+  await showMenu(ctx, `🗺️ ${nav.breadcrumb.join(" ▸ ")}`, () => buildNavMenu(() => {}));
+}
+
+export async function showPhoneTUI(ctx: any, phoneItem: any) {
+  const { getPlayerPhoneData, syncContactsFromRelationships, markAllRead } = await import("../engine/phone.ts");
+  const { phoneAppsCatalog } = await import("../engine/state.ts");
+  const phoneApps: any[] = phoneAppsCatalog;
+  const { gameState } = await import("../engine/state.ts");
+
+  const pd = getPlayerPhoneData();
+  if (!pd) { ctx.ui.notify("没有手机数据", "warning"); return; }
+
+  syncContactsFromRelationships(pd);
+
+  const gameYear = parseInt(gameState.time.game_date.split("-")[0]) || 2018;
+  const isJP = true;
+
+  function eraMatches(era: string): boolean {
+    if (era === "all") return true;
+    if (era === "2004-2014") return gameYear >= 2004 && gameYear <= 2014;
+    if (era === "2011+") return gameYear >= 2011;
+    return true;
+  }
+  function regionMatches(region: string): boolean {
+    if (region === "all") return true;
+    if (region === "jp") return isJP;
+    return true;
+  }
+
+  const visibleApps = phoneApps.filter(
+    (app: any) => eraMatches(app.era) && regionMatches(app.region)
+  );
+
+  function buildMessagingPanel(): MenuItem[] {
+    const items: MenuItem[] = [];
+    const msgs = pd.messages;
+    const unread = msgs.filter(m => !m.read && m.to === gameState.player.name);
+    if (unread.length > 0) {
+      items.push({ label: `🆕 ${unread.length} 条未读消息`, detail: "" });
+      items.push({ label: "── 收件箱 ──" });
+    }
+    if (msgs.length > 0) {
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        const m = msgs[i];
+        items.push({
+          label: `${m.read ? "📩" : "🆕"}「${m.from}」${m.text}`,
+          detail: m.timestamp,
+        });
+      }
+    } else {
+      items.push({ label: "📩 （收件箱是空的）" });
+    }
+    markAllRead(pd);
+    return items;
+  }
+
+  function buildContactsPanel(): MenuItem[] {
+    const items: MenuItem[] = [];
+    if (pd.contacts.length > 0) {
+      for (const c of pd.contacts) {
+        items.push({
+          label: `👤 ${c.name}`,
+          detail: `${c.number} | ${c.relation}`,
+        });
+      }
+    } else {
+      items.push({ label: "（通讯录是空的）" });
+    }
+    return items;
+  }
+
+  function buildBoardPanel(appId: string): MenuItem[] {
+    const items: MenuItem[] = [];
+    if (appId === "call_log") {
+      if (pd.callLog.length > 0) {
+        for (let i = pd.callLog.length - 1; i >= 0; i--) {
+          const cl = pd.callLog[i];
+          const icon = cl.status === "missed" ? "🔴" : cl.status === "answered" ? "✅" : "📞";
+          items.push({
+            label: `${icon} ${cl.caller} → ${cl.callee}`,
+            detail: `${cl.status} | ${cl.startTime}`,
+          });
+        }
+      } else {
+        items.push({ label: "（无通话记录）" });
+      }
+    } else if (appId === "bbs") {
+      const flags = gameState.flags;
+      if (flags.wanted) items.push({ label: "💬 【警视厅通告】您已被列为重要参考人。" });
+      if (flags.steal_alert) items.push({ label: "💬 【学校通知】近期校内发生盗窃事件。" });
+      if (flags.identity_exposed) items.push({ label: "💬 【匿名】有人已经知道你是谁了。" });
+      if (items.length === 0) items.push({ label: "💬 【掲示板】今天没有新帖子。" });
+    }
+    return items;
+  }
+
+  function buildTimelinePanel(appId: string): MenuItem[] {
+    const items: MenuItem[] = [];
+    const platformFilter = appId === "twitter" ? "twitter" : "mixi";
+    const posts = pd.snsPosts.filter(p => p.platform === platformFilter);
+    if (posts.length > 0) {
+      for (let i = posts.length - 1; i >= 0; i--) {
+        const p = posts[i];
+        items.push({
+          label: `${p.author}: ${p.text}`,
+          detail: `❤️${p.likes} | ${p.timestamp}`,
+        });
+      }
+    } else {
+      items.push({ label: "（时间线是空的——LLM 可以用 browse_sns 填充内容）" });
+    }
+    return items;
+  }
+
+  function buildGalleryPanel(): MenuItem[] {
+    const items: MenuItem[] = [];
+    if (pd.photos.length > 0) {
+      for (const p of pd.photos) {
+        items.push({
+          label: `📷 ${p.caption || p.filename}`,
+          detail: `${p.location} | ${p.takenAt}`,
+        });
+      }
+    } else {
+      items.push({ label: "（相册是空的）" });
+    }
+    return items;
+  }
+
+  const phoneMenu: MenuItem[] = [];
+  const { time, weather } = gameState;
+  const { getTodayCalendar } = await import("../engine/calendar.ts");
+  const todayEvents = getTodayCalendar(gameState.time.game_date, gameState.player.location);
+  const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
+  const dayStr = dayNames[time.day];
+  
+  phoneMenu.push({ label: `📅 ${time.year}年${time.month}月${time.date}日 星期${dayStr} ${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`, detail: "" });
+  phoneMenu.push({ label: `⛅ ${time.season}季 | ${weather.type} (${weather.temp}°C)`, detail: "" });
+  if (todayEvents) {
+    phoneMenu.push({ label: `📌 今日提醒: ${todayEvents}`, detail: "" });
+  }
+  phoneMenu.push({ label: "────────────────────────────────────────", detail: "" });
+
+  for (const app of visibleApps) {
+    phoneMenu.push({
+      label: `${app.icon} ${app.label}`,
+      detail: app.type,
+      action: async (_done: () => void) => {
+        let items: MenuItem[];
+        switch (app.type) {
+          case "messaging":  items = buildMessagingPanel(); break;
+          case "contacts":   items = buildContactsPanel(); break;
+          case "board":      items = buildBoardPanel(app.id); break;
+          case "timeline":   items = buildTimelinePanel(app.id); break;
+          case "gallery":    items = buildGalleryPanel(); break;
+          default:           items = [{ label: "未支持的应用类型" }];
+        }
+        await showMenu(ctx, `📱 ${phoneItem.name} - ${app.label}`, items);
+      },
+    });
+  }
+
+  const unreadStr = pd.unreadCount > 0 ? ` (${pd.unreadCount}条未读)` : "";
+  await showMenu(ctx, `📱 ${phoneItem.name}${unreadStr}`, phoneMenu);
+}
+
+export async function runStatus(ctx: any) {
+  const { gameState, saveState, calcMaxCarry, calcCurrentWeight, isOverburdened, calcPocketVolume, calcInventoryVolume } = await import("../engine/state.ts");
+  const p = gameState.player;
+
+  const maxC = calcMaxCarry(p.attributes.力量);
+  const curW = calcCurrentWeight(p.inventory, p.equipment);
+  const burden = isOverburdened(curW, maxC);
+  const pocketVol = calcPocketVolume(p.equipment);
+  const invVol = calcInventoryVolume(p.inventory, p.equipment);
+
+  const SLOT_NAMES: Record<string, string> = {
+    top: "外套大衣",
+    shirt: "内搭衬衫",
+    inner_top: "胸罩/裹胸",
+    bottom: "下装/裙子",
+    inner_bot: "内裤/胖次",
+    legs: "丝袜/连裤袜",
+    feet: "脚部鞋子",
+    head: "头部/发饰",
+    acc: "配饰/挂件",
+    left_hand: "副手/左手",
+    right_hand: "主手/右手",
+    back: "背部/背包"
+  };
+
+  const buildMenu = () => {
+    const items: MenuItem[] = [];
+    const identityStr = p.public_identity ? ` | 🎭 伪装: ${p.public_identity}` : "";
+    items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁${identityStr}`, detail: "" });
+    items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ${getCurrency()}${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`, detail: "" });
+    items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""} | 📦 体积: ${invVol}${pocketVol > 0 ? `/${pocketVol}` : ""}L`, detail: "" });
+    items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
+    const woundStr = p.wounds && p.wounds.length > 0 
+      ? p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")
+      : "健康";
+    items.push({ label: `🩸 伤势: ${woundStr}`, detail: "" });
+
+    if (p.body) {
+      const b = p.body;
+      let bodyStr = `📏 ${b.height_cm}cm ${b.weight_kg}kg ${b.build}`;
+      if (b.cup) bodyStr += ` ${b.cup}cup`;
+      if (b.measurements) bodyStr += ` 三围${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
+      if (b.leg_type) bodyStr += ` ${b.leg_type}腿`;
+      if (b.skin) bodyStr += ` 肤${b.skin.texture}·${b.skin.base_tone}`;
+      items.push({ label: bodyStr, detail: "" });
+    }
+
+    items.push({ label: "── 🌟 声望与派系 ──", detail: "" });
+    const reps = Object.entries(p.reputation || {});
+    if (reps.length > 0) {
+      items.push({ label: `  ${reps.map(([k, v]) => `${k}(${v})`).join(" | ")}`, detail: "" });
+    } else {
+      items.push({ label: `  (无)`, detail: "" });
+    }
+
+    items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
+    for (const [slotKey, slotName] of Object.entries(SLOT_NAMES)) {
+      const item = p.equipment[slotKey as any];
+      if (item) {
+        items.push({
+          label: `  [${slotName}] ${item.name}`,
+          detail: `🛡️ 卸下`,
+          action: (_done) => {
+            p.inventory.push(item);
+            p.equipment[slotKey as any] = null;
+            saveState();
+            ctx.ui.notify(`卸下了 ${item.name}`, "info");
+          }
+        });
+      } else {
+        items.push({
+          label: `  [${slotName}] (空)`,
+          detail: `➕ 穿戴`,
+          action: async (_done) => {
+            const fitItems = p.inventory.filter(it => it.slot === slotKey);
+            if (fitItems.length === 0) {
+              ctx.ui.notify(`背包中没有适合该槽位的装备`, "warning");
+              return;
+            }
+            await showMenu(ctx, `装备到 [${slotName}]`, fitItems.map(it => ({
+              label: it.name,
+              detail: `${it.type} ${it.weight}kg`,
+              action: (subDone) => {
+                p.equipment[slotKey as any] = it;
+                p.inventory.splice(p.inventory.indexOf(it), 1);
+                saveState();
+                ctx.ui.notify(`装备了 ${it.name}`, "info");
+                subDone();
+              }
+            })));
+          }
+        });
+      }
+    }
+
+    items.push({ label: "── 背包物品 (点击查看/操作) ──", detail: "" });
+    if (p.inventory.length > 0) {
+      p.inventory.forEach(it => {
+        items.push({
+          label: `  ${it.name}`,
+          detail: `${it.type} ${it.weight}kg`,
+          action: async (_done) => {
+            const isPhone = it.name.includes("手机") || it.effects?.some((e: any) => e.type === "communication");
+            const subItems: MenuItem[] = [
+              {
+                label: "🔍 查看详情",
+                action: (subDone) => {
+                  const lines = [
+                    `名称: ${it.name}`,
+                    `类型: ${it.type} | 重量: ${it.weight}kg | 体积: ${(it as any).volume ?? "?"}L | 状态: ${it.state}`,
+                    it.flavor ? `描述: ${it.flavor}` : "",
+                    it.damage ? `伤害: ${it.damage.dice} (${it.damage.damageType})` : "",
+                  ].filter(Boolean);
+                  if (it.effects && it.effects.length > 0) {
+                    lines.push("效果:");
+                    it.effects.forEach((eff: any) => {
+                      lines.push(`  - ${eff.type}: ${eff.value}${eff.group ? ` (${eff.group})` : ""}`);
+                    });
+                  }
+                  showPanel(ctx, it.name, lines);
+                  subDone();
+                }
+              }
+            ];
+
+            if (isPhone) {
+              subItems.push({
+                label: "📱 打开手机",
+                action: async (subDone) => {
+                  await showPhoneTUI(ctx, it);
+                  subDone();
+                }
+              });
+            }
+
+            if (it.slot) {
+              const slotName = SLOT_NAMES[it.slot] || it.slot;
+              subItems.push({
+                label: `🛡️ 装备到 [${slotName}]`,
+                action: (subDone) => {
+                  const slot = it.slot as any;
+                  if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
+                  p.equipment[slot] = it;
+                  p.inventory.splice(p.inventory.indexOf(it), 1);
+                  saveState();
+                  ctx.ui.notify(`装备了 ${it.name}`, "info");
+                  subDone();
+                }
+              });
+            }
+
+            subItems.push({
+              label: "❌ 丢弃物品",
+              action: (subDone) => {
+                p.inventory.splice(p.inventory.indexOf(it), 1);
+                saveState();
+                ctx.ui.notify(`丢弃了 ${it.name}`, "info");
+                subDone();
+              }
+            });
+
+            await showMenu(ctx, it.name, subItems);
+          }
+        });
+      });
+    } else {
+      items.push({ label: "  （背包空空如也）", detail: "" });
+    }
+
+    items.push({ label: "── ⚙️ 系统与引擎状态 ──", detail: "" });
+    const activeFlags = Object.entries(gameState.flags)
+      .filter(([_, v]) => v)
+      .map(([k]) => k);
+    items.push({
+      label: `  [状态] 模式:${gameState.mode} | Layer1:${gameState.layer1Enabled ? "启用" : "禁用"} | 魔改:${gameState.auMode ? "启用" : "禁用"}`,
+      detail: `阻合:${gameState.turn}`
+    });
+    items.push({
+      label: `  [天气] ${gameState.weather.type} (${gameState.weather.temp}°C)`,
+      detail: `时间:${gameState.time.game_date}`
+    });
+    items.push({
+      label: `  [标记] ${activeFlags.length > 0 ? activeFlags.join(", ") : "(空)"}`,
+      detail: "🔍 查看详情",
+      action: async (_done) => {
+        const lines = [
+          `当前世界模式: ${gameState.mode}`,
+          `Layer1 亲密引擎: ${gameState.layer1Enabled ? "ON" : "OFF"}`,
+          `魔改模式 (AU): ${gameState.auMode ? "ON" : "OFF"}`,
+          `游戏总回合数: ${gameState.turn}`,
+          `游戏当前时间: ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${gameState.time.time_of_day}`,
+          `当前天气状况: ${gameState.weather.type} (${gameState.weather.temp}°C)`,
+          ``,
+          `所有已记录的世界/事件标记 (gameState.flags):`,
+          ...Object.entries(gameState.flags).map(([k, v]) => `  - ${k}: ${v}`),
+          Object.keys(gameState.flags).length === 0 ? "  （目前无任何事件标记）" : ""
+        ].filter(Boolean);
+        await showPanel(ctx, "⚙️ 系统与标记详情", lines);
+      }
+    });
+
+    return items;
+  };
+
+  await showMenu(ctx, `👤 状态与装备`, buildMenu);
+}
