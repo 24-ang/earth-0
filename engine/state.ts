@@ -1027,6 +1027,9 @@ export async function buildStatePrompt(): Promise<string> {
       if (prop.arrears_days > 0) tpl += ` (已欠费 ${prop.arrears_days} 天)`;
     }
   }
+  // 附加区域设定（根据当前位置匹配 region_contexts.json）
+  const regionCtx = getRegionContext(p.location);
+  if (regionCtx) tpl += `\n[区域设定] ${regionCtx}`;
   // 附加空间上下文
   const gridCtx = getGridContext();
   if (gridCtx) tpl += `\n${gridCtx}`;
@@ -3266,6 +3269,38 @@ export function getGridContext(): string {
   if (furniture.length > 0) ctx += ` | 家具:${furniture.join(",")}`;
   ctx += ` | ${around.join("。")}`;
   return ctx;
+}
+
+// ── 区域设定自动注入 ──
+
+let _regionContexts: Record<string, { keys: string[]; context: string; npc_beauty_ref?: string }> | null = null;
+
+/** 根据玩家位置匹配 region_contexts.json 中的区域设定，自动注入到 prompt */
+export function getRegionContext(location: string): string {
+  // 懒加载
+  if (!_regionContexts) {
+    const rcPath = path.resolve(process.cwd(), "data", "region_contexts.json");
+    if (fs.existsSync(rcPath)) {
+      try { _regionContexts = JSON.parse(fs.readFileSync(rcPath, "utf-8")); }
+      catch (_) { _regionContexts = {}; }
+    } else {
+      _regionContexts = {};
+    }
+  }
+
+  const matched: string[] = [];
+  for (const [region, data] of Object.entries(_regionContexts)) {
+    if (!data?.keys) continue;
+    for (const key of data.keys) {
+      if (location.includes(key)) {
+        let ctx = data.context || "";
+        if (data.npc_beauty_ref) ctx += `\n[NPC美学参考] ${data.npc_beauty_ref}`;
+        matched.push(ctx);
+        break; // 每个区域只匹配一次
+      }
+    }
+  }
+  return matched.join("\n");
 }
 
 // --- 偷窃 ---
