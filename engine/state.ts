@@ -3273,7 +3273,7 @@ export function getGridContext(): string {
 
 // ── 区域设定自动注入 ──
 
-let _regionContexts: Record<string, { keys: string[]; context: string; npc_beauty_ref?: string }> | null = null;
+let _regionContexts: Record<string, { keys: string[]; context: string; social_norms?: string; npc_beauty_ref?: string }> | null = null;
 
 /** 根据玩家位置匹配 region_contexts.json 中的区域设定，自动注入到 prompt */
 export function getRegionContext(location: string): string {
@@ -3294,6 +3294,7 @@ export function getRegionContext(location: string): string {
     for (const key of data.keys) {
       if (location.includes(key)) {
         let ctx = data.context || "";
+        if (data.social_norms) ctx += `\n[社交规范] ${data.social_norms}`;
         if (data.npc_beauty_ref) ctx += `\n[NPC美学参考] ${data.npc_beauty_ref}`;
         matched.push(ctx);
         break; // 每个区域只匹配一次
