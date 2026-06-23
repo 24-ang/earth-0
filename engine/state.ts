@@ -568,10 +568,14 @@ export function getNpcCurrentAge(npcBaseAge: number): number {
 
 /** 设置玩家位置并自动发现新地点 */
 export function setPlayerLocation(loc: string): void {
+  const oldLoc = gameState.player.location;
   gameState.player.location = loc;
   if (!gameState.player.known_locations) gameState.player.known_locations = ["住宅区"];
   if (!gameState.player.known_locations.includes(loc)) {
     gameState.player.known_locations.push(loc);
+  }
+  if (oldLoc !== loc && gameState.tempNPCs?.length > 0) {
+    cleanupTempNPCs("玩家移动");
   }
 }
 
@@ -2795,6 +2799,7 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
       }
       gameState.player.location = cell.exitTo;
       initPlayerGrid();
+      if (gameState.tempNPCs?.length > 0) cleanupTempNPCs("玩家移动");
       return { success: true, newX: gameState.player.gridPos?.[0] ?? 0, newY: gameState.player.gridPos?.[1] ?? 0, newRoom: cell.exitTo, blocked: false, reason: "", distance: cellDist, seconds };
     }
     return { success: false, newX: cx, newY: cy, blocked: true, reason: "门打不开", distance: 0, seconds: 0 };
