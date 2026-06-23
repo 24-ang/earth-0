@@ -8,8 +8,8 @@
  * - 钩子重复出现强制写 novelty
  */
 
-import type { TimelineEvent, Hook, QuestState, CalendarEntry, DynamicEvent } from "./types.ts";
-import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation } from "./state.ts";
+import type { TimelineEvent, Hook, QuestState, CalendarEntry, DynamicEvent, NPCRuntimeState } from "./types.ts";
+import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation, findCharacter } from "./state.ts";
 import { LIFE_STAGES } from "./time.ts";
 import fs from "node:fs";
 import path from "node:path";
@@ -57,6 +57,72 @@ function loadCalendar(): CalendarEntry[] {
 }
 /** 世界观切换时清除日历缓存 */
 export function clearCalendarCache(): void { _calendarCache = {}; }
+
+/** P1: 获取 NPC 应感知的事件素材（引擎做过滤，GM 做人格化） */
+export function getNPCEventContext(npcName: string): string {
+  const all = loadCalendar();
+  const today = gameState.time.game_date;
+  const year = parseYear(today);
+  const mmdd = today.includes("-") ? parseMonthDay(today) : today;
+
+  const relevant: string[] = [];
+
+  for (const e of all) {
+    if (!e.advance_days || !e.advance_hook) continue;
+    if (e.year !== null && e.year !== year) continue;
+
+    // Check if this NPC belongs to an affected org
+    let npcAffected = false;
+    if (e.org_effects) {
+      const npc = gameState.npcs[npcName];
+      if (npc) {
+        for (const eff of e.org_effects) {
+          if (npcBelongsToOrgCheck(npcName, npc, eff.org)) {
+            npcAffected = true;
+            break;
+          }
+        }
+      }
+    } else {
+      // No org_effects → general event, all NPCs in range see it
+      npcAffected = true;
+    }
+    if (!npcAffected) continue;
+
+    // Check if we're in the advance window (event is in the future, within advance_days)
+    const offset = daysFromTodayMD(mmdd, e.date);
+    if (offset > 0 && offset <= e.advance_days) {
+      const daysUntil = offset;
+      relevant.push(`• ${e.text.slice(0, 50)} ${daysUntil}天后 — ${e.advance_hook}`);
+    }
+  }
+
+  return relevant.length > 0
+    ? `[NPC·事件感知·素材]\n${relevant.map(r => `  ${r}`).join("\n")}\n（GM 可在 sceneContext 中覆写为角色特化版本）`
+    : "";
+}
+
+/** P1: 启发式判断 NPC 是否属于某组织（与 state.ts 中 npcBelongsToOrg 同逻辑） */
+function npcBelongsToOrgCheck(name: string, npc: NPCRuntimeState, org: string): boolean {
+  const src = findCharacter(name);
+  const group = npc.scheduleGroup || src?.schedule_group || "";
+  const defLoc = src?.default_location || "";
+  if (group.includes(org.replace("总武", "")) || defLoc.includes(org.replace("高", ""))) return true;
+  if ((group === "学生" || group === "高校生" || group === "总武高学生" || group === "总武高教师") && org.includes("高")) return true;
+  if ((group === "教师" || group === "总武高教师") && org.includes("高")) return true;
+  return false;
+}
+
+/** P1: 计算从 todayMD 到 targetMD 的天数差（正 = 未来） */
+function daysFromTodayMD(todayMD: string, targetMD: string): number {
+  function parse(md: string): { m: number; d: number } {
+    const parts = md.split("月");
+    return { m: parseInt(parts[0]), d: parseInt(parts[1]) };
+  }
+  const t = parse(todayMD);
+  const tg = parse(targetMD);
+  return (tg.m - t.m) * 30 + (tg.d - t.d);
+}
 
 /** 提取 game_date 中的 M月D日 字符串 */
 function parseMonthDay(gameDate: string): string {
