@@ -21,6 +21,7 @@ export default {
       }
       lines.push("────────────────────");
       lines.push("/load <名> 载入 | /saves delete <名> 删除");
-      await (await import("../../extension.ts")).showPanel(ctx, "📂 存档管理", lines);
+      const { showPanel } = await import("../helpers.ts");
+      await showPanel(ctx, "📂 存档管理", lines);
     },
   };

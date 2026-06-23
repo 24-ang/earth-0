@@ -151,6 +151,7 @@ function createInitialState(): GameState {
     storySoFar: "",
     revealLog: initRevealLog,
     calendarEvents: [],
+    dynamicEvents: [],
     academic_year_offset: 0,
     world_states: {},
   };
@@ -232,6 +233,7 @@ function createDefaultPlayer(): PlayerState {
     },
     attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 12, 感知: 10, 魅力: 10 },
     skills: {},
+    abilities: {},
     hp: { current: 18, max: 18 },
     ac: 10,
     equipment: {},
@@ -406,6 +408,11 @@ export function loadState(filepath?: string): boolean {
             };
           }
         }
+      }
+
+      // 4. 补齐能力映射
+      if (!npc.abilities || typeof npc.abilities !== "object") {
+        npc.abilities = {};
       }
     }
   }
@@ -667,6 +674,24 @@ function ensureCollectors(): void {
       if (disguise) text += `\n[身份认知] 你被认知为: ${disguise}`;
       else if (p.public_identity) text += `\n[身份认知] 公开身份: ${p.public_identity}`;
       if (p.titles?.length) text += `\n[称号] ${p.titles.join(" | ")}`;
+      const skillsStr = Object.entries(p.skills)
+        .filter(([_, sk]) => sk.level > 0)
+        .map(([k, sk]) => `${k}:Lv${sk.level}`)
+        .join(", ");
+      if (skillsStr) text += `\n[技能] ${skillsStr}`;
+      const abilitiesStr = Object.entries(p.abilities || {})
+        .filter(([_, a]) => (a as any).level > 0)
+        .map(([k, a]) => `${k}:Lv${(a as any).level}`)
+        .join(", ");
+      if (abilitiesStr) text += `\n[能力] ${abilitiesStr}`;
+      const rp = p.resourcePools;
+      if (rp) {
+        const rpStr = Object.entries(rp)
+          .filter(([_, v]) => v)
+          .map(([k, v]) => `${k}:${v!.current}/${v!.max}`)
+          .join(", ");
+        if (rpStr) text += `\n[资源] ${rpStr}`;
+      }
       return text.trim() ? { text, priority: 2, layer: "stable", degradeStrategy: "keep", sourceName: "player-status" } : null;
     },
   });
@@ -983,26 +1008,33 @@ export async function buildStatePrompt(): Promise<string> {
   const disguise = getDisguiseIdentity(p);
   if (disguise) tpl += `\n[身份认知] 你被认知为: ${disguise}`;
   else if (p.public_identity) tpl += `\n[身份认知] 公开身份: ${p.public_identity}`;
-  // 玩家当前穿着（mount 槽单独显示为载具）
-  const INNER_SLOTS = new Set(["inner_top", "inner_bot"]);
-  const outerItems: string[] = [];
-  const innerItems: string[] = [];
+  // 玩家当前装备摘要（全部槽位，始终注入以确保 TUI 修改后 LLM 同步）
+  const SLOT_LABELS: Record<string, string> = {
+    top: "外套", shirt: "内搭", inner_top: "胸衣", bottom: "下装", inner_bot: "内裤",
+    legs: "袜", feet: "鞋", head: "头饰", acc: "配饰",
+    left_hand: "左手", right_hand: "右手", back: "背"
+  };
+  const wornParts: string[] = [];
+  const emptySlots: string[] = [];
   let mountItem: string | null = null;
   for (const [slot, item] of Object.entries(p.equipment)) {
-    if (!item) continue;
-    if (slot === "mount") { mountItem = (item as any).name; continue; }
-    if (INNER_SLOTS.has(slot)) innerItems.push((item as any).name);
-    else outerItems.push((item as any).name);
-  }
-  if (outerItems.length > 0 || innerItems.length > 0) {
-    const outerStr = outerItems.length > 0 ? outerItems.join("、") : "（无）";
-    if (s.layer1Enabled && innerItems.length > 0) {
-      tpl += `\n[穿着] ${outerStr}  |  内: ${innerItems.join("、")}`;
-    } else {
-      tpl += `\n[穿着] ${outerStr}`;
+    if (!item) {
+      if (slot !== "mount" && SLOT_LABELS[slot]) emptySlots.push(SLOT_LABELS[slot]);
+      continue;
     }
-  } else {
-    tpl += `\n[穿着] （什么都没穿）`;
+    if (slot === "mount") { mountItem = item.name; continue; }
+    const label = SLOT_LABELS[slot] || slot;
+    // Layer1 关闭时 inner 只标记有/无，不暴露具体名
+    if ((slot === "inner_top" || slot === "inner_bot") && !s.layer1Enabled) {
+      wornParts.push(`${label}:有`);
+    } else {
+      wornParts.push(`${label}:${item.name}`);
+    }
+  }
+  const eqSummary = wornParts.length > 0 ? wornParts.join(" | ") : "（全裸）";
+  tpl += `\n[装备] ${eqSummary}`;
+  if (emptySlots.length > 0 && emptySlots.length <= 6) {
+    tpl += `  [空槽] ${emptySlots.join("、")}`;
   }
   if (mountItem) {
     const speedStr = p.vehicle ? ` ×${p.vehicle.speedMul}` : "";
@@ -1166,7 +1198,7 @@ function getDefaultSexAtmosphere(location: string): string {
 
   if (sceneHints.length > 0) {
     // 始终提醒可用的核心工具（不随场景变）
-    const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn, add_to_party, remove_from_party, lookup_weather";
+    const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn, add_to_party, remove_from_party, lookup_weather, spawn_item, grant_skill_exp, create_story_hook, instantiate_npc";
     tpl += `\n[工具提示] ${[...sceneHints, always].join(" | ")}`;
   }
 
@@ -1712,6 +1744,98 @@ export function registerDynamicCharacter(name: string, data: Record<string, any>
   return `创建了动态角色: ${name}（${data.gender || "female"}，${data.base_age || data.age || 16}岁，位于 ${DYNAMIC_CHARACTERS[name].default_location}）`;
 }
 
+/** 从 nameless_npc_templates 中查找模板 */
+function findNamelessTemplate(namelessName: string): { name: string; act: string; height: string; vehicle?: string } | null {
+  const traits = namelessNpcTemplates.traits;
+  if (!Array.isArray(traits)) return null;
+  return traits.find((t: any) => t.name === namelessName) || null;
+}
+
+/** 从 act 描述推断 schedule_group */
+function inferScheduleGroup(act: string): string {
+  if (act.includes("学生") || act.includes("书包") || act.includes("校")) return "学生";
+  if (act.includes("上班") || act.includes("职员") || act.includes("公文包") || act.includes("电话") && act.includes("赶路")) return "上班族";
+  if (act.includes("主妇") || act.includes("购物")) return "主妇";
+  if (act.includes("小学生") || act.includes("红蓝书包")) return "小学生";
+  if (act.includes("店员")) return "便利店店员";
+  if (act.includes("巡警")) return "巡警";
+  if (act.includes("跑步") || act.includes("运动服")) return "运动者";
+  return "自由人";
+}
+
+/** 从 name/act 推断性别 */
+function inferGender(name: string, act: string): string {
+  if (name.includes("女生") || name.includes("主妇") || name.includes("老奶奶")) return "female";
+  if (name.includes("男生") || name.includes("不良少年") || name.includes("流浪汉") || name.includes("上班族")) return "male";
+  if (act.includes("他") && !act.includes("她")) return "male";
+  if (act.includes("她")) return "female";
+  return "male";
+}
+
+/** 从 name/act 推断年龄 */
+function inferBaseAge(name: string, act: string): number {
+  if (name.includes("小学生")) return 10;
+  if (name.includes("学生")) return 16;
+  if (name.includes("老奶奶")) return 70;
+  if (name.includes("上班族") || name.includes("职员")) return 30;
+  if (name.includes("主妇")) return 35;
+  if (name.includes("店员")) return 25;
+  if (name.includes("不良少年")) return 17;
+  if (name.includes("巡警")) return 35;
+  if (name.includes("流浪汉")) return 50;
+  return 20;
+}
+
+/** 从 height 字符串解析身高 cm（取第一个数字；情侣/双人取平均值） */
+function inferHeightCm(heightStr: string): number {
+  const nums = heightStr.match(/\d+/g);
+  if (!nums) return 165;
+  const vals = nums.map(Number);
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+
+/** 将路人模板实例化为完整角色。返回描述文本。 */
+export function instantiateNamelessNPC(namelessName: string, reason: string = ""): string {
+  const template = findNamelessTemplate(namelessName);
+  if (!template) return `未找到路人模板: ${namelessName}`;
+
+  // 改名：去掉 "路人()" 前缀，取内部文本作为角色名
+  const match = namelessName.match(/路人\((.+)\)/);
+  const baseName = match ? match[1] : namelessName;
+  // 如果已存在同名角色，加后缀
+  let charName = baseName;
+  if ((characters as any[]).find((c: any) => c.name === charName) || DYNAMIC_CHARACTERS[charName]) {
+    charName = `${baseName}(路人转正)`;
+  }
+
+  const heightCm = inferHeightCm(template.height);
+  const weightKg = Math.round((heightCm - 100) * 0.9);
+
+  const charData: Record<string, any> = {
+    name: charName,
+    gender: inferGender(namelessName, template.act),
+    base_age: inferBaseAge(namelessName, template.act),
+    appearance_brief: `${template.act}的${baseName}`,
+    body: {
+      height_cm: heightCm,
+      weight_kg: weightKg,
+      build: weightKg / (heightCm / 100) ** 2 > 24 ? "结实" : "标准",
+      leg_type: "修长",
+      skin: { base_tone: "普通", tan: 0, texture: "普通" },
+    },
+    schedule_group: inferScheduleGroup(template.act),
+    default_location: gameState.player.location,
+    tags: ["路人转正"],
+  };
+
+  const result = registerDynamicCharacter(charName, charData);
+  // 初始化 NPC 运行时状态
+  getOrCreateNPC(charName);
+
+  const reasonLine = reason ? `\n原因: ${reason}` : "";
+  return `${result}${reasonLine}\n模板: ${template.name} | act: ${template.act} | 推断: ${charData.gender}, ${charData.base_age}岁, ${charData.schedule_group}`;
+}
+
 /** 查找角色（先静态库 → 动态注册表） */
 export function findCharacter(name: string): any | null {
   const src = (characters as any[]).find((c: any) => c.name === name);
@@ -1754,8 +1878,20 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
       hp: { current: currentHP, max: maxHP },
       alive: true,
       attributes: runtimeAttrs,
-      skills: runtimeSkills
+      skills: runtimeSkills,
+      abilities: {}
     };
+    // 初始化自主意图（从 drives_by_age 按当前年龄取对应段）
+    if (src?.drives_by_age) {
+      const keys = Object.keys(src.drives_by_age).map(Number).sort((a, b) => a - b);
+      let best = keys[0];
+      for (const k of keys) { if (k <= npcAge) best = k; else break; }
+      const ageDrives = src.drives_by_age[String(best)];
+      if (ageDrives) {
+        gameState.npcs[name].current_drives = [...ageDrives.drives];
+        gameState.npcs[name].current_goal = ageDrives.goal;
+      }
+    }
     // 魅力→初始印象：NPC首次创建时自动写入关系
     if (!gameState.player.relationships[name]) {
       const impression = Math.round((gameState.player.attributes.魅力 - 10) / 2) * 3;
@@ -1832,8 +1968,39 @@ export async function getOrCreateSexState(npcName: string): Promise<SexState | n
   gameState.sexStates ??= {};
   if (!gameState.sexStates[npcName]) {
     const { SEX_PROFILES, createSexState } = await import("./sex.ts");
-    const profile = SEX_PROFILES[npcName];
-    if (!profile) return null;
+    let profile = SEX_PROFILES[npcName];
+    // 玩家不在 SEX_PROFILES 中 → 按性别构建默认 profile
+    if (!profile && npcName === gameState.player.name) {
+      const pGender = gameState.player.gender;
+      profile = {
+        attitude: "期待",
+        experience: "熟练",
+        likes: [],
+        dislikes: [],
+        baselineDesire: 30,
+        cycleDay: 0,
+        climaxThreshold: 60,
+        bodyParts: {
+          "秘部": { sensitivity: 3, development: 2, preference: "喜欢" as const },
+        },
+      } as any;
+      if (pGender === "女") {
+        profile.female = {
+          breast: { cup: "B", shape: "半球" as any, nipple_size: "普通" as any, nipple_color: "粉色" as any, areola_size: "普通" as any, feel: "柔软" as any },
+          vagina: { type: "闭合" as any, labia_size: "普通" as any, depth_cm: 10, tightness: "普通" as any, inner_color: "淡粉" as any, feel: "普通" as any },
+          pubic_hair: { amount: "普通" as any, color: "黑色" as any, style: "自然" as any },
+          clitoris: "普通" as any,
+        };
+      } else {
+        profile.male = {
+          penis: { length_cm: 14, girth_cm: 10, shape: "直" as any, head_size: "普通" as any, circumcised: false, color: "普通" as any },
+          testicles: { size: "普通" as any },
+          pubic_hair: { amount: "普通" as any, color: "黑色" as any, style: "自然" as any },
+        };
+      }
+    } else if (!profile) {
+      return null; // NPC 且不在 SEX_PROFILES → 确实不存在
+    }
     gameState.sexStates[npcName] = createSexState(npcName, profile);
   }
   return gameState.sexStates[npcName];
@@ -2220,6 +2387,21 @@ export function createDynamicLocation(parentName: string, name: string): string 
   if (!gameState.player.known_locations.includes(name)) {
     gameState.player.known_locations.push(name);
   }
+
+  // 自动创建基础房间网格，让新地点立即可交互（而非空壳导航条目）
+  if (!ROOMS[name]) {
+    const w = 10, h = 10;
+    const cells: any[][] = [];
+    for (let y = 0; y < h; y++) {
+      const row: any[] = [];
+      for (let x = 0; x < w; x++) {
+        row.push({ type: "floor", block: false, furniture: null, label: "  " });
+      }
+      cells.push(row);
+    }
+    ROOMS[name] = { width: w, height: h, cellSize: 1, floor: 0, origin: [Math.floor(w/2), Math.floor(h/2)], cells, capacity: undefined };
+  }
+
   saveState();
   return `创建了新地点: ${name}（位于 ${parentName}）`;
 }
@@ -2307,7 +2489,30 @@ const DIRS: Record<string, [number, number]> = {
 
 export function getRoom(roomName: string): RoomGrid | null {
   const key = getRoomKey(roomName);
-  return key ? ROOMS[key] : null;
+  if (key) return ROOMS[key];
+
+  // 无 room grid 但属于有效导航节点 → 自动创建默认房间
+  // 解决 ROOMS 键名体系（家_玩家房间、千葉市街）与 location 导航体系（千叶_住宅区）不一致的问题
+  // 非导航节点（如错误世界线的地点名）不创建——防止世界切换后旧地名泄露
+  if (roomName && !key) {
+    const inKnown = gameState.player?.known_locations?.some(k => isSameLocation(k, roomName));
+    const isDynamic = Object.values(LOCATIONS_DELTA).some(arr => arr.includes(roomName));
+    if (inKnown || isDynamic) {
+      const w = 10, h = 10;
+      const cells: any[][] = [];
+      for (let y = 0; y < h; y++) {
+        const row: any[] = [];
+        for (let x = 0; x < w; x++) {
+          row.push({ type: "floor", block: false, furniture: null, label: "  " });
+        }
+        cells.push(row);
+      }
+      ROOMS[roomName] = { width: w, height: h, cellSize: 1, floor: 0, origin: [Math.floor(w/2), Math.floor(h/2)], cells, capacity: undefined };
+      return ROOMS[roomName];
+    }
+  }
+
+  return null;
 }
 
 /**

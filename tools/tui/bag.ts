@@ -3,10 +3,14 @@ import { Type } from "typebox";
 export default {
     description: "背包管理：查看/筛选/使用物品",
     handler: async (_args, ctx) => {
-      const { gameState, saveState, checkAddVolume } = await import("../../engine/state.ts");
+      const { gameState, saveState, getCurrency, calcPocketVolume } = await import("../../engine/state.ts");
       const p = gameState.player;
+      let activeDoneCb: (() => void) | null = null;
 
-      const rerender = (filter: string, sort: string, done: any) => {
+      const rerender = (filter: string, sort: string) => {
+        // 关闭上一个 overlay 防止堆叠
+        if (activeDoneCb) { activeDoneCb(); activeDoneCb = null; }
+
         let items = [...p.inventory];
         // 过滤
         if (filter === "weapon") items = items.filter((i: any) => i.type === "weapon");
@@ -21,15 +25,16 @@ export default {
 
         const lines: string[] = [];
         const volUsed = p.inventory.reduce((s: number, i: any) => s + (i.volume || 0), 0);
-        const volMax = 30; // 默认背包容量
-        lines.push(`🎒 背包 (${p.inventory.length}件 | ${volUsed.toFixed(1)}/${volMax}L) | 资金 ${getCurrency()}${p.funds}`);
+        const pocketVol = calcPocketVolume(p.equipment);
+        const volStr = pocketVol > 0 ? `${volUsed.toFixed(1)}/${pocketVol}L` : `${volUsed.toFixed(1)}L`;
+        lines.push(`🎒 背包 (${p.inventory.length}件 | ${volStr}) | 资金 ${getCurrency()}${p.funds}`);
         lines.push(`筛选: ${filter === "all" ? "全部" : filter} | 排序: ${sort === "name" ? "名称" : sort === "weight" ? "重量" : "默认"}`);
         lines.push("────────────────────────────────────────");
 
         if (items.length === 0) {
           lines.push("（空）");
         } else {
-          const display = items.slice(0, 30); // 最多显示30件
+          const display = items.slice(0, 30);
           display.forEach((item: any, idx: number) => {
             const tag = item.type ? `[${item.type.slice(0, 2)}]` : "";
             const wt = item.weight ? `${item.weight}kg` : "";
@@ -50,26 +55,25 @@ export default {
 
         ctx.ui.custom(
           (tui: any, _theme: any, _kb: any, doneCb: any) => {
+            activeDoneCb = doneCb;
             return {
               render(_termW: number): string[] { return lines; },
               handleInput(d: string) {
                 const key = d.toLowerCase();
-                if (key === "q") { doneCb(); done(); }
-                else if (key === "a") rerender("all", sort, done);
-                else if (key === "w") rerender("weapon", sort, done);
-                else if (key === "c") rerender("consumable", sort, done);
-                else if (key === "t") rerender("clothing", sort, done);
-                else if (key === "e") rerender("equipped", sort, done);
-                else if (key === "n") rerender(filter, "name", done);
-                else if (key === "g") rerender(filter, "weight", done);
+                if (key === "q") { doneCb(); activeDoneCb = null; }
+                else if (key === "a") rerender("all", sort);
+                else if (key === "w") rerender("weapon", sort);
+                else if (key === "c") rerender("consumable", sort);
+                else if (key === "t") rerender("clothing", sort);
+                else if (key === "e") rerender("equipped", sort);
+                else if (key === "n") rerender(filter, "name");
+                else if (key === "g") rerender(filter, "weight");
                 else if (key === "u") {
-                  // 使用消耗品：列出可用的 consumable 物品
                   const consumables = p.inventory.filter((i: any) => i.type === "consumable");
                   if (consumables.length === 0) {
                     ctx.ui.notify("没有可用的消耗品", "warning");
                     return;
                   }
-                  // 简单版：使用第一个消耗品（完整实现应用菜单选择）
                   const item = consumables[0];
                   const idx = p.inventory.indexOf(item);
                   if (idx >= 0) {
@@ -84,7 +88,7 @@ export default {
                     p.inventory.splice(idx, 1);
                     saveState();
                     ctx.ui.notify(`使用了 ${item.name}${healed ? `，HP ${p.hp.current}/${p.hp.max}` : ""}`, "info");
-                    rerender(filter, sort, done);
+                    rerender(filter, sort);
                   }
                 }
                 else if (key === "d") {
@@ -96,7 +100,7 @@ export default {
                       p.inventory.splice(idx, 1);
                       saveState();
                       ctx.ui.notify(`丢弃了 ${name}`, "info");
-                      rerender(filter, sort, done);
+                      rerender(filter, sort);
                     }
                   }
                 }
@@ -106,9 +110,8 @@ export default {
           },
           { overlay: true }
         );
-        done();
       };
 
-      rerender("all", "name", () => {});
+      rerender("all", "name");
     },
   };

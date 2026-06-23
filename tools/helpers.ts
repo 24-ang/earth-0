@@ -120,29 +120,30 @@ export async function generateCompletion(promptText: string, maxTokens: number, 
   return data?.content?.[0]?.text?.trim() || "";
 }
 
-export function updateChatHUD(ctx: any) {
+const timeOfDayZH: Record<string, string> = {
+  morning: "午前", lunch: "昼", afternoon: "午後", evening: "夕方", night: "夜"
+};
+
+function buildStatusBarText(): string | null {
   try {
     if (gameState && gameState.time && gameState.player) {
-      const timeOfDayZH: Record<string, string> = {
-        morning: "午前",
-        lunch: "昼",
-        afternoon: "午後",
-        evening: "夕方",
-        night: "夜"
-      };
       const loc = gameState.player.location;
       const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
       const cLoc = clean(loc);
       const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
       const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
       const totalCount = npcsHereCount + namelessCount;
-      
-      const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
-      ctx.ui.setWidget("hud-status-bar", [statusBarText]);
+      return `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
     }
   } catch (e) {
-    console.error("updateChatHUD error:", e);
+    console.error("buildStatusBarText error:", e);
   }
+  return null;
+}
+
+export function updateChatHUD(ctx: any) {
+  const text = buildStatusBarText();
+  if (text) ctx.ui.setWidget("hud-status-bar", [text]);
 }
 
 export async function moveTo(loc: string, ctx: any, gs: any, save: any) {
@@ -179,29 +180,12 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
           out.push("┌─" + title + " " + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐");
           
           // TUI HUD Status Bar
-          try {
-            if (gameState && gameState.time && gameState.player) {
-              const timeOfDayZH: Record<string, string> = {
-                morning: "午前",
-                lunch: "昼",
-                afternoon: "午後",
-                evening: "夕方",
-                night: "夜"
-              };
-              const loc = gameState.player.location;
-              const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
-              const cLoc = clean(loc);
-              const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
-              const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
-              const totalCount = npcsHereCount + namelessCount;
-              const statusBarText = `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
-              const barTrunc = truncateToWidth(statusBarText, w - 4);
-              const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
-              out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
-              out.push("├" + "─".repeat(w - 2) + "┤");
-            }
-          } catch (e) {
-            console.error("showMenu render status bar error:", e);
+          const statusText = buildStatusBarText();
+          if (statusText) {
+            const barTrunc = truncateToWidth(statusText, w - 4);
+            const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
+            out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
+            out.push("├" + "─".repeat(w - 2) + "┤");
           }
 
           const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
@@ -246,7 +230,11 @@ export async function advanceTimeMinutes(mins: number, ctx: any, gs: any, save: 
   const { tickSexStates } = await import("../engine/state.ts");
   await tickSexStates(result.daysAdvanced, mins);
   const { checkTimelineEvents, expireHooks } = await import("../engine/timeline.ts");
+  const { checkDriveDrivenHooks } = await import("../engine/drives.ts");
   checkTimelineEvents();
+  checkDriveDrivenHooks();
+  const { tickLifeEvents } = await import("../engine/life-events.ts");
+  tickLifeEvents();
   await expireHooks();
   gs.player.fatigue = Math.min(100, (gs.player.fatigue ?? 0) + Math.round(mins / 12));
   save();

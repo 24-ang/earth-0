@@ -31,8 +31,9 @@ export default {
       if (gameState.player.sex.climaxCount == null) gameState.player.sex.climaxCount = 0;
       if (gameState.player.sex.squirtCount == null) gameState.player.sex.squirtCount = 0;
 
-      // Apply arousal change
-      gameState.player.sex.arousal = Math.min(100, gameState.player.sex.arousal + r.arousalChange);
+      // Apply arousal change — NaN 防线: 如果计算结果为 NaN，重置为 0
+      const newArousal = gameState.player.sex.arousal + r.arousalChange;
+      gameState.player.sex.arousal = isNaN(newArousal) ? 0 : Math.min(100, newArousal);
       
       // Track touched parts in gameState.flags
       const flagKey = `sex_parts_touched_${params.char}`;

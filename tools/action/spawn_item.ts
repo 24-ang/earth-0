@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "spawn_item", label: "生成物品",
-    description: "剧情生成物品放入背包。须提供source和reason。禁止绕过buy_item/steal_item正常获取。",
+    description: "剧情生成物品放入背包。须提供source和reason。",
     parameters: Type.Object({
       target: Type.String({ description: "接收者：'玩家' 或 NPC 名" }),
       item: Type.Object({

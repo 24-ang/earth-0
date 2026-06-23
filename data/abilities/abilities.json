@@ -1,0 +1,48 @@
+[
+  {
+    "name": "火遁·豪火球之术",
+    "rank": "C",
+    "description": "从口中喷出巨大火球。可被水遁克制。",
+    "resourceCost": { "chakra": 15 },
+    "cooldown": 1,
+    "damage": { "dice": "2d8", "type": "火焰", "area": "cone_3m" },
+    "requires": { "skills": { "忍术": 2 } }
+  },
+  {
+    "name": "影分身之术",
+    "rank": "B",
+    "description": "制造实体分身。分身受击即消失，消失时经验传回本体。",
+    "resourceCost": { "chakra": 20 },
+    "cooldown": 3,
+    "requires": { "skills": { "忍术": 4 } }
+  },
+  {
+    "name": "千鸟",
+    "rank": "A",
+    "description": "将雷遁查克拉集中于手掌，形成高速穿刺攻击。",
+    "resourceCost": { "chakra": 30 },
+    "cooldown": 2,
+    "damage": { "dice": "4d8", "type": "雷电穿刺" },
+    "requires": { "skills": { "忍术": 5 }, "abilities": { "写轮眼": 1 } }
+  },
+  {
+    "name": "八卦掌·回天",
+    "rank": "B",
+    "description": "从全身穴位释放查克拉高速旋转，形成绝对防御。",
+    "resourceCost": { "chakra": 25 },
+    "cooldown": 2,
+    "requires": { "skills": { "体术": 4 }, "abilities": { "白眼": 1 } }
+  },
+  {
+    "name": "写轮眼",
+    "rank": "S",
+    "description": "宇智波一族的血继限界。看穿对手动作、复制忍术、施加幻术。被动生效。",
+    "narrativeOnly": true
+  },
+  {
+    "name": "白眼",
+    "rank": "A",
+    "description": "日向一族的血继限界。360°透视视野，看穿经络系统。被动生效。",
+    "narrativeOnly": true
+  }
+]

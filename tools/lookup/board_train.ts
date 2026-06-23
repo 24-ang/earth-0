@@ -9,7 +9,7 @@ export default {
     }),
     async execute(_id, params, _s, _o, _ctx) {
       // 查时刻表
-      const cityMap = await import("./data/city_map.json", { with: { type: "json" } });
+      const cityMap = await import("../../data/city_map.json", { with: { type: "json" } });
       const regions = (cityMap as any).default?.regions || {};
       let mins = 0;
       for (const reg of Object.values(regions) as any[]) {
