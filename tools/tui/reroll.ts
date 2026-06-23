@@ -18,8 +18,8 @@ export default {
         const fs = await import("node:fs");
         const path = await import("node:path");
         let modelMappings: Record<string, string> = {
-          logic_engine_model: "model_pro_default",
-          narrative_render_model: "model_flash_default"
+          logic_engine_model: "deepseek/deepseek-v4-pro",
+          narrative_render_model: "deepseek/deepseek-v4-pro"
         };
         try {
           const renderJsonPath = path.resolve(process.cwd(), "data", "rendering.json");

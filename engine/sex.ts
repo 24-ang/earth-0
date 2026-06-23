@@ -142,14 +142,18 @@ export interface TouchResult {
 export function touchBodyPart(profile: SexProfile, state: SexState, part: string, intensity: "轻" | "中" | "重"): TouchResult {
   const bp = profile.bodyParts[part];
   if (!bp) return { arousalChange: 0, reaction: "无特别反应", sensitive: false };
-  
+
   if (bp.preference === "排斥" && bp.development === 0) {
     return { arousalChange: -3, reaction: "明显退缩，身体绷紧", sensitive: true };
   }
-  
-  const intensityMult = { "轻": 0.5, "中": 1.0, "重": 1.5 };
-  const change = bp.sensitivity * intensityMult[intensity] - bp.development;
-  const finalChange = Math.round(Math.max(0, change)); // 最低0,不会降
+
+  const intensityMult: Record<string, number> = { "轻": 0.5, "中": 1.0, "重": 1.5 };
+  const mult = intensityMult[intensity] ?? 1.0; // 防御非预期 intensity 值导致 NaN
+  const sens = typeof bp.sensitivity === "number" ? bp.sensitivity : 1;
+  const dev = typeof bp.development === "number" ? bp.development : 0;
+  const change = sens * mult - dev;
+  const finalChange = Math.round(Math.max(0, change));
+  if (isNaN(finalChange)) return { arousalChange: 0, reaction: "无特别反应", sensitive: false };
   
   const devDesc = getDevDescription(bp.development);
   let reaction = "";

@@ -8,7 +8,7 @@
  * - 钩子重复出现强制写 novelty
  */
 
-import type { TimelineEvent, Hook, QuestState, CalendarEntry } from "./types.ts";
+import type { TimelineEvent, Hook, QuestState, CalendarEntry, DynamicEvent } from "./types.ts";
 import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation } from "./state.ts";
 import { LIFE_STAGES } from "./time.ts";
 import fs from "node:fs";
@@ -164,7 +164,7 @@ function loadAllTimelines(): TimelineEvent[] {
 }
 
 /** 计算当前游戏天数（从 game_date 解析） — 时区与夏令时安全 */
-function currentDay(): number {
+export function currentDay(): number {
   const d = gameState.time.game_date; // "2018-04-07"
   const parts = d.split("-");
   const y = Number(parts[0]);
@@ -174,6 +174,24 @@ function currentDay(): number {
   const start = Date.UTC(startYear, 0, 1);
   const now = Date.UTC(y, m, day);
   return Math.round((now - start) / 86400000) + 1;
+}
+
+/** 注入动态事件（LLM 工具或引擎自动调用）→ 写入 dynamicEvents 注册表 */
+export function injectDynamicEvent(event: DynamicEvent): string {
+  gameState.dynamicEvents ??= [];
+  const existing = gameState.dynamicEvents.findIndex(e => e.id === event.id);
+  if (existing >= 0) {
+    gameState.dynamicEvents[existing] = event;
+    return `已更新动态事件: ${event.id}`;
+  }
+  gameState.dynamicEvents.push(event);
+  return `已注入动态事件: ${event.id}`;
+}
+
+/** 移除动态事件（钩子被打开/过期时调用） */
+export function removeDynamicEvent(eventId: string): void {
+  gameState.dynamicEvents ??= [];
+  gameState.dynamicEvents = gameState.dynamicEvents.filter(e => e.id !== eventId);
 }
 
 /** 检查触发条件 */
@@ -239,12 +257,59 @@ function checkTrigger(event: TimelineEvent, day: number): boolean {
   return true;
 }
 
+/** 好感驱动钩子：高好感 NPC 不在场时自动产钩子（引擎驱动，零 tk） */
+export function checkAffectionDrivenHooks(): void {
+  const p = gameState.player;
+  const AFFECTION_THRESHOLD = 70;
+  gameState.dynamicEvents ??= [];
+
+  for (const [npcName, rel] of Object.entries(p.relationships)) {
+    if (rel.affection < AFFECTION_THRESHOLD) continue;
+    const npc = gameState.npcs[npcName];
+    if (!npc) continue;
+
+    const eventId = `affection_${npcName}`;
+
+    // NPC 已在玩家面前 → 不需要钩子
+    if (isSameLocation(npc.currentRoom, p.location)) {
+      removeDynamicEvent(eventId);
+      continue;
+    }
+
+    // 创建/更新动态事件（checkTimelineEvents 会在同一次调用中扫描到它）
+    injectDynamicEvent({
+      id: eventId,
+      source: "engine",
+      expires_days: 3,
+      repeatable: true,
+      hook: {
+        source_npc: npcName,
+        hook_text: `${npcName}好像想见你`,
+        urgency: "low",
+      },
+    });
+  }
+
+  // 清理已失效的关系事件（好感跌破阈值 / 关系被删除）
+  for (const ev of [...gameState.dynamicEvents]) {
+    if (ev.id.startsWith("affection_") && ev.source === "engine") {
+      const name = ev.id.replace("affection_", "");
+      if (!p.relationships[name] || (p.relationships[name]?.affection ?? 0) < AFFECTION_THRESHOLD) {
+        removeDynamicEvent(ev.id);
+      }
+    }
+  }
+}
+
 /** 每回合调用：扫描未触发事件 → 满足条件 → 加入 active_hooks */
 export function checkTimelineEvents(): void {
   const day = currentDay();
   const events = loadAllTimelines();
   gameState.active_hooks ??= [];
   gameState.completed_events ??= [];
+
+  // 先跑引擎驱动钩子（好感→动态事件），再扫描动态事件使其在同回合生效
+  checkAffectionDrivenHooks();
 
   for (const ev of events) {
     // 已完成/已过期/不可重复 → 跳过
@@ -269,6 +334,25 @@ export function checkTimelineEvents(): void {
     gameState.active_hooks.push(hook);
   }
 
+  // 扫描动态事件（LLM/引擎运行时创建，不入 JSON 文件）
+  gameState.dynamicEvents ??= [];
+  for (const ev of gameState.dynamicEvents) {
+    if (gameState.completed_events.includes(ev.id) && !ev.repeatable) continue;
+    if (gameState.active_hooks.some(h => h.event_id === ev.id)) continue;
+    if (ev.trigger && !checkTrigger(ev as any, day)) continue;
+
+    const hook: Hook = {
+      event_id: ev.id,
+      source_npc: ev.hook.source_npc,
+      hook_text: ev.hook.hook_text,
+      urgency: ev.hook.urgency,
+      created_day: day,
+      expires_day: day + ev.expires_days,
+      seen_count: 0,
+    };
+    gameState.active_hooks.push(hook);
+  }
+
   // 上限 3 条 → 优先保留高紧迫度，同紧迫度保留最新的
   if (gameState.active_hooks.length > 3) {
     const urgencyRank = { high: 3, medium: 2, low: 1 };
@@ -279,9 +363,10 @@ export function checkTimelineEvents(): void {
     });
     // 多余的标记为静默过期（不执行惩罚效果，不扣好感，不生成失败flag）
     const removed = gameState.active_hooks.splice(3);
-    const events = loadAllTimelines();
+    const jsonEvents = loadAllTimelines();
+    gameState.dynamicEvents ??= [];
     for (const h of removed) {
-      const ev = events.find(e => e.id === h.event_id);
+      const ev = jsonEvents.find(e => e.id === h.event_id) ?? gameState.dynamicEvents.find(e => e.id === h.event_id);
       if (ev) expireHookSync(h, ev);
     }
   }
@@ -304,11 +389,14 @@ export async function expireHooks(): Promise<void> {
 }
 
 /** 同步标记钩子过期状态 */
-function expireHookSync(hook: Hook, ev: TimelineEvent): void {
+function expireHookSync(hook: Hook, ev: TimelineEvent | DynamicEvent): void {
   // 记录到 completed_events
   if (!ev.repeatable) {
     gameState.completed_events.push(ev.id);
   }
+
+  // 如果是动态事件，从注册表移除
+  removeDynamicEvent(hook.event_id);
 
   // 如果有对应的 active quest，标记为 expired
   gameState.quests ??= {};
@@ -320,14 +408,19 @@ function expireHookSync(hook: Hook, ev: TimelineEvent): void {
 /** 单个钩子过期处理 */
 async function expireHook(hook: Hook, silent = false): Promise<void> {
   const events = loadAllTimelines();
-  const ev = events.find(e => e.id === hook.event_id);
+  let ev: TimelineEvent | DynamicEvent | undefined = events.find(e => e.id === hook.event_id);
+  // 没找到 → 尝试动态事件注册表
+  if (!ev) {
+    gameState.dynamicEvents ??= [];
+    ev = gameState.dynamicEvents.find(e => e.id === hook.event_id);
+  }
   if (!ev) return;
 
   // 调用同步部分
   expireHookSync(hook, ev);
 
-  // 执行 on_expire effects
-  if (!silent && ev.on_expire?.effects) {
+  // 执行 on_expire effects（仅 TimelineEvent 有）
+  if (!silent && "on_expire" in ev && ev.on_expire?.effects) {
     await applyBeatEffects(ev.on_expire.effects);
   }
 }
@@ -337,11 +430,15 @@ export function getActiveHooks(): Hook[] {
   gameState.active_hooks ??= [];
   const events = loadAllTimelines();
   const validIds = new Set(events.map(e => e.id));
+  // 动态事件 ID 也视为有效
+  if (gameState.dynamicEvents) {
+    for (const de of gameState.dynamicEvents) validIds.add(de.id);
+  }
   const isTest = typeof process !== "undefined" && (
     process.env.NODE_ENV === "test" ||
     process.argv.some(arg => arg.includes("test.ts") || arg.includes("test"))
   );
-  return gameState.active_hooks.filter(h => 
+  return gameState.active_hooks.filter(h =>
     validIds.has(h.event_id) ||
     (isTest && (
       h.event_id.startsWith("old_") ||
@@ -477,6 +574,8 @@ export async function openQuest(eventId: string): Promise<string | null> {
 
   // 从 active_hooks 中移除
   gameState.active_hooks = gameState.active_hooks.filter(h => h.event_id !== eventId);
+  // 如果是动态事件，从注册表移除
+  removeDynamicEvent(eventId);
 
   // 自动推进满足 auto_if 条件的 beat
   const autoLogs = await autoAdvanceQuest(ev, gameState.quests[eventId]);

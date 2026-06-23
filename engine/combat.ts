@@ -47,14 +47,16 @@ export function resolveAttack(
   attacker: Combatant,
   defender: Combatant,
   weapon: Item,
-  advantage: Advantage = "平"
+  advantage: Advantage = "平",
+  combatSkill: string = "格斗"
 ): AttackResult {
   const useStr = weapon.damage?.damageType !== "穿刺";
   const attrKey = useStr ? "力量" : "敏捷";
   const baseAttr = attacker.state.attributes[attrKey];
   const equipBonus = getEquipmentBonus(attacker.state.equipment, "attribute_bonus", attrKey);
   const attr = baseAttr + equipBonus;
-  const skill = attacker.state.skills["格斗"]?.level ?? 0;
+  const skill = (attacker.state.skills[combatSkill]?.level ?? attacker.state.skills["格斗"]?.level ?? 0)
+    + getEquipmentBonus(attacker.state.equipment, "skill_bonus", combatSkill);
   const ac = defender.state.ac;
 
   // 等级碾压

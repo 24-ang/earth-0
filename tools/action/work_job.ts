@@ -9,6 +9,7 @@ export default {
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { workJob, saveState, gameState } = await import("../../engine/state.ts");
+      const { advanceTimeMinutes } = await import("../helpers.ts");
       const r = workJob(params.jobName, params.hours);
       await advanceTimeMinutes(params.hours * 60, _ctx, gameState, saveState);
       return { content: [{ type: "text", text: r }], details: {} };

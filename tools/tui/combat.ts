@@ -4,7 +4,7 @@ import { showPanel } from "../helpers.ts";
 export default {
     description: "查看玩家战斗状态与周边敌对NPC",
     handler: async (_args, ctx) => {
-      const { gameState, getOrCreateNPC } = await import("../../engine/state.ts");
+      const { gameState, getOrCreateNPC, getCurrency, isSameLocation } = await import("../../engine/state.ts");
       const lines: string[] = [];
       const p = gameState.player;
 
@@ -30,8 +30,6 @@ export default {
       // 周边NPC战力
       lines.push("────────────────────────────────────────");
       lines.push("👥 周边 NPC 战力评估:");
-      const { isSameLocation } = await import("../../engine/state.ts");
-      const { allChars } = await import("../../engine/router.ts");
       const nearbyNPCs = Object.entries(gameState.npcs)
         .filter(([_, n]) => isSameLocation(n.currentRoom, p.location));
 
@@ -39,12 +37,11 @@ export default {
         lines.push("  (周围没有NPC)");
       } else {
         for (const [name, npc] of nearbyNPCs) {
-          const src = allChars.find((c: any) => c.name === name);
-          const srcHp = src?.hp || { current: 10, max: 10 };
-          const srcAttr = src?.attributes || { 力量: 10, 敏捷: 10, 体质: 10 };
+          const npcHp = npc.hp || { current: 10, max: 10 };
+          const npcAttr = npc.attributes || { 力量: 10, 敏捷: 10, 体质: 10 };
           const weapon = npc.equipment?.right_hand || npc.equipment?.left_hand;
           const wpnStr = weapon?.damage ? `${weapon.name}(${weapon.damage.dice})` : "徒手";
-          lines.push(`  ${name}: HP${srcHp.current}/${srcHp.max} AC${10 + Math.floor(((srcAttr.敏捷 || 10) - 10) / 2)} ${wpnStr}`);
+          lines.push(`  ${name}: HP${npcHp.current}/${npcHp.max} AC${10 + Math.floor(((npcAttr.敏捷 || 10) - 10) / 2)} ${wpnStr}`);
         }
       }
 

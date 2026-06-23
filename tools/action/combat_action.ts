@@ -2,11 +2,12 @@ import { Type } from "typebox";
 
 export default {
     name: "combat_action", label: "战斗",
-    description: "攻击|防御|逃跑|死亡豁免。actor可选NPC名(以NPC攻击)。",
+    description: "攻击|防御|逃跑|死亡豁免。actor可选NPC名。skill可选(默认格斗)。",
     parameters: Type.Object({
       action: Type.String({ description: "attack / defend / flee / death_save" }),
       target: Type.Optional(Type.String({ description: "目标名，attack/flee 时需要" })),
       actor: Type.Optional(Type.String({ description: "行动者，默认玩家。设为 NPC 名则 NPC 执行该动作" })),
+      skill: Type.Optional(Type.String({ description: "攻击技能名，默认格斗。如剑术/射击/拳法" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState, getOrCreateNPC, damageItem, calcAC } = await import("../../engine/state.ts");
@@ -62,14 +63,15 @@ export default {
         const weapon = Object.values(isNPC ? attackerEquip : p.equipment).find((w: any) => w?.damage)
           || { name: "拳头", damage: { dice: "1d2", damageType: "钝击" }, type: "weapon", slot: "right_hand", weight: 0, effects: [], state: "intact" };
 
-        const result = resolveAttack(attacker, defender, weapon as any);
+        const result = resolveAttack(attacker, defender, weapon as any, "平", params.skill || "格斗");
         r = result.narrative;
 
         // 实际伤害写入目标 HP
+        // 注意: resolveAttack 已直接修改 defender.state.hp.current
+        // 玩家: defender.state === p 同一引用 → p.hp.current 已更新，不需重复
+        // NPC: defender.state 是 clone → 需回写到 gameState.npcs
         if (result.hit && result.damage) {
-          if (defender === playerCombatant) {
-            p.hp.current = Math.max(0, p.hp.current - result.damage);
-          } else {
+          if (defender !== playerCombatant) {
             const npc = getOrCreateNPC(defender.name);
             npc.hp.current = defender.state.hp.current;
             if (npc.hp.current <= 0) {
@@ -98,14 +100,16 @@ export default {
           }
         }
       } else if (params.action === "defend") {
-        r = defend(playerCombatant);
-        r += `\n[HP] ${p.name}:${p.hp.current}/${p.hp.max}`;
+        const defender = isNPC ? buildNPCCombatant(params.actor!) : playerCombatant;
+        r = defend(defender);
+        r += `\n[HP] ${defender.name}:${defender.state.hp.current}/${defender.state.hp.max}`;
       } else if (params.action === "flee") {
-        const npcName = params.target || Object.keys(gameState.npcs)[0];
+        const fleer = isNPC ? buildNPCCombatant(params.actor!) : playerCombatant;
+        const npcName = params.target || Object.keys(gameState.npcs).find(n => n !== params.actor);
         if (!npcName) { r = "没有敌人可逃跑"; }
         else {
           const npcCombatant = buildNPCCombatant(npcName);
-          r = attemptFlee(playerCombatant, npcCombatant).narrative;
+          r = attemptFlee(fleer, npcCombatant).narrative;
         }
       } else r = "无效战斗动作";
       saveState();

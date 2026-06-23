@@ -4,7 +4,7 @@ import { showPanel } from "../helpers.ts";
 export default {
     description: "浏览附近商店货架与打工列表",
     handler: async (_args, ctx) => {
-      const { gameState, getLocationNav } = await import("../../engine/state.ts");
+      const { gameState, getLocationNav, getCurrency } = await import("../../engine/state.ts");
       const lines: string[] = [];
       const loc = gameState.player.location;
 
@@ -22,7 +22,7 @@ export default {
       }
       let economy: any = null;
       try {
-        economy = (await import("./data/economy.json", { with: { type: "json" } })).default;
+        economy = (await import("../../data/economy.json", { with: { type: "json" } })).default;
       } catch (e) {
         console.error("shop command economy loading error:", e);
       }

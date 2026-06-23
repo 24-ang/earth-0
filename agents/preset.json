@@ -14,9 +14,10 @@
   },
 
   "layers": {
+    "start":     { "file": "agents/gm-start.md",      "desc": "开局流程（角色确认/init_game/开场叙事）" },
     "pre":       { "file": "agents/gm-pre.md",       "desc": "世界观 + 核心原则" },
     "rules":     { "file": "agents/gm-rules.md",      "desc": "硬规则（骰子/战斗/HP/负重等）" },
-    "contract":  { "file": "agents/gm-contract.md",    "desc": "输出闸门（禁止/必须/格式）" },
+    "contract":  { "file": "agents/gm-contract.md",    "desc": "输出闸门（禁止/必须/格式 + 每轮检查清单）" },
     "state":     { "file": "agents/gm-state.md",       "desc": "状态简报（模板，engine 填入实时数据）", "template": true },
     "mode_gal":  { "file": "agents/gm-mode-gal.md",    "desc": "日常/GAL 叙事规则", "mode": "gal" },
     "mode_rpg":  { "file": "agents/gm-mode-rpg.md",    "desc": "检定/探索叙事规则", "mode": "rpg" },
@@ -24,8 +25,8 @@
   },
 
   "assembly": {
-    "default": ["pre", "rules", "contract", "state", "mode_{mode}"],
-    "lite":    ["pre", "contract", "state", "mode_{mode}"]
+    "default": ["start", "pre", "rules", "contract", "state", "mode_{mode}"],
+    "lite":    ["start", "pre", "contract", "state", "mode_{mode}"]
   },
 
   "layer1": {

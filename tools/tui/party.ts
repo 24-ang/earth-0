@@ -4,8 +4,7 @@ import { showPanel } from "../helpers.ts";
 export default {
     description: "查看当前队伍成员状态",
     handler: async (_args, ctx) => {
-      const { gameState, getOrCreateNPC } = await import("../../engine/state.ts");
-      const { allChars } = await import("../../engine/router.ts");
+      const { gameState, getOrCreateNPC, findCharacter } = await import("../../engine/state.ts");
       const p = gameState.player;
       const lines: string[] = [];
       

@@ -6,8 +6,9 @@ export default {
     parameters: Type.Object({}),
     async execute(_id, _params, _s, _o, _ctx) {
       const { gameState, saveState } = await import("../../engine/state.ts");
+      const { moveTo, advanceTimeMinutes } = await import("../helpers.ts");
       if (!gameState.pendingTravel) return { content: [{ type: "text", text: "目前没有正在进行的旅行" }], details: {} };
-      
+
       const pt = gameState.pendingTravel;
       gameState.pendingTravel = null;
       saveState();

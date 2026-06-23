@@ -1,17 +1,17 @@
 import { Type } from "typebox";
-import { showMenu } from "../helpers.ts";
+import { showMenu, updateChatHUD } from "../helpers.ts";
 
 export default {
     description: "电车通勤：查看当前区域车站，购票乘车",
     handler: async (_args, ctx) => {
-      const { gameState, saveState, getLocationNav } = await import("../../engine/state.ts");
+      const { gameState, saveState, getLocationNav, getCurrency } = await import("../../engine/state.ts");
       const loc = gameState.player.location;
       const nav = getLocationNav(loc);
 
       // 加载车站数据
       let cityMap: any = null;
       try {
-        cityMap = (await import("./data/city_map.json", { with: { type: "json" } })).default;
+        cityMap = (await import("../../data/city_map.json", { with: { type: "json" } })).default;
       } catch (e) {
         console.error("train command cityMap loading error:", e);
       }

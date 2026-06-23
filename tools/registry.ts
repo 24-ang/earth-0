@@ -48,6 +48,7 @@ import lookupBodyTool from "./state/lookup_body.ts";
 import lookupLoreTool from "./lookup/lookup_lore.ts";
 import lookupVillainTool from "./lookup/lookup_villain.ts";
 import addMemoryTagTool from "./state/add_memory_tag.ts";
+import setNpcDrivesTool from "./state/set_npc_drives.ts";
 import setNpcRelationTool from "./state/set_npc_relation.ts";
 import tableCreateTool from "./action/table_create.ts";
 import tableUpdateTool from "./action/table_update.ts";
@@ -64,6 +65,9 @@ import browseSnsTool from "./lookup/browse_sns.ts";
 import postSnsTool from "./lookup/post_sns.ts";
 import makeCallTool from "./lookup/make_call.ts";
 import addCalendarEventTool from "./action/add_calendar_event.ts";
+import createStoryHookTool from "./action/create_story_hook.ts";
+import instantiateNpcTool from "./action/instantiate_npc.ts";
+import addLifeEventTool from "./action/add_life_event.ts";
 import gambleBetTool from "./action/gamble_bet.ts";
 import blackMarketTradeTool from "./action/black_market_trade.ts";
 import managePropertyTool from "./action/manage_property.ts";
@@ -72,6 +76,8 @@ import lookupWeatherTool from "./lookup/lookup_weather.ts";
 import travelIntercityTool from "./lookup/travel_intercity.ts";
 import interactFurnitureTool from "./action/interact_furniture.ts";
 import restockShopTool from "./action/restock_shop.ts";
+import useAbilityTool from "./action/use_ability.ts";
+import lookupAbilityTool from "./lookup/lookup_ability.ts";
 import gambleCommand from "./tui/gamble.ts";
 import housingCommand from "./tui/housing.ts";
 import relationsCommand from "./tui/relations.ts";
@@ -163,6 +169,7 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerTool(lookupLoreTool);
   pi.registerTool(lookupVillainTool);
   pi.registerTool(addMemoryTagTool);
+  pi.registerTool(setNpcDrivesTool);
   pi.registerTool(setNpcRelationTool);
   pi.registerTool(tableCreateTool);
   pi.registerTool(tableUpdateTool);
@@ -179,6 +186,9 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerTool(postSnsTool);
   pi.registerTool(makeCallTool);
   pi.registerTool(addCalendarEventTool);
+  pi.registerTool(createStoryHookTool);
+  pi.registerTool(instantiateNpcTool);
+  pi.registerTool(addLifeEventTool);
   pi.registerTool(gambleBetTool);
   pi.registerTool(blackMarketTradeTool);
   pi.registerTool(managePropertyTool);
@@ -187,6 +197,8 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerTool(travelIntercityTool);
   pi.registerTool(interactFurnitureTool);
   pi.registerTool(restockShopTool);
+  pi.registerTool(useAbilityTool);
+  pi.registerTool(lookupAbilityTool);
 
   // Register Commands
   pi.registerCommand("gamble", gambleCommand);

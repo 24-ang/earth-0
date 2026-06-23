@@ -6,7 +6,7 @@ export default {
     handler: async (args, ctx) => {
       const name = args.trim();
       if (!name) { ctx.ui.notify("用法: /look <角色名或物品名>", "warning"); return; }
-      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateNPC, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
+      const { gameState, getBodyForAge, getNpcCurrentAge, getOrCreateNPC, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getCurrency } = await import("../../engine/state.ts");
 
       const isPlayer = name === gameState.player.name || name === "玩家" || name === "我";
       if (isPlayer) {

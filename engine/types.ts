@@ -36,6 +36,19 @@ export interface Skill {
 
 export type Skills = Record<string, Skill>;
 
+// --- 能力（超能力/忍术/咒术等，与技能平行） ---
+export interface AbilityState {
+  name: string;
+  level: number;          // 1-10
+  exp: number;
+  nextLevel: number;      // (level+1) * 10
+  cooldownRemaining: number;
+}
+
+export interface ResourcePools {
+  [key: string]: { current: number; max: number } | undefined;
+}
+
 // --- 物品 ---
 export type ItemType = "weapon" | "clothing" | "armor" | "tool" | "consumable";
 export type SlotType = "inner_top" | "inner_bot" | "shirt" | "top" | "bottom" | "legs" | "feet" | "head" | "acc" | "left_hand" | "right_hand" | "back" | "mount";
@@ -208,6 +221,8 @@ export interface PlayerState {
   body: BodyMeasurements;
   attributes: Attributes;
   skills: Skills;
+  abilities: Record<string, AbilityState>;    // 超能力/忍术等 (Layer B)
+  resourcePools?: ResourcePools;              // 查克拉/魔力等，世界包激活时注入
   hp: { current: number; max: number };
   ac: number;
   equipment: EquipmentSlots;
@@ -268,12 +283,35 @@ export interface StaticCharacter {
   schedule_overrides?: Record<string, string>;
   schedule_group_by_age?: Record<string, string>;
   funds?: number;
+  drives_by_age?: Record<string, { drives: string[]; goal: string }>;  // 自主意图（按年龄段）
 }
 
 // --- NPC运行时状态（lazy init，只存被修改过的NPC） ---
 // --- 场景服装集（每套衣服的各槽物品名） ---
 export type OutfitKey = "school" | "pe" | "swim" | "casual" | "sleep";
 export type NPCOutfitSet = Record<OutfitKey, Partial<Record<string, string>>>;
+
+// --- NPC 人生事件（纯引擎状态机） ---
+export interface IllnessState {
+  type: string;           // "感冒" | "流感" | "重病" 等
+  severity: "轻" | "中" | "重";
+  day_started: number;    // 发病日
+  contagious: boolean;
+}
+
+export interface PregnancyState {
+  day_conceived: number;
+  father: string;
+  stage: "early" | "visible" | "due";
+  child_name?: string;    // 分娩后由 LLM 设定
+}
+
+export interface LifeEvent {
+  id: string;
+  type: "illness" | "pregnancy" | "criminal" | "conflict";
+  data: IllnessState | PregnancyState | { type: string; victim: string; day: number; witness?: string } | { npc1: string; npc2: string; cause: string; day: number };
+  day_started: number;
+}
 
 export interface NPCRuntimeState {
   inventory: Item[];
@@ -297,6 +335,11 @@ export interface NPCRuntimeState {
   alive: boolean;
   attributes: Attributes;
   skills: Record<string, Skill>;
+  abilities: Record<string, AbilityState>;
+  resourcePools?: ResourcePools;
+  current_drives?: string[];           // 当前驱动力（引擎从 drives_by_age 初始化，GM/NPC Agent 可更新）
+  current_goal?: string;               // 当前目标（引擎从 drives_by_age 初始化）
+  lifeEvents?: LifeEvent[];            // 进行中的人生事件（引擎追踪状态变化）
 }
 
 // --- 空间系统（棋盘格） ---
@@ -460,6 +503,33 @@ export interface Hook {
   novelty?: string;
 }
 
+// --- 动态事件（LLM/引擎运行时创建，不入 JSON 文件） ---
+export interface DynamicEvent {
+  id: string;
+  title?: string;
+  source: "llm" | "engine";
+  trigger?: {
+    min_age?: number;
+    max_age?: number;
+    player_stage?: string;
+    min_day?: number;
+    max_day?: number;
+    location?: string;
+    affection?: Record<string, number>;
+    time_of_day?: string[];
+    flags?: Record<string, boolean>;
+    min_skills?: Record<string, number>;
+    calendar_event?: string;
+  };
+  expires_days: number;
+  repeatable: boolean;
+  hook: {
+    source_npc: string;
+    hook_text: string;
+    urgency: "low" | "medium" | "high";
+  };
+}
+
 // --- 回合台账 (Layer 2) ---
 export interface TurnLogEntry {
   turn: number;
@@ -510,6 +580,7 @@ export interface GameState {
   academic_year_offset: number;              // 学年偏移（0=默认时间线，+1=全员升一年级，教师不变）
   active_hooks: Hook[];                        // 活跃钩子账本（上限 3）
   completed_events: string[];                  // 已完成/已过期的事件 ID（防重复触发）
+  dynamicEvents: DynamicEvent[];               // LLM/引擎动态创建的事件（不入 JSON）
   roomTimestamps: Record<string, string>;  // 房间名 → game_date，场景时间戳脏污
   activeWorld: string;                     // 当前活跃世界观（用于过滤时间线/日历/lore）
   turnLog: TurnLogEntry[];                 // Layer 2 回合台账

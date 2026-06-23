@@ -26,6 +26,8 @@ export default {
       if (gameState.player.sex.climaxCount == null) gameState.player.sex.climaxCount = 0;
       if (gameState.player.sex.squirtCount == null) gameState.player.sex.squirtCount = 0;
 
+      // NaN 防线
+      if (isNaN(gameState.player.sex.arousal)) gameState.player.sex.arousal = 0;
       let textResult = `${params.char}进行了 ${params.minutes} 分钟的自慰。兴奋度 +${r.arousalChange} (当前兴奋度: ${gameState.player.sex.arousal}/100)`;
       let settlementReport: any = null;
 
