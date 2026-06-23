@@ -4360,6 +4360,72 @@ test("P3: 角色常识 — 至交可以看到 intimate 级 private_facts", async
   }
 });
 
+// ── P4: Temporary NPC ──
+console.log("\n── P4: 临时NPC ──");
+
+test("P4: spawn + context injection + cleanup", async () => {
+  resetState();
+  const { spawnTempNPC, getTempNPCContext, cleanupTempNPCs } = await import("./engine/state.ts");
+
+  const result = spawnTempNPC({
+    name: "混混A",
+    act: "握着棒球棍逼近",
+    hostility: "敌对",
+    body_hint: "175cm 瘦削",
+    reason: "找维的麻烦",
+  });
+
+  if (!result.includes("混混A")) throw new Error(`spawn结果应包含NPC名: ${result}`);
+
+  const ctx = getTempNPCContext();
+  if (!ctx.includes("混混A") || !ctx.includes("⚔敌对")) {
+    throw new Error(`临时NPC应出现在场景上下文中: ${ctx}`);
+  }
+
+  // Cleanup
+  const cleaned = cleanupTempNPCs("测试");
+  if (!cleaned[0]?.includes("混混A")) throw new Error(`回收应包含混混A: ${cleaned}`);
+  if (getTempNPCContext() !== "") throw new Error("回收后临时NPC列表应为空");
+});
+
+test("P4: promote temp NPC to permanent", async () => {
+  resetState();
+  const { spawnTempNPC, promoteTempNPC, getOrCreateNPC } = await import("./engine/state.ts");
+
+  spawnTempNPC({
+    name: "有潜力的路人",
+    act: "犹豫地看着维",
+    hostility: "中立",
+    reason: "偶然相遇",
+  });
+
+  const result = promoteTempNPC("有潜力的路人", "玩家对他产生了兴趣");
+  if (!result || !result.includes("转正")) throw new Error(`转正失败: ${result}`);
+
+  // Should now exist as permanent NPC
+  const npc = getOrCreateNPC("有潜力的路人");
+  if (!npc) throw new Error("转正后NPC应存在于gameState.npcs");
+  if (npc.action !== "犹豫地看着维") throw new Error(`动作应保留: ${npc.action}`);
+});
+
+test("P4: hostile NPC stored correctly", async () => {
+  resetState();
+  const { spawnTempNPC } = await import("./engine/state.ts");
+
+  spawnTempNPC({
+    name: "敌方混混",
+    act: "抡起棒球棍",
+    hostility: "敌对",
+    reason: "挑衅",
+  });
+
+  // Verify hostility is stored correctly
+  const temps = gameState.tempNPCs || [];
+  const enemy = temps.find(t => t.name === "敌方混混");
+  if (!enemy) throw new Error("敌方混混未找到");
+  if (enemy.hostility !== "敌对") throw new Error(`应为敌对，实际: ${enemy.hostility}`);
+});
+
 (async () => {
   for (const t of testQueue) {
     try {
