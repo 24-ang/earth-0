@@ -137,14 +137,14 @@ export function getCalendarPhase(date: string, location: string): {
       continue;
     }
 
-    // Pre-phase: within advance_days before event
-    if (e.advance_days && offset < 0 && offset >= -e.advance_days) {
+    // Pre-phase: within advance_days before event (event is in the future)
+    if (e.advance_days && offset > 0 && offset <= e.advance_days) {
       if (e.range && !isInRange(e.range, e.center, location)) continue;
       preEntries.push(e);
     }
 
-    // After-phase: 1-2 days after event
-    if (e.aftermath_text && offset > 0 && offset <= 2) {
+    // After-phase: 1-2 days after event (event is in the past)
+    if (e.aftermath_text && offset < 0 && offset >= -2) {
       if (e.range && !isInRange(e.range, e.center, location)) continue;
       afterEntries.push(e);
     }
@@ -168,7 +168,7 @@ function locationMatches(entryLoc: string, playerLoc: string): boolean {
 
 function isInRange(range: string, center: string | undefined, playerLoc: string): boolean {
   if (range === "national" || range === "global") return true;
-  if (!center) return locationMatches(center || "", playerLoc);
+  if (!center) return false;
   return locationMatches(center, playerLoc);
 }
 
