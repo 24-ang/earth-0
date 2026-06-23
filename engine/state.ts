@@ -2,7 +2,7 @@
  * 状态引擎 - 角色状态 + HP + 负重 + 物品操作 + 持久化
  */
 
-import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, RevealVisibilityLevel, ContainerState, ContainerDef, CharacterFact } from "./types.ts";
+import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, RevealVisibilityLevel, ContainerState, ContainerDef, CharacterFact, TempNPCState } from "./types.ts";
 import { promptCollectors, schedule, type Collector } from "./collectors.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import charactersStatic from "../data/characters.json" with { type: "json" };
@@ -1140,6 +1140,12 @@ export async function buildStatePrompt(): Promise<string> {
     .map(([name, n]) => `${name}${n.action ? "("+n.action+")" : ""}`);
   if (inRoom.length > 0) tpl += `\n[在场] ${inRoom.join(", ")}`;
 
+  // 临时NPC注入 (P4)
+  const tempCtx = getTempNPCContext();
+  if (tempCtx) {
+    tpl += `\n[在场·临时]\n${tempCtx}`;
+  }
+
   // 注入 collector 注册表产出的上下文（NPC详情/关系/Layer1 等重段已迁移至 collector）
   const collectorText = await buildCollectorContext();
   if (collectorText) tpl += "\n" + collectorText;
@@ -1851,6 +1857,100 @@ export function instantiateNamelessNPC(namelessName: string, reason: string = ""
 
   const reasonLine = reason ? `\n原因: ${reason}` : "";
   return `${result}${reasonLine}\n模板: ${template.name} | act: ${template.act} | 推断: ${charData.gender}, ${charData.base_age}岁, ${charData.schedule_group}`;
+}
+
+// ── P4: 临时 NPC 管理 ──
+
+/** P4: Spawn a temporary NPC into the current scene */
+export function spawnTempNPC(params: {
+  name: string;
+  act: string;
+  hostility?: "友好" | "中立" | "敌对";
+  body_hint?: string;
+  reason: string;
+}): string {
+  gameState.tempNPCs ??= [];
+
+  // Check for duplicate name
+  if (gameState.tempNPCs.some(t => t.name === params.name)) {
+    return `临时NPC「${params.name}」已存在于当前场景`;
+  }
+
+  const temp: TempNPCState = {
+    name: params.name,
+    act: params.act,
+    hostility: params.hostility || "中立",
+    body_hint: params.body_hint,
+    reason: params.reason,
+    created_at_turn: gameState.turn,
+    created_at_date: gameState.time.game_date,
+  };
+
+  gameState.tempNPCs.push(temp);
+  return `临时NPC「${params.name}」已加入场景（${params.hostility || "中立"}）。场景结束自动回收。`;
+}
+
+/** P4: Clean up temp NPCs on scene transition */
+export function cleanupTempNPCs(trigger: string): string[] {
+  gameState.tempNPCs ??= [];
+  const removed = gameState.tempNPCs.map(t => t.name);
+  const count = removed.length;
+  gameState.tempNPCs = [];
+  if (count > 0) {
+    return [`[临时NPC回收] ${trigger}: ${removed.join("、")} 已离开场景（${count}人）`];
+  }
+  return [];
+}
+
+/** P4: Promote a temp NPC to permanent character */
+export function promoteTempNPC(tempName: string, reason: string): string | null {
+  gameState.tempNPCs ??= [];
+  const idx = gameState.tempNPCs.findIndex(t => t.name === tempName);
+  if (idx < 0) return null;
+
+  const temp = gameState.tempNPCs[idx];
+
+  // Build minimal StaticCharacter from temp data
+  const charData: any = {
+    name: temp.name,
+    source: "dynamic",
+    gender: "男",
+    base_age: 17,
+    appearance_brief: temp.body_hint || "普通身材",
+    schedule_group: "自由人",
+    tags: [],
+  };
+
+  // Store in dynamicCharacters
+  gameState.dynamicCharacters ??= {};
+  gameState.dynamicCharacters[temp.name] = charData;
+
+  // Initialize NPC runtime state
+  const npc = getOrCreateNPC(temp.name);
+  npc.action = temp.act;
+  npc.currentRoom = gameState.player.location;
+  npc.memoryTags.push({
+    tag: `[临时NPC转正] ${reason}`,
+    since: gameState.time.game_date,
+    expires: 365,
+    tone: "无感",
+  });
+
+  // Remove from temp list
+  gameState.tempNPCs.splice(idx, 1);
+
+  return `临时NPC「${temp.name}」已转正为永久角色。理由: ${reason}`;
+}
+
+/** P4: Get temp NPC context for prompt injection */
+export function getTempNPCContext(): string {
+  gameState.tempNPCs ??= [];
+  if (gameState.tempNPCs.length === 0) return "";
+
+  return gameState.tempNPCs.map(t => {
+    const hostilityNote = t.hostility === "敌对" ? " ⚔敌对" : t.hostility === "友好" ? " ☮友好" : "";
+    return `  [临时] ${t.name} — ${t.act}${hostilityNote}（${t.body_hint || "身材普通"}）`;
+  }).join("\n");
 }
 
 /** 查找角色（先静态库 → 动态注册表） */

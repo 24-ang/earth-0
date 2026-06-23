@@ -77,6 +77,7 @@ import travelIntercityTool from "./lookup/travel_intercity.ts";
 import interactFurnitureTool from "./action/interact_furniture.ts";
 import restockShopTool from "./action/restock_shop.ts";
 import useAbilityTool from "./action/use_ability.ts";
+import spawnTempNpcTool from "./action/spawn_temp_npc.ts";
 import lookupAbilityTool from "./lookup/lookup_ability.ts";
 import gambleCommand from "./tui/gamble.ts";
 import housingCommand from "./tui/housing.ts";
@@ -188,6 +189,7 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerTool(addCalendarEventTool);
   pi.registerTool(createStoryHookTool);
   pi.registerTool(instantiateNpcTool);
+  pi.registerTool(spawnTempNpcTool);
   pi.registerTool(addLifeEventTool);
   pi.registerTool(gambleBetTool);
   pi.registerTool(blackMarketTradeTool);
