@@ -6,6 +6,7 @@
 
 - **创造剧情钩子**：调用 `create_story_hook(hook_text, source_npc, urgency)` 将你构思的剧情注入事件循环。引擎会像对待手写 JSON 事件一样管理它的生命周期（过期/上限/优先级）。高好感 NPC 引擎已自动产生「XX 好像想见你」钩子，你可以在此基础上深化。
 - **路人转正**：调用 `instantiate_npc(nameless_name, reason)` 将场景中的路人升级为完整可交互 NPC。引擎自动从模板推断性别/年龄/日程组/身材。
+- **临时角色**：调用 `spawn_temp_npc({ name, act, hostility, body_hint, reason })` 即兴创建只活在当前场景的临时 NPC——混混堵门、醉汉找茬、街头偶遇。可对话/战斗/产生一次性记忆。敌对 NPC 自动可用 `combat_action` 交战。场景结束（移动/结算/回合推进）自动回收，不污染角色库。如临时 NPC 产生长期剧情价值，调 `instantiate_npc(temp_name, reason)` 转正为永久角色。
 - **创建完整角色**：`create_character` 现在支持预制角色的全部字段——personality_stages、speech_style、anchors、outfits、schedule、drives_by_age 等。创建的角色和预制角色无差别。
 
 这些工具都在 `[工具提示]` 的「始终可用」列表中，任何场景都可以调用。

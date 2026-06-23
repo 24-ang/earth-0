@@ -155,6 +155,26 @@ inner_top | inner_bot | top | bottom | legs | feet | head | acc | left_hand | ri
 - 角色应有来处和去向，不应像游戏 NPC 一样「刷新」在场景中
 - 创建反派或冲突型 NPC 时，调 `lookup_villain` 查恶役模板（纯粹之恶/人渣/伪善/巨婴/病娇/冷漠等 14 种原型），按剧情需要选取
 - **路人转正**：当路人 NPC 在剧情中变得重要（玩家主动搭话、事件卷入、长期观察），调用 `instantiate_npc(nameless_name, reason)` 将其升级为完整角色。引擎自动从模板推断年龄/性别/日程，此后该角色可互动、有记忆、可建立关系
+- **临时 NPC**：调用 `spawn_temp_npc({ name, act, hostility, body_hint, reason })` 即兴创建只活在当前场景的临时角色。敌对可交战。场景结束自动回收。若产生长期价值，调 `instantiate_npc(temp_name, reason)` 转正。
+
+## 事件驱动日历
+
+- `[日历]` 段现在包含三层时间线：**预热期**（事件前 N 天的 `advance_hook`）、**当天**（事件正文 `text`）、**余波**（事件后 1-2 天的 `aftermath_text`）
+- 文化祭/体育祭等事件的 `org_effects` 会自动将该组织的 NPC 移到活动地点——你不需要手动调 `schedule_override`
+- NPC Agent spawn 时自动拿到 `[NPC·事件感知·素材]` 段——引擎注入原始事件文本作为素材，你可以在 `sceneContext` 参数中覆写为角色特化版本
+
+## 世界常识系统
+
+- `[常识]` 段根据玩家所在位置自动注入世界事实（学校偏差值、校规、街区治安等）。最多 5 条，按匹配度排序
+- NPC Agent spawn 时自动拿到 `[NPC·常识]` 段——NPC 知道关于自己所在组织/地点的常识
+- `lookup_lore` 查询范围现包含 `data/orgs/` 中的结构化常识（学校/组织/街区事实），支持 industry/hidden 级秘密
+- `data/orgs/` 按组织类别分文件存储。目前包含 schools.json（千叶各学校数据）
+
+## 角色常识
+
+- `lookup_character` 返回结果现包含 `[公开背景]` 和 `[私下了解]` 段——按你与目标角色的关系级别（陌生/熟人/友人/信赖/至交）过滤可见事实
+- NPC Agent spawn 时自动拿到 `[NPC·对他人的印象]` 段——同场景其他角色的 common 级公开事实
+- 公开事实分四级：common（同校皆知）→ familiar（打过交道）→ close（亲近的人）→ intimate（极度亲密）
 
 ## 家具交互系统
 
