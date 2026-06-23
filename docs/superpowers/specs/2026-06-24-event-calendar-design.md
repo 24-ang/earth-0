@@ -16,8 +16,9 @@
 | 3 | GM 无法创建冲突场景 | 路人只有 `{name, act, height, gridPos}` 四个字段，不能打架/对话/产生记忆。`instantiate_npc` 太重 | 缺少「比文字素材重、比完整角色轻」的临时 NPC 层 |
 | 4 | 世界常识无处存放 | 总武高偏差值排名、女子校联谊文化、千叶治安差街区、松树象征地位——GM 和 NPC 都不知道，LLM 凭训练数据脑补 → OOC | `region_contexts.json` 只管地点氛围+社会规范，不管学校/组织/区域的事实性常识 |
 | 5 | 地点知识散落 | 小到店铺学校、大到国家——这些地点的常识没有结构化存储和触发机制 | 同上 |
+| 6 | 角色常识无处存放 | 雪之下雪乃每天坐 30 分钟电车通学——这个事实 GM 不知道、NPC 不知道。角色 JSON 只有属性/身体/装备，没有「别人知道她什么」的字段。LLM 脑补角色背景 → OOC | `StaticCharacter` 缺少 `public_facts` / `private_facts` |
 
-本计划书用三个子系统解决这五个问题。
+本计划书用四个子系统解决这六个问题。
 
 ---
 
@@ -270,7 +271,98 @@ P1 用 schedule_group + default_location 启发式推断组织归属。P2 实现
 
 ---
 
-## 第三部分：临时 NPC
+## 第三部分：角色常识（public_facts / private_facts）
+
+### 解决的问题
+
+问题 6（角色常识无处存放）。
+
+### 当前状态
+
+`StaticCharacter` 有 `personality_brief`、`speech_style`、`anchors`——描述角色「是什么样的人」，但没有任何字段描述「别人知道她什么」。
+
+例：雪之下雪乃独居、坐电车通学 30 分钟、偏差值学年第一——这些是总武高任何学生都可能知道的事实。现在 GM 不知道，NPC 不知道，LLM 脑补。
+
+### 方案
+
+在 `StaticCharacter` 加两个字段。数据放角色自身 JSON 里，不另建文件。
+
+#### 数据结构
+
+```json
+{
+  "name": "雪之下雪乃",
+  "public_facts": [
+    {
+      "text": "雪之下家的二女儿，偏差值学年第一。独居，坐 JR 总武线从幕张通学，单程约 30 分钟。",
+      "level": "common"
+    },
+    {
+      "text": "父亲是雪之下建设的社长，但雪乃刻意脱离家族影响——不坐私家车，不参加家族社交。",
+      "level": "familiar"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "被姐姐阳乃的完美阴影压得喘不过气，但从不表现出来。",
+      "level": "close"
+    },
+    {
+      "text": "小学时全班以她太优秀为由孤立她——从此不信任集体。",
+      "level": "close"
+    },
+    {
+      "text": "车祸后内心对比企谷有复杂的感觉——感激、愧疚、还有一种说不清的东西。",
+      "level": "intimate"
+    }
+  ]
+}
+```
+
+#### 四级可见性
+
+| level | 含义 | 谁可以知道 |
+|-------|------|----------|
+| `common` | 同校/同社区任何人都可能知道 | NPC spawn 时自动注入 `[NPC·对XX的印象]` |
+| `familiar` | 打过交道的人 | 关系 ≥ 熟人，或同社团/同班 |
+| `close` | 比较亲近的人 | 关系 ≥ 信赖，或 GM 调 `lookup_character` 深查 |
+| `intimate` | 极度亲密 | 关系 ≥ 至交 或恋人。GM 调 `lookup_character` 并满足关系阈值才返回 |
+
+#### 注入格式
+
+**GM prompt**（`lookup_character` 返回时）：
+```
+[角色常识·雪之下雪乃]
+  common: 雪之下家的二女儿，偏差值学年第一。独居，坐 JR 总武线从幕张通学。
+  familiar: 父亲是雪之下建设的社长，但雪乃刻意脱离家族影响。
+  ↑close↑: 被姐姐阳乃的完美阴影压得喘不过气。
+```
+
+GM 查阅时，只返回 ≤ 当前关系级别的条目。比企谷如果和雪乃关系是「熟人」→ 看不到 close/intimate 条。
+
+**NPC Agent prompt**（spawn 时注入）：
+```
+[NPC·对雪之下雪乃的印象]
+  • 年级第一的优等生，不太和人说话
+  • 坐电车上下学，住幕张那边
+```
+
+NPC 拿到自己和场景内其他角色的 common 级 public_facts。这模拟「同校学生彼此知道的那些事」。
+
+#### 和 orgs 常识的关系
+
+| | orgs 常识 | 角色常识 |
+|---|---|---|
+| 数据位置 | `data/orgs/` | `characters.json` 内字段 |
+| 管什么 | 组织/地点是什么 | 角色是什么人 |
+| 例子 | 总武高偏差值前5 | 雪之下雪乃偏差值学年第一 |
+| 注入时机 | 进入地点/组织 | lookup_character / NPC spawn |
+
+互补，不重叠。角色 data 里不写「总武高是什么学校」，orgs 里不写「雪之下是什么人」。
+
+---
+
+## 第四部分：临时 NPC
 
 ### 解决的问题
 
@@ -351,7 +443,16 @@ spawn_temp_npc({
     5. 第一批数据：schools.json（千叶各学校）+ entertainment.json（娱乐圈结构）
   依赖：无（可独立实现）
 
-第三阶段：临时 NPC（P3）
+第三阶段：角色常识（P3）
+  目标：GM 和 NPC 自动知道角色的公开/私有背景信息
+  改动：
+    1. engine/types.ts — StaticCharacter 加 public_facts / private_facts + FactLevel 类型
+    2. engine/state.ts — lookup_character 按关系级别返回事实
+    3. tools/state/spawn_npc_agent.ts — NPC spawn 时注入 [NPC·对XX的印象]
+    4. 第一批数据：雪之下雪乃 / 比企谷八幡 / 由比滨结衣 的 public_facts
+  依赖：无（可独立实现）
+
+第四阶段：临时 NPC（P4）
   目标：GM 可以即兴创建冲突/偶遇角色，场景结束自动回收
   改动：
     1. engine/types.ts — TempNPCState 类型
@@ -361,7 +462,7 @@ spawn_temp_npc({
   依赖：无（可独立实现）
 ```
 
-三个阶段相互独立，可并行开发。
+四个阶段相互独立，可并行开发。
 
 ---
 
@@ -387,5 +488,7 @@ spawn_temp_npc({
 | 常识条目扫描 | 0 tk | — | 每次 buildStatePrompt |
 | 常识注入（GM） | ~80 字 | — | 触发条件满足时 |
 | 常识注入（NPC） | — | ~60 字 | NPC spawn + 触发条件满足 |
+| 角色常识注入（GM） | — | ~80 字 | lookup_character 时按 level 返回 |
+| 角色常识注入（NPC） | — | ~50 字 | NPC spawn 自动注入 common 级 |
 | org_effects 执行 | 0 tk | — | 事件当天 |
 | spawn_temp_npc | — | ~200 tk | GM 调用时 |
