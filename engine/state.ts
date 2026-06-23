@@ -1064,6 +1064,23 @@ export async function buildStatePrompt(): Promise<string> {
   if (todayCal) {
     tpl += `\n[日历] 今日特殊: ${todayCal}`;
   }
+  // 世界常识注入 (P2)
+  try {
+    const { getTriggeredLore } = await import("./lore.ts");
+    const playerGroup = gameState.player.schedule_group || "";
+    const loreTexts = getTriggeredLore(
+      p.location,
+      [], // topics — could be extracted from recent dialogue in future
+      [playerGroup],
+      [],
+      s.flags
+    );
+    if (loreTexts.length > 0) {
+      tpl += `\n[常识]\n${loreTexts.map(t => `  • ${t}`).join("\n")}`;
+    }
+  } catch (e) {
+    console.error("lore injection error:", e);
+  }
   // 活跃任务注入
   const activeQuests = getActiveQuests();
   if (activeQuests.length > 0) {
