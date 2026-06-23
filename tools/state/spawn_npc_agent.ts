@@ -115,6 +115,23 @@ export default {
         }
       } catch (_) {}
 
+      // P3: NPC impressions of other characters in scene
+      let npcImpressionsContext = "";
+      try {
+        const { getNPCCharacterImpressions } = await import("../../engine/state.ts");
+        const allSceneNPCs = [gameState.player.name, ...otherNPCs].filter(n => n !== params.npcName);
+        const impressions = getNPCCharacterImpressions(params.npcName, allSceneNPCs);
+        const impressionLines: string[] = [];
+        for (const [target, facts] of Object.entries(impressions)) {
+          for (const fact of facts) {
+            impressionLines.push(`  对${target}的印象: ${fact}`);
+          }
+        }
+        if (impressionLines.length > 0) {
+          npcImpressionsContext = `[NPC·对他人的印象]\n${impressionLines.join("\n")}`;
+        }
+      } catch (_) {}
+
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
         (() => {
@@ -197,6 +214,8 @@ export default {
         npcEventContext || "",
         // P2: NPC 世界常识
         npcLoreContext || "",
+        // P3: NPC 对他人的印象
+        npcImpressionsContext || "",
         "",
         `当前场景: ${params.sceneContext}`,
         params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",

@@ -4330,6 +4330,36 @@ test("P2: 世界常识 — 排序规则 location精确 > topic关键词", async 
   }
 });
 
+test("P3: 角色常识 — 陌生人只能看到 common 级 public_facts", async () => {
+  resetState();
+  const { getCharacterFacts } = await import("./engine/state.ts");
+
+  // 雪之下雪乃 public_facts should exist in characters data
+  const facts = getCharacterFacts("雪之下雪乃", "陌生");
+  if (facts.public.length === 0) {
+    throw new Error("陌生人应能看到 common 级 public_facts");
+  }
+  // All returned facts should be common level
+  const hasNonCommon = facts.public.some(f => f.level !== "common");
+  if (hasNonCommon) {
+    throw new Error("陌生人不应看到 familiar 级以上的 public_facts");
+  }
+  // Private facts should be empty for 陌生
+  if (facts.private.length > 0) {
+    throw new Error("陌生人不应看到任何 private_facts");
+  }
+});
+
+test("P3: 角色常识 — 至交可以看到 intimate 级 private_facts", async () => {
+  resetState();
+  const { getCharacterFacts } = await import("./engine/state.ts");
+
+  const facts = getCharacterFacts("雪之下雪乃", "至交");
+  if (facts.private.length === 0) {
+    throw new Error("至交应能看到 private_facts");
+  }
+});
+
 (async () => {
   for (const t of testQueue) {
     try {
