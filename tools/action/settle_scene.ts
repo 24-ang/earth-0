@@ -12,8 +12,9 @@ export default {
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom } = await import("../../engine/state.ts");
+      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom, cleanupTempNPCs } = await import("../../engine/state.ts");
       const { advanceMinutes } = await import("../../engine/time.ts");
+      const cleanupMsgs = cleanupTempNPCs("场景结算");
       const mins = params.elapsed_minutes;
       if (mins > 0) backupBeforeTurn();
       if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
@@ -43,7 +44,8 @@ export default {
       saveState();
 
       const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
-      const textResult = `场景结束推进了 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。\n` +
+      const cleanupText = cleanupMsgs.length > 0 ? cleanupMsgs.join("\n") + "\n" : "";
+      const textResult = cleanupText + `场景结束推进了 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。\n` +
         `日程更新: ${events.length > 0 ? events.join("; ") : "无特殊事件"}\n` +
         `写入记忆: ${params.memory_tags && params.memory_tags.length > 0 ? params.memory_tags.map(m => `${m.target}(${m.tag})`).join(", ") : "无"}`;
       return { content: [{ type: "text", text: textResult }], details: { time: gameState.time, events, memory_tags: params.memory_tags } };
