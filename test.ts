@@ -4262,6 +4262,37 @@ test("pure_route: applyBeatEffects writes playerRelations from pure_1 first_time
   }
 });
 
+test("P1: NPC 事件感知 — spawn 时拿到日历预热素材", async () => {
+  resetState();
+  const { getOrCreateNPC } = await import("./engine/state.ts");
+  const { clearCalendarCache, getNPCEventContext } = await import("./engine/timeline.ts");
+
+  gameState.time.game_date = "2018-05-26"; // 10 days before 体育祭 (6月5日)
+  gameState.activeWorld = "oregairu";
+
+  // Setup NPC
+  const yui = getOrCreateNPC("由比滨结衣");
+  yui.scheduleGroup = "总武高学生";
+
+  // Add calendar event with advance_days=10
+  clearCalendarCache();
+  gameState.calendarEvents = [{
+    year: null, date: "6月5日", location: "总武高",
+    text: "总武高体育祭当日",
+    advance_days: 10,
+    advance_hook: "操场上各班级在练习接力",
+    org_effects: [{ org: "总武高", override_location: "操场", override_action_template: "{role}参加体育祭中" }]
+  }];
+
+  const ctx = getNPCEventContext("由比滨结衣");
+  if (!ctx.includes("体育祭")) {
+    throw new Error(`NPC事件感知应包含体育祭: ${ctx}`);
+  }
+  if (!ctx.includes("素材")) {
+    throw new Error(`应标注为素材供GM覆写: ${ctx}`);
+  }
+});
+
 (async () => {
   for (const t of testQueue) {
     try {
