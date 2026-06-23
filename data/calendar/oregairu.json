@@ -11,13 +11,14 @@
   { "year": 2018, "date": "5月15日", "location": "总武高", "text": "期中考试第一天。教学楼里异常安静，只有翻卷子和写字的声音。考完后走廊里到处是'考砸了'的哀嚎。" },
   { "year": 2018, "date": "5月20日", "location": "总武高", "text": "成绩公布日。2年F班的排名贴在走廊公告栏上。雪之下雪乃的名字毫无意外地排在年级第一的位置。" },
   { "year": 2018, "date": "6月1日", "location": "总武高", "text": "衣替え（换季）。学生们换上夏装。女生们的夏季水手服让校园气氛变得明亮起来。" },
-  { "year": null, "date": "6月15日", "location": null, "text": "梅雨季正式开始。千叶连日阴雨，走廊里弥漫着湿气。操场暂时不能使用，体育课改为室内。" },
-  { "year": 2018, "date": "7月1日", "location": "总武高", "text": "期末考试的脚步声渐近。侍奉部收到大量'帮忙补习'的委托。雪乃难得露出了厌烦的表情。" },
+  { "year": null, "date": "6月5日", "location": "总武高", "text": "总武高体育祭当日。操场被红白两色装扮一新，呐喊声响彻校区。", "range": "local", "center": "总武高", "advance_days": 10, "advance_hook": "体育祭临近——操场上各班级在练习接力，走廊里贴满红白对阵表", "aftermath_text": "操场上还在清理体育祭的装饰和器材", "org_effects": [{ "org": "总武高", "override_location": "操场", "override_action_template": "{role}参加体育祭{role_action}中" }] },
+  { "year": null, "date": "6月15日", "location": null, "text": "梅雨季正式开始。千叶连日阴雨，走廊里弥漫着湿气。操场暂时不能使用，体育课改为室内。", "range": "regional", "center": "千叶", "advance_days": 3, "advance_hook": "天气预报说下周开始入梅——操场上体育部在抓紧最后几天的室外训练", "aftermath_text": "梅雨季还没结束，走廊里到处是湿漉漉的脚印" },
+  { "year": 2018, "date": "7月1日", "location": "总武高", "text": "期末考试的脚步声渐近。侍奉部收到大量'帮忙补习'的委托。雪乃难得露出了厌烦的表情。", "range": "local", "center": "总武高", "advance_days": 14, "advance_hook": "期末考还有两周——图书馆座位开始紧张，到处是抱着参考书的学生", "aftermath_text": "期末考刚结束，走廊里到处是'考砸了'的哀嚎和对答案的声音" },
   { "year": 2018, "date": "7月18日", "location": "总武高", "text": "第一学期终业式。明天开始暑假。走廊里充满了'明天去海边吧'的讨论声。" },
   { "year": null, "date": "7月20日", "location": null, "text": "暑假正式开始。气温突破35度。蝉鸣声灌满整个千叶。" },
   { "year": 2018, "date": "9月1日", "location": "总武高", "text": "第二学期始业式。晒黑了的学生们回到校园，互相交换暑假见闻。文化祭的筹备工作开始提上日程。" },
-  { "year": 2018, "date": "10月15日", "location": "总武高", "text": "文化祭前日。全校进入最后准备阶段。各班级熬夜装饰教室和摊位。走廊里飘着颜料和炒面酱汁的气味。" },
-  { "year": 2018, "date": "10月16日", "location": "总武高", "text": "文化祭当日。总武高变身热闹的学园祭。各色摊位、舞台表演、鬼屋、女仆咖啡厅。校外来客络绎不绝。" },
+  { "year": 2018, "date": "10月15日", "location": "总武高", "text": "文化祭前日。全校进入最后准备阶段。各班级熬夜装饰教室和摊位。走廊里飘着颜料和炒面酱汁的气味。", "range": "local", "center": "总武高", "advance_days": 7, "advance_hook": "文化祭临近——走廊里贴满各班的节目海报，放学后教室里传来钉锤声和排练声", "aftermath_text": "文化祭结束，校园里还在拆除装饰和清理垃圾", "org_effects": [{ "org": "总武高", "override_location": "各自班级摊位", "override_action_template": "{role}筹备文化祭{role_action}中" }] },
+  { "year": 2018, "date": "10月16日", "location": "总武高", "text": "文化祭当日。总武高变身热闹的学园祭。各色摊位、舞台表演、鬼屋、女仆咖啡厅。校外来客络绎不绝。", "range": "local", "center": "总武高", "advance_days": 7, "advance_hook": "文化祭当天——校门大开，校外访客涌入。到处是欢声笑语和揽客的吆喝声", "aftermath_text": "文化祭的余韵——操场上还在拆除舞台，学生们带着疲惫和满足感回到日常", "org_effects": [{ "org": "总武高", "override_location": "各自班级摊位", "override_action_template": "{role}在文化祭{role_action}" }] },
   { "year": null, "date": "12月24日", "location": null, "text": "圣诞夜。千叶街道张灯结彩。学生们开始筹划圣诞派对和礼物。这是告白成功率最高的一天。" },
   { "year": null, "date": "1月1日", "location": null, "text": "元旦。初诣的人潮涌向千叶神社。雪之下家的和服姿态在这一天格外引人注目。" }
 ]
