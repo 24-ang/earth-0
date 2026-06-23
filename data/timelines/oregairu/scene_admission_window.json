@@ -1,0 +1,31 @@
+{
+  "id": "admission_day_encounter",
+  "title": "入学式的窗前邂逅",
+  "source": "春物",
+  "trigger": {
+    "location": "侍奉部",
+    "calendar_event": "入学式",
+    "affection": { "雪之下雪乃": 5 },
+    "flags": { "service_club_joined": true, "met_yukino_first": true },
+    "player_stage": "高中"
+  },
+  "expires_days": 1,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "窗外樱花正满开，入学式的喧嚣从操场方向隐约传来。雪之下一个人站在侍奉部的窗边，静静地看着下面穿着崭新制服的新生和他们的家人。八幡坐在角落的椅子上翻着文库本，时不时抬头看一眼雪之下的背影，然后继续低头看书。{{player.surname}}走进了教室。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "talk",
+      "label": "上前搭话",
+      "prompt": "{{player.surname}}走到窗边和雪之下并肩站定，一起望着窗外飞舞的樱花和散去的新生人群。他们聊起了开学、变化和那些每年四月都会重来的期待与不安。八幡在角落里翻了一页书。雪之下没有说太多，但也没有赶人走。在樱花飘落的窗边，三个人之间某种生硬的距离似乎松动了那么一点点。",
+      "effects": { "affection": { "雪之下雪乃": 5, "比企谷八幡": 3 }, "flags": { "admission_talked": true } }
+    }
+  ],
+  "on_expire": {
+    "narrative": "雪之下一个人在窗边站了很久。入学式的喧嚣渐渐散去，樱花继续飘落。没有人走过来站到她旁边。八幡在角落里又多翻了几页。她最后整理了一下裙摆的褶边，转身回到了自己的座位上。",
+    "effects": { "flags": { "admission_missed": true } }
+  }
+}

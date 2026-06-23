@@ -58,6 +58,12 @@ export function updateRouterData(newRegions: any, newCharacters: any, newSchoolM
   cityMap = newCityMap;
 }
 
+export interface CharRoster {
+  grade?: number;
+  class?: string;
+  role?: string; // "teacher" | "staff"
+}
+
 export interface RegionEntry {
   id: number;
   name: string;
@@ -65,7 +71,13 @@ export interface RegionEntry {
   location_hints: string[];
   character_count: number;
   characters: string[];
+  character_roster?: Record<string, CharRoster>;
+  clubs?: Record<string, string[]>;
 }
+
+let academicYearOffset = 0;
+export function setAcademicYearOffset(offset: number) { academicYearOffset = offset; }
+export function getAcademicYearOffset() { return academicYearOffset; }
 
 export interface RouterResult {
   matched_regions: RegionEntry[];
@@ -138,11 +150,59 @@ export function lookupRegion(location: string): RouterResult {
   }
   
   // 合并所有角色名（去重）
-  const allChars = [...new Set(matched.flatMap(r => r.characters))];
-  
+  let allChars = [...new Set(matched.flatMap(r => r.characters))];
+  let filterHint = "";
+
+  // 班级过滤：用 character_roster + academic_year_offset 动态算年级
+  const classMatch = location.match(/(\d+)年([A-Z0-9])[班组]?/);
+  if (classMatch) {
+    const targetGrade = parseInt(classMatch[1]);
+    const targetLetter = classMatch[2];
+    const classChars: string[] = [];
+    for (const region of matched) {
+      const roster = (region as any).character_roster as Record<string, CharRoster> | undefined;
+      if (!roster) continue;
+      for (const [name, info] of Object.entries(roster)) {
+        if (info.role === "teacher" || info.role === "staff") {
+          classChars.push(name); // 老师在所有班级都出现
+        } else if (info.grade !== undefined) {
+          const actualGrade = info.grade + academicYearOffset;
+          if (actualGrade === targetGrade && (info.class === targetLetter || info.class === "?")) {
+            classChars.push(name);
+          }
+        }
+      }
+    }
+    if (classChars.length > 0) {
+      allChars = [...new Set(classChars)];
+      filterHint = classMatch[0];
+    }
+  }
+
+  // 社团过滤
+  if (matched.length > 0) {
+    for (const region of matched) {
+      const cl = (region as any).clubs as Record<string, string[]> | undefined;
+      if (!cl) continue;
+      for (const [clubName, clubChars] of Object.entries(cl)) {
+        if (location.includes(clubName) && clubChars.length > 0) {
+          if (filterHint) {
+            allChars = allChars.filter(c => clubChars.includes(c));
+          } else {
+            allChars = [...new Set(clubChars)];
+          }
+          filterHint = filterHint ? filterHint + "+" + clubName : clubName;
+          break;
+        }
+      }
+    }
+  }
+  // 如果没有班级/社团过滤，过滤掉不在roster中的角色（只保留有roster的角色+原始列表的交集）
+  // 保留全部角色作为fallback
+
   // 生成上下文简报给 LLM
-  const brief = buildContextBrief(matched, allChars);
-  
+  const brief = buildContextBrief(matched, allChars, filterHint);
+
   return {
     matched_regions: matched.slice(0, 5), // 最多 5 个地区
     all_characters: allChars.slice(0, 30), // 最多 30 个角色名
@@ -163,11 +223,12 @@ export function lookupCharacter(name: string): RegionEntry[] {
 /**
  * 生成地区简报文本（注入 LLM context）
  */
-function buildContextBrief(regions: RegionEntry[], characters: string[]): string {
+function buildContextBrief(regions: RegionEntry[], characters: string[], classroom?: string): string {
   if (regions.length === 0) return "当前地区暂无特殊角色信息。";
-  
+
   const regionNames = regions.map(r => r.name).join("、");
   const charList = characters.slice(0, 20).join("、");
-  
-  return `当前地区关联作品：${regionNames}\n可能出现的角色：${charList}`;
+  const classHint = classroom ? `[${classroom}] ` : "";
+
+  return `${classHint}当前地区关联作品：${regionNames}\n可能出现的角色：${charList}`;
 }

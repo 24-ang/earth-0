@@ -1,0 +1,136 @@
+{
+  "id": "yukino_fireworks_yukata",
+  "title": "烟火大会·浴衣",
+  "source": "同人IF·纯爱",
+  "trigger": {
+    "min_day": 350,
+    "location": "河川敷",
+    "time_of_day": ["evening"],
+    "flags": {
+      "yukino_library_intimate": true,
+      "yukino_beach_intimate": true
+    },
+    "affection": {
+      "雪之下雪乃": 70
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 2,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "暑假最后一个周末，千叶花火大会。雪乃穿着白底牵牛花图案的浴衣从车里下来，浅紫色腰带系得十分工整，长发盘起，用发簪固定。她走到{{player.surname}}面前微微抬头：‘很久没穿浴衣了……奇怪吗？’在听到‘很好看’的赞美后，她垂下眼睛，捏了捏手袋的提绳。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "fireworks_date",
+      "label": "花火的邀约",
+      "prompt": "烟花升空，绚丽的光芒倒映在雪乃秀丽的侧脸上。她轻轻将头靠在{{player.surname}}肩膀上，小声呢喃：‘去年……我是一个人在家里的阳台上看的。’人群散去后，她有些为难地摆弄着腰带，似乎浴衣系得太紧，自己没办法解开。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "牵着她的手，带她一起回到自己的公寓中",
+          "effects": {
+            "flags": {
+              "fireworks_date_accepted": true
+            }
+          },
+          "next_beat": "apartment_yukata"
+        },
+        {
+          "pick": "帮她叫好出租车，送她坐车安全返回她自己的公寓",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 5
+            },
+            "flags": {
+              "fireworks_date_declined": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "apartment_yukata",
+      "label": "滑落的浴衣",
+      "prompt": "回到公寓里，冷气吹散了夏夜的燥热。雪乃背对着立在榻榻米旁，腰带在指尖灵活的协助下脱落，整件白底牵牛花的浴衣滑落到脚踝，只剩下一身半解的白色襦袢。她转过身来，眼神炽热。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "上前搂抱住她柔滑的身躯，温柔地亲吻并推倒在被褥上",
+          "effects": {},
+          "next_beat": "date_sex_action"
+        }
+      ]
+    },
+    {
+      "id": "date_sex_action",
+      "label": "纯粹的占有",
+      "prompt": "雪乃白暂的手指按住拿避孕套的手，双眸湿润地注视过来：‘今天……这算是约会吧。约会就不是侍奉……也就是说，我也想要。别戴了，进来。’褪去所有防备与借口后，她张开双腿，第一次迎着冲撞直接哼出了娇柔的声音。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "紧搂着她，完全不做防护地在快速冲撞中进行内射",
+          "effects": {},
+          "next_beat": "date_sex_finish"
+        }
+      ]
+    },
+    {
+      "id": "date_sex_finish",
+      "label": "不是结束的终点",
+      "prompt": "在高潮的极度绞紧中，雪乃抓着{{player.surname}}的后颈，哭腔着喊出名字。精液大量灌入，她疲倦地趴伏在枕头上，轻叹着：‘原来不是侍奉，也可以这么舒服啊……’随后把头埋进{{player.surname}}的怀里，手指在胸口轻轻画圈。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "紧紧抱着她，在她的额头印下深情的一吻",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 20
+            },
+            "flags": {
+              "yukino_fireworks_intimate": true
+            },
+            "playerRelations": {
+              "雪之下雪乃": {
+                "stage": "至交",
+                "romance": "恋人",
+                "notes": "花火大会之夜，不再以侍奉为名，迎来最纯粹的身心契合"
+              }
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "乳", "唇"],
+              "thoughts": ["花火大会散场后，解开她的牵牛花浴衣彻底占有了她，不再以侍奉为名，迎来了最纯粹的身心契合..."],
+              "duration": 35
+            },
+            "npcRelations": {
+              "比企谷八幡": {
+                "由比滨结衣": {
+                  "stage": "情侣",
+                  "tone": "甜蜜",
+                  "notes": "玩家与雪乃在一起后，八幡与结衣在后续相处中确立了恋爱关系"
+                }
+              },
+              "由比滨结衣": {
+                "比企谷八幡": {
+                  "stage": "情侣",
+                  "tone": "甜蜜",
+                  "notes": "雪乃与玩家交往后，结衣与八幡逐渐走近并确立了恋爱关系"
+                }
+              }
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "花火大会的夜晚千叶下起了暴雨，烟花取消了。雪乃在自己冰冷的公寓阳台上看着被雨淋湿的夜景——和去年一样孤单。手机亮了又灭，那条已经打好字的邀请消息终究没有发出去。",
+    "effects": {
+      "flags": {
+        "yukino_fireworks_missed": true
+      }
+    }
+  }
+}

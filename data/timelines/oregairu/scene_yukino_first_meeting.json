@@ -1,0 +1,30 @@
+{
+  "id": "yukino_first_meeting",
+  "title": "开学日的图书馆邂逅",
+  "source": "春物",
+  "trigger": {
+    "min_day": 97,
+    "location": "图书馆",
+    "time_of_day": ["morning"],
+    "player_stage": "高中"
+  },
+  "expires_days": 1,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "开学第一天的早晨，图书馆里几乎没有人。靠窗的座位旁，一个女生正在专注地读书——黑色长发，端正的坐姿，翻页的动作安静而精准。她抬头看了{{player.surname}}一眼，没有打招呼，但也没有表示排斥。窗外的樱花刚开始飘落，晨光把书架间的灰尘照成了金色的细柱。",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "greet",
+      "label": "搭话",
+      "prompt": "{{player.surname}}在她对面的座位坐了下来。她继续看了几分钟的书，然后在翻页的间隙问了句：'你是新生？'——语气与其说是好奇，不如说是在陈述一个观察结果。聊了几句之后她合上了书：'二年J班，雪之下雪乃。'她没有伸手，但她的眼神里有一种安静的评估——像是在判断面前这个人值不值得记住名字。最后她把文库本收进书包，站起来时说了一句：'图书馆早上很安静，适合看书。如果你也能保持安静的话，我不介意有人坐在对面。'然后她走了出去，晨光在她身后拉出一道修长的影子。",
+      "effects": { "affection": { "雪之下雪乃": 8 }, "flags": { "met_yukino_first": true } }
+    }
+  ],
+  "on_expire": {
+    "narrative": "{{player.surname}}没有走进图书馆。那个早晨，靠窗的座位旁有个女生独自读完了整本文库本，然后收拾好东西离开了。她不会记得今天有人本可以走进来。",
+    "effects": { "flags": { "met_yukino_missed": true } }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "id": "main_5_election",
+  "title": "学生会选举",
+  "source": "春物",
+  "trigger": {
+    "min_day": 380,
+    "time_of_day": ["morning"],
+    "flags": {
+      "cultural_festival_complete": true,
+      "route_pure": false,
+      "route_brainwash": false,
+      "route_ntr": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "平冢静",
+    "hook_text": "平冢静在活动室找到了侍奉部众人。一色彩羽因为开玩笑被推上了学生会会长候选人的位置，现在极其苦恼。平冢静希望侍奉部能帮她解决这个危机，并让{{player.surname}}共同参与决策。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "election_discussion",
+      "label": "选举对策",
+      "prompt": "活动室里，一色彩羽在长椅上可怜兮兮地绞着手指。雪乃认为正面帮她参选是逃避，主张通过自己参选来击败她，从而免去她的职务。八幡则持反对意见，认为雪乃当选会彻底撕裂社团，他打算在暗中操作票数，自己承担所有负面后果。由比滨站在中间不知所措，频频望向{{player.surname}}。",
+      "outcomes": [
+        {
+          "pick": "赞同八幡的计划，让他暗中自爆操纵票数（走原著线）",
+          "effects": {
+            "flags": { "hachiman_sacrificed": true }
+          },
+          "next_beat": "hachiman_sacrifice"
+        },
+        {
+          "pick": "否定自爆，自己出面辅导一色彩羽赢得选举（走玩家线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 15, "一色彩羽": 15 },
+            "flags": { "player_solved_election": true }
+          },
+          "next_beat": "player_solve",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hachiman_sacrifice",
+      "label": "落幕的叹息",
+      "prompt": "八幡通过在网络上编造负面言论和操纵舆论，迫使其他候选人退选，让一色彩羽以一种极不光彩但符合她心意的方式“解决”了事件。事情尘埃落定，但雪乃看着八幡的眼神冷若冰霜，由比滨在一旁默默擦拭眼泪。有些东西在这个下午悄然破碎了。",
+      "effects": {
+        "flags": { "election_complete": true }
+      },
+      "expires_quest": true
+    },
+    {
+      "id": "player_solve",
+      "label": "崭新的光芒",
+      "prompt": "{{player.surname}}否定了八幡的自暗行为，主动协助一色彩羽准备演讲，并在学校里开展正面游说。在{{player.surname}}的鼓励下，一色彩羽在讲台上发表了自信的演讲，最终堂堂正正地赢得了竞选。雪乃在台下露出了久违的微笑，由比滨也松了一口气。八幡站在后排，看着{{player.surname}}，自嘲地笑了一下。",
+      "effects": {
+        "flags": { "election_complete": true }
+      },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "学生会选举的大选日过去了。在{{player.surname}}缺席的后台，八幡最终用他一贯的自爆手段解决了选举风波，让一色彩羽成功当选。然而，他和雪乃的关系也降到了冰点，社团笼罩在压抑的沉默之中。",
+    "effects": {
+      "flags": {
+        "election_complete": true,
+        "hachiman_sacrificed": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[选举] 对比企谷八幡的自爆行为感到失望和痛苦", "expires": 365, "tone": "屈辱" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[选举] 自爆解决选举，与雪乃关系陷入僵局", "expires": 365, "tone": "无感" }
+        ]
+      }
+    }
+  }
+}

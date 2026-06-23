@@ -1,0 +1,86 @@
+{
+  "id": "main_8_park",
+  "title": "葛西临海公园与她的委托",
+  "source": "春物",
+  "trigger": {
+    "min_day": 530,
+    "time_of_day": ["morning"],
+    "flags": {
+      "skitrip_complete": true,
+      "route_pure": false,
+      "route_brainwash": false,
+      "route_ntr": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "由比滨结衣",
+    "hook_text": "由比滨结衣提议在寒冬的一天前往葛西临海公园游玩。此时雪乃不仅面临着家庭中母亲与姐姐的巨大压力，还面临着侍奉部三人关系的僵局。结衣似乎想借这次旅行做个了断。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "park_confrontation",
+      "label": "摩天轮下的心声",
+      "prompt": "在寒风凛冽的葛西临海公园，三人站在摩天轮下。由比滨结衣拿出了自制的饼干，红着眼眶提出了她的‘提案’——想要维持现在的关系，并由她来替雪乃分担痛苦、决定未来。雪乃低着头，神情痛苦而迷茫，不知道该如何回答。",
+      "outcomes": [
+        {
+          "pick": "让八幡出面否定结衣的提议，让雪乃自己寻找属于自己的答案（走原著线）",
+          "effects": {
+            "flags": { "hachiman_park_led": true }
+          },
+          "next_beat": "hachiman_park_resolve"
+        },
+        {
+          "pick": "自己站出来握住雪乃的手，打断结衣的提议，宣告由自己来与雪乃共同面对未来的困境（走玩家线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 15 },
+            "flags": { "player_park_led": true }
+          },
+          "next_beat": "player_park_resolve",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" },
+            "flags": { "player_skitrip_led": true }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hachiman_park_resolve",
+      "label": "自我前行的意志",
+      "prompt": "八幡坚决地对结衣的‘提案’说了不，认为那不过是虚假的妥协，雪乃的未来应该由她自己来决定。雪乃听到八幡的话，流下眼泪却也露出了坚定的表情。她决定不再逃避，正面去面对母亲的质疑。",
+      "effects": {
+        "flags": { "park_complete": true }
+      },
+      "expires_quest": true
+    },
+    {
+      "id": "player_park_resolve",
+      "label": "风中的誓言",
+      "prompt": "{{player.surname}}在雪乃最迷茫的时候，握紧了她冰凉的手，表明自己会一直在她身边，支持她、照顾她。雪乃看着{{player.surname}}，压抑许久的防线终于崩溃，靠在{{player.surname}}的怀里低声哭泣，并轻声表达了信赖。结衣和八幡在一旁看着，虽然有着不同的感慨，但也露出了释怀的笑容。",
+      "effects": {
+        "flags": { "park_complete": true }
+      },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "公园的寒风吹走了所有的纠葛。在{{player.surname}}没有主动干预的情况下，八幡在葛西临海公园否定了结衣那为了维持现状而代做决定的温柔提议。雪乃哭过之后，终于下定决心，要依靠自己的意志，独立走上解决家庭矛盾的道路。",
+    "effects": {
+      "flags": {
+        "park_complete": true,
+        "hachiman_park_led": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[公园] 决定独立面对家庭压力，并得到八幡的支持", "expires": 365, "tone": "期待" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[公园] 在摩天轮下拒绝虚假妥协，坚定支持雪乃独立", "expires": 365, "tone": "期待" }
+        ]
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@ export default {
     async execute(_id, params, _s, _o, _ctx) {
       const { openQuest, getActiveQuests } = await import("../../engine/timeline.ts");
       const { saveState } = await import("../../engine/state.ts");
-      const r = openQuest(params.eventId);
+      const r = await openQuest(params.eventId);
       saveState();
       if (!r) return { content: [{ type: "text", text: `开启任务失败: ${params.eventId}` }], details: {} };
       const quests = getActiveQuests();

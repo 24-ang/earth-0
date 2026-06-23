@@ -1209,19 +1209,44 @@ test("checkTimelineEvents 未满足条件→不触发", () => {
 
 test("checkTimelineEvents 前置flag满足才触发", () => {
   resetState();
-  gameState.active_hooks = [];
-  gameState.completed_events = [];
-  gameState.quests = {};
-  gameState.flags = { cookie_complete: true };
-  gameState.time.time_of_day = "afternoon";
-  gameState.player.location = "侍奉部";
-  gameState.time.game_date = "2018-04-12";
-  gameState.player.relationships["雪之下雪乃"] = { affection: 20, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+  const fs = require('fs');
+  const path = require('path');
+  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "temp_test_flag_event.json");
+  fs.writeFileSync(tempFile, JSON.stringify({
+    id: "temp_test_event",
+    title: "测试事件",
+    trigger: {
+      player_stage: "高中",
+      flags: { test_flag: true }
+    },
+    hook: { source_npc: "旁白", hook_text: "测试", urgency: "low" },
+    beats: []
+  }));
 
-  checkTimelineEvents();
-  const hooks = getActiveHooks();
-  if (hooks.length < 2) throw new Error(`应有2个钩子(cookie+zaimokuza)，实际: ${hooks.length}`);
-  if (!hooks.find(h => h.event_id === "zaimokuza_novel")) throw new Error("flag满足后应触发zaimokuza_novel");
+  try {
+    gameState.active_hooks = [];
+    gameState.completed_events = [];
+    gameState.quests = {};
+    gameState.flags = {}; // flag not met
+    gameState.time.player_stage = "高中";
+    gameState.time.game_date = "2018-04-12";
+
+    checkTimelineEvents();
+    let hooks = getActiveHooks();
+    if (hooks.find(h => h.event_id === "temp_test_event")) {
+      throw new Error("flag未满足时不应触发");
+    }
+
+    gameState.flags = { test_flag: true }; // flag met
+    gameState.active_hooks = [];
+    checkTimelineEvents();
+    hooks = getActiveHooks();
+    if (!hooks.find(h => h.event_id === "temp_test_event")) {
+      throw new Error("flag满足后应触发");
+    }
+  } finally {
+    if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+  }
 });
 
 test("钩子上限3→第4条挤掉最旧低优先级", () => {
@@ -1249,7 +1274,7 @@ test("钩子上限3→第4条挤掉最旧低优先级", () => {
   if (!hooks.find(h => h.event_id === "old_high")) throw new Error("old_high 应保留");
 });
 
-test("expireHooks 过期钩子→移除+执行on_expire", () => {
+test("expireHooks 过期钩子→移除+执行on_expire", async () => {
   resetState();
   gameState.active_hooks = [];
   gameState.completed_events = [];
@@ -1265,14 +1290,14 @@ test("expireHooks 过期钩子→移除+执行on_expire", () => {
     seen_count: 0,
   }];
 
-  expireHooks();
+  await expireHooks();
   const hooks = getActiveHooks();
   if (hooks.length !== 0) throw new Error(`过期钩子应被移除，实际: ${hooks.length}`);
   if (gameState.flags["cookie_missed"] !== true) throw new Error("过期应设置cookie_missed flag");
   if (!gameState.completed_events.includes("cookie_delegation")) throw new Error("应加入completed_events");
 });
 
-test("expireHooks 未过期钩子保留", () => {
+test("expireHooks 未过期钩子保留", async () => {
   resetState();
   gameState.active_hooks = [];
   gameState.completed_events = [];
@@ -1284,7 +1309,7 @@ test("expireHooks 未过期钩子保留", () => {
     urgency: "low", created_day: day, expires_day: day + 30,
     seen_count: 0,
   }];
-  expireHooks();
+  await expireHooks();
   if (getActiveHooks().length !== 1) throw new Error("未过期钩子应保留");
 });
 
@@ -1328,10 +1353,40 @@ test("getHookNoveltyHint low紧迫度→轻描淡写", () => {
   if (!hint.includes("轻描淡写")) throw new Error(`low urgency应轻描淡写: ${hint}`);
 });
 
+test("双轨制重构: 静默功能检测 (队列溢出不触发处罚)", () => {
+  resetState();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {};
+  
+  // 预置3个钩子，其中 zaimokuza_novel 为低紧迫度
+  gameState.active_hooks = [
+    { event_id: "zaimokuza_novel", source_npc: "材木座", hook_text: "1", urgency: "low", created_day: 1, expires_day: 10, seen_count: 0 },
+    { event_id: "old_med", source_npc: "路人", hook_text: "2", urgency: "medium", created_day: 2, expires_day: 10, seen_count: 0 },
+    { event_id: "old_high", source_npc: "路人", hook_text: "3", urgency: "high", created_day: 3, expires_day: 10, seen_count: 0 },
+  ];
+  
+  // 满足 founding 触发条件 (职员室 + afternoon + day 97)
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.location = "职员室";
+  gameState.time.game_date = "2018-04-07";
+  
+  checkTimelineEvents();
+  
+  // zaimokuza_novel 应被静默挤掉
+  if (gameState.flags["novel_missed"] === true) {
+    throw new Error("静默过期的钩子不应该触发 on_expire 的惩罚效果");
+  }
+  if (!gameState.completed_events.includes("zaimokuza_novel")) {
+    throw new Error("静默过期的钩子应该被加入 completed_events 防止再次触发");
+  }
+});
+
 // ── Quest 生命周期 ──
 console.log("── Quest 生命周期 ──");
 
-test("openQuest 创建任务+移除钩子", () => {
+test("openQuest 创建任务+移除钩子", async () => {
   resetState();
   gameState.active_hooks = [];
   gameState.completed_events = [];
@@ -1345,8 +1400,8 @@ test("openQuest 创建任务+移除钩子", () => {
   checkTimelineEvents();
   if (!getActiveHooks().find(h => h.event_id === "cookie_delegation")) throw new Error("pre: 应有cookie钩子");
 
-  const r = openQuest("cookie_delegation");
-  if (!r || !r.includes("雪乃的第一次委托")) throw new Error(`openQuest应返回任务标题: ${r}`);
+  const r = await openQuest("cookie_delegation");
+  if (!r || !r.includes("由比滨的曲奇委托")) throw new Error(`openQuest应返回任务标题: ${r}`);
   if (!gameState.quests["cookie_delegation"]) throw new Error("应创建QuestState");
   if (gameState.quests["cookie_delegation"].status !== "active") throw new Error("状态应为active");
   if (gameState.quests["cookie_delegation"].current_beat !== "accept") throw new Error(`首beat应为accept，实际: ${gameState.quests["cookie_delegation"].current_beat}`);
@@ -1354,7 +1409,7 @@ test("openQuest 创建任务+移除钩子", () => {
   if (getActiveHooks().find(h => h.event_id === "cookie_delegation")) throw new Error("钩子应被移除");
 });
 
-test("advanceQuest 推进→应用效果→完成", () => {
+test("advanceQuest 推进→应用效果→完成", async () => {
   resetState();
   gameState.active_hooks = [];
   gameState.completed_events = [];
@@ -1362,44 +1417,99 @@ test("advanceQuest 推进→应用效果→完成", () => {
   gameState.flags = {};
   gameState.time.game_date = "2018-04-08";
 
-  openQuest("cookie_delegation");
-  const r1 = advanceQuest("cookie_delegation", "一起指导做曲奇");
-  if (!r1 || !r1.includes("曲奇烤好了")) throw new Error(`应推进到baking: ${r1}`);
+  await openQuest("cookie_delegation");
+  const r1 = await advanceQuest("cookie_delegation", "一起指导她做曲奇");
+  if (!r1 || !r1.includes("曲奇完成")) throw new Error(`应推进到baking: ${r1}`);
   if (gameState.flags["cookie_helped"] !== true) throw new Error("'指导做曲奇'应设置cookie_helped flag");
   const yuiAff = gameState.player.relationships["由比滨结衣"]?.affection;
   if (yuiAff !== 10) throw new Error(`由比滨好感应为10，实际: ${yuiAff}`);
 
-  const r2 = advanceQuest("cookie_delegation");
+  const r2 = await advanceQuest("cookie_delegation");
   if (!r2 || !r2.includes("完成")) throw new Error(`应完成任务: ${r2}`);
   if (gameState.quests["cookie_delegation"].status !== "completed") throw new Error("状态应为completed");
   if (!gameState.completed_events.includes("cookie_delegation")) throw new Error("应加入completed_events");
 });
 
-test("abandonQuest 放弃任务", () => {
+test("abandonQuest 放弃任务", async () => {
   resetState();
   gameState.active_hooks = [];
   gameState.completed_events = [];
   gameState.quests = {};
   gameState.time.game_date = "2018-04-08";
 
-  openQuest("cookie_delegation");
+  await openQuest("cookie_delegation");
   const r = abandonQuest("cookie_delegation");
   if (!r || !r.includes("放弃")) throw new Error(`应返回已放弃: ${r}`);
   if (gameState.quests["cookie_delegation"].status !== "abandoned") throw new Error("状态应为abandoned");
   if (!gameState.completed_events.includes("cookie_delegation")) throw new Error("应加入completed_events防止重新触发");
 });
 
-test("getActiveQuests 仅返回active状态", () => {
+test("getActiveQuests 仅返回active状态", async () => {
   resetState();
   gameState.active_hooks = [];
   gameState.completed_events = [];
   gameState.quests = {};
   gameState.time.game_date = "2018-04-08";
 
-  openQuest("cookie_delegation");
+  await openQuest("cookie_delegation");
   if (getActiveQuests().length !== 1) throw new Error("应有1个活跃quest");
   abandonQuest("cookie_delegation");
   if (getActiveQuests().length !== 0) throw new Error("放弃后应0个活跃quest");
+});
+
+test("timeline events applying sex effects successfully", async () => {
+  resetState();
+  const fs = require('fs');
+  const path = require('path');
+  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "temp_test_sex_event.json");
+  fs.writeFileSync(tempFile, JSON.stringify({
+    id: "temp_test_sex_event",
+    title: "测试性爱事件",
+    trigger: { player_stage: "高中" },
+    hook: { source_npc: "雪之下雪乃", hook_text: "测试", urgency: "low" },
+    beats: [
+      {
+        id: "beat1",
+        label: "测试节拍",
+        prompt: "测试",
+        outcomes: [
+          {
+            "pick": "选择",
+            "effects": {
+              "sex": {
+                "npc": "雪之下雪乃",
+                "partner": "维",
+                "touched_parts": ["秘部"],
+                "thoughts": ["测试想法"],
+                "duration": 45
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }));
+
+  try {
+    gameState.active_hooks = [];
+    gameState.completed_events = [];
+    gameState.quests = {};
+    gameState.flags = {};
+    gameState.time.player_stage = "高中";
+    gameState.time.game_date = "2018-04-12";
+    gameState.sexStates = {};
+
+    await openQuest("temp_test_sex_event");
+    await advanceQuest("temp_test_sex_event", "选择");
+
+    const ss = gameState.sexStates["雪之下雪乃"];
+    if (!ss) throw new Error("SexState应被自动创建");
+    if (ss.milestones.virginity.isVirgin) throw new Error("处女应由于秘部接触被破处");
+    if (ss.milestones.virginity.lostTo !== "维") throw new Error("对象应为维");
+    if (ss.thoughts[0].text !== "测试想法") throw new Error("想法应记录");
+  } finally {
+    if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+  }
 });
 
 test("buildStatePrompt 注入[今日世界]+[剧情钩子]+[进行中]", async () => {
@@ -1421,10 +1531,10 @@ test("buildStatePrompt 注入[今日世界]+[剧情钩子]+[进行中]", async (
   if (!prompt.includes("[日历]")) throw new Error("应包含[日历]");
   if (!prompt.includes("[剧情钩子]")) throw new Error("应包含[剧情钩子]");
 
-  openQuest("cookie_delegation");
+  await openQuest("cookie_delegation");
   prompt = await buildStatePrompt();
   if (!prompt.includes("[活跃任务]")) throw new Error("应包含[活跃任务]");
-  if (!prompt.includes("雪乃的第一次委托")) throw new Error("应包含任务标题");
+  if (!prompt.includes("由比滨的曲奇委托")) throw new Error("应包含任务标题");
 });
 
 test("buildStatePrompt [今日世界] 含当日日历文本", async () => {
@@ -1441,10 +1551,10 @@ test("buildStatePrompt [今日世界] 含当日日历文本", async () => {
   if (!prompt.includes("入学式")) throw new Error("应包含入学式文本");
 });
 
-test("openQuest 不存在的eventId返回错误", () => {
+test("openQuest 不存在的eventId返回错误", async () => {
   resetState();
   gameState.quests = {};
-  const r = openQuest("nonexistent");
+  const r = await openQuest("nonexistent");
   if (!r || !r.includes("未找到")) throw new Error(`应返回错误: ${r}`);
 });
 
@@ -2174,6 +2284,181 @@ test("loadActiveWorld 防崩溃 (Issue ⑮)", () => {
   loadActiveWorld("oregairu");
 });
 
+test("双轨制重构: 缺hook字段的剧情事件防崩溃", () => {
+  resetState();
+  const { loadActiveWorld } = require("./engine/state.ts");
+  const { checkTimelineEvents } = require("./engine/timeline.ts");
+
+  loadActiveWorld("wasteland");
+  // wasteland_intro 没有 hook 配置，应正常检测通过，不抛出 TypeError
+  checkTimelineEvents();
+
+  loadActiveWorld("oregairu");
+});
+
+test("双轨制重构: 玩家与比企谷八幡共存检定", async () => {
+  resetState();
+  const { loadActiveWorld } = require("./engine/state.ts");
+  const { checkTimelineEvents, getActiveHooks } = require("./engine/timeline.ts");
+
+  loadActiveWorld("oregairu");
+
+  // 1. 自定义名字 "维"，好感低，且未在小时候保护雪乃 -> 保留比企谷八幡原著戏份
+  gameState.player.name = "维";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 5, stage: "陌生", notes: "" };
+  gameState.flags.protected_yukino_childhood = false;
+  gameState.player.location = "职员室";
+  gameState.time.game_date = "2018-04-08";
+  gameState.time.time_of_day = "afternoon";
+  
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  checkTimelineEvents();
+  
+  let hooks = getActiveHooks();
+  const foundingHook = hooks.find(h => h.event_id === "service_club_founding");
+  if (!foundingHook) {
+    throw new Error("应该能触发 service_club_founding 钩子");
+  }
+  // 比企谷八幡作为独立NPC始终存在于叙事中
+  if (!foundingHook.hook_text.includes("比企谷八幡") || !foundingHook.hook_text.includes("维")) {
+    throw new Error("叙事中应同时包含玩家名(维)和比企谷八幡，实际文本：" + foundingHook.hook_text);
+  }
+
+  // 2. 满足初始好感度 >= 20 -> 触发顶替，替换为 "维"
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.player.name = "维";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 65, stage: "熟人", notes: "" };
+  gameState.flags.protected_yukino_childhood = false;
+  gameState.player.location = "职员室";
+  gameState.time.game_date = "2018-04-08";
+  gameState.time.time_of_day = "afternoon";
+  
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  checkTimelineEvents();
+  
+  hooks = getActiveHooks();
+  const foundingHook2 = hooks.find(h => h.event_id === "service_club_founding");
+  if (!foundingHook2) {
+    throw new Error("应该能触发 service_club_founding 钩子");
+  }
+  // 高好感度时：玩家名和比企谷八幡共存（两人始终是独立角色）
+  if (!foundingHook2.hook_text.includes("维") || !foundingHook2.hook_text.includes("比企谷八幡")) {
+    throw new Error("好感度高时玩家名和比企谷八幡应共存，实际文本：" + foundingHook2.hook_text);
+  }
+
+  // 3. 满足小时候保护过雪乃 -> 触发顶替，替换为 "维"
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.player.name = "维";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 0, stage: "陌生", notes: "" };
+  gameState.flags.protected_yukino_childhood = true;
+  gameState.player.location = "职员室";
+  gameState.time.game_date = "2018-04-08";
+  gameState.time.time_of_day = "afternoon";
+  
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  checkTimelineEvents();
+  
+  hooks = getActiveHooks();
+  const foundingHook3 = hooks.find(h => h.event_id === "service_club_founding");
+  if (!foundingHook3) {
+    throw new Error("应该能触发 service_club_founding 钩子");
+  }
+  // 保护flag时：玩家名和比企谷八幡共存
+  if (!foundingHook3.hook_text.includes("维") || !foundingHook3.hook_text.includes("比企谷八幡")) {
+    throw new Error("保护Flag满足时玩家名和比企谷八幡应共存，实际文本：" + foundingHook3.hook_text);
+  }
+
+  // 4. NPC 派生与过滤校验
+  // 4a. 满足顶替时，主角是"维"，"比企谷八幡"可以作为NPC派生
+  const spawnNpcAgent = require("./tools/state/spawn_npc_agent.ts").default;
+  const spawnNpcAgents = require("./tools/state/spawn_npc_agents.ts").default;
+
+  // 此时仍处于满足顶替状态（player.name = "维", protected_yukino_childhood = true）
+  const result1 = await spawnNpcAgent.execute("test_id", { npcName: "比企谷八幡", sceneContext: "测试" });
+  if (result1.content[0].text.includes("是当前主角或玩家")) {
+    throw new Error("满足顶替时，比企谷八幡应能作为同伴NPC派生，但被错误拦截了：" + result1.content[0].text);
+  }
+
+  const result1_batch = await spawnNpcAgents.execute("test_id", { npcs: [{ npcName: "比企谷八幡", sceneContext: "测试" }] });
+  if (!result1_batch.content[0].text.includes("比企谷八幡")) {
+    throw new Error("满足顶替时，比企谷八幡应能作为同伴NPC批量派生，但被过滤了: " + result1_batch.content[0].text);
+  }
+
+  // 4b. 不满足顶替条件时，比企谷八幡仍可作为NPC派生（玩家和八幡是两个人）
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.player.name = "维";
+  gameState.player.relationships["雪之下雪乃"] = { affection: 0, stage: "陌生", notes: "" };
+  gameState.flags.protected_yukino_childhood = false;
+
+  const result2 = await spawnNpcAgent.execute("test_id", { npcName: "比企谷八幡", sceneContext: "测试" });
+  if (result2.content[0].text.includes("是当前主角或玩家")) {
+    throw new Error("比企谷八幡应始终可作为NPC派生，但被错误拦截了：" + result2.content[0].text);
+  }
+
+  const result2_batch = await spawnNpcAgents.execute("test_id", { npcs: [{ npcName: "比企谷八幡", sceneContext: "测试" }] });
+  if (!result2_batch.content[0].text.includes("比企谷八幡")) {
+    throw new Error("比企谷八幡应始终可作为NPC批量派生，但被过滤了: " + result2_batch.content[0].text);
+  }
+});
+
+test("双轨制重构: 入学式车祸干涉剧情走向", async () => {
+  resetState();
+  const { loadActiveWorld } = require("./engine/state.ts");
+  const { getCalendarEvents } = require("./engine/timeline.ts");
+
+  loadActiveWorld("oregairu");
+
+  gameState.player.name = "维";
+  gameState.player.age = 16;
+  gameState.time.player_stage = "高中";
+  gameState.player.location = "千叶_住宅区";
+  gameState.time.game_date = "2018-04-07";
+  gameState.time.time_of_day = "morning";
+
+  // 1. 验证日历中包含车祸干涉机制规则
+  const calendarEvents = getCalendarEvents("2018-04-07", "千叶_住宅区");
+  const accidentEvent = calendarEvents.find(e => e.text.includes("player_accident"));
+  if (!accidentEvent) {
+    throw new Error("日历中应该包含车祸的干涉机制规则说明");
+  }
+
+  const { getPlayerNameParts } = require("./engine/timeline.ts");
+
+  // 2. 无论哪个分支，玩家名字始终是自己的名字（与八幡是两个人）
+  // 分支一：玩家推开八幡被撞 → 玩家走雪乃线，八幡安全
+  gameState.flags.player_accident = true;
+  gameState.flags.hachiman_accident = false;
+  gameState.flags.no_accident = false;
+  let parts = getPlayerNameParts();
+  if (parts.full !== "维") {
+    throw new Error("玩家被撞后，名字应始终是自己的名字 维，实际：" + parts.full);
+  }
+
+  // 分支二：拽住狗绳无车祸 → 玩家和八幡都安全，各自发展
+  gameState.flags.player_accident = false;
+  gameState.flags.hachiman_accident = false;
+  gameState.flags.no_accident = true;
+  parts = getPlayerNameParts();
+  if (parts.full !== "维") {
+    throw new Error("无车祸时，玩家名字应始终是自己的名字 维，实际：" + parts.full);
+  }
+
+  // 分支三：旁观原著车祸 → 八幡被撞（canon事件），玩家名字不变
+  gameState.flags.player_accident = false;
+  gameState.flags.hachiman_accident = true;
+  gameState.flags.no_accident = false;
+  parts = getPlayerNameParts();
+  if (parts.full !== "维") {
+    throw new Error("旁观车祸时，玩家名字应始终是自己的名字 维，实际：" + parts.full);
+  }
+});
+
 test("⑳ Gambling: executeGamble & getBlackMarketPrice", async () => {
   resetState();
   const { executeGamble, getBlackMarketPrice } = await import("./engine/gambling.ts");
@@ -2573,41 +2858,65 @@ console.log("\n── 察觉统一检定 ──");
 loadActiveWorld("oregairu");
 
 test("perceptionCheck: 近距离直视必被看到", () => {
-  const actor = { attributes: { 敏捷: 10 }, skills: {}, equipment: {} };
-  const observer = { attributes: { 感知: 20 }, skills: { "察觉": { level: 10 } }, equipment: {} };
-  const ctx = { distance_m: 1, noise: "quiet" as const, light: "bright" as const, walls_between: 0 };
-  const r = perceptionCheck(actor, observer, ctx);
-  if (!r.seen) throw new Error("1m + bright + 感知20应该被看到");
-  if (!r.heard) throw new Error("quiet环境近距离应该被听到");
-  if (r.margin <= 0) throw new Error("裕度应 >0");
+  const originalRandom = Math.random;
+  Math.random = () => 0.5; // d20 will roll 11
+  try {
+    const actor = { attributes: { 敏捷: 10 }, skills: {}, equipment: {} };
+    const observer = { attributes: { 感知: 20 }, skills: { "察觉": { level: 10 } }, equipment: {} };
+    const ctx = { distance_m: 1, noise: "quiet" as const, light: "bright" as const, walls_between: 0 };
+    const r = perceptionCheck(actor, observer, ctx);
+    if (!r.seen) throw new Error("1m + bright + 感知20应该被看到");
+    if (!r.heard) throw new Error("quiet环境近距离应该被听到");
+    if (r.margin <= 0) throw new Error("裕度应 >0");
+  } finally {
+    Math.random = originalRandom;
+  }
 });
 
 test("perceptionCheck: concealed 角色视觉自动失败", () => {
-  const actor = { attributes: { 敏捷: 10 }, skills: {}, equipment: {}, concealed: true };
-  const observer = { attributes: { 感知: 20 }, skills: { "察觉": { level: 10 } }, equipment: {} };
-  const ctx = { distance_m: 1, noise: "quiet" as const, light: "bright" as const, walls_between: 0 };
-  const r = perceptionCheck(actor, observer, ctx);
-  if (r.seen) throw new Error("concealed角色不应被看到");
-  // 听觉仍应成功
-  if (!r.heard) throw new Error("concealed只影响视觉，不影响听觉");
+  const originalRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    const actor = { attributes: { 敏捷: 10 }, skills: {}, equipment: {}, concealed: true };
+    const observer = { attributes: { 感知: 20 }, skills: { "察觉": { level: 10 } }, equipment: {} };
+    const ctx = { distance_m: 1, noise: "quiet" as const, light: "bright" as const, walls_between: 0 };
+    const r = perceptionCheck(actor, observer, ctx);
+    if (r.seen) throw new Error("concealed角色不应被看到");
+    // 听觉仍应成功
+    if (!r.heard) throw new Error("concealed只影响视觉，不影响听觉");
+  } finally {
+    Math.random = originalRandom;
+  }
 });
 
 test("perceptionCheck: 远距离+墙壁 降低margin", () => {
-  const actor = { attributes: { 敏捷: 10 }, skills: {}, equipment: {} };
-  const observer = { attributes: { 感知: 10 }, skills: {}, equipment: {} };
-  const ctx = { distance_m: 10, noise: "loud" as const, light: "dark" as const, walls_between: 2 };
-  const r = perceptionCheck(actor, observer, ctx);
-  // 极端不利条件下margin应很低（即使d20=20也可能刚好及格）
-  // 只需验证函数不崩溃，margin存在
-  if (r.margin === undefined) throw new Error("应有margin");
-  if (!r.roll || r.roll.dc === undefined) throw new Error("应有roll");
+  const originalRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    const actor = { attributes: { 敏捷: 10 }, skills: {}, equipment: {} };
+    const observer = { attributes: { 感知: 10 }, skills: {}, equipment: {} };
+    const ctx = { distance_m: 10, noise: "loud" as const, light: "dark" as const, walls_between: 2 };
+    const r = perceptionCheck(actor, observer, ctx);
+    // 极端不利条件下margin应很低（即使d20=20也可能刚好及格）
+    // 只需验证函数不崩溃，margin存在
+    if (r.margin === undefined) throw new Error("应有margin");
+    if (!r.roll || r.roll.dc === undefined) throw new Error("应有roll");
+  } finally {
+    Math.random = originalRandom;
+  }
 });
 
 test("perceptionCheck: checkDC 数字DC版本", () => {
-  const r = checkDC(15, 14, 3); // 属性14(+2) + 技能3*2(+6) = +8
-  if (r.margin === undefined) throw new Error("应有margin字段");
-  // d20+8 vs DC15, 有概率成功失败，只验证结构
-  if (!r.roll || r.roll.dc !== 15) throw new Error("roll.dc应为15");
+  const originalRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    const r = checkDC(15, 14, 3); // 属性14(+2) + 技能3*2(+6) = +8
+    if (r.margin === undefined) throw new Error("应有margin字段");
+    // d20+8 vs DC15, 有概率成功失败，只验证结构
+    if (!r.roll || r.roll.dc !== 15) throw new Error("roll.dc应为15");
+  } finally {
+    Math.random = originalRandom;
+  }
 });
 
 // ── getNearbyNPCs 辅助函数 ──
@@ -2838,6 +3147,1048 @@ test("散文Lint: 秘密泄露检测", async () => {
   // 无秘密的正文不触发
   const r3 = lintProse("风吹过校园，樱花飘落。", testState);
   if (r3.needsRetry) throw new Error("无关正文不应触发 needsRetry");
+});
+
+
+test("autonomic_chain: expireHooks executes background sex and memory resolution", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getOrCreateSexState, updateRelation } = require("./engine/state.ts");
+  
+  // 初始化好感度为 20（好感度在引擎中不能为负数）
+  updateRelation(gameState.player.relationships, "雪之下雪乃", 20, "测试初置");
+  
+  gameState.active_hooks = [{
+    event_id: "if_yukino_cohabit_start",
+    source_npc: "雪之下雪乃",
+    hook_text: "test",
+    urgency: "low",
+    created_day: 100,
+    expires_day: 101,
+    seen_count: 0
+  }];
+  
+  // Set day to 102 (expired)
+  gameState.time.game_date = "2018-04-12"; // approx day 102
+  
+  // Run expiration
+  await expireHooks();
+  
+  // Assert flags
+  if (gameState.flags["cohabit_bath_occurred"] !== true) {
+    throw new Error("on_expire flag cohabit_bath_occurred 未设置");
+  }
+  
+  // Assert affection
+  const rel = gameState.player.relationships["雪之下雪乃"];
+  if (!rel || rel.affection !== 5) {
+    throw new Error(`雪乃好感度应从 20 减少 15 变成 5, 实际: ${rel ? rel.affection : "undefined"}`);
+  }
+  
+  // Assert sexState background evolution
+  const ss = await getOrCreateSexState("雪之下雪乃");
+  if (!ss) throw new Error("未创建雪乃的 sexState");
+  if (ss.milestones.virginity.isVirgin !== false) {
+    throw new Error("雪乃在后台应该已经失贞");
+  }
+  if (ss.milestones.virginity.lostTo !== "比企谷猿畠") {
+    throw new Error(`失贞对象应为比企谷猿畠, 实际: ${ss.milestones.virginity.lostTo}`);
+  }
+  const thought = ss.thoughts[ss.thoughts.length - 1];
+  if (!thought || !thought.text.includes("被八幡的父亲粗暴地占有了")) {
+    throw new Error(`心里话记录错误: ${thought?.text}`);
+  }
+});
+
+test("autonomic_chain: trip expireHooks executes background hotel sex", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getOrCreateSexState, updateRelation } = require("./engine/state.ts");
+  
+  updateRelation(gameState.player.relationships, "雪之下雪乃", 30, "测试初置");
+  
+  gameState.active_hooks = [{
+    event_id: "if_yukino_cohabit_trip",
+    source_npc: "雪之下雪乃",
+    hook_text: "test trip",
+    urgency: "low",
+    created_day: 100,
+    expires_day: 101,
+    seen_count: 0
+  }];
+  
+  // Set day to 152 (expired)
+  gameState.time.game_date = "2018-04-12"; // trigger expiration
+  
+  await expireHooks();
+  
+  // Assert flags
+  if (gameState.flags["cohabit_trip_completed"] !== true) {
+    throw new Error("on_expire flag cohabit_trip_completed 未设置");
+  }
+  
+  // Assert affection decreased
+  const rel = gameState.player.relationships["雪之下雪乃"];
+  if (!rel || rel.affection !== 15) {
+    throw new Error(`雪乃好感度应从 30 减少 15 变成 15, 实际: ${rel ? rel.affection : "undefined"}`);
+  }
+});
+
+test("autonomic_chain: applyBeatEffects supports memoryTags", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getMemoryTags } = require("./engine/state.ts");
+  
+  gameState.active_hooks = [{
+    event_id: "test_memory_tags_event",
+    source_npc: "雪之下雪乃",
+    hook_text: "test",
+    urgency: "low",
+    created_day: 100,
+    expires_day: 101,
+    seen_count: 0
+  }];
+  
+  const fs = require('fs');
+  const path = require('path');
+  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_memory_tags_event.json");
+  fs.writeFileSync(tempFile, JSON.stringify({
+    id: "test_memory_tags_event",
+    title: "测试记忆标签事件",
+    trigger: { player_stage: "高中" },
+    hook: { source_npc: "旁白", hook_text: "测试", urgency: "low" },
+    beats: [],
+    on_expire: {
+      effects: {
+        memoryTags: {
+          "雪之下雪乃": [
+            { "tag": "[失贞] 浴室被强占", "expires": 10, "tone": "屈辱" }
+          ]
+        }
+      }
+    }
+  }));
+  
+  try {
+    gameState.time.game_date = "2018-04-12";
+    await expireHooks();
+    
+    const tags = getMemoryTags("雪之下雪乃");
+    if (!tags.some((t: string) => t.includes("[失贞] 浴室被强占 [屈辱]"))) {
+      throw new Error(`雪乃的记忆标签中应包含 [失贞] 浴室被强占 [屈辱], 实际：${JSON.stringify(tags)}`);
+    }
+  } finally {
+    if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+  }
+});
+
+test("autonomic_chain: applyBeatEffects supports npcRelations", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  
+  gameState.active_hooks = [{
+    event_id: "test_npc_relations_event",
+    source_npc: "比企谷八幡",
+    hook_text: "test",
+    urgency: "low",
+    created_day: 100,
+    expires_day: 101,
+    seen_count: 0
+  }];
+  
+  const fs = require('fs');
+  const path = require('path');
+  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_npc_relations_event.json");
+  fs.writeFileSync(tempFile, JSON.stringify({
+    id: "test_npc_relations_event",
+    title: "测试NPC关系事件",
+    trigger: { player_stage: "高中" },
+    hook: { source_npc: "旁白", hook_text: "测试", urgency: "low" },
+    beats: [],
+    on_expire: {
+      effects: {
+        npcRelations: {
+          "比企谷八幡": {
+            "由比滨结衣": {
+              "stage": "情侣",
+              "tone": "甜蜜",
+              "notes": "确立了关系"
+            }
+          }
+        }
+      }
+    }
+  }));
+  
+  try {
+    gameState.time.game_date = "2018-04-12";
+    await expireHooks();
+    
+    const hachiman = getOrCreateNPC("比企谷八幡");
+    const rel = hachiman.npcRelationships?.["由比滨结衣"];
+    if (!rel || rel.stage !== "情侣" || rel.tone !== "甜蜜" || rel.notes !== "确立了关系") {
+      throw new Error(`八幡与结衣的关系应为情侣-甜蜜-确立了关系, 实际：${JSON.stringify(rel)}`);
+    }
+  } finally {
+    if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+  }
+});
+
+
+test("achievements: query achievements from flags", () => {
+  resetState();
+  const fs = require('fs');
+  const path = require('path');
+  
+  gameState.flags["achievement_yukino_first_rental"] = true;
+  gameState.flags["achievement_hachiman_ed_overcome"] = true;
+  
+  const achievementsPath = path.resolve(process.cwd(), "data", "achievements.json");
+  const rules = JSON.parse(fs.readFileSync(achievementsPath, "utf-8"));
+  
+  const unlocked = rules.filter((r: any) => !!gameState.flags[r.id]);
+  if (unlocked.length !== 2) {
+    throw new Error(`应解锁2个成就，实际：${unlocked.length}`);
+  }
+  if (unlocked[0].id !== "achievement_yukino_first_rental" && unlocked[1].id !== "achievement_yukino_first_rental") {
+    throw new Error("解锁列表应包含 achievement_yukino_first_rental");
+  }
+});
+
+test("spawn_npc_agent: system prompt contains sex milestones", async () => {
+  resetState();
+  const spawnNpcAgent = require("./tools/state/spawn_npc_agent.ts").default;
+  const { getOrCreateSexState } = require("./engine/state.ts");
+  
+  const ss = await getOrCreateSexState("雪之下雪乃");
+  ss.milestones = {
+    virginity: { isVirgin: false, lostTo: "比企谷猿畠", lostAt: "2018-04-10" },
+    firstKiss: { given: true, partner: "维", date: "2018-04-09" },
+    analVirginity: { isVirgin: true, lostTo: null, lostAt: null }
+  };
+  
+  let capturedPrompt = "";
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url: any, init: any) => {
+    try {
+      const reqBody = JSON.parse(init.body);
+      capturedPrompt = reqBody.messages[0].content;
+    } catch (_) {}
+    return {
+      ok: true,
+      json: async () => ({
+        content: [{ text: "Agent response." }]
+      })
+    } as any;
+  };
+  
+  try {
+    await spawnNpcAgent.execute("test_id_milestones", { npcName: "雪之下雪乃", sceneContext: "测试对话" });
+    
+    if (!capturedPrompt.includes("初吻于 2018-04-09 献给 维")) {
+      throw new Error("spawn_npc_agent 提示词应包含初吻里程碑信息！实际：" + capturedPrompt);
+    }
+    if (!capturedPrompt.includes("初夜于 2018-04-10 丢失给 比企谷猿畠")) {
+      throw new Error("spawn_npc_agent 提示词应包含初夜里程碑信息！实际：" + capturedPrompt);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("trigger_rules: if_ed_treatment blocks if cohabit occurred", () => {
+  resetState();
+  clearCalendarCache();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {
+    cohabit_bath_occurred: true
+  };
+  gameState.time.player_stage = "大学/社会";
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.relationships["比企谷八幡"] = { affection: 35, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+  gameState.player.relationships["雪之下雪乃"] = { affection: 35, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  const edHook = hooks.find(h => h.event_id === "if_ed_treatment");
+  if (edHook) {
+    throw new Error("当 cohabit_bath_occurred 为 true 时，不应触发 if_ed_treatment！");
+  }
+});
+
+test("trigger_rules: if_ed_treatment triggers if conditions met", () => {
+  resetState();
+  clearCalendarCache();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {
+    cohabit_bath_occurred: false,
+    cohabit_trip_completed: false
+  };
+  gameState.time.player_stage = "大学/社会";
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.relationships["比企谷八幡"] = { affection: 35, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+  gameState.player.relationships["雪之下雪乃"] = { affection: 35, trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: "" };
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  const edHook = hooks.find(h => h.event_id === "if_ed_treatment");
+  if (!edHook) {
+    throw new Error("当条件满足且无同居发生时，应正常触发 if_ed_treatment！");
+  }
+});
+
+// ═══════════════════════════════════════════════
+// 春物主线 Volume 8-14 双轨分支测试
+// ═══════════════════════════════════════════════
+
+test("autonomic_chain: applyBeatEffects supports playerRelations", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+
+  gameState.active_hooks = [{
+    event_id: "test_player_relations_event",
+    source_npc: "雪之下雪乃",
+    hook_text: "测试玩家关系效果",
+    urgency: "low",
+    created_day: 100,
+    expires_day: 101,
+    seen_count: 0
+  }];
+
+  const fs = require('fs');
+  const path = require('path');
+  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_player_relations_event.json");
+  fs.writeFileSync(tempFile, JSON.stringify({
+    id: "test_player_relations_event",
+    title: "测试玩家关系事件",
+    trigger: { player_stage: "高中" },
+    hook: { source_npc: "旁白", hook_text: "测试", urgency: "low" },
+    beats: [],
+    on_expire: {
+      effects: {
+        playerRelations: {
+          "雪之下雪乃": {
+            stage: "至交",
+            romance: "恋人",
+            notes: "在天台告白后确立恋人关系"
+          }
+        }
+      }
+    }
+  }));
+
+  try {
+    gameState.time.game_date = "2018-04-12";
+    await expireHooks();
+
+    const rel = gameState.player.relationships["雪之下雪乃"];
+    if (!rel) throw new Error("雪乃的关系应被创建");
+    if (rel.stage !== "至交") throw new Error(`stage应为至交, 实际: ${rel.stage}`);
+    if (rel.romance !== "恋人") throw new Error(`romance应为恋人, 实际: ${rel.romance}`);
+    if (rel.notes !== "在天台告白后确立恋人关系") throw new Error(`notes错误: ${rel.notes}`);
+  } finally {
+    if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+  }
+});
+
+test("autonomic_chain: applyBeatEffects playerRelations updates existing relationship", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { updateRelation } = require("./engine/state.ts");
+
+  // 先建立已有关系
+  updateRelation(gameState.player.relationships, "雪之下雪乃", 50, "前期积累");
+
+  gameState.active_hooks = [{
+    event_id: "test_player_rel_update_event",
+    source_npc: "雪之下雪乃",
+    hook_text: "测试更新已有关系",
+    urgency: "low",
+    created_day: 100,
+    expires_day: 101,
+    seen_count: 0
+  }];
+
+  const fs = require('fs');
+  const path = require('path');
+  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_player_rel_update_event.json");
+  fs.writeFileSync(tempFile, JSON.stringify({
+    id: "test_player_rel_update_event",
+    title: "测试更新已有关系",
+    trigger: { player_stage: "高中" },
+    hook: { source_npc: "旁白", hook_text: "测试", urgency: "low" },
+    beats: [],
+    on_expire: {
+      effects: {
+        playerRelations: {
+          "雪之下雪乃": {
+            stage: "至交",
+            romance: "恋人",
+            notes: "关系升级"
+          }
+        }
+      }
+    }
+  }));
+
+  try {
+    gameState.time.game_date = "2018-04-12";
+    await expireHooks();
+
+    const rel = gameState.player.relationships["雪之下雪乃"];
+    if (!rel) throw new Error("雪乃的关系应存在");
+    if (rel.stage !== "至交") throw new Error(`stage应为至交, 实际: ${rel.stage}`);
+    if (rel.romance !== "恋人") throw new Error(`romance应为恋人, 实际: ${rel.romance}`);
+    if (rel.affection !== 50) throw new Error(`affection应保持50, 实际: ${rel.affection}`);
+    if (rel.notes !== "关系升级") throw new Error(`notes应更新, 实际: ${rel.notes}`);
+  } finally {
+    if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+  }
+});
+
+test("oregairu main timeline: flag chain connects main_5→6→7→8→9", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const dir = path.resolve(process.cwd(), "data", "timelines", "oregairu");
+
+  const m5 = JSON.parse(fs.readFileSync(path.join(dir, "main_5_election.json"), "utf-8"));
+  const m6 = JSON.parse(fs.readFileSync(path.join(dir, "main_6_genuine.json"), "utf-8"));
+  const m7 = JSON.parse(fs.readFileSync(path.join(dir, "main_7_skitrip.json"), "utf-8"));
+  const m8 = JSON.parse(fs.readFileSync(path.join(dir, "main_8_park.json"), "utf-8"));
+  const m9 = JSON.parse(fs.readFileSync(path.join(dir, "main_9_prom.json"), "utf-8"));
+
+  // 验证链条: 每个事件要求前一个事件的完成flag
+  if (!m6.trigger.flags.election_complete) throw new Error("main_6 应要求 election_complete");
+  if (!m7.trigger.flags.genuine_complete) throw new Error("main_7 应要求 genuine_complete");
+  if (!m8.trigger.flags.skitrip_complete) throw new Error("main_8 应要求 skitrip_complete");
+  if (!m9.trigger.flags.park_complete) throw new Error("main_9 应要求 park_complete");
+
+  // 验证 main_5 的 on_expire 设置了 election_complete（八幡默认路径的衔接flag）
+  if (m5.on_expire?.effects?.flags?.election_complete !== true) {
+    throw new Error("main_5 on_expire 应设置 election_complete: true");
+  }
+  // 验证每个事件的 on_expire 都设置了本阶段的完成flag
+  if (m6.on_expire?.effects?.flags?.genuine_complete !== true) {
+    throw new Error("main_6 on_expire 应设置 genuine_complete: true");
+  }
+  if (m7.on_expire?.effects?.flags?.skitrip_complete !== true) {
+    throw new Error("main_7 on_expire 应设置 skitrip_complete: true");
+  }
+  if (m8.on_expire?.effects?.flags?.park_complete !== true) {
+    throw new Error("main_8 on_expire 应设置 park_complete: true");
+  }
+  if (m9.on_expire?.effects?.flags?.prom_complete !== true) {
+    throw new Error("main_9 on_expire 应设置 prom_complete: true");
+  }
+});
+
+test("oregairu main timeline: all events block route_pure, route_brainwash, route_ntr", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const dir = path.resolve(process.cwd(), "data", "timelines", "oregairu");
+  const files = ["main_5_election.json", "main_6_genuine.json", "main_7_skitrip.json", "main_8_park.json", "main_9_prom.json"];
+
+  for (const f of files) {
+    const ev = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"));
+    const flags = ev.trigger.flags;
+    if (flags.route_pure !== false) throw new Error(`${f}: trigger.flags.route_pure 应为 false（阻挡纯爱线已触发玩家）`);
+    if (flags.route_brainwash !== false) throw new Error(`${f}: trigger.flags.route_brainwash 应为 false（阻挡洗脑线玩家）`);
+    if (flags.route_ntr !== false) throw new Error(`${f}: trigger.flags.route_ntr 应为 false（阻挡NTR线玩家）`);
+  }
+});
+
+test("oregairu main timeline: every event has both branch beats with expires_quest", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const dir = path.resolve(process.cwd(), "data", "timelines", "oregairu");
+  const files = ["main_5_election.json", "main_6_genuine.json", "main_7_skitrip.json", "main_8_park.json", "main_9_prom.json"];
+
+  for (const f of files) {
+    const ev = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"));
+    // 第一个beat必须有outcomes（分支选择）
+    const firstBeat = ev.beats[0];
+    if (!firstBeat.outcomes || firstBeat.outcomes.length < 2) {
+      throw new Error(`${f}: 第一个beat (${firstBeat.id}) 应有至少2个outcomes`);
+    }
+    // 检查每个outcome引用的next_beat都存在
+    for (const oc of firstBeat.outcomes) {
+      const target = ev.beats.find((b: any) => b.id === oc.next_beat);
+      if (!target) throw new Error(`${f}: outcome引用的next_beat "${oc.next_beat}" 不存在`);
+      if (target.expires_quest !== true) throw new Error(`${f}: beat "${oc.next_beat}" 应设置 expires_quest: true`);
+    }
+    // on_expire 必须存在（作为默认路径）
+    if (!ev.on_expire) throw new Error(`${f}: 必须有 on_expire（默认过期路径）`);
+  }
+});
+
+test("main_9_prom: player_bridge sets player romance=恋人 and Hachiman-Yui couple", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const m9 = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_9_prom.json"), "utf-8"
+  ));
+
+  const playerBridge = m9.beats.find((b: any) => b.id === "player_bridge");
+  if (!playerBridge) throw new Error("main_9 应有 player_bridge beat");
+
+  const eff = playerBridge.effects;
+
+  // 验证 playerRelations：玩家↔雪乃 成为恋人
+  if (!eff.playerRelations) throw new Error("player_bridge 应有 playerRelations");
+  const yukino = eff.playerRelations["雪之下雪乃"];
+  if (!yukino) throw new Error("playerRelations 应包含雪之下雪乃");
+  if (yukino.romance !== "恋人") throw new Error(`雪乃romance应为恋人, 实际: ${yukino.romance}`);
+
+  // 验证 npcRelations：八幡↔结衣 成为情侣
+  if (!eff.npcRelations) throw new Error("player_bridge 应有 npcRelations");
+  const hachimanToYui = eff.npcRelations["比企谷八幡"]?.["由比滨结衣"];
+  if (!hachimanToYui) throw new Error("npcRelations 应有 比企谷八幡→由比滨结衣");
+  if (hachimanToYui.stage !== "情侣") throw new Error(`八幡→结衣 stage应为情侣, 实际: ${hachimanToYui.stage}`);
+
+  const yuiToHachiman = eff.npcRelations["由比滨结衣"]?.["比企谷八幡"];
+  if (!yuiToHachiman) throw new Error("npcRelations 应有 由比滨结衣→比企谷八幡");
+  if (yuiToHachiman.stage !== "情侣") throw new Error(`结衣→八幡 stage应为情侣, 实际: ${yuiToHachiman.stage}`);
+
+  // 验证 route_pure flag 被设置
+  if (eff.flags?.route_pure !== true) throw new Error("player_bridge 应设置 route_pure: true");
+  if (eff.flags?.prom_complete !== true) throw new Error("player_bridge 应设置 prom_complete: true");
+
+  // 验证好感度
+  if ((eff.affection?.["雪之下雪乃"] ?? 0) <= 0) throw new Error("player_bridge 应给雪乃增加好感度");
+});
+
+test("main_9_prom: hachiman_bridge sets Hachiman-Yukino couple via npcRelations", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const m9 = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_9_prom.json"), "utf-8"
+  ));
+
+  const hachimanBridge = m9.beats.find((b: any) => b.id === "hachiman_bridge");
+  if (!hachimanBridge) throw new Error("main_9 应有 hachiman_bridge beat");
+
+  const eff = hachimanBridge.effects;
+  if (!eff.npcRelations) throw new Error("hachiman_bridge 应有 npcRelations");
+
+  const hToY = eff.npcRelations["比企谷八幡"]?.["雪之下雪乃"];
+  if (!hToY) throw new Error("npcRelations 应有 比企谷八幡→雪之下雪乃");
+  if (hToY.stage !== "情侣") throw new Error(`八幡→雪乃 stage应为情侣, 实际: ${hToY.stage}`);
+  if (hToY.tone !== "甜蜜") throw new Error(`八幡→雪乃 tone应为甜蜜, 实际: ${hToY.tone}`);
+
+  const yToH = eff.npcRelations["雪之下雪乃"]?.["比企谷八幡"];
+  if (!yToH) throw new Error("npcRelations 应有 雪之下雪乃→比企谷八幡");
+  if (yToH.stage !== "情侣") throw new Error(`雪乃→八幡 stage应为情侣, 实际: ${yToH.stage}`);
+
+  // hachiman_bridge 不应有 playerRelations
+  if (eff.playerRelations) throw new Error("hachiman_bridge 不应有 playerRelations（走原著线，玩家不与雪乃成为恋人）");
+
+  if (eff.flags?.prom_complete !== true) throw new Error("hachiman_bridge 应设置 prom_complete: true");
+});
+
+test("main_9_prom: on_expire defaults to Hachiman-Yukino couple path", async () => {
+  // 验证过期时走八幡路径：八幡↔雪乃成为情侣
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+
+  gameState.active_hooks = [{
+    event_id: "main_9_prom",
+    source_npc: "雪之下雪乃",
+    hook_text: "舞会委托测试",
+    urgency: "medium",
+    created_day: 580,
+    expires_day: 583,
+    seen_count: 0
+  }];
+
+  gameState.time.game_date = "2019-08-10"; // day ~587, past expires_day 583
+  gameState.flags = { park_complete: true };
+  gameState.time.player_stage = "高中";
+
+  await expireHooks();
+
+  // on_expire 应设置 prom_complete 和 hachiman_prom_led
+  if (gameState.flags["prom_complete"] !== true) throw new Error("应设置 prom_complete: true");
+  if (gameState.flags["hachiman_prom_led"] !== true) throw new Error("应设置 hachiman_prom_led: true（默认八幡路径）");
+
+  // 验证八幡↔雪乃 npcRelations
+  const hachiman = getOrCreateNPC("比企谷八幡");
+  const hRel = hachiman.npcRelationships?.["雪之下雪乃"];
+  if (!hRel || hRel.stage !== "情侣") {
+    throw new Error(`八幡→雪乃应为情侣, 实际: ${JSON.stringify(hRel)}`);
+  }
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  const yRel = yukino.npcRelationships?.["比企谷八幡"];
+  if (!yRel || yRel.stage !== "情侣") {
+    throw new Error(`雪乃→八幡应为情侣, 实际: ${JSON.stringify(yRel)}`);
+  }
+});
+
+test("main_5_election: on_expire applies hachiman path effects", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getMemoryTags } = require("./engine/state.ts");
+
+  gameState.active_hooks = [{
+    event_id: "main_5_election",
+    source_npc: "平冢静",
+    hook_text: "选举委托测试",
+    urgency: "medium",
+    created_day: 380,
+    expires_day: 383,
+    seen_count: 0
+  }];
+
+  gameState.time.game_date = "2019-01-20"; // past day 380
+  gameState.flags = { cultural_festival_complete: true };
+  gameState.time.player_stage = "高中";
+
+  await expireHooks();
+
+  // on_expire 应设置 election_complete 和 hachiman_sacrificed
+  if (gameState.flags["election_complete"] !== true) throw new Error("应设置 election_complete: true");
+  if (gameState.flags["hachiman_sacrificed"] !== true) throw new Error("应设置 hachiman_sacrificed: true（默认八幡自爆路径）");
+
+  // 验证 memoryTags
+  const yukinoTags = getMemoryTags("雪之下雪乃");
+  if (!yukinoTags.some((t: string) => t.includes("选举") && t.includes("自爆"))) {
+    throw new Error(`雪乃应有选举自爆记忆标签, 实际: ${JSON.stringify(yukinoTags)}`);
+  }
+});
+
+test("oregairu main timeline: route_pure blocks main_5 from triggering", () => {
+  resetState();
+  clearCalendarCache();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {
+    cultural_festival_complete: true,
+    route_pure: true  // 玩家已在纯爱线
+  };
+  gameState.time.player_stage = "高中";
+  gameState.time.time_of_day = "morning";
+  gameState.time.game_date = "2019-01-20";
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  const main5 = hooks.find(h => h.event_id === "main_5_election");
+  if (main5) {
+    throw new Error("route_pure=true 时不应触发 main_5_election（玩家已走纯爱线，不应再走主线）");
+  }
+});
+
+// ═══════════════════════════════════════════════
+// 春物 Volume 4 (暑假) + Volume 7 (京都修学旅行)
+// ═══════════════════════════════════════════════
+
+test("main_summer_break: structure has both branch beats and on_expire", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const ev = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_summer_break.json"), "utf-8"
+  ));
+
+  if (ev.id !== "summer_break") throw new Error("id 应为 summer_break");
+  if (!ev.trigger.flags.camp_complete) throw new Error("应要求 camp_complete");
+  if (ev.trigger.flags.route_pure !== false) throw new Error("应阻挡 route_pure");
+
+  // 第一个beat必须有双分支
+  const firstBeat = ev.beats[0];
+  if (!firstBeat.outcomes || firstBeat.outcomes.length < 2) throw new Error("第一个beat应有至少2个outcomes");
+
+  // 验证两个分支beat都存在且设置 expires_quest
+  const hachimanRealization = ev.beats.find((b: any) => b.id === "hachiman_realization");
+  const playerPromise = ev.beats.find((b: any) => b.id === "player_promise");
+  if (!hachimanRealization || hachimanRealization.expires_quest !== true) {
+    throw new Error("hachiman_realization 应设置 expires_quest: true");
+  }
+  if (!playerPromise || playerPromise.expires_quest !== true) {
+    throw new Error("player_promise 应设置 expires_quest: true");
+  }
+
+  // on_expire 应设置 summer_break_complete
+  if (ev.on_expire?.effects?.flags?.summer_break_complete !== true) {
+    throw new Error("on_expire 应设置 summer_break_complete: true");
+  }
+});
+
+test("main_summer_break: player path sets player_sable_connection and player_fireworks_promise", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const ev = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_summer_break.json"), "utf-8"
+  ));
+
+  // player路径: park_encounter → player分支 → fireworks_night → player_promise
+  const parkBeat = ev.beats.find((b: any) => b.id === "park_encounter");
+  const playerSable = parkBeat.outcomes.find((o: any) => o.effects?.flags?.player_sable_connection);
+  if (!playerSable) throw new Error("park_encounter 应有 player_sable_connection 分支");
+  if ((playerSable.effects.affection?.["雪之下雪乃"] ?? 0) <= 0) throw new Error("玩家路径应加雪乃好感");
+
+  const fireworksBeat = ev.beats.find((b: any) => b.id === "fireworks_night");
+  const playerFireworks = fireworksBeat.outcomes.find((o: any) => o.effects?.flags?.player_fireworks_promise);
+  if (!playerFireworks) throw new Error("fireworks_night 应有 player_fireworks_promise 分支");
+
+  // hachiman路径: park_encounter → hachiman分支 → fireworks_night → hachiman_realization
+  const hachimanSable = parkBeat.outcomes.find((o: any) => o.effects?.flags?.hachiman_sable_savior);
+  if (!hachimanSable) throw new Error("park_encounter 应有 hachiman_sable_savior 分支");
+
+  const hachimanFireworks = fireworksBeat.outcomes.find((o: any) => !o.effects?.flags?.player_fireworks_promise);
+  if (!hachimanFireworks) throw new Error("fireworks_night 应有八幡路径分支");
+});
+
+test("main_summer_break: on_expire applies Hachiman path with memoryTags", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getMemoryTags } = require("./engine/state.ts");
+
+  gameState.active_hooks = [{
+    event_id: "summer_break",
+    source_npc: "平冢静",
+    hook_text: "暑假花火测试",
+    urgency: "medium",
+    created_day: 235,
+    expires_day: 240,
+    seen_count: 0
+  }];
+
+  gameState.time.game_date = "2018-08-30"; // past day 240
+  gameState.flags = { camp_complete: true };
+  gameState.time.player_stage = "高中";
+
+  await expireHooks();
+
+  if (gameState.flags["summer_break_complete"] !== true) throw new Error("应设置 summer_break_complete: true");
+  if (gameState.flags["summer_break_missed"] !== true) throw new Error("应设置 summer_break_missed: true");
+  if (gameState.flags["hachiman_sable_savior"] !== true) throw new Error("默认八幡路径应设置 hachiman_sable_savior");
+
+  const yukinoTags = getMemoryTags("雪之下雪乃");
+  if (!yukinoTags.some((t: string) => t.includes("暑假") && t.includes("萨布雷"))) {
+    throw new Error(`雪乃应有暑假萨布雷记忆标签, 实际: ${JSON.stringify(yukinoTags)}`);
+  }
+});
+
+test("main_kyoto_field_trip: structure has both branch beats and club crisis", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const ev = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_kyoto_field_trip.json"), "utf-8"
+  ));
+
+  if (ev.id !== "kyoto_field_trip") throw new Error("id 应为 kyoto_field_trip");
+  if (!ev.trigger.flags.cultural_festival_complete) throw new Error("应要求 cultural_festival_complete");
+  if (ev.trigger.flags.route_pure !== false) throw new Error("应阻挡 route_pure");
+
+  // 第一个beat有双分支
+  const firstBeat = ev.beats[0];
+  if (!firstBeat.outcomes || firstBeat.outcomes.length < 2) throw new Error("第一个beat应有至少2个outcomes");
+
+  // 验证关键beat都存在
+  const hachimanScheme = ev.beats.find((b: any) => b.id === "hachiman_scheme");
+  if (!hachimanScheme) throw new Error("应有 hachiman_scheme beat (八幡假告白)");
+
+  const clubCrisis = ev.beats.find((b: any) => b.id === "club_crisis");
+  if (!clubCrisis) throw new Error("应有 club_crisis beat (侍奉部裂痕)");
+  if (clubCrisis.expires_quest !== true) throw new Error("club_crisis 应设 expires_quest: true");
+  if (!clubCrisis.effects.memoryTags?.["雪之下雪乃"]) throw new Error("club_crisis 应有雪乃记忆标签");
+  if (!clubCrisis.effects.memoryTags?.["比企谷八幡"]) throw new Error("club_crisis 应有八幡记忆标签");
+  if (!clubCrisis.effects.memoryTags?.["由比滨结衣"]) throw new Error("club_crisis 应有结衣记忆标签");
+
+  // 玩家路径beat
+  const playerApproach = ev.beats.find((b: any) => b.id === "player_approach");
+  if (!playerApproach) throw new Error("应有 player_approach beat (玩家诚实行事)");
+  if (playerApproach.expires_quest !== true) throw new Error("player_approach 应设 expires_quest: true");
+  if (!playerApproach.effects.flags?.kyoto_resolved_peacefully) {
+    throw new Error("player_approach 应设置 kyoto_resolved_peacefully");
+  }
+
+  // on_expire 应设置 kyoto_trip_complete
+  if (ev.on_expire?.effects?.flags?.kyoto_trip_complete !== true) {
+    throw new Error("on_expire 应设置 kyoto_trip_complete: true");
+  }
+});
+
+test("main_kyoto_field_trip: on_expire applies Hachiman river fall and club crisis", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+  const { getMemoryTags } = require("./engine/state.ts");
+
+  gameState.active_hooks = [{
+    event_id: "kyoto_field_trip",
+    source_npc: "户部翔",
+    hook_text: "京都修学旅行测试",
+    urgency: "medium",
+    created_day: 340,
+    expires_day: 343,
+    seen_count: 0
+  }];
+
+  gameState.time.game_date = "2018-12-15"; // past day 343
+  gameState.flags = { cultural_festival_complete: true };
+  gameState.time.player_stage = "高中";
+
+  await expireHooks();
+
+  if (gameState.flags["kyoto_trip_complete"] !== true) throw new Error("应设置 kyoto_trip_complete: true");
+  if (gameState.flags["kyoto_trip_missed"] !== true) throw new Error("应设置 kyoto_trip_missed: true");
+  if (gameState.flags["hachiman_river_fall"] !== true) throw new Error("默认八幡路径应设置 hachiman_river_fall");
+  if (gameState.flags["club_crisis_triggered"] !== true) throw new Error("应设置 club_crisis_triggered");
+
+  // 验证三方记忆标签
+  const yukinoTags = getMemoryTags("雪之下雪乃");
+  if (!yukinoTags.some((t: string) => t.includes("京都") && t.includes("怀疑"))) {
+    throw new Error(`雪乃应有京都裂痕记忆标签, 实际: ${JSON.stringify(yukinoTags)}`);
+  }
+
+  const hachimanTags = getMemoryTags("比企谷八幡");
+  if (!hachimanTags.some((t: string) => t.includes("京都") && t.includes("裂痕"))) {
+    throw new Error(`八幡应有京都裂痕记忆标签, 实际: ${JSON.stringify(hachimanTags)}`);
+  }
+
+  const yuiTags = getMemoryTags("由比滨结衣");
+  if (!yuiTags.some((t: string) => t.includes("京都") && t.includes("无力"))) {
+    throw new Error(`结衣应有京都无力记忆标签, 实际: ${JSON.stringify(yuiTags)}`);
+  }
+});
+
+test("main_kyoto_field_trip: route_pure blocks triggering", () => {
+  resetState();
+  clearCalendarCache();
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {
+    cultural_festival_complete: true,
+    route_pure: true
+  };
+  gameState.time.player_stage = "高中";
+  gameState.time.time_of_day = "morning";
+  gameState.time.game_date = "2018-12-10";
+
+  checkTimelineEvents();
+  const hooks = getActiveHooks();
+  const kyoto = hooks.find(h => h.event_id === "kyoto_field_trip");
+  if (kyoto) {
+    throw new Error("route_pure=true 时不应触发 kyoto_field_trip");
+  }
+});
+
+// ═══════════════════════════════════════════════
+// auto_if 自动分支选择
+// ═══════════════════════════════════════════════
+
+test("auto_if: romance 匹配时自动选择玩家路径", async () => {
+  resetState();
+  const { openQuest, advanceQuest } = require("./engine/timeline.ts");
+
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = { camp_complete: true, cultural_festival_complete: true };
+  gameState.time.game_date = "2018-04-08";
+  gameState.time.player_stage = "高中";
+
+  // 设置玩家与雪乃已经是恋人
+  gameState.player.relationships["雪之下雪乃"] = {
+    stage: "至交", romance: "恋人", affection: 80,
+    trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: ""
+  };
+
+  // 打开 summer_break — auto_if 应触发: park_encounter→player, fireworks_night→player, player_promise完成
+  const r = await openQuest("summer_break");
+  if (!r || !r.includes("自动完成")) throw new Error(`应自动完成, 实际: ${r}`);
+
+  const q = gameState.quests["summer_break"];
+  if (q.status !== "completed") throw new Error(`应自动完成, 实际状态: ${q.status}`);
+  // 应设置了玩家路径的 flag
+  if (gameState.flags["player_sable_connection"] !== true) throw new Error("应设置 player_sable_connection");
+  if (gameState.flags["player_fireworks_promise"] !== true) throw new Error("应设置 player_fireworks_promise");
+});
+
+test("auto_if: flags 匹配时自动选择玩家路径（粘性路由）", async () => {
+  resetState();
+  const { openQuest } = require("./engine/timeline.ts");
+
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = {
+    election_complete: true,
+    player_solved_election: true  // 前序事件选了玩家路径
+  };
+  gameState.time.game_date = "2019-03-15"; // past day 430
+  gameState.time.player_stage = "高中";
+
+  // 打开 main_6_genuine — 应自动选择并完成（flags sticky route: collab_dilemma→player_genuine触发expires_quest）
+  const r = await openQuest("main_6_genuine");
+  if (!r || !r.includes("自动完成")) throw new Error(`应自动完成（粘性路由），实际: ${r}`);
+
+  const q = gameState.quests["main_6_genuine"];
+  if (q.status !== "completed") throw new Error(`应自动完成, 实际状态: ${q.status}`);
+  if (gameState.flags["player_genuine_triggered"] !== true) throw new Error("应设置 player_genuine_triggered");
+});
+
+test("auto_if: 无匹配条件时正常展示选择", async () => {
+  resetState();
+  const { openQuest } = require("./engine/timeline.ts");
+
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = { camp_complete: true };
+  gameState.time.game_date = "2018-08-20";
+  gameState.time.player_stage = "高中";
+  // 不设置任何 romance 或 sticky flag
+
+  const r = await openQuest("summer_break");
+  if (!r) throw new Error("应正常打开任务");
+  // 不应该自动推进（没有匹配的 auto_if）
+  if (r.includes("自动推进")) throw new Error(`不应自动推进（无匹配条件）, 实际: ${r}`);
+
+  const q = gameState.quests["summer_break"];
+  // 应停在第一个有选择的分支 beat (park_encounter)
+  if (q.current_beat !== "park_encounter") {
+    throw new Error(`应停在 park_encounter 等待玩家选择, 实际: ${q.current_beat}`);
+  }
+  if (q.status !== "active") throw new Error("状态应为 active");
+});
+
+test("auto_if: main_9 全自动完成（romance→player_bridge→route_pure）", async () => {
+  resetState();
+  const { openQuest } = require("./engine/timeline.ts");
+
+  gameState.active_hooks = [];
+  gameState.completed_events = [];
+  gameState.quests = {};
+  gameState.flags = { park_complete: true };
+  gameState.time.game_date = "2019-08-15";
+  gameState.time.player_stage = "高中";
+
+  // 玩家与雪乃是恋人 + 前序选了玩家路径
+  gameState.player.relationships["雪之下雪乃"] = {
+    stage: "至交", romance: "恋人", affection: 90,
+    trust: 0, first_met_day: 1, last_interaction_day: 1, interactions: 0, notes: ""
+  };
+  gameState.flags["player_park_led"] = true;
+
+  const r = await openQuest("main_9_prom");
+  if (!r) throw new Error("应打开任务");
+  if (!r.includes("自动完成")) throw new Error(`应自动完成 main_9, 实际: ${r}`);
+
+  // route_pure 应被设置
+  if (gameState.flags["route_pure"] !== true) throw new Error("应设置 route_pure: true");
+  // 雪乃 romace 应为恋人
+  const rel = gameState.player.relationships["雪之下雪乃"];
+  if (!rel || (rel as any).romance !== "恋人") throw new Error(`雪乃 romance 应为恋人, 实际: ${(rel as any)?.romance}`);
+  // 八幡↔结衣 应为情侣
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const hachiman = getOrCreateNPC("比企谷八幡");
+  const hRel = hachiman.npcRelationships?.["由比滨结衣"];
+  if (!hRel || hRel.stage !== "情侣") throw new Error("八幡应与结衣成为情侣");
+});
+
+// ═══════════════════════════════════════════════
+// 纯爱 IF 线 playerRelations 闭环
+// ═══════════════════════════════════════════════
+
+test("pure_1_gate: first_time_finish sets playerRelations romance=恋人", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const ev = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), "data", "timelines", "oregairu", "pure_1_gate.json"), "utf-8"
+  ));
+
+  const finalBeat = ev.beats.find((b: any) => b.id === "first_time_finish");
+  if (!finalBeat) throw new Error("应有 first_time_finish beat");
+
+  // 找确立关系那条 outcome（有 route_pure 的）
+  const loveOutcome = finalBeat.outcomes.find((o: any) => o.effects?.flags?.route_pure);
+  if (!loveOutcome) throw new Error("应有设置 route_pure 的 outcome");
+
+  const pr = loveOutcome.effects?.playerRelations?.["雪之下雪乃"];
+  if (!pr) throw new Error("pure_1 结局应设置 playerRelations");
+  if (pr.romance !== "恋人") throw new Error(`romance应为恋人, 实际: ${pr.romance}`);
+  if (pr.stage !== "至交") throw new Error(`stage应为至交, 实际: ${pr.stage}`);
+});
+
+test("pure_5_fireworks: date_sex_finish confirms playerRelations romance=恋人", () => {
+  const fs = require('fs');
+  const path = require('path');
+  const ev = JSON.parse(fs.readFileSync(
+    path.resolve(process.cwd(), "data", "timelines", "oregairu", "pure_5_fireworks.json"), "utf-8"
+  ));
+
+  const finalBeat = ev.beats.find((b: any) => b.id === "date_sex_finish");
+  if (!finalBeat) throw new Error("应有 date_sex_finish beat");
+
+  const mainOutcome = finalBeat.outcomes[0];
+  const pr = mainOutcome.effects?.playerRelations?.["雪之下雪乃"];
+  if (!pr) throw new Error("pure_5 结局应设置 playerRelations");
+  if (pr.romance !== "恋人") throw new Error(`romance应为恋人, 实际: ${pr.romance}`);
+
+  // 验证同时有 npcRelations (八幡↔结衣)
+  const npcR = mainOutcome.effects?.npcRelations;
+  if (!npcR) throw new Error("pure_5 结局应有 npcRelations（八幡↔结衣）");
+  if (npcR["比企谷八幡"]?.["由比滨结衣"]?.stage !== "情侣") throw new Error("八幡应与结衣成为情侣");
+});
+
+test("pure_route: applyBeatEffects writes playerRelations from pure_1 first_time_finish", async () => {
+  resetState();
+  const { expireHooks } = require("./engine/timeline.ts");
+
+  // 用 temp-file 模式验证 pure_1 的 playerRelations effects 被正确应用
+  const fs = require('fs');
+  const path = require('path');
+  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_pure_romance_event.json");
+  fs.writeFileSync(tempFile, JSON.stringify({
+    id: "test_pure_romance_event",
+    title: "测试纯爱确立关系",
+    trigger: { player_stage: "高中" },
+    hook: { source_npc: "雪之下雪乃", hook_text: "测试", urgency: "low" },
+    beats: [],
+    on_expire: {
+      effects: {
+        flags: { route_pure: true, yukino_first_time: true },
+        playerRelations: {
+          "雪之下雪乃": {
+            stage: "至交",
+            romance: "恋人",
+            notes: "在社办夕阳下完成初体验，确立恋人关系"
+          }
+        }
+      }
+    }
+  }));
+
+  try {
+    gameState.active_hooks = [{
+      event_id: "test_pure_romance_event",
+      source_npc: "雪之下雪乃",
+      hook_text: "测试",
+      urgency: "low",
+      created_day: 97,
+      expires_day: 99,
+      seen_count: 0
+    }];
+    gameState.time.game_date = "2018-04-12";
+    await expireHooks();
+
+    // 验证 playerRelations 被写入
+    const rel = gameState.player.relationships["雪之下雪乃"];
+    if (!rel) throw new Error("雪乃关系应被创建");
+    if ((rel as any).romance !== "恋人") throw new Error(`romance 应为恋人, 实际: ${(rel as any).romance}`);
+    if (rel.stage !== "至交") throw new Error(`stage 应为至交, 实际: ${rel.stage}`);
+    if (gameState.flags["route_pure"] !== true) throw new Error("应设置 route_pure: true");
+  } finally {
+    if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+  }
 });
 
 (async () => {

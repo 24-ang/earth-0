@@ -1,0 +1,140 @@
+{
+  "id": "yukino_sleepover_bareback",
+  "title": "留宿·无套",
+  "source": "同人IF·纯爱",
+  "trigger": {
+    "min_day": 150,
+    "location": "自宅（千叶市高级公寓）",
+    "time_of_day": ["night"],
+    "flags": {
+      "yukino_maid_intimate": true
+    },
+    "affection": {
+      "雪之下雪乃": 50
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 2,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "周五放学，雪乃在走廊上叫住了{{player.surname}}。她说这周末家里没人——阳乃出差，父母也去京都参加婚礼。她的话点到为止，默默地站在原地。当被问起要不要去{{player.surname}}的公寓暂住时，她红着脸轻轻点头。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "sleepover_arrival",
+      "label": "深夜的公寓",
+      "prompt": "周五深夜，{{player.surname}}的公寓中。雪乃洗完澡后，换上了{{player.surname}}宽大的 T 恤当睡衣，衣摆刚好盖住大腿根。她有些不自然地坐在床边擦头发，清香在房间里弥漫。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "从背后温柔地抱住她，低头与她亲吻",
+          "effects": {
+            "flags": {
+              "sleepover_kissed": true
+            }
+          },
+          "next_beat": "sleepover_first_round"
+        },
+        {
+          "pick": "帮她吹干头发，劝她早点去休息",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 5
+            },
+            "flags": {
+              "sleepover_rest_only": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "sleepover_first_round",
+      "label": "长夜的序幕",
+      "prompt": "两人缠绵地吻到有些窒息，雪乃顺从地躺下，白暂的大腿泛着红晕。正常位进入时，她的长发散在被褥上，眼睛一直睁着看过来，咬着嘴唇承受着缓慢的冲击。第一发在套子里射出后，{{player.surname}}手伸向床头柜准备拿第二个套子，却被她轻轻按住了手腕。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "顺从她的呼唤：‘官……别戴那个了。我想直接……射在里面。’",
+          "effects": {
+            "flags": {
+              "sleepover_bareback_chosen": true
+            }
+          },
+          "next_beat": "sleepover_morning"
+        },
+        {
+          "pick": "为了她的安全，坚持再次戴上避孕套",
+          "effects": {
+            "flags": {
+              "sleepover_safe_chosen": true
+            }
+          },
+          "next_beat": "sleepover_morning_safe"
+        }
+      ]
+    },
+    {
+      "id": "sleepover_morning",
+      "label": "无套的印记",
+      "prompt": "把避孕套放回抽屉，无套的第二轮撞击比之前更深，雪乃的声音也开始失控地变得娇柔，最终翻过身从后方承受了深处的浇灌。半夜她又迷迷糊糊地跨坐上来骑乘了一轮。次日醒来床单一片狼藉，她去浴室冲水，厨房里响起了煎蛋的香气。擦着头发出来的她轻道了一声：‘早上好。’{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "盛起煎蛋，招呼她一起享用早餐",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 18
+            },
+            "flags": {
+              "yukino_sleepover_intimate": true,
+              "yukino_sleepover_bareback": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "乳", "唇"],
+              "thoughts": ["在公寓里完成了无套缠绵的整夜留宿，顺从地将精液完全内射在花径最深处..."],
+              "duration": 40
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "sleepover_morning_safe",
+      "label": "温馨的清晨",
+      "prompt": "雪乃有些羞涩而开心地笑了，配合着戴好了第二个套子，并在温柔的冲击中再次迎来了高潮。次日早晨，两人一起收拾了房间，在餐桌前享用早餐。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "送她回公寓，度过温馨的一天",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 12
+            },
+            "flags": {
+              "yukino_sleepover_intimate": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "唇"],
+              "thoughts": ["在公寓里完成了整夜戴套的安全温存留宿，感到关系更加亲近了..."],
+              "duration": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "周五{{player.surname}}没有再提起留宿的事，雪乃一个人落寞地回了家。空旷寒冷的屋子里，她抱着枕头看了一晚上的书。周一见面时，她只是用平淡疏远的语气轻声说了句早上好。",
+    "effects": {
+      "flags": {
+        "yukino_sleepover_missed": true
+      }
+    }
+  }
+}

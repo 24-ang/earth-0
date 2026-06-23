@@ -1,0 +1,37 @@
+{
+  "id": "oshi_bridge_rescue",
+  "title": "黑川茜·天桥救出",
+  "source": "推しの子",
+  "trigger": {
+    "min_day": 167,
+    "time_of_day": ["afternoon", "evening"],
+    "flags": {
+      "oshi_reality_show_done": true
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "旁白",
+    "hook_text": "暴雨。新闻快讯：一名年轻女性在千叶县内一座天桥上试图自杀，被两名高中生救下。事后确认该女性为演员黑川茜——正是前段时间真人秀网暴事件的主角。救下她的人中有一个金发少年，另一个目击者描述模糊。",
+    "urgency": "low"
+  },
+  "beats": [],
+  "on_expire": {
+    "effects": {
+      "flags": {
+        "oshi_akane_saved": true,
+        "oshi_bridge_rescue_done": true
+      },
+      "memoryTags": {
+        "黑川茜": [
+          { "tag": "[救出] 暴雨天桥上被阿库亚救下——那个雨天之后她决定重新活一次。从此对阿库亚产生了超越感激的感情", "expires": 999, "tone": "羁绊" }
+        ],
+        "星野阿库亚": [
+          { "tag": "[救出] 暴雨天桥上救下了试图自杀的黑川茜——从那天起他不再只是为了复仇而活", "expires": 999, "tone": "羁绊" }
+        ]
+      }
+    }
+  }
+}

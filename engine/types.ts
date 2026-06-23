@@ -385,17 +385,21 @@ export interface TimelineEvent {
   title: string;
   source: string;
   trigger: {
+    min_age?: number;
+    max_age?: number;
+    player_stage?: string;
     min_day?: number;
     max_day?: number;
     location?: string;
     affection?: Record<string, number>;
     time_of_day?: string[];
     flags?: Record<string, boolean>;
+    min_skills?: Record<string, number>;
     calendar_event?: string;
   };
   expires_days: number;
   repeatable: boolean;
-  hook: {
+  hook?: {
     source_npc: string;
     hook_text: string;
     urgency: "low" | "medium" | "high";
@@ -403,7 +407,7 @@ export interface TimelineEvent {
   beats: TimelineBeat[];
   on_expire?: {
     narrative: string;
-    effects?: { flags?: Record<string, boolean>; affection?: Record<string, number> };
+    effects?: { flags?: Record<string, boolean>; affection?: Record<string, number>; sex?: any };
   };
 }
 
@@ -415,6 +419,14 @@ export interface TimelineBeat {
     pick: string;
     effects?: { flags?: Record<string, boolean>; affection?: Record<string, number> };
     next_beat?: string;
+    auto_if?: {
+      /** NPC名 → 必须匹配的romance stage (如 "恋人") */
+      romance?: Record<string, string>;
+      /** flag名 → 必须匹配的值 */
+      flags?: Record<string, boolean>;
+      /** NPC名 → 最低好感度 */
+      affection?: Record<string, number>;
+    };
   }[];
   effects?: { flags?: Record<string, boolean>; affection?: Record<string, number> };
   expires_quest?: boolean;
@@ -495,6 +507,7 @@ export interface GameState {
   preset?: "default" | "lite";
   pendingTravel?: PendingTravel | null;
   quests: Record<string, QuestState>;          // 剧情任务状态
+  academic_year_offset: number;              // 学年偏移（0=默认时间线，+1=全员升一年级，教师不变）
   active_hooks: Hook[];                        // 活跃钩子账本（上限 3）
   completed_events: string[];                  // 已完成/已过期的事件 ID（防重复触发）
   roomTimestamps: Record<string, string>;  // 房间名 → game_date，场景时间戳脏污

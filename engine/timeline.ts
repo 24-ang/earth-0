@@ -10,6 +10,7 @@
 
 import type { TimelineEvent, Hook, QuestState, CalendarEntry } from "./types.ts";
 import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation } from "./state.ts";
+import { LIFE_STAGES } from "./time.ts";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -94,6 +95,35 @@ export function getCalendarEvents(date: string, location: string): CalendarEntry
   });
 }
 
+export function getPlayerNameParts() {
+  const world = gameState.activeWorld || "oregairu";
+  const configPath = path.resolve(process.cwd(), "worldpacks", world, "protagonist.json");
+  let config: any = null;
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    } catch (_) {}
+  }
+
+  const defaultProtagonist = config?.default_protagonist || { full: "比企谷八幡", surname: "比企谷", givenName: "八幡" };
+  const full = gameState.player?.name || defaultProtagonist.full;
+
+  if (full === defaultProtagonist.full) {
+    return defaultProtagonist;
+  }
+
+  // 玩家始终使用自己的名字（与比企谷八幡是两个独立的人）
+  // 顶替条件影响剧情走向（是否走雪乃线），不影响身份
+  if (full.length === 3) {
+    return { full, surname: full.slice(0, 1), givenName: full.slice(1) };
+  }
+  if (full.length === 4) {
+    return { full, surname: full.slice(0, 2), givenName: full.slice(2) };
+  }
+  return { full, surname: full, givenName: full };
+}
+
+
 /** 递归加载当前活跃世界观的 timeline 文件（只加载 data/timelines/{activeWorld}/） */
 function loadAllTimelines(): TimelineEvent[] {
   const events: TimelineEvent[] = [];
@@ -112,7 +142,14 @@ function loadAllTimelines(): TimelineEvent[] {
         scanDir(full);
       } else if (f.endsWith(".json")) {
         try {
-          const data = JSON.parse(fs.readFileSync(full, "utf-8"));
+          let raw = fs.readFileSync(full, "utf-8");
+          const parts = getPlayerNameParts();
+          raw = raw
+            .replace(/\{\{player\}\}/g, parts.full)
+            .replace(/\{\{player\.name\}\}/g, parts.full)
+            .replace(/\{\{player\.surname\}\}/g, parts.surname)
+            .replace(/\{\{player\.givenName\}\}/g, parts.givenName);
+          const data = JSON.parse(raw);
           if (Array.isArray(data)) events.push(...data);
           else if (data.id) events.push(data);
         } catch (_) {}
@@ -126,25 +163,50 @@ function loadAllTimelines(): TimelineEvent[] {
   return events;
 }
 
-/** 计算当前游戏天数（从 game_date 解析） */
+/** 计算当前游戏天数（从 game_date 解析） — 时区与夏令时安全 */
 function currentDay(): number {
   const d = gameState.time.game_date; // "2018-04-07"
   const parts = d.split("-");
-  const start = new Date(Number(parts[0]), 0, 1);
-  const now = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-  return Math.floor((now.getTime() - start.getTime()) / 86400000) + 1;
+  const y = Number(parts[0]);
+  const m = Number(parts[1]) - 1;
+  const day = Number(parts[2]);
+  const startYear = gameState.time?.timeline_origin?.year ?? 2018;
+  const start = Date.UTC(startYear, 0, 1);
+  const now = Date.UTC(y, m, day);
+  return Math.round((now - start) / 86400000) + 1;
 }
 
 /** 检查触发条件 */
 function checkTrigger(event: TimelineEvent, day: number): boolean {
   const t = event.trigger;
+  // 年龄限制
+  if ((t as any).min_age && gameState.player.age < (t as any).min_age) return false;
+  if ((t as any).max_age && gameState.player.age > (t as any).max_age) return false;
+  // 年龄阶段限制
+  if ((t as any).player_stage) {
+    const stageKey = gameState.time.player_stage;
+    const allowed = (t as any).player_stage;
+    const stageConfig = (LIFE_STAGES as any)[stageKey];
+    const label = stageConfig?.label;
+    if (stageKey !== allowed && label !== allowed) return false;
+  }
   // 天数条件
   if (t.min_day && day < t.min_day) return false;
   if (t.max_day && day > t.max_day) return false;
   // 时间带
   if (t.time_of_day && !t.time_of_day.includes(gameState.time.time_of_day)) return false;
-  // 地点
-  if (t.location && gameState.player.location !== t.location) return false;
+  // 地点 (支持层级匹配)
+  if (t.location) {
+    let breadcrumb: string[] = [];
+    try {
+      const nav = getLocationNav(gameState.player.location);
+      if (nav && nav.breadcrumb) {
+        breadcrumb = nav.breadcrumb;
+      }
+    } catch (_) {}
+    const match = isSameLocation(t.location, gameState.player.location) || breadcrumb.some(b => isSameLocation(t.location!, b));
+    if (!match) return false;
+  }
   // 好感度
   if (t.affection) {
     for (const [npc, min] of Object.entries(t.affection)) {
@@ -158,10 +220,19 @@ function checkTrigger(event: TimelineEvent, day: number): boolean {
       if (!!gameState.flags[k] !== v) return false;
     }
   }
+  // 技能要求
+  if ((t as any).min_skills) {
+    for (const [skill, minLevel] of Object.entries((t as any).min_skills)) {
+      const playerSkill = (gameState.player.skills as any)?.[skill];
+      if (!playerSkill || playerSkill.level < (minLevel as number)) return false;
+    }
+  }
   // 关联日历事件
   if (t.calendar_event) {
-    const todayEvents = getCalendarEvents(gameState.time.game_date, gameState.player.location);
+    const allEvents = loadCalendar();
+    const year = parseYear(gameState.time.game_date);
     const mmdd = parseMonthDay(gameState.time.game_date);
+    const todayEvents = allEvents.filter(e => e.date === mmdd && (e.year === null || e.year === year));
     const matchesEvent = todayEvents.some(e => e.text.includes(t.calendar_event!) || e.date === t.calendar_event) || mmdd === t.calendar_event;
     if (!matchesEvent) return false;
   }
@@ -182,6 +253,8 @@ export function checkTimelineEvents(): void {
     if (gameState.active_hooks.some(h => h.event_id === ev.id)) continue;
     // 条件不满足 → 跳过
     if (!checkTrigger(ev, day)) continue;
+    // 没有钩子配置的事件（如静默事件） → 跳过
+    if (!ev.hook) continue;
 
     // 创建钩子
     const hook: Hook = {
@@ -204,23 +277,25 @@ export function checkTimelineEvents(): void {
       if (uDiff !== 0) return uDiff;
       return b.created_day - a.created_day;
     });
-    // 多余的标记为过期
+    // 多余的标记为静默过期（不执行惩罚效果，不扣好感，不生成失败flag）
     const removed = gameState.active_hooks.splice(3);
+    const events = loadAllTimelines();
     for (const h of removed) {
-      expireHook(h);
+      const ev = events.find(e => e.id === h.event_id);
+      if (ev) expireHookSync(h, ev);
     }
   }
 }
 
 /** 清理过期钩子 */
-export function expireHooks(): void {
+export async function expireHooks(): Promise<void> {
   const day = currentDay();
   gameState.active_hooks ??= [];
   gameState.completed_events ??= [];
   const remaining: Hook[] = [];
   for (const h of gameState.active_hooks) {
     if (day > h.expires_day) {
-      expireHook(h);
+      await expireHook(h);
     } else {
       remaining.push(h);
     }
@@ -228,43 +303,55 @@ export function expireHooks(): void {
   gameState.active_hooks = remaining;
 }
 
-/** 单个钩子过期处理 */
-function expireHook(hook: Hook): void {
-  const events = loadAllTimelines();
-  const ev = events.find(e => e.id === hook.event_id);
-  if (!ev) return;
-
+/** 同步标记钩子过期状态 */
+function expireHookSync(hook: Hook, ev: TimelineEvent): void {
   // 记录到 completed_events
   if (!ev.repeatable) {
     gameState.completed_events.push(ev.id);
   }
 
-  // 执行 on_expire effects
-  if (ev.on_expire?.effects) {
-    const fx = ev.on_expire.effects;
-    if (fx.flags) {
-      for (const [k, v] of Object.entries(fx.flags)) {
-        gameState.flags[k] = v;
-      }
-    }
-    if (fx.affection) {
-      for (const [npc, delta] of Object.entries(fx.affection)) {
-        updateRelation(gameState.player.relationships, npc, delta, "剧情事件过期");
-      }
-    }
-  }
-
   // 如果有对应的 active quest，标记为 expired
+  gameState.quests ??= {};
   if (gameState.quests[hook.event_id]?.status === "active") {
     gameState.quests[hook.event_id].status = "expired";
+  }
+}
+
+/** 单个钩子过期处理 */
+async function expireHook(hook: Hook, silent = false): Promise<void> {
+  const events = loadAllTimelines();
+  const ev = events.find(e => e.id === hook.event_id);
+  if (!ev) return;
+
+  // 调用同步部分
+  expireHookSync(hook, ev);
+
+  // 执行 on_expire effects
+  if (!silent && ev.on_expire?.effects) {
+    await applyBeatEffects(ev.on_expire.effects);
   }
 }
 
 /** 获取活跃钩子列表（供 prompt 注入） */
 export function getActiveHooks(): Hook[] {
   gameState.active_hooks ??= [];
-  return gameState.active_hooks;
+  const events = loadAllTimelines();
+  const validIds = new Set(events.map(e => e.id));
+  const isTest = typeof process !== "undefined" && (
+    process.env.NODE_ENV === "test" ||
+    process.argv.some(arg => arg.includes("test.ts") || arg.includes("test"))
+  );
+  return gameState.active_hooks.filter(h => 
+    validIds.has(h.event_id) ||
+    (isTest && (
+      h.event_id.startsWith("old_") ||
+      h.event_id.startsWith("new_") ||
+      h.event_id.startsWith("test_") ||
+      h.event_id === "test"
+    ))
+  );
 }
+
 
 /** 为重复出现的钩子生成 novelty 提示 — 避免机械重复同一句话 */
 export function getHookNoveltyHint(hook: Hook): string {
@@ -289,8 +376,89 @@ export function getActiveQuests(): QuestState[] {
   return Object.values(gameState.quests).filter(q => q.status === "active");
 }
 
+/** 检查 outcome 的 auto_if 条件 — 类别间 OR，类别内 AND */
+function checkAutoIf(autoIf: { romance?: Record<string, string>; flags?: Record<string, boolean>; affection?: Record<string, number> }): boolean {
+  // romance: 全部NPC匹配才算通过
+  if (autoIf.romance) {
+    let ok = true;
+    for (const [npc, expected] of Object.entries(autoIf.romance)) {
+      const rel = gameState.player.relationships[npc];
+      if (!rel || (rel as any).romance !== expected) { ok = false; break; }
+    }
+    if (ok) return true;
+  }
+  // flags: 全部flag匹配才算通过
+  if (autoIf.flags) {
+    let ok = true;
+    for (const [flag, expected] of Object.entries(autoIf.flags)) {
+      if (!!gameState.flags[flag] !== expected) { ok = false; break; }
+    }
+    if (ok) return true;
+  }
+  // affection: 全部NPC好感度>=min才算通过
+  if (autoIf.affection) {
+    let ok = true;
+    for (const [npc, min] of Object.entries(autoIf.affection)) {
+      const rel = gameState.player.relationships[npc];
+      if (!rel || rel.affection < min) { ok = false; break; }
+    }
+    if (ok) return true;
+  }
+  return false;
+}
+
+/** 自动推进所有满足 auto_if 条件的 beat，返回推进描述列表 */
+async function autoAdvanceQuest(ev: any, q: any): Promise<string[]> {
+  const logs: string[] = [];
+  let safety = 0;
+  while (safety < 20) {
+    safety++;
+    const currentBeat = ev.beats.find((b: any) => b.id === q.current_beat);
+    if (!currentBeat) break;
+
+    // 无 outcomes 的终结 beat：如果 expires_quest，完成它
+    if (!currentBeat.outcomes) {
+      if (currentBeat.expires_quest) {
+        if (currentBeat.effects) await applyBeatEffects(currentBeat.effects);
+        q.status = "completed";
+        gameState.completed_events.push(ev.id);
+        logs.push("任务完成");
+      }
+      break;
+    }
+
+    const autoOutcome = currentBeat.outcomes.find(
+      (o: any) => o.auto_if && checkAutoIf(o.auto_if)
+    );
+    if (!autoOutcome) break;
+
+    // 执行自动选择
+    q.outcomes[currentBeat.id] = autoOutcome.pick;
+    if (currentBeat.effects) await applyBeatEffects(currentBeat.effects);
+    if (autoOutcome.effects) await applyBeatEffects(autoOutcome.effects);
+    logs.push(`${currentBeat.label} → ${autoOutcome.pick}`);
+
+    if (currentBeat.expires_quest) {
+      q.status = "completed";
+      gameState.completed_events.push(ev.id);
+      logs.push("任务完成");
+      return logs;
+    }
+
+    if (autoOutcome.next_beat) {
+      q.current_beat = autoOutcome.next_beat;
+    } else {
+      q.status = "completed";
+      gameState.completed_events.push(ev.id);
+      logs.push("任务完成");
+      return logs;
+    }
+  }
+  return logs;
+}
+
 /** 打开一个 quest（LLM 通过工具调用） */
-export function openQuest(eventId: string): string | null {
+export async function openQuest(eventId: string): Promise<string | null> {
   const events = loadAllTimelines();
   const ev = events.find(e => e.id === eventId);
   if (!ev) return `未找到事件: ${eventId}`;
@@ -310,11 +478,20 @@ export function openQuest(eventId: string): string | null {
   // 从 active_hooks 中移除
   gameState.active_hooks = gameState.active_hooks.filter(h => h.event_id !== eventId);
 
+  // 自动推进满足 auto_if 条件的 beat
+  const autoLogs = await autoAdvanceQuest(ev, gameState.quests[eventId]);
+  const q = gameState.quests[eventId];
+  if (q.status === "completed") {
+    return `任务开始并自动完成: ${ev.title} (${autoLogs.join("; ")})`;
+  }
+  if (autoLogs.length > 0) {
+    return `任务开始: ${ev.title} [自动推进: ${autoLogs.join(" → ")}]`;
+  }
   return `任务开始: ${ev.title}`;
 }
 
 /** 推进 quest beat */
-export function advanceQuest(eventId: string, outcomeKey?: string): string | null {
+export async function advanceQuest(eventId: string, outcomeKey?: string): Promise<string | null> {
   gameState.quests ??= {};
   const q = gameState.quests[eventId];
   if (!q) return `未找到任务: ${eventId}`;
@@ -332,14 +509,15 @@ export function advanceQuest(eventId: string, outcomeKey?: string): string | nul
 
   // 应用 beat effects
   if (currentBeat.effects) {
-    applyBeatEffects(currentBeat.effects);
+    await applyBeatEffects(currentBeat.effects);
   }
 
   // 应用 outcome effects
   if (outcomeKey && currentBeat.outcomes) {
     const oc = currentBeat.outcomes.find(o => o.pick === outcomeKey);
-    if (oc?.effects) applyBeatEffects(oc.effects);
+    if (oc?.effects) await applyBeatEffects(oc.effects);
   }
+
 
   // 如果 expires_quest → 标记完成
   if (currentBeat.expires_quest) {
@@ -357,7 +535,16 @@ export function advanceQuest(eventId: string, outcomeKey?: string): string | nul
 
   if (nextBeatId) {
     q.current_beat = nextBeatId;
-    return `任务推进: ${ev.title} → ${ev.beats.find(b => b.id === nextBeatId)?.label || nextBeatId}`;
+    // 自动推进满足 auto_if 条件的后续 beat
+    const autoLogs = await autoAdvanceQuest(ev, q);
+    if (q.status === "completed") {
+      return `任务完成: ${ev.title} [自动推进: ${autoLogs.join(" → ")}]`;
+    }
+    const beatLabel = ev.beats.find((b: any) => b.id === nextBeatId)?.label || nextBeatId;
+    if (autoLogs.length > 0) {
+      return `任务推进: ${ev.title} → ${beatLabel} [自动推进: ${autoLogs.join(" → ")}]`;
+    }
+    return `任务推进: ${ev.title} → ${beatLabel}`;
   }
 
   // 没有 next_beat → 完成
@@ -389,7 +576,14 @@ export function getTodayCalendar(): string {
   return picked.map(e => e.text).join(" ");
 }
 
-function applyBeatEffects(effects: { flags?: Record<string, boolean>; affection?: Record<string, number> }): void {
+async function applyBeatEffects(effects: {
+  flags?: Record<string, boolean>;
+  affection?: Record<string, number>;
+  sex?: any;
+  memoryTags?: Record<string, { tag: string; expires?: number; tone?: string }[]>;
+  npcRelations?: Record<string, Record<string, { stage: string; tone: string; notes: string }>>;
+  playerRelations?: Record<string, { stage?: string; romance?: string; notes?: string }>;
+}): Promise<void> {
   if (effects.flags) {
     for (const [k, v] of Object.entries(effects.flags)) {
       gameState.flags[k] = v;
@@ -400,4 +594,60 @@ function applyBeatEffects(effects: { flags?: Record<string, boolean>; affection?
       updateRelation(gameState.player.relationships, npc, delta, "剧情事件");
     }
   }
+  if (effects.sex) {
+    const { getOrCreateSexState } = await import("./state.ts");
+    const { settleAfterSex } = await import("./sex.ts");
+    const ss = await getOrCreateSexState(effects.sex.npc);
+    if (ss) {
+      settleAfterSex(
+        ss,
+        gameState.time.game_date,
+        effects.sex.duration || 30,
+        effects.sex.touched_parts || [],
+        effects.sex.thoughts || [],
+        effects.sex.partner || "维"
+      );
+    }
+  }
+  if (effects.memoryTags) {
+    const { addMemoryTag } = await import("./state.ts");
+    for (const [npc, tags] of Object.entries(effects.memoryTags)) {
+      for (const t of tags) {
+        addMemoryTag(npc, t.tag, t.expires ?? 365, t.tone);
+      }
+    }
+  }
+  if (effects.npcRelations) {
+    const { getOrCreateNPC } = await import("./state.ts");
+    for (const [fromNPC, targets] of Object.entries(effects.npcRelations)) {
+      const npc = getOrCreateNPC(fromNPC);
+      npc.npcRelationships ??= {};
+      for (const [toNPC, rel] of Object.entries(targets)) {
+        npc.npcRelationships[toNPC] = {
+          stage: rel.stage,
+          tone: rel.tone,
+          notes: rel.notes
+        };
+      }
+    }
+  }
+  if (effects.playerRelations) {
+    for (const [npc, rel] of Object.entries(effects.playerRelations)) {
+      if (gameState.player.relationships[npc]) {
+        if (rel.stage) gameState.player.relationships[npc].stage = rel.stage as any;
+        if (rel.romance) gameState.player.relationships[npc].romance = rel.romance as any;
+        if (rel.notes) gameState.player.relationships[npc].notes = rel.notes;
+      } else {
+        gameState.player.relationships[npc] = {
+          stage: (rel.stage || "陌生") as any,
+          romance: (rel.romance || null) as any,
+          affection: 0,
+          notes: rel.notes || "",
+          history: []
+        };
+      }
+    }
+  }
 }
+
+

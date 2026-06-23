@@ -1,0 +1,113 @@
+{
+  "id": "summer_break",
+  "title": "暑假·烟花与她的狗",
+  "source": "春物",
+  "trigger": {
+    "min_day": 235,
+    "time_of_day": ["morning", "afternoon"],
+    "flags": {
+      "camp_complete": true,
+      "route_pure": false,
+      "route_brainwash": false,
+      "route_ntr": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 5,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "平冢静",
+    "hook_text": "暑假过半，平冢静发来消息说侍奉部有临时委托——实际上是她自己想带大家去花火大会。她还特意提了一句：上次在公园看到雪之下在遛一条很漂亮的狗，建议{{player.surname}}有空也去看看。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "park_encounter",
+      "label": "公园与萨布雷",
+      "prompt": "傍晚的公园里，雪之下雪乃正蹲在草坪上抚摸一条毛色蓬松的狗。那条狗一看到{{player.surname}}就兴奋地跑了过来，尾巴摇成了螺旋桨。雪乃有些惊讶地站起来介绍这是她家的狗——萨布雷。奇怪的是，萨布雷对{{player.surname}}格外亲近，蹭着裤腿呜呜叫。雪乃若有所思地看着这一幕，轻声说萨布雷曾经在第一学期开学那天被一辆车差点撞到，是一个高中生冲出来救了它——但她一直不知道那个人是谁。",
+      "outcomes": [
+        {
+          "pick": "让八幡说出真相——那天是他救了萨布雷，也因此开学迟到了（走原著线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 12, "比企谷八幡": 8 },
+            "flags": { "sable_truth_revealed": true, "hachiman_sable_savior": true }
+          },
+          "next_beat": "fireworks_night"
+        },
+        {
+          "pick": "自己蹲下来抚摸萨布雷，告诉雪乃那天你也差点被那辆车碰到，一直想找到这条狗的主人（走玩家线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 15 },
+            "flags": { "sable_truth_revealed": true, "player_sable_connection": true }
+          },
+          "next_beat": "fireworks_night",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "fireworks_night",
+      "label": "花火大会之夜",
+      "prompt": "花火大会当晚，平冢静开着她的跑车把侍奉部全员拉到了河川敷。她塞给每人一罐饮料（八幡的是果汁，她自己的是啤酒），然后远远退到后面抽烟去了。雪乃穿着浴衣，头发盘起，站在河堤上仰望着升空的烟花。由比滨在旁边用手机拍照，八幡靠在栏杆上。当最大的一朵烟花在夜空炸开时，雪乃的侧脸被照得明亮。",
+      "outcomes": [
+        {
+          "pick": "让八幡去和雪乃站在一起——平冢静已经把他推过去了（走原著线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 5, "比企谷八幡": 5 },
+            "flags": { "summer_fireworks_watched": true }
+          },
+          "next_beat": "hachiman_realization"
+        },
+        {
+          "pick": "走到雪乃身边，问她明年还能不能一起来看烟花（走玩家线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 12 },
+            "flags": { "summer_fireworks_watched": true, "player_fireworks_promise": true }
+          },
+          "next_beat": "player_promise",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hachiman_realization",
+      "label": "想要拯救她",
+      "prompt": "花火大会散场后，八幡一个人走在河堤上。平冢静追上来，递给他一罐温掉的咖啡。她问他对雪之下的看法。八幡沉默了很久，最后说了一句：'我……不想看到她再露出那种表情。不是同情，也不是憧憬。只是不想让她受伤。'平冢静吐了口烟，笑了笑走了。八幡抬头看着已经暗下来的夜空，第一次在心里承认——他想要拯救那个人。",
+      "effects": {
+        "flags": { "summer_break_complete": true }
+      },
+      "expires_quest": true
+    },
+    {
+      "id": "player_promise",
+      "label": "明年的约定",
+      "prompt": "烟花结束后，人群逐渐散去。雪乃和{{player.surname}}并肩走在河堤上，前方是由比滨拉着八幡去买苹果糖的背影。雪乃忽然停下脚步，语气平静却微颤地说：'谢谢你今天……关于萨布雷的事。我一直想知道那天救它的人是谁。'{{player.surname}}笑着说明年还可以一起来看烟花。她垂下眼睛，嘴角却浮起了一层薄薄的笑意，轻声应了句'嗯'。头顶最后几朵烟花在夜空里消散，夏天的风从河面上吹过来。",
+      "effects": {
+        "flags": { "summer_break_complete": true }
+      },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "暑假在蝉鸣中结束了。{{player.surname}}错过了公园里的那次相遇——后来听说八幡在遛狗的雪乃面前说出了自己开学那天救下萨布雷的事。平冢静后来提起花火大会时只是摇了摇头。有些属于夏天的对话，错过了就不会再有了。",
+    "effects": {
+      "flags": {
+        "summer_break_complete": true,
+        "summer_break_missed": true,
+        "hachiman_sable_savior": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[暑假] 从八幡口中得知开学那天救下萨布雷的人是他，心情复杂", "expires": 365, "tone": "期待" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[暑假] 在花火大会上意识到自己想要拯救雪之下", "expires": 365, "tone": "期待" }
+        ]
+      }
+    }
+  }
+}

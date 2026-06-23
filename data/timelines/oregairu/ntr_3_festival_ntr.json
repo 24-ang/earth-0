@@ -1,0 +1,100 @@
+{
+  "id": "yukino_festival_ntr",
+  "title": "储物间",
+  "source": "同人IF·NTR",
+  "trigger": {
+    "min_day": 280,
+    "location": "总武高",
+    "time_of_day": ["night"],
+    "flags": {
+      "yukino_sexual_awakening": true,
+      "route_ntr": true,
+      "cultural_festival_complete": true
+    },
+    "min_skills": {
+      "sex_technique": 6
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 2,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "文化祭深夜，雪之下独自一人在储物间清点剩余物资。{{player.surname}}推开门进来时，她仅仅抬头看了一眼，便继续低头数箱子。在{{player.surname}}面前，她早已无需再维持什么所谓的完美形象——从社办初夜开始便不复存在了。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "storage_encounter",
+      "label": "散场的储物间",
+      "prompt": "堆满废旧纸箱的储物间里只有几盏昏暗的日光灯闪烁。雪乃随口提起八幡在文化祭闭幕式上出头给大伙接麦克风的事，语气平静却略显疲惫。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "上前帮她挪开几个沉重的箱子，随后从背后环抱住她纤细的腰肢",
+          "effects": {
+            "flags": {
+              "storage_boxes_moved": true
+            }
+          },
+          "next_beat": "storage_ntr_action"
+        },
+        {
+          "pick": "老老实实帮她把剩余物资核对完，随后向她道别离开",
+          "effects": {
+            "flags": {
+              "storage_ntr_declined": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "storage_ntr_action",
+      "label": "无声的顺从",
+      "prompt": "雪乃没有回头，也没有挣扎，似乎对这种触碰已经当成了呼吸般自然的事。她顺服地弯下腰去，双手扶着纸箱边缘。当{{player.surname}}撩起百褶裙摆、褪去内裤并从后方推入时，她只是死死咬住了袖口。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "有力地抓紧她的胯骨，加速耸动，将她推到高潮并完成深处内射",
+          "effects": {},
+          "next_beat": "storage_ntr_finish"
+        }
+      ]
+    },
+    {
+      "id": "storage_ntr_finish",
+      "label": "冰冷的事务",
+      "prompt": "雪乃在痉挛中到了高潮，手心把箱子上的标签都抠掉了一角。内射结束后，她默默直起身体，抚平裙子，将那个被撕坏的‘文化祭·展示用’标签扔进垃圾桶，提起笔若无其事地继续划掉清单上的条目：‘八幡说明天要开总结会，别迟到。’她刚承受了内射，却在讨论八幡要开会。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "淡淡地回应一声，帮她带上门一起离开",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 3
+            },
+            "flags": {
+              "yukino_ntr_storage": true,
+              "route_ntr": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部"],
+              "thoughts": ["在文化祭物资堆积如山的储物间里后入，听着她冷淡通知明天的会议安排，明白她的情绪永远只属于另一个人..."],
+              "duration": 20
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "储物间的灯亮了一整夜。雪乃独自清点完物资后锁了门。空无一人的走廊里回荡着她轻轻的脚步声。",
+    "effects": {
+      "flags": {
+        "yukino_festival_ntr_missed": true
+      }
+    }
+  }
+}

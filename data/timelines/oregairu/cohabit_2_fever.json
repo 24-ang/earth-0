@@ -1,0 +1,148 @@
+{
+  "id": "if_yukino_cohabit_fever",
+  "title": "雪乃发烧与材木座非礼",
+  "source": "同人IF·同居",
+  "trigger": {
+    "min_day": 322,
+    "max_day": 327,
+    "location": "家_玩家房间",
+    "flags": {
+      "cohabit_bath_occurred": true
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 5,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "雪乃在上学路上发高烧，被材木座一路背回了比企谷家并安置在二楼。小町打电话让比企谷猿畠从公司请假回来，猿畠推开房门，却震惊地发现……",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "cohabit_fever_arrive",
+      "label": "材木座的非礼现场",
+      "prompt": "大胖子材木座正趴在床上，把粗大的分身插入雪乃滚烫娇嫩的通道中亲吻爱抚！听到干咳，材木座吓得立刻提上裤子仓皇逃走。比企谷猿畠看着床上神志不清的雪乃决定：",
+      "outcomes": [
+        {
+          "pick": "[比企谷猿畠的隐瞒] 决定隐瞒这件事不告诉八幡，默默为雪乃盖上被子并倒水喂药（材木座在后台完成了侵犯）",
+          "effects": {
+            "flags": {
+              "cohabit_fever_occurred": true
+            },
+            "affection": {
+              "雪之下雪乃": 10
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "材木座义辉",
+              "touched_parts": ["唇", "秘部"],
+              "thoughts": ["高烧中失去了反抗力，被八幡的挚友材木座那根肥大的肉棒强行戳入并大肆玩弄了病弱的娇躯……"],
+              "duration": 15
+            }
+          },
+          "next_beat": "cohabit_punish_komachi"
+        },
+        {
+          "pick": "[比企谷八幡的守护] 八幡提前请假回家，正好撞见材木座的卑劣行径，当场怒火冲天痛扁了材木座，将其彻底赶走！",
+          "effects": {
+            "flags": {
+              "cohabit_fever_occurred": true,
+              "zaimokuza_beaten": true
+            },
+            "affection": {
+              "雪之下雪乃": 25
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷猿畠的贪婪] 借着给雪乃擦汗的名义，趁其高烧昏睡反抗力降到最低，自己也爬上床强硬地插进雪乃的娇躯占有了一次……",
+          "effects": {
+            "flags": {
+              "cohabit_fever_occurred": true,
+              "yukino_fever_abused": true
+            },
+            "affection": {
+              "雪之下雪乃": -20
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["胸", "唇", "秘部"],
+              "thoughts": ["发着高烧神志不清的时候……又被八幡的父亲趁虚而入，用那根丑陋的大肉棒狠狠地插进了滚烫的小穴里抽送内射了……好热……"],
+              "duration": 30
+            }
+          },
+          "next_beat": "cohabit_punish_komachi"
+        }
+      ]
+    },
+    {
+      "id": "cohabit_punish_komachi",
+      "label": "小町的坏锁惩罚",
+      "prompt": "雪乃退烧睡下后，比企谷猿畠在走廊叫住了小町。雪乃房门锁坏掉才导致材木座轻易潜入，猿畠将小町按在大腿上，扒下短裤露出圆臀，却发现手中摸到极其黏稠的爱液。发现小町竟然不是处女，比企谷猿畠决定：",
+      "outcomes": [
+        {
+          "pick": "[比企谷猿畠的霸占] 逼问未果，为了彻底占有女儿，脱下长裤将粗大之物直接插进小町紧致的秘部中惩罚她",
+          "effects": {
+            "affection": {
+              "比企谷小町": 15
+            },
+            "sex": {
+              "npc": "比企谷小町",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["臀", "秘部"],
+              "thoughts": ["爸爸的手指和巨大肉棒狠狠地蹂躏着我的下体……作为惩罚，被爸爸以严厉占有的姿态彻底肏成了他的私有物。"],
+              "duration": 40
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷猿畠的严肃训诫] 狠狠地打了小町几记耳光，罚她做两周家务并没收所有零花钱，严厉警告其不许早恋",
+          "effects": {
+            "flags": {
+              "komachi_punished_mild": true
+            },
+            "affection": {
+              "比企谷小町": -10
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷小町的主动迎合] 害怕挨揍，眼含泪水地主动搂住爸爸的脖子求饶，用自己大腿间的黏液摩擦爸爸的裤档，用身体讨好父亲",
+          "effects": {
+            "affection": {
+              "比企谷小町": 20
+            },
+            "sex": {
+              "npc": "比企谷小町",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["秘部"],
+              "thoughts": ["害怕爸爸揍我，主动用小穴蹭爸爸的肉棒讨好他……被爸爸温柔地抱起来插了好多下，感觉作为女儿的坏心眼全露出来了。"],
+              "duration": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "比企谷猿畠没能及时请假回家，材木座在雪乃房间侵犯了高烧的雪乃。随后猿畠回家发现了雪乃锁坏和小町非处的事实，愤而用肉体严厉惩罚了小町，将其强占为禁脔……",
+    "effects": {
+      "flags": {
+        "cohabit_fever_occurred": true
+      },
+      "sex": {
+        "npc": "比企谷小町",
+        "partner": "比企谷猿畠",
+        "touched_parts": ["秘部"],
+        "thoughts": ["被爸爸发现我已经不是处女后，强行被他扒光在房间以极其粗野的抽送强占了……"],
+        "duration": 40
+      }
+    }
+  }
+}

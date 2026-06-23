@@ -1,0 +1,103 @@
+{
+  "id": "yukino_camp_moonlight",
+  "title": "林间月下",
+  "source": "同人IF·纯爱",
+  "trigger": {
+    "min_day": 200,
+    "location": "千叶村",
+    "time_of_day": ["night"],
+    "flags": {
+      "yukino_sexual_awakening": true,
+      "route_pure": true,
+      "camp_helped": true,
+      "met_yukino_first": true
+    },
+    "affection": {
+      "雪之下雪乃": 45
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 2,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "合宿第一晚，其他人都睡了。雪之下独自坐在营地边的长椅上仰头看月亮。听到脚步声没有回头：'也睡不着吗。'随后指了指身旁的空位。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "moonlight_talk",
+      "label": "长椅上的倾听",
+      "prompt": "雪乃双手环抱在膝前，声音有些低沉。她罕见地提起了小学时被孤立、被拿走室内鞋的往事，流露出最真实而脆弱的一面。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "轻轻坐过去抱住她，用实际的温度安慰她",
+          "effects": {
+            "flags": {
+              "moonlight_talked": true
+            }
+          },
+          "next_beat": "moonlight_closeness"
+        },
+        {
+          "pick": "站在一旁好言安慰，随后劝她回屋早点休息",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 5
+            },
+            "flags": {
+              "moonlight_talk_only": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "moonlight_closeness",
+      "label": "夜色下的触碰",
+      "prompt": "雪乃把头靠在{{player.surname}}的肩膀上，没有闪躲抚摸发梢的手指。当手探入她外套下面，隔着衬衫和内裤揉捏时，她微微颤抖，声音断了几次，但依然顺从地靠过来。内裤退到脚踝，她转过身看了过来。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "抱起她放在松软的草地上，在婆娑的树影和虫鸣声中结合",
+          "effects": {},
+          "next_beat": "moonlight_sex_finish"
+        }
+      ]
+    },
+    {
+      "id": "moonlight_sex_finish",
+      "label": "回归寂静的夜空",
+      "prompt": "在微凉的草地上，雪乃的双腿夹着{{player.surname}}的腰，指尖掐进泥土中，压抑着声音迎来了极致的高潮。结束后，雪乃枕着{{player.surname}}的手臂，相依着看了很久的星空。回去的路上，她主动牵起了手。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "牵紧她的手，送她回到小木屋门前",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 20
+            },
+            "flags": {
+              "yukino_camp_intimate": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "乳", "唇"],
+              "thoughts": ["在千叶村月光照耀的草地上完成了野外本番，听她倾诉过去的孤独，身心一同彻底契合..."],
+              "duration": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "夜深了。长椅空无一人。雪乃独自裹紧外套走回了小木屋。月光照在寂静的林间空地上。",
+    "effects": {
+      "flags": {
+        "yukino_camp_missed": true
+      }
+    }
+  }
+}

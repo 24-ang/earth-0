@@ -1,0 +1,86 @@
+{
+  "id": "main_7_skitrip",
+  "title": "滑雪旅行与巧克力",
+  "source": "春物",
+  "trigger": {
+    "min_day": 480,
+    "time_of_day": ["morning"],
+    "flags": {
+      "genuine_complete": true,
+      "route_pure": false,
+      "route_brainwash": false,
+      "route_ntr": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "三浦优美子",
+    "hook_text": "三浦优美子因为担心叶山隼人的文理选科和未来去向，来到活动室向侍奉部哭诉求助。恰逢学校组织前往滑雪场的野外实训，平冢静老师指派{{player.surname}}协助引导活动。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "ski_confrontation",
+      "label": "雪夜的交流",
+      "prompt": "在白雪皑皑的滑雪场，夜晚群星闪烁。叶山隼人的选科困境成了大家的焦点。在寒冷的山区走廊和星空下，大家各自有着心思。",
+      "outcomes": [
+        {
+          "pick": "让八幡在雪夜去质问叶山，并主导后续情人节巧克力会（走原著线）",
+          "effects": {
+            "flags": { "hachiman_skitrip_led": true }
+          },
+          "next_beat": "hachiman_chocolate"
+        },
+        {
+          "pick": "自己陪雪乃去雪地散步看星空，并在巧克力会上接受她的赠礼（走玩家线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 15 },
+            "flags": { "player_skitrip_led": true }
+          },
+          "next_beat": "player_chocolate",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" },
+            "flags": { "player_genuine_triggered": true }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hachiman_chocolate",
+      "label": "原著的手作巧克力",
+      "prompt": "滑雪旅行结束后，大家在烹饪教室举办了巧克力制作会。雪乃在八幡的从旁协助下，制作了巧克力。尽管没有言明好感，但八幡和雪乃之间流淌着心照不宣的默契。",
+      "effects": {
+        "flags": { "skitrip_complete": true }
+      },
+      "expires_quest": true
+    },
+    {
+      "id": "player_chocolate",
+      "label": "玩家的手作巧克力",
+      "prompt": "巧克力制作会上，雪乃有些红着脸，将一盒包装精美的巧克力悄悄塞进了{{player.surname}}的手里，轻声嘟囔：‘这只是……试吃的样品而已。’由比滨在旁边笑着打趣，雪乃的脸变得更红了。八幡在一旁端着红茶，默默露出了微笑。",
+      "effects": {
+        "flags": { "skitrip_complete": true }
+      },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "滑雪实训和情人节都过去了。八幡在雪夜质问了叶山，解决了他的出路烦恼。在后续的巧克力会上，八幡和雪乃在微妙的默契中度过了情人节，感情在悄然升温。",
+    "effects": {
+      "flags": {
+        "skitrip_complete": true,
+        "hachiman_skitrip_led": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[滑雪] 巧克力制作会上与八幡保持微妙默契", "expires": 365, "tone": "期待" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[滑雪] 雪夜质问叶山，并在巧克力会上与雪乃建立默契", "expires": 365, "tone": "期待" }
+        ]
+      }
+    }
+  }
+}

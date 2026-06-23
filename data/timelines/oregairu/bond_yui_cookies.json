@@ -1,0 +1,46 @@
+{
+  "id": "cookie_delegation",
+  "title": "由比滨的曲奇委托",
+  "source": "春物",
+  "trigger": {
+    "min_day": 98,
+    "location": "总武高",
+    "time_of_day": ["afternoon"],
+    "player_stage": "高中"
+  },
+  "expires_days": 5,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "雪之下在走廊上叫住了{{player.surname}}。她说最近有个一年级的女生经常在侍奉部门口张望——由比滨结衣，八幡说她看八幡的眼神总带着一种奇怪的紧张，好像是认识但又不敢开口。雪之下的语气漫不经心，但她停在原地等了几秒——显然在等一个回答，看{{player.surname}}愿不愿意一起接下这个委托。",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "accept",
+      "label": "接受委托",
+      "prompt": "第二天放学后，由比滨结衣终于鼓起勇气走进了侍奉部。她有着明亮的发色和温暖的笑容，但说话时手指一直在绞裙摆。她说想给某个重要的人亲手做曲奇，但她这辈子从没进过厨房。说话的时候她飞快地瞟了一眼角落里的八幡。八幡正低着头看文库本，似乎完全没注意到。雪之下已经冷静地列出了教学计划：从称面粉、控制黄油温度到烤箱计时。由比滨手忙脚乱地系上围裙，第一把面粉就撒了半桌。八幡的书页上落了一层白粉，他默默地把书往旁边挪了挪。{{player.surname}}可以在旁边看着，也可以搭把手。",
+      "outcomes": [
+        { "pick": "一起指导她做曲奇", "effects": { "affection": { "由比滨结衣": 10, "雪之下雪乃": 5 }, "flags": { "cookie_helped": true, "cookie_complete": true } }, "next_beat": "baking" },
+        { "pick": "在旁边安静地陪着，偶尔递个工具", "effects": { "affection": { "由比滨结衣": 3, "雪之下雪乃": 3 }, "flags": { "cookie_watched": true, "cookie_complete": true } }, "next_beat": "baking" }
+      ]
+    },
+    {
+      "id": "baking",
+      "label": "曲奇完成",
+      "prompt": "经过几天的反复练习，由比滨的曲奇终于像样了。她把成品装在小纸袋里分给每个在场的人——给雪之下时她认真地道了谢，给{{player.surname}}时她笑得很真诚，给八幡时她红着脸把袋子往他手里一塞就跑了。八幡拿着那袋歪歪扭扭的曲奇饼干，愣了几秒，然后拆开吃了一片。阳光从窗外照进来，桌上只剩几粒饼干碎屑和她留下的一张字迹歪扭的感谢纸条。",
+      "effects": { "flags": { "cookie_baked": true }, "affection": { "由比滨结衣": 5, "比企谷八幡": 3 } }
+    },
+    {
+      "id": "reject",
+      "label": "拒绝参与",
+      "prompt": "雪之下等了几秒，没有听到回答。她转回身去，用平常的语气说了句'算了'，回了侍奉部。之后几天，她和八幡一起处理了由比滨的委托——从教她称面粉到守着烤箱。八幡后来提到那次经历时只说了一句：'面粉进了我的文库本夹缝，现在翻书还有饼干的香味。'由比滨的曲奇最终做出来了，但{{player.surname}}不在那个被面粉弄得一片白的下午里。",
+      "effects": { "affection": { "雪之下雪乃": -5 }, "flags": { "cookie_declined": true, "cookie_complete": true } },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "几周后，{{player.surname}}偶然想起走廊上那个在侍奉部门口张望的一年级身影。但已经很久没见到她了。后来听说八幡和雪之下帮她搞定了曲奇——八幡的文库本现在还夹着面粉。",
+    "effects": { "flags": { "cookie_missed": true, "cookie_complete": true } }
+  }
+}
