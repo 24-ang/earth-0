@@ -95,6 +95,83 @@ export function getCalendarEvents(date: string, location: string): CalendarEntry
   });
 }
 
+/** 获取当前日期所处的日历阶段及匹配条目 — 预热/当天/余波三阶段 */
+export function getCalendarPhase(date: string, location: string): {
+  phase: "pre" | "today" | "after" | "none";
+  entries: CalendarEntry[];
+} {
+  const all = loadCalendar();
+  const year = parseYear(date);
+  const mmdd = date.includes("-") ? parseMonthDay(date) : date;
+
+  // Helper: parse M月D日 into {month, day} numbers
+  function parseMD(md: string): { m: number; d: number } {
+    const parts = md.split("月");
+    return { m: parseInt(parts[0]), d: parseInt(parts[1]) };
+  }
+
+  const todayMD = parseMD(mmdd);
+
+  // Helper: check if a date string falls within a range of days from todayMD
+  function daysFromToday(targetMD: string): number {
+    const t = parseMD(targetMD);
+    // Simplified: treat months as 30 days each for rough offset calculation
+    return (t.m - todayMD.m) * 30 + (t.d - todayMD.d);
+  }
+
+  const todayEntries: CalendarEntry[] = [];
+  const preEntries: CalendarEntry[] = [];
+  const afterEntries: CalendarEntry[] = [];
+
+  for (const e of all) {
+    if (e.date !== mmdd && !e.advance_days && !e.aftermath_text) continue;
+    if (e.year !== null && e.year !== year) continue;
+
+    const eMD = parseMD(e.date);
+    const offset = daysFromToday(e.date);
+
+    // Exact match → today phase
+    if (e.date === mmdd) {
+      if (e.location !== null && !locationMatches(e.location, location)) continue;
+      todayEntries.push(e);
+      continue;
+    }
+
+    // Pre-phase: within advance_days before event
+    if (e.advance_days && offset < 0 && offset >= -e.advance_days) {
+      if (e.range && !isInRange(e.range, e.center, location)) continue;
+      preEntries.push(e);
+    }
+
+    // After-phase: 1-2 days after event
+    if (e.aftermath_text && offset > 0 && offset <= 2) {
+      if (e.range && !isInRange(e.range, e.center, location)) continue;
+      afterEntries.push(e);
+    }
+  }
+
+  if (todayEntries.length > 0) return { phase: "today", entries: todayEntries };
+  if (preEntries.length > 0) return { phase: "pre", entries: preEntries };
+  if (afterEntries.length > 0) return { phase: "after", entries: afterEntries };
+  return { phase: "none", entries: [] };
+}
+
+function locationMatches(entryLoc: string, playerLoc: string): boolean {
+  const { isSameLocation, getLocationNav } = require("./state.ts");
+  if (isSameLocation(entryLoc, playerLoc)) return true;
+  try {
+    const nav = getLocationNav(playerLoc);
+    if (nav?.breadcrumb?.some((b: string) => isSameLocation(entryLoc, b))) return true;
+  } catch (_) {}
+  return false;
+}
+
+function isInRange(range: string, center: string | undefined, playerLoc: string): boolean {
+  if (range === "national" || range === "global") return true;
+  if (!center) return locationMatches(center || "", playerLoc);
+  return locationMatches(center, playerLoc);
+}
+
 export function getPlayerNameParts() {
   const world = gameState.activeWorld || "oregairu";
   const configPath = path.resolve(process.cwd(), "worldpacks", world, "protagonist.json");
@@ -662,17 +739,29 @@ export function abandonQuest(eventId: string): string | null {
   return `任务已放弃: ${q.title}`;
 }
 
-/** 获取今日日历条目（供 prompt 注入） — 保留向后兼容 */
+/** 获取今日日历条目（供 prompt 注入） — 区分预热/当天/余波三阶段 */
 export function getTodayCalendar(): string {
   const d = gameState.time.game_date;
   const loc = gameState.player.location;
-  const entries = getCalendarEvents(d, loc);
-  // 优先 location 精确匹配的条目，其次 location-null 的条目
+  const { phase, entries } = getCalendarPhase(d, loc);
+
+  if (phase === "none" || entries.length === 0) return "";
+
+  // Pick up to 2 entries, prefer location-matched over location-null
   const locationMatch = entries.filter(e => e.location !== null);
   const anyMatch = entries.filter(e => e.location === null);
-  // 最多取 2 条，location match 优先
   const picked = [...locationMatch, ...anyMatch].slice(0, 2);
-  return picked.map(e => e.text).join(" ");
+
+  switch (phase) {
+    case "pre":
+      return picked.map(e => e.advance_hook || e.text).join(" ");
+    case "today":
+      return picked.map(e => e.text).join(" ");
+    case "after":
+      return picked.map(e => e.aftermath_text || e.text).join(" ");
+    default:
+      return "";
+  }
 }
 
 async function applyBeatEffects(effects: {
