@@ -2,7 +2,7 @@
  * 状态引擎 - 角色状态 + HP + 负重 + 物品操作 + 持久化
  */
 
-import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, RevealVisibilityLevel, ContainerState, ContainerDef } from "./types.ts";
+import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, RevealVisibilityLevel, ContainerState, ContainerDef, CharacterFact } from "./types.ts";
 import { promptCollectors, schedule, type Collector } from "./collectors.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import charactersStatic from "../data/characters.json" with { type: "json" };
@@ -1858,6 +1858,55 @@ export function findCharacter(name: string): any | null {
   const src = (characters as any[]).find((c: any) => c.name === name);
   if (src) return src;
   return DYNAMIC_CHARACTERS[name] || null;
+}
+
+/** P3: 按关系级别过滤角色事实 */
+const FACT_LEVEL_ORDER: Record<string, number> = {
+  "common": 0,
+  "familiar": 1,
+  "close": 2,
+  "intimate": 3,
+};
+
+const RELATION_TO_MAX_LEVEL: Record<string, string> = {
+  "陌生": "common",
+  "熟人": "familiar",
+  "友人": "close",
+  "信赖": "close",
+  "至交": "intimate",
+};
+
+export function getCharacterFacts(
+  characterName: string,
+  relationshipStage: string,
+  isSelf: boolean = false
+): { public: CharacterFact[]; private: CharacterFact[] } {
+  const src = findCharacter(characterName);
+  if (!src) return { public: [], private: [] };
+
+  const maxLevel = isSelf ? "intimate" : (RELATION_TO_MAX_LEVEL[relationshipStage] || "common");
+  const maxLevelOrder = FACT_LEVEL_ORDER[maxLevel] ?? 0;
+
+  const publicFacts = (src.public_facts || []).filter((f: CharacterFact) => FACT_LEVEL_ORDER[f.level] <= maxLevelOrder);
+  const privateFacts = isSelf
+    ? (src.private_facts || [])
+    : (src.private_facts || []).filter((f: CharacterFact) => FACT_LEVEL_ORDER[f.level] <= maxLevelOrder);
+
+  return { public: publicFacts, private: privateFacts };
+}
+
+/** P3: 获取 NPC 对场景内其他角色的 common 级印象 */
+export function getNPCCharacterImpressions(npcName: string, otherNames: string[]): Record<string, string[]> {
+  const impressions: Record<string, string[]> = {};
+  for (const other of otherNames) {
+    const src = findCharacter(other);
+    if (!src?.public_facts) continue;
+    const commonFacts = (src.public_facts as CharacterFact[]).filter(f => f.level === "common");
+    if (commonFacts.length > 0) {
+      impressions[other] = commonFacts.map(f => f.text);
+    }
+  }
+  return impressions;
 }
 
 export function getOrCreateNPC(name: string): NPCRuntimeState {
