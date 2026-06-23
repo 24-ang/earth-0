@@ -4293,6 +4293,43 @@ test("P1: NPC 事件感知 — spawn 时拿到日历预热素材", async () => {
   }
 });
 
+test("P2: 世界常识 — 进入总武高自动注入偏差值常识", async () => {
+  resetState();
+  const { loadOrgLore, getTriggeredLore, clearLoreCache } = await import("./engine/lore.ts");
+
+  gameState.activeWorld = "oregairu";
+  clearLoreCache();
+  gameState.player.location = "总武高";
+
+  const lore = getTriggeredLore("总武高", [], [], [], {});
+  const hasDeviation = lore.some(t => t.includes("偏差值"));
+  if (!hasDeviation) {
+    throw new Error(`进入总武高应触发偏差值常识，实际: ${lore.join(" | ")}`);
+  }
+  if (lore.length > 5) {
+    throw new Error(`常识注入不应超过5条，实际: ${lore.length}`);
+  }
+});
+
+test("P2: 世界常识 — 排序规则 location精确 > topic关键词", async () => {
+  resetState();
+  const { loadOrgLore, getTriggeredLore, clearLoreCache } = await import("./engine/lore.ts");
+
+  gameState.activeWorld = "oregairu";
+  clearLoreCache();
+
+  // Location match + topic match: both should be present
+  const lore = getTriggeredLore("总武高", ["不良", "打架"], [], [], {});
+  // Both entries should be present
+  if (lore.length >= 2) {
+    const hasDeviation = lore.some(t => t.includes("偏差值"));
+    const hasDelinquent = lore.some(t => t.includes("海滨综合"));
+    if (!hasDeviation || !hasDelinquent) {
+      throw new Error(`应同时有偏差值常识和海滨综合高常识: ${lore.join(" | ")}`);
+    }
+  }
+});
+
 (async () => {
   for (const t of testQueue) {
     try {

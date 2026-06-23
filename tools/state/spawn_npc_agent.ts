@@ -105,6 +105,16 @@ export default {
         npcEventContext = getNPCEventContext(params.npcName);
       } catch (_) {}
 
+      // P2: NPC world knowledge injection
+      let npcLoreContext = "";
+      try {
+        const { getNPCLore } = await import("../../engine/lore.ts");
+        const loreTexts = getNPCLore(params.npcName);
+        if (loreTexts.length > 0) {
+          npcLoreContext = `[NPC·常识]\n${loreTexts.map(t => `  • ${t}`).join("\n")}`;
+        }
+      } catch (_) {}
+
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
         (() => {
@@ -185,6 +195,8 @@ export default {
         (() => { const ctx = getNPCContext(params.npcName); return ctx.length > 0 ? `你的已知情报:\n${ctx.join("\n")}` : ""; })(),
         // P1: NPC 事件感知素材
         npcEventContext || "",
+        // P2: NPC 世界常识
+        npcLoreContext || "",
         "",
         `当前场景: ${params.sceneContext}`,
         params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",
