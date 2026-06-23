@@ -31,7 +31,7 @@ import { advanceMinutes } from "./engine/time.ts";
 import {
   checkTimelineEvents, expireHooks, getActiveHooks, getActiveQuests,
   openQuest, advanceQuest, abandonQuest,
-  getTodayCalendar, getCalendarEvents, clearCalendarCache,
+  getTodayCalendar, getCalendarEvents, getCalendarPhase, clearCalendarCache,
   getHookNoveltyHint,
 } from "./engine/timeline.ts";
 
@@ -1204,6 +1204,39 @@ test("P1: 日历 org_effects — 体育祭当天总武高学生自动移到操�
   if (!yui.action || !yui.action.includes("体育祭")) {
     throw new Error(`由比滨动作应包含"体育祭"，实际: ${yui.action}`);
   }
+});
+
+test("getCalendarPhase pre_phase: 5日前でadvance_days=10→pre", () => {
+  clearCalendarCache();
+  resetState();
+  gameState.time.game_date = "2018-04-25";
+  gameState.player.location = "总武高";
+  gameState.calendarEvents = [{
+    year: null, date: "4月30日", location: null,
+    text: "月末大事件",
+    advance_days: 10
+  }];
+  const { phase, entries } = getCalendarPhase("2018-04-25", "总武高");
+  if (phase !== "pre") throw new Error(`预期 phase=pre，实际=${phase}`);
+  if (entries.length === 0) throw new Error("应有匹配的预兆条目");
+  if (!entries[0].text.includes("月末大事件")) throw new Error(`文本应包含"月末大事件"，实际: ${entries[0].text}`);
+});
+
+test("getCalendarPhase after_phase: 1日後でaftermath_text→after", () => {
+  clearCalendarCache();
+  resetState();
+  gameState.time.game_date = "2018-04-23";
+  gameState.player.location = "总武高";
+  gameState.calendarEvents = [{
+    year: null, date: "4月22日", location: null,
+    text: "昨日大事件",
+    aftermath_text: "余波未平，人心惶惶"
+  }];
+  const { phase, entries } = getCalendarPhase("2018-04-23", "总武高");
+  if (phase !== "after") throw new Error(`预期 phase=after，实际=${phase}`);
+  if (entries.length === 0) throw new Error("应有匹配的余波条目");
+  if (!entries[0].aftermath_text) throw new Error("条目应包含 aftermath_text");
+  if (!entries[0].aftermath_text.includes("余波未平")) throw new Error(`aftermath_text应包含"余波未平"，实际: ${entries[0].aftermath_text}`);
 });
 
 // ── 剧情钩子 ──
