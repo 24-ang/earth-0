@@ -2,7 +2,7 @@
  * 状态引擎 - 角色状态 + HP + 负重 + 物品操作 + 持久化
  */
 
-import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, VisibilityLevel, ContainerState, ContainerDef } from "./types.ts";
+import type { PlayerState, GameState, EquipmentSlots, Item, Wound, Relationship, AttrKey, NPCRuntimeState, StealResult, Skill, StaticCharacter, RoomGrid, SexState, TurnLogEntry, RevealEntry, RevealVisibilityLevel, ContainerState, ContainerDef } from "./types.ts";
 import { promptCollectors, schedule, type Collector } from "./collectors.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import charactersStatic from "../data/characters.json" with { type: "json" };
@@ -197,7 +197,7 @@ export function getRecentTurnLogContext(n: number = 5): string {
 }
 
 // ── Layer 3 秘密防火墙 ──
-export function revealSecret(id: string, content: string, fromLevel: VisibilityLevel, toLevel: VisibilityLevel): RevealEntry {
+export function revealSecret(id: string, content: string, fromLevel: RevealVisibilityLevel, toLevel: RevealVisibilityLevel): RevealEntry {
   const entry: RevealEntry = {
     id, content, fromLevel, toLevel,
     revealedAt: gameState.time.game_date,
@@ -209,14 +209,14 @@ export function revealSecret(id: string, content: string, fromLevel: VisibilityL
 }
 
 /** 获取已揭示为指定级别及以上（可见性从低到高: hidden → protagonist → player → public）的秘密 */
-const VISIBILITY_RANK: Record<VisibilityLevel, number> = {
+const VISIBILITY_RANK: Record<RevealVisibilityLevel, number> = {
   "hidden_canonical": 0,
   "protagonist_known": 1,
   "player_known": 2,
   "scene_public": 3,
 };
 
-export function getRevealedSecrets(minLevel: VisibilityLevel): RevealEntry[] {
+export function getRevealedSecrets(minLevel: RevealVisibilityLevel): RevealEntry[] {
   const minRank = VISIBILITY_RANK[minLevel];
   return gameState.revealLog.filter(e => VISIBILITY_RANK[e.toLevel] >= minRank);
 }

@@ -284,6 +284,9 @@ export interface StaticCharacter {
   schedule_group_by_age?: Record<string, string>;
   funds?: number;
   drives_by_age?: Record<string, { drives: string[]; goal: string }>;  // 自主意图（按年龄段）
+  // P3 新增
+  public_facts?: CharacterFact[];
+  private_facts?: CharacterFact[];
 }
 
 // --- NPC运行时状态（lazy init，只存被修改过的NPC） ---
@@ -490,6 +493,69 @@ export interface CalendarEntry {
   location: string | null;   // null = 任意地点均生效
   text: string;              // 叙事风味文本
   world?: string;            // 关联的世界观，如 'oregairu'
+  // P1 新增 (all optional, backward compatible)
+  range?: "local" | "regional" | "national" | "global";
+  center?: string;
+  advance_days?: number;
+  advance_hook?: string;
+  aftermath_text?: string;
+  org_effects?: OrgEffect[];
+}
+
+// ── P1: 事件驱动日历扩展 ──
+export interface OrgEffect {
+  org: string;
+  override_location: string;
+  override_action_template: string;  // supports {role} and {role_action} variables
+}
+
+// ── P2: 世界常识 ──
+export type VisibilityLevel = "common" | "industry" | "hidden";
+
+export interface LoreTrigger {
+  locations?: string[];
+  topics?: string[];
+  roles?: string[];
+  orgs?: string[];
+  flags?: string[];
+}
+
+export interface LoreEntryItem {
+  tag: string;
+  level: VisibilityLevel;
+  triggers: LoreTrigger;
+  text: string;
+}
+
+export interface LoreOrgFile {
+  id: string;
+  org: string;
+  type: string;
+  members?: string[];         // NPC names for precise org matching (P2 upgrade)
+  match_rules?: {             // fallback heuristic matching
+    schedule_groups?: string[];
+    location_contains?: string;
+  };
+  entries: LoreEntryItem[];
+}
+
+// ── P3: 角色常识 ──
+export type FactLevel = "common" | "familiar" | "close" | "intimate";
+
+export interface CharacterFact {
+  text: string;
+  level: FactLevel;
+}
+
+// ── P4: 临时 NPC ──
+export interface TempNPCState {
+  name: string;
+  act: string;
+  hostility: "友好" | "中立" | "敌对";
+  body_hint?: string;
+  reason: string;
+  created_at_turn: number;
+  created_at_date: string;
 }
 
 export interface Hook {
@@ -543,13 +609,13 @@ export interface TurnLogEntry {
 }
 
 // --- 秘密防火墙 (Layer 3) ---
-export type VisibilityLevel = "player_known" | "protagonist_known" | "scene_public" | "hidden_canonical";
+export type RevealVisibilityLevel = "player_known" | "protagonist_known" | "scene_public" | "hidden_canonical";
 
 export interface RevealEntry {
   id: string;           // 秘密标识
   content: string;       // 揭示内容
-  fromLevel: VisibilityLevel;
-  toLevel: VisibilityLevel;
+  fromLevel: RevealVisibilityLevel;
+  toLevel: RevealVisibilityLevel;
   revealedAt: string;    // gameDate
   turn: number;
 }
@@ -590,6 +656,8 @@ export interface GameState {
   calendarEvents?: CalendarEntry[];          // 动态可写日历事件
   world_states: Record<string, WorldStateSnapshot>; // 冷冻世界线的状态快照
   shops?: Record<string, { items: string[] }>;       // 运行时货架覆盖（由restock_shop写入，优先级高于shops.json）
+  // P4 新增
+  tempNPCs?: TempNPCState[];
 }
 
 // ── 手机数据（存储在 Item.phoneData）──
