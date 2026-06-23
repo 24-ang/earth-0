@@ -1,0 +1,112 @@
+{
+  "id": "yukino_camp_bathtub",
+  "title": "浴室的旖旎",
+  "source": "同人IF·纯爱",
+  "trigger": {
+    "min_day": 200,
+    "location": "千叶村",
+    "time_of_day": ["night"],
+    "flags": {
+      "yukino_sexual_awakening": true,
+      "route_pure": true,
+      "met_yukino_first": true,
+      "yukino_camp_intimate": true
+    },
+    "affection": {
+      "雪之下雪乃": 50
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 2,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "试胆大会结束，鹤见留美在营火晚会上第一次和同学说了话。雪之下远远看着那群小学生笑了。回小木屋路上她在公共浴室门口停了步，把一把备用钥匙放在{{player.surname}}手心，没说话。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "bathtub_entrance",
+      "label": "公共浴室的约定",
+      "prompt": "深夜的公共浴室里亮着微弱的黄光，水蒸气将窗户渲染得一片模糊。雪乃正在里面冲凉。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "推开浴室门，走入暖气氤氲的蒸汽中",
+          "effects": {
+            "flags": {
+              "bathtub_entered": true
+            }
+          },
+          "next_beat": "bathtub_back_rub"
+        },
+        {
+          "pick": "把备用钥匙留好，安静地回到自己的小木屋休息",
+          "effects": {
+            "flags": {
+              "bathtub_declined": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "bathtub_back_rub",
+      "label": "浴室的背影",
+      "prompt": "雪乃坐在一张矮凳上冲水，细碎的水珠顺着洁白的脖颈和脊椎线条滑落。看见推门进来的{{player.surname}}，她没有抗拒。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "挤上沐浴露，拿起浴棉从背后温柔地为她搓背",
+          "effects": {},
+          "next_beat": "bathtub_sex_action"
+        }
+      ]
+    },
+    {
+      "id": "bathtub_sex_action",
+      "label": "温水中的依偎",
+      "prompt": "水流不断冲刷在两人相拥的身体上，泡沫与爱液顺着地漏流下。雪乃转过身来，双手撑着冰凉的瓷砖，大腿间早已一片湿润。后入数十次后，她已全身娇软。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "坐在池子边沿，将她抱到身上面对面跨坐，让她自己动腰",
+          "effects": {},
+          "next_beat": "bathtub_sex_finish"
+        }
+      ]
+    },
+    {
+      "id": "bathtub_sex_finish",
+      "label": "水温渐退的剖白",
+      "prompt": "雪乃紧紧搂着{{player.surname}}的脖颈，在急速的挺入和摩擦中迎来了高潮痉挛。内射结束后，她靠在{{player.surname}}怀里，任由温水慢慢流淌，直到水温变凉。她沉默很久，轻声说道：‘我以前以为被人看到脆弱的部分就意味着输了。现在不太确定了。’{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "抱紧她，帮她把身体冲洗干净，一起离开浴室",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 18
+            },
+            "flags": {
+              "yukino_bathtub_intimate": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "乳", "唇"],
+              "thoughts": ["在千叶村公共浴室的蒸汽与温水中紧紧相拥，感受她的防线在一次次爱抚中被卸下..."],
+              "duration": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "公共浴室的灯熄灭了。雪乃把备用钥匙交还管理室，独自走回木屋。长椅空荡，唯有月光依然静谧。",
+    "effects": {
+      "flags": {
+        "yukino_bathtub_missed": true
+      }
+    }
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "id": "yukino_tennis_shower",
+  "title": "网球部室淋浴 (IF)",
+  "source": "同人IF·纯爱",
+  "trigger": {
+    "min_day": 100,
+    "location": "网球场",
+    "time_of_day": ["evening"],
+    "flags": {
+      "yukino_sexual_awakening": true,
+      "route_pure": true,
+      "tennis_complete": true
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 2,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "网球训练结束人都散了。雪乃难得穿了网球服，运动后出了汗。她拿着淋浴间钥匙，回头看了{{player.surname}}一眼，门虚掩着没有关。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "shower_approach",
+      "label": "淋浴间的水声",
+      "prompt": "推开虚掩的门，里面热蒸汽弥漫。雪乃背对着{{player.surname}}正在水龙头下冲水，湿透的网球服紧贴着曲线。此时{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "推门走进去，从背后抱住她，伸手抚摸她被热水打湿的身体",
+          "effects": {
+            "flags": {
+              "shower_entered": true
+            }
+          },
+          "next_beat": "shower_sex_action"
+        },
+        {
+          "pick": "关上门在外面等待，尊重她的隐私",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 3
+            },
+            "flags": {
+              "yukino_tennis_missed": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "shower_sex_action",
+      "label": "蒸汽中的纠缠",
+      "prompt": "从背后贴上雪乃，手指探入她湿透的网球服底。她两腿间已经泛水，温水从她的香肩上流下。她撑着冰凉的瓷砖墙壁，承受着你从后面的挺入。此时{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "将她整个人悬空抱起，背靠在你怀里用火车便当体位向上顶入",
+          "effects": {},
+          "next_beat": "shower_sex_finish"
+        },
+        {
+          "pick": "保持平稳的立位后入，细细品味她的颤抖与喘息",
+          "effects": {},
+          "next_beat": "shower_sex_finish_gentle"
+        }
+      ]
+    },
+    {
+      "id": "shower_sex_finish",
+      "label": "卸下的身心防线",
+      "prompt": "在悬空的极速挺入中，雪乃彻底失去控制，只能死死搂着{{player.surname}}的脖子连连尖叫直到高潮榨取。事后她靠在你怀里，沉默了很久，轻声呢喃：‘我以前以为，被人看到脆弱的部分就意味着输了。现在不太确定了。’此时{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "抱紧她，温柔地为她搓背冲洗洗澡，随后一起离开",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 15
+            },
+            "flags": {
+              "yukino_tennis_intimate": true,
+              "achievement_yukino_train_lunchbox": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "乳", "唇"],
+              "thoughts": ["在网球淋浴间被悬空火车便当占有，卸下了最深的心防，却无比安心..."],
+              "duration": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "shower_sex_finish_gentle",
+      "label": "浴室的余温",
+      "prompt": "在平稳的冲击下，雪乃低声喘息着达到了高潮。事后热水快用完了，她穿好衣服红着脸瞥了你一眼便离开了。此时{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "换好衣服离开淋浴间",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 10
+            },
+            "flags": {
+              "yukino_tennis_intimate": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "唇"],
+              "thoughts": ["在淋浴间里完成了平稳而温柔的交合..."],
+              "duration": 25
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "effects": {
+      "flags": {
+        "yukino_tennis_missed": true
+      }
+    }
+  }
+}

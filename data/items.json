@@ -555,5 +555,325 @@
       "state": "intact",
       "volume": 0.5
     }
+  },
+  "总武高制服外套": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "白色衬衫外套深色制服，颈间系缎带，勾勒出纤细的肩线与腰身。",
+    "weight": 0.3,
+    "value": 0
+  },
+  "黑白百褶裙": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "黑白相间的百褶裙，裙摆及膝，摆动时露出大腿内侧的绝对领域。",
+    "weight": 0.2,
+    "value": 0
+  },
+  "黑色过膝袜": {
+    "type": "clothing",
+    "slot": "legs",
+    "gender": "female",
+    "flavor": "黑色及膝长袜，袜口带一圈白边，紧裹笔直修长的腿，在大腿上勒出微妙的肉感。",
+    "weight": 0.1,
+    "value": 0
+  },
+  "皮鞋": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "female",
+    "flavor": "深棕色乐福鞋，鞋面微光，日常通学用。",
+    "weight": 0.3,
+    "value": 0
+  },
+  "白色蕾丝胸罩": {
+    "type": "clothing",
+    "slot": "inner_top",
+    "gender": "female",
+    "flavor": "白色蕾丝胸罩，小巧精致，包裹着含苞待放的乳房。",
+    "weight": 0.05,
+    "value": 0
+  },
+  "白色棉内裤": {
+    "type": "clothing",
+    "slot": "inner_bot",
+    "gender": "female",
+    "flavor": "纯白棉质内裤，简洁朴素，贴合臀部的曲线。",
+    "weight": 0.03,
+    "value": 0
+  },
+  "长袖衬衫": {
+    "type": "clothing",
+    "slot": "shirt",
+    "gender": "female",
+    "flavor": "洁白笔挺的长袖衬衫，袖口扣紧，领口系缎带。",
+    "weight": 0.15,
+    "value": 0
+  },
+  "白色体操服": {
+    "type": "clothing",
+    "slot": "shirt",
+    "gender": "female",
+    "flavor": "白色短袖体操服，吸汗面料，贴身勾勒出运动中的身体线条。",
+    "weight": 0.1,
+    "value": 0
+  },
+  "深蓝运动短裤": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "深蓝色运动短裤，宽松透气，奔跑时裤管随步伐翻飞。",
+    "weight": 0.1,
+    "value": 0
+  },
+  "深蓝运动短裙": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "深蓝色网球短裙，裙摆蓬松摇曳，底下安全裤若隐若现。",
+    "weight": 0.12,
+    "value": 0
+  },
+  "运动安全裤": {
+    "type": "clothing",
+    "slot": "inner_bot",
+    "gender": "female",
+    "flavor": "黑色弹力安全裤，紧贴大腿根部，剧烈运动也不走光。",
+    "weight": 0.08,
+    "value": 0
+  },
+  "运动内衣": {
+    "type": "clothing",
+    "slot": "inner_top",
+    "gender": "female",
+    "flavor": "黑色运动内衣，强力支撑，吸湿排汗。",
+    "weight": 0.08,
+    "value": 0
+  },
+  "运动鞋": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "unisex",
+    "flavor": "白色运动鞋，轻便耐磨，鞋底弹性十足。",
+    "weight": 0.3,
+    "value": 0
+  },
+  "白色网球鞋": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "female",
+    "flavor": "白色网球鞋，鞋底防滑，鞋带系得整整齐齐。",
+    "weight": 0.3,
+    "value": 0
+  },
+  "白色网球服": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "白色网球服上衣，透气面料，运动后微微汗湿贴在白皙肌肤上。",
+    "weight": 0.12,
+    "value": 0
+  },
+  "米色针织衫": {
+    "type": "clothing",
+    "slot": "shirt",
+    "gender": "female",
+    "flavor": "米色针织衫，柔软亲肤，领口微敞露出锁骨。",
+    "weight": 0.2,
+    "value": 0
+  },
+  "深蓝A字裙": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "深蓝色A字短裙，及膝以上，简约大方。",
+    "weight": 0.15,
+    "value": 0
+  },
+  "棕色短靴": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "female",
+    "flavor": "棕色短靴，低跟设计，走路时发出清脆的声响。",
+    "weight": 0.4,
+    "value": 0
+  },
+  "淡蓝蕾丝胸罩": {
+    "type": "clothing",
+    "slot": "inner_top",
+    "gender": "female",
+    "flavor": "淡蓝色蕾丝胸罩，小巧可爱，衬托出清纯的气质。",
+    "weight": 0.05,
+    "value": 0
+  },
+  "淡蓝蕾丝内裤": {
+    "type": "clothing",
+    "slot": "inner_bot",
+    "gender": "female",
+    "flavor": "淡蓝色蕾丝内裤，同色配套，质地轻柔。",
+    "weight": 0.03,
+    "value": 0
+  },
+  "白色棉质睡裙": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "纯白棉质睡裙，宽松柔软，及膝长度，穿着舒适。",
+    "weight": 0.15,
+    "value": 0
+  },
+  "白色连体泳衣": {
+    "type": "clothing",
+    "slot": "shirt",
+    "gender": "female",
+    "flavor": "白色连体泳衣，简洁的校园泳装款式，贴合纤细的身材曲线。",
+    "weight": 0.1,
+    "value": 0
+  },
+  "白底滚荷边比基尼": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "白底滚荷边的成套比基尼，胸前有黑绳蝴蝶结装饰，展示纤细的腰身。",
+    "weight": 0.08,
+    "value": 0
+  },
+  "薄纱长裙": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "若隐若现的薄纱长裙，轻裹白玉般的双腿，随海风轻轻扬起。",
+    "weight": 0.06,
+    "value": 0
+  },
+  "拖鞋": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "unisex",
+    "flavor": "普通塑料拖鞋，浴室或泳池边穿。",
+    "weight": 0.15,
+    "value": 0
+  },
+  "沙滩拖鞋": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "female",
+    "flavor": "沙滩拖鞋，藤编底，走在沙滩上发出沙沙声。",
+    "weight": 0.12,
+    "value": 0
+  },
+  "素黑连身长裙": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "素黑淡雅的连身长裙，收束腰身的设计衬托出胸部曲线，下摆及踝。",
+    "weight": 0.3,
+    "value": 0
+  },
+  "纯白围裙": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "纯白围裙，系在腰间，与黑色长裙形成鲜明对比。",
+    "weight": 0.1,
+    "value": 0
+  },
+  "黑色丝质过膝袜": {
+    "type": "clothing",
+    "slot": "legs",
+    "gender": "female",
+    "flavor": "黑色丝质过膝袜，光泽优雅，紧裹纤细的小腿。",
+    "weight": 0.08,
+    "value": 0
+  },
+  "亮黑女仆皮鞋": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "female",
+    "flavor": "亮黑色女仆皮鞋，低跟，鞋头微圆，走路轻巧无声。",
+    "weight": 0.3,
+    "value": 0
+  },
+  "雪白和服": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "一袭雪白和服，配合清冷的气质，宛如误入凡间的雪女。",
+    "weight": 0.5,
+    "value": 0
+  },
+  "和服下摆": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "和服下摆，行走时布料轻曳，步伐被约束成细碎的步伐。",
+    "weight": 0.3,
+    "value": 0
+  },
+  "旅馆浴衣": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "旅馆提供的素色浴衣，出浴后随意裹在身上，领口微敞。",
+    "weight": 0.2,
+    "value": 0
+  },
+  "木屐": {
+    "type": "clothing",
+    "slot": "feet",
+    "gender": "unisex",
+    "flavor": "木质人字拖，走在石板上咔哒咔哒响。",
+    "weight": 0.25,
+    "value": 0
+  },
+  "粉色蕾丝胸罩": {
+    "type": "clothing",
+    "slot": "inner_top",
+    "gender": "female",
+    "flavor": "粉色蕾丝胸罩，尺码比雪乃的大了两号，蕾丝边缘点缀着小花。",
+    "weight": 0.06,
+    "value": 0
+  },
+  "粉色条纹内裤": {
+    "type": "clothing",
+    "slot": "inner_bot",
+    "gender": "female",
+    "flavor": "粉色条纹内裤，俏皮可爱，与胸罩同色系搭配。",
+    "weight": 0.04,
+    "value": 0
+  },
+  "粉色运动内衣": {
+    "type": "clothing",
+    "slot": "inner_top",
+    "gender": "female",
+    "flavor": "粉色运动内衣，高强度支撑，防止剧烈运动时的晃动。",
+    "weight": 0.09,
+    "value": 0
+  },
+  "粉色棉内裤": {
+    "type": "clothing",
+    "slot": "inner_bot",
+    "gender": "female",
+    "flavor": "粉色棉内裤，柔软亲肤，简洁的款式。",
+    "weight": 0.04,
+    "value": 0
+  },
+  "粉色荷叶边比基尼": {
+    "type": "clothing",
+    "slot": "top",
+    "gender": "female",
+    "flavor": "粉色荷叶边比基尼，可爱风格的泳装上装，衬托饱满的身材。",
+    "weight": 0.09,
+    "value": 0
+  },
+  "粉色比基尼下装": {
+    "type": "clothing",
+    "slot": "bottom",
+    "gender": "female",
+    "flavor": "粉色比基尼下装，与上装成套，侧边系带。",
+    "weight": 0.05,
+    "value": 0
   }
 }

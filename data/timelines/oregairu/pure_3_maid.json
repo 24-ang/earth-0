@@ -1,0 +1,103 @@
+{
+  "id": "yukino_maid_service",
+  "title": "女仆口舌侍奉",
+  "source": "同人IF·纯爱",
+  "trigger": {
+    "min_day": 108,
+    "location": "侍奉部",
+    "time_of_day": ["evening"],
+    "flags": {
+      "yukino_sexual_awakening": true,
+      "route_pure": true,
+      "met_yukino_first": true,
+      "kawasaki_saved": true
+    },
+    "affection": {
+      "雪之下雪乃": 40
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "女仆咖啡厅调查时那套暗色女仆装被雪乃收进了社办柜子——说是'留作参考'。今天{{player.surname}}推门进来时她穿着它，微微欠身说了句'欢迎回来'，嘴角压着笑。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "maid_entrance",
+      "label": "女仆的迎接",
+      "prompt": "雪乃穿着暗色女仆长裙和白色围裙，黑色长发上戴着精美的蕾丝头饰，眼神清冷却带着一丝罕见的羞涩。她似乎在等待着评价。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "反锁社办门，走过去搂住她的细腰，接受她的女仆侍奉",
+          "effects": {
+            "flags": {
+              "maid_service_accepted": true
+            }
+          },
+          "next_beat": "maid_oral_service"
+        },
+        {
+          "pick": "轻声赞美她的美丽，温柔地建议她换回制服，避免被人发现",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 8
+            },
+            "flags": {
+              "maid_service_declined": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "maid_oral_service",
+      "label": "课椅上的侍奉",
+      "prompt": "雪乃将{{player.surname}}按在椅子上，自己则缓缓在跟前跪下，黑色的长裙在地上铺展成圆。她解开拉链，生涩而极其认真地开始舔舐，微合的眼眸里闪烁着执着。随着呼吸愈发急促，她尝试着将整根含入，深入到喉咙深处，发出断续的干呕。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "按着她的香肩，在她深喉吞吐至极致时将精液射在她白暂的脸上",
+          "effects": {},
+          "next_beat": "maid_oral_finish"
+        }
+      ]
+    },
+    {
+      "id": "maid_oral_finish",
+      "label": "认真的清扫",
+      "prompt": "精液溅落在雪乃精致的脸颊、发梢和围裙胸口上。她用纸巾轻轻把污渍擦掉，随后微仰着头，再次含住，极为认真地把残存的蜜液和精液吮吸干净。她抬头看了过来。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "温柔地摸摸她的头，对这段只属于两人的禁忌日常表示感谢",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 15
+            },
+            "flags": {
+              "yukino_maid_intimate": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["唇", "秘部"],
+              "thoughts": ["穿着暗色女仆长裙在社办里进行了深度的口舌侍奉，将精液尽数吞咽，这已经成了逃不掉的秘密常态..."],
+              "duration": 20
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "社办的灯熄了。女仆装被默默收回柜子。雪乃重新穿上制服锁好门，走廊里只有她一个人孤单的脚步声。",
+    "effects": {
+      "flags": {
+        "yukino_maid_missed": true
+      }
+    }
+  }
+}

@@ -27,5 +27,21 @@
   {
     "title": "潜行大师",
     "condition": { "type": "skill", "skillName": "潜行", "min": 5 }
+  },
+  {
+    "title": "寝取之魔",
+    "condition": { "type": "flag", "flagName": "oregairu_ntr_route" }
+  },
+  {
+    "title": "爱巢霸占者",
+    "condition": { "type": "flag", "flagName": "achievement_yukino_one_month_loan" }
+  },
+  {
+    "title": "绿色守护者",
+    "condition": { "type": "flag", "flagName": "refused_hachiman_request" }
+  },
+  {
+    "title": "雪之下的暗主",
+    "condition": { "type": "flag", "flagName": "oregairu_end_yukino_clan" }
   }
 ]

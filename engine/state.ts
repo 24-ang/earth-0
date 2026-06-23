@@ -7,7 +7,7 @@ import { promptCollectors, schedule, type Collector } from "./collectors.ts";
 import { INITIAL_TIME_STATE } from "./time.ts";
 import charactersStatic from "../data/characters.json" with { type: "json" };
 import roomsStatic from "../data/rooms.json" with { type: "json" };
-import { lookupRegion } from "./router.ts";
+import { lookupRegion, setAcademicYearOffset } from "./router.ts";
 import charStagesStatic from "../data/character_stages.json" with { type: "json" };
 import fs from "node:fs";
 import path from "node:path";
@@ -114,6 +114,26 @@ const AGENTS_DIR = path.resolve(process.cwd(), "agents");
 export let gameState: GameState = createInitialState();
 
 function createInitialState(): GameState {
+  // 加载世界级秘密
+  const worldSecretsPath = path.resolve(process.cwd(), "data", "world_secrets.json");
+  let initRevealLog: RevealEntry[] = [];
+  if (fs.existsSync(worldSecretsPath)) {
+    try {
+      const ws = JSON.parse(fs.readFileSync(worldSecretsPath, "utf-8"));
+      for (const [_, sec] of Object.entries(ws)) {
+        const s = sec as any;
+        initRevealLog.push({
+          id: s.id,
+          content: s.content,
+          fromLevel: s.fromLevel || "hidden",
+          toLevel: s.toLevel || "protagonist_known",
+          revealedAt: INITIAL_TIME_STATE.game_date,
+          turn: 0
+        });
+      }
+    } catch (_) {}
+  }
+
   return {
     time: { ...INITIAL_TIME_STATE },
     player: createDefaultPlayer(),
@@ -129,8 +149,9 @@ function createInitialState(): GameState {
     roomTimestamps: {},
     turnLog: [],
     storySoFar: "",
-    revealLog: [],
+    revealLog: initRevealLog,
     calendarEvents: [],
+    academic_year_offset: 0,
     world_states: {},
   };
 }
@@ -257,7 +278,8 @@ export function loadState(filepath?: string): boolean {
   const targetDir = path.dirname(fp);
   const raw = fs.readFileSync(fp, "utf-8");
   gameState = JSON.parse(raw) as GameState;
-  
+  setAcademicYearOffset(gameState.academic_year_offset ?? 0);
+
   // 读取 rooms_delta.json 并覆盖 ROOMS
   const roomsDeltaPath = path.join(targetDir, "rooms_delta.json");
   if (fs.existsSync(roomsDeltaPath)) {
@@ -584,6 +606,8 @@ export function checkAndGrantTitles(): void {
       match = p.funds >= cond.min;
     } else if (cond.type === "skill") {
       match = (p.skills[cond.skillName]?.level ?? 0) >= cond.min;
+    } else if (cond.type === "flag") {
+      match = !!gameState.flags[cond.flagName];
     }
 
     if (match) grant(rule.title);
@@ -1777,16 +1801,30 @@ export function getNPCOutfitDesc(npcName: string): string {
   // 分层：内层 vs 外层；跳过已被移除的装备
   const inner: string[] = [];
   const outer: string[] = [];
+  // 懒加载 items.json
+  let itemsData = null;
+  const getFlavor = (itemName) => {
+    if (!itemsData) {
+      try {
+        const fs = require("node:fs");
+        const path = require("node:path");
+        itemsData = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "data", "items.json"), "utf-8"));
+      } catch { itemsData = {}; }
+    }
+    return itemsData[itemName]?.flavor || itemName;
+  };
   for (const [slot, item] of Object.entries(outfit)) {
+    if (slot === 'desc' || slot === 'hair' || slot === 'acc' || slot === 'head') continue;
     // 检查装备槽：如果对应槽位为空，该物品已被偷/移除 → 不显示
-    const equipSlot = npc.equipment[slot as any];
+    const equipSlot = npc?.equipment?.[slot as any];
     const isMissing = equipSlot === null || equipSlot === undefined;
-    const label = isMissing ? `${item}（已被拿走）` : item as string;
+    const flavor = getFlavor(item);
+    const label = isMissing ? `${flavor}（已被拿走）` : flavor;
     if (slot.startsWith("inner_")) inner.push(label);
     else outer.push(label);
   }
-  const outerStr = outer.join("、");
-  if (inner.length > 0) return `${outerStr}。内: ${inner.join("、")}`;
+  const outerStr = outer.join("；");
+  if (inner.length > 0) return `外层: ${outerStr}。内层: ${inner.join("；")}`;
   return outerStr;
 }
 
@@ -1871,23 +1909,36 @@ function buildLocationTree(): LocationNode {
       const prefNode: LocationNode = { key: prefKey, name: pref.name, type: "prefecture", children: [], parent: regNode };
       regNode.children.push(prefNode);
 
-      const districts: string[] = pref.districts || [];
-      if (districts.length > 0) {
-        // 有区/市 → 学校和地标挂到第一个区下面
-        const mainDistrict: LocationNode = { key: districts[0], name: districts[0], type: "district", children: [], parent: prefNode };
-        prefNode.children.push(mainDistrict);
-        for (const s of (pref.schools || [])) {
-          mainDistrict.children.push({ key: s, name: s, type: "school", children: [], parent: mainDistrict });
-        }
-        for (const l of (pref.landmarks || [])) {
-          mainDistrict.children.push({ key: l, name: l, type: "landmark", children: [], parent: mainDistrict });
-        }
-        // 其余区
-        for (let i = 1; i < districts.length; i++) {
-          prefNode.children.push({ key: districts[i], name: districts[i], type: "district", children: [], parent: prefNode });
+      const districts = pref.districts;
+      if (districts) {
+        if (Array.isArray(districts)) {
+          // 旧格式：string[] — 所有学校/地标挂到第一个区（向后兼容）
+          const mainDistrict: LocationNode = { key: districts[0], name: districts[0], type: "district", children: [], parent: prefNode };
+          prefNode.children.push(mainDistrict);
+          for (const s of (pref.schools || [])) {
+            mainDistrict.children.push({ key: s, name: s, type: "school", children: [], parent: mainDistrict });
+          }
+          for (const l of (pref.landmarks || [])) {
+            mainDistrict.children.push({ key: l, name: l, type: "landmark", children: [], parent: mainDistrict });
+          }
+          for (let i = 1; i < districts.length; i++) {
+            prefNode.children.push({ key: districts[i], name: districts[i], type: "district", children: [], parent: prefNode });
+          }
+        } else {
+          // 新格式：{ 区名: { schools?: string[], landmarks?: string[] } }
+          for (const [dname, ddata] of Object.entries(districts as Record<string, any>)) {
+            const distNode: LocationNode = { key: dname, name: dname, type: "district", children: [], parent: prefNode };
+            prefNode.children.push(distNode);
+            for (const s of (ddata.schools || [])) {
+              distNode.children.push({ key: s, name: s, type: "school", children: [], parent: distNode });
+            }
+            for (const l of (ddata.landmarks || [])) {
+              distNode.children.push({ key: l, name: l, type: "landmark", children: [], parent: distNode });
+            }
+          }
         }
       } else {
-        // 无区/市 → 学校和地标直接挂在县下
+        // 无区/市 → 学校和地标直接挂在县下（兼容旧数据的 pref.schools / pref.landmarks）
         for (const s of (pref.schools || [])) {
           prefNode.children.push({ key: s, name: s, type: "school", children: [], parent: prefNode });
         }
@@ -2635,8 +2686,7 @@ export function toggleDoor(x: number, y: number): { success: boolean; reason: st
 
 // --- 记忆标签：LLM观察到某事 → 打标签 ---
 export function addMemoryTag(npcName: string, tag: string, expiresDays: number = 365, tone?: string): void {
-  const npc = gameState.npcs[npcName];
-  if (!npc) return;
+  const npc = getOrCreateNPC(npcName);
   npc.memoryTags ??= [];
   npc.memoryTags.push({ tag, since: gameState.time.game_date, expires: expiresDays, tone: tone as any });
 }

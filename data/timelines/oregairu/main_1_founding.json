@@ -1,0 +1,51 @@
+{
+  "id": "service_club_founding",
+  "title": "侍奉部创立",
+  "source": "春物",
+  "trigger": {
+    "min_day": 97,
+    "location": "职员室",
+    "time_of_day": ["afternoon"],
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "平冢静",
+    "hook_text": "平冢静叼着烟，把{{player.surname}}叫到了职员室。旁边还站着一个眼神像死鱼一样的男生——二年F班的比企谷八幡，据说是因为写了一篇被评价为'犯罪宣言式'的作文被一并叫来的。平冢静宣布了对这两人的惩罚：去参加'侍奉活动'。她不由分说地拉着两人穿过走廊，来到特别大楼一间没有挂牌的教室前。夕阳透过窗户照进来，里面坐着一位正在读文库本的少女。",
+    "urgency": "high"
+  },
+  "beats": [
+    {
+      "id": "first_meeting",
+      "label": "初遇雪之下",
+      "prompt": "平冢静推开教室门，向正在读书的少女介绍两个新成员。这是二年J班的雪之下雪乃。她抬起头，用冷淡而礼貌的语气指出老师进门前应该先敲门。平冢静毫不在意，解释道这是来加入社团的人。雪之下打量了两人几秒，目光在八幡脸上停得格外久。她毫不掩饰地评价了那双'邪恶又下流的死鱼眼'，表示拒绝接受这个人。平冢静则以'他绝不会触犯刑法，你大可相信他的孬种性格'为由说服了她。至于{{player.surname}}，雪之下只是多看了一眼，没有发表评论。平冢静完成任务般离开了教室。",
+      "outcomes": [
+        {
+          "pick": "老实打招呼，和八幡一起自我介绍",
+          "effects": { "affection": { "雪之下雪乃": 3, "比企谷八幡": 3 }, "flags": { "service_club_joined": true, "club_founded": true } },
+          "next_beat": "club_empty"
+        },
+        {
+          "pick": "保持沉默，让八幡先开口",
+          "effects": { "affection": { "雪之下雪乃": -2 }, "flags": { "service_club_joined": true, "club_founded": true } },
+          "next_beat": "club_empty"
+        }
+      ]
+    },
+    {
+      "id": "club_empty",
+      "label": "没有人来的社团",
+      "prompt": "平冢静走后，教室里陷入沉默。雪之下重新看起文库本，八幡也在角落里翻着一本不知从哪摸出来的轻小说。翻书的声音交替着持续了很久。终于有人开口问这个社团到底是做什么的是八幡。雪之下合上书，用清晰而冷静的语调解释了'侍奉部'的含义：富有之人怀着慈悲之心给予贫乏之人，所谓侍奉。简单说就是帮助有困难的人。当被问到目前正在帮助谁时，她停顿了一下，承认开学至今还没有委托人上门。八幡嘀咕了一句什么，被雪之下的一个眼神压了回去。夕阳把三个人的影子拉得很长。",
+      "outcomes": [
+        { "pick": "对雪之下说'那我就是第一个委托人了——教我变回正常人'", "effects": { "affection": { "雪之下雪乃": 3, "比企谷八幡": 5 } } },
+        { "pick": "附合八幡——'没人来正好，落得清静'", "effects": { "affection": { "雪之下雪乃": 3, "比企谷八幡": 5 } } },
+        { "pick": "鼓励雪之下——'总会有人的，你看起来能信任'", "effects": { "affection": { "雪之下雪乃": 8, "比企谷八幡": 3 } } }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "{{player.surname}}没有去职员室。后来听说八幡被平冢静单独推进了那间教室，现在已经和雪之下两个人尴尬地各看各的书了。{{player.surname}}以普通学生的身份继续着高中生活，没有踏入过那间特别大楼的空教室。",
+    "effects": { "flags": { "club_ignored": true, "service_club_joined": false, "club_founded": true } }
+  }
+}

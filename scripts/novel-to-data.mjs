@@ -23,7 +23,7 @@ const CONFIG = {
   baseUrl: process.env.LLM_BASE_URL || "https://api.deepseek.com/anthropic/v1/messages",
   pass1Model: "deepseek-v4-flash",
   pass2Model: "deepseek-v4-pro",
-  pass1MaxTokens: 2048,
+  pass1MaxTokens: 4096,
   pass2MaxTokens: 4096,
 
   // Pass 1 每次处理的文本块大小（字符）
@@ -66,6 +66,7 @@ async function callLLM(model, prompt, maxTokens = 2048) {
       model,
       max_tokens: maxTokens,
       messages: [{ role: "user", content: prompt }],
+      thinking: { type: "disabled" },
     }),
   });
   if (!res.ok) throw new Error(`LLM API ${res.status}: ${await res.text()}`);
@@ -81,13 +82,13 @@ async function callLLM(model, prompt, maxTokens = 2048) {
 
 const PASS1_PROMPT = (chunk) => `你是小说分析助手。分析以下文本，识别包含下列信息的段落：
 
-1. 角色描写（外貌、性格、年龄、身份）
-2. 场景/地点描写
-3. 剧情事件（关键情节节点）
-4. 世界观设定（规则、历史、背景）
+1. 关键事件（情节转折、冲突爆发、关系突破、告白、争吵、分离、重伤/死亡——故事走向改变的地方）
+2. 场景切换（地点变化、时间跳跃、章节开头）
+3. 情感高潮（角色情绪达到峰值、内心崩溃或释放、泪流或怒吼）
+4. 人物登场或退场（重要角色首次出现或离开场景）
 
 每段开头有类似 [123] 的编号。请只输出符合条件的段落编号（例如如果 [123] 和 [125] 符合条件，则只输出 "123, 125"），用逗号分隔。
-不要输出任何其他解释文字。
+不要输出任何其他解释文字。只输出编号。
 
 文本：
 ${chunk}`;
@@ -140,7 +141,7 @@ async function pass1CoarseFilter(text) {
   }
 
   // 去重 + 限制数量
-  const unique = [...new Set(allPassages)].slice(0, 50);
+  const unique = [...new Set(allPassages)].slice(0, 300);
   console.log(`[Pass 1] 去重后保留 ${unique.length} 段高浓度文本`);
   return unique;
 }
@@ -187,8 +188,8 @@ const PASS2_CHARACTER_PROMPT = (passages, ip, context) => `你是小说数据提
 
 只输出 JSON 数组。
 
-段落:
-${passages.join("\n---\n")}`;
+文本:
+${typeof passages === "string" ? passages : passages.join("\n---\n")}`;
 
 const PASS2_TIMELINE_PROMPT = (passages, ip, context) => `你是小说剧情分析专家。${context ? "作品背景: " + context : ""}从以下段落中提取可转化为游戏的剧情事件。
 
@@ -196,62 +197,67 @@ const PASS2_TIMELINE_PROMPT = (passages, ip, context) => `你是小说剧情分�
 
 输出 JSON 数组。只输出 JSON。
 
-段落:
-${passages.join("\n---\n")}`;
+文本:
+${typeof passages === "string" ? passages : passages.join("\n---\n")}`;
 
-const PASS2_LORE_PROMPT = (passages, ip, context) => `你是世界观整理专家。${context ? "作品背景: " + context : ""}从以下段落中提取可写入 lore 的设定条目。
+const PASS2_SCENE_PROMPT = (passages, ip, context) => `你是场景描写专家。${context ? "作品背景: " + context : ""}从以下段落中提取场景氛围描写，用于GM生成环境。
 
-每条用键值对: { "键":"描述" }。键用英文 snake_case。描述用中文 ≤200字。类型(geography/faction/rule/history/culture)存在 typeMap 中。
+每条: { "location": "地点名", "atmosphere": "氛围≤100字", "sensory": "五感细节≤50字" }
 
-输出: { "条目": "描述", ... }
-再加 typeMap: { "条目": "类型", ... }
+输出 JSON 数组。只输出 JSON。
 
-只输出 JSON。
+文本:
+${typeof passages === "string" ? passages : passages.join("\n---\n")}`;
 
-段落:
-${passages.join("\n---\n")}`;
+const PASS2_OUTFIT_PROMPT = (passages, ip, context) => `你是服装描写专家。${context ? "作品背景: " + context : ""}从以下段落中提取角色服装描写（校服/私服/泳装/女仆装/内衣等）。
+
+每条: { "character": "角色名", "outfit_type": "制服/私服/泳装/内衣/其他", "description": "服装细节≤80字", "occasion": "穿着场景" }
+
+输出 JSON 数组。只输出 JSON。
+
+文本:
+${typeof passages === "string" ? passages : passages.join("\n---\n")}`;
 
 async function pass2FineExtract(passages, ip, context = "") {
-  console.log("[Pass 2] 开始精提取...");
+  console.log(`[Pass 2] 开始精提取... (${passages.length} 段)`);
 
-  const passageText = passages.join("\n---\n");
-  const truncated = passageText.slice(0, 40000);
-
-  // 并行提取三类数据
-  const [charRaw, timelineRaw, loreRaw] = await Promise.all([
-    callLLM(CONFIG.pass2Model, PASS2_CHARACTER_PROMPT(truncated, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("角色提取失败:", e.message); return "[]"; }),
-    callLLM(CONFIG.pass2Model, PASS2_TIMELINE_PROMPT(truncated, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("时间线提取失败:", e.message); return "[]"; }),
-    callLLM(CONFIG.pass2Model, PASS2_LORE_PROMPT(truncated, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("Lore提取失败:", e.message); return "{}"; }),
-  ]);
-
-  let characters = [];
-  let timelines = [];
-  let lore = {};
-
-  try {
-    // 清理 LLM 可能输出的 markdown 代码块包装
-    const cleanJSON = (s) => s.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-    characters = JSON.parse(cleanJSON(charRaw));
-    console.log(`[Pass 2] 角色: ${characters.length} 个`);
-  } catch (e) {
-    console.error("角色 JSON 解析失败:", e.message);
+  // 分批处理，每批最多 40 段
+  const BATCH_SIZE = 40;
+  const batches = [];
+  for (let i = 0; i < passages.length; i += BATCH_SIZE) {
+    batches.push(passages.slice(i, i + BATCH_SIZE));
   }
 
-  try {
-    timelines = JSON.parse(cleanJSON(timelineRaw));
-    console.log(`[Pass 2] 剧情线: ${timelines.length} 条`);
-  } catch (e) {
-    console.error("时间线 JSON 解析失败:", e.message);
+  let allChars = [];
+  let allTimelines = [];
+  let allLore = {};
+
+  const cleanJSON = (s) => (s || "").replace(/```json\s*/gi, "").replace(/```\s+/g, "").replace(/```\s*$/g, "").trim();
+
+  for (let bi = 0; bi < batches.length; bi++) {
+    const batchText = batches[bi].join("\n---\n");
+    console.log(`[Pass 2] 批次 ${bi + 1}/${batches.length} (${batchText.length} 字)...`);
+
+    const [charRaw, timelineRaw, sceneRaw, outfitRaw] = await Promise.all([
+      callLLM(CONFIG.pass2Model, PASS2_CHARACTER_PROMPT(batchText, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("角色提取失败:", e.message); return "[]"; }),
+      callLLM(CONFIG.pass2Model, PASS2_TIMELINE_PROMPT(batchText, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("时间线提取失败:", e.message); return "[]"; }),
+      callLLM(CONFIG.pass2Model, PASS2_SCENE_PROMPT(batchText, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("场景提取失败:", e.message); return "[]"; }),
+      callLLM(CONFIG.pass2Model, PASS2_OUTFIT_PROMPT(batchText, ip, context), CONFIG.pass2MaxTokens).catch(e => { console.error("服装提取失败:", e.message); return "[]"; }),
+    ]);
+
+    try { const parsed = JSON.parse(cleanJSON(charRaw)); allChars.push(...parsed); console.log(`  角色: +${parsed.length}`); } catch(e) { console.error(`  解析失败: ${e.message}`); }
+    try { const parsed = JSON.parse(cleanJSON(timelineRaw)); allTimelines.push(...parsed); console.log(`  剧情: +${parsed.length}`); } catch(e) { console.error(`  解析失败: ${e.message}`); }
+    try { const parsed = JSON.parse(cleanJSON(sceneRaw)); allLore.scenes = [...(allLore.scenes||[]), ...parsed]; console.log(`  场景: +${parsed.length}`); } catch(e) { console.error(`  解析失败: ${e.message}`); }
+    try { const parsed = JSON.parse(cleanJSON(outfitRaw)); allLore.outfits = [...(allLore.outfits||[]), ...parsed]; console.log(`  服装: +${parsed.length}`); } catch(e) { console.error(`  解析失败: ${e.message}`); }
   }
 
-  try {
-    lore = JSON.parse(cleanJSON(loreRaw));
-    console.log(`[Pass 2] Lore: ${Object.keys(lore).length} 条`);
-  } catch (e) {
-    console.error("Lore JSON 解析失败:", e.message);
-  }
+  // 角色去重
+  const seen = new Set();
+  const characters = allChars.filter(c => { const key = c.name; if (seen.has(key)) return false; seen.add(key); return true; });
+  const timelines = allTimelines.filter(t => t.id && t.title);
+  console.log(`[Pass 2] 总计: ${characters.length} 角色, ${timelines.length} 剧情线`);
 
-  return { characters, timelines, lore };
+  return { characters, timelines, lore: allLore };
 }
 
 // ── 输出到 data/ ──
@@ -288,15 +294,29 @@ function writeOutput(ip, data) {
   }
   console.log(`[输出] timelines/${ip}/: ${data.timelines.length} 个文件`);
 
-  // 3. Lore — 合并到已有文件
-  const lorePath = path.join(dataDir, "lore", `${ip}_world.json`);
-  let existingLore = {};
-  if (fs.existsSync(lorePath)) {
-    try { existingLore = JSON.parse(fs.readFileSync(lorePath, "utf-8")); } catch {}
+  // 3. Scenes — 合并到已有文件
+  const scenePath = path.join(dataDir, "scene_atmosphere.json");
+  let existingScenes = [];
+  if (fs.existsSync(scenePath)) {
+    try { existingScenes = JSON.parse(fs.readFileSync(scenePath, "utf-8")); } catch {}
   }
-  const mergedLore = { ...existingLore, ...data.lore };
-  fs.writeFileSync(lorePath, JSON.stringify(mergedLore, null, 2), "utf-8");
-  console.log(`[输出] lore/${ip}_world.json: ${Object.keys(mergedLore).length} 条`);
+  const mergedScenes = [...existingScenes, ...(data.lore.scenes || [])];
+  if (mergedScenes.length > existingScenes.length) {
+    fs.writeFileSync(scenePath, JSON.stringify(mergedScenes, null, 2), "utf-8");
+    console.log("[输出] scene_atmosphere.json: +" + data.lore.scenes.length + " 个 (总计 " + mergedScenes.length + ")");
+  }
+
+  // 4. Outfits — 合并到已有文件
+  const outfitPath = path.join(dataDir, "outfit_descriptions.json");
+  let existingOutfits = [];
+  if (fs.existsSync(outfitPath)) {
+    try { existingOutfits = JSON.parse(fs.readFileSync(outfitPath, "utf-8")); } catch {}
+  }
+  const mergedOutfits = [...existingOutfits, ...(data.lore.outfits || [])];
+  if (mergedOutfits.length > existingOutfits.length) {
+    fs.writeFileSync(outfitPath, JSON.stringify(mergedOutfits, null, 2), "utf-8");
+    console.log("[输出] outfit_descriptions.json: +" + data.lore.outfits.length + " 个 (总计 " + mergedOutfits.length + ")");
+  }
 }
 
 // ── 主流程 ──

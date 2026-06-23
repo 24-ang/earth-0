@@ -1,0 +1,26 @@
+{
+  "default_protagonist": {
+    "full": "比企谷八幡",
+    "surname": "比企谷",
+    "givenName": "八幡"
+  },
+  "displacement_conditions": {
+    "any_of": [
+      {
+        "flags": {
+          "protected_yukino_childhood": true
+        }
+      },
+      {
+        "flags": {
+          "player_accident": true
+        }
+      },
+      {
+        "affection": {
+          "雪之下雪乃": 60
+        }
+      }
+    ]
+  }
+}

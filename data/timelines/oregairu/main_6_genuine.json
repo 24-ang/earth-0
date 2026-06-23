@@ -1,0 +1,86 @@
+{
+  "id": "main_6_genuine",
+  "title": "真物与圣诞协作",
+  "source": "春物",
+  "trigger": {
+    "min_day": 430,
+    "time_of_day": ["morning"],
+    "flags": {
+      "election_complete": true,
+      "route_pure": false,
+      "route_brainwash": false,
+      "route_ntr": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "一色彩羽",
+    "hook_text": "新任学生会长一色彩羽跑进活动室，焦急地请求协助筹备与海滨高中的圣诞联合企划。然而此时侍奉部正因之前的风波而陷入僵局。一色向{{player.surname}}投去求助的目光。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "collab_dilemma",
+      "label": "协作的难题",
+      "prompt": "在圣诞联合企划的准备会议上，海滨高中的学生会效率低下、空谈连篇，一色彩羽无力掌控局面。活动室里依然弥漫着冰冷的气氛，八幡在一旁沉默不语，雪乃也只是机械地做着记录。",
+      "outcomes": [
+        {
+          "pick": "让八幡在社团中吐露心声，寻找‘真物’（走原著线）",
+          "effects": {
+            "flags": { "hachiman_genuine_triggered": true }
+          },
+          "next_beat": "hachiman_genuine"
+        },
+        {
+          "pick": "主动站出来打破沉默，对雪乃表白并表达寻找’真物’的意愿（走玩家线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 15 },
+            "flags": { "player_genuine_triggered": true }
+          },
+          "next_beat": "player_genuine",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" },
+            "flags": { "player_solved_election": true }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hachiman_genuine",
+      "label": "真物的追求",
+      "prompt": "八幡最终流着泪说出了‘我想要真物’的脑内真实想法。雪乃被他的情绪震撼，夺门而出。但在由比滨的劝说下，三人最终和解，重新联手解决了圣诞协作事件。八幡和雪乃的关系得到了重塑。",
+      "effects": {
+        "flags": { "genuine_complete": true }
+      },
+      "expires_quest": true
+    },
+    {
+      "id": "player_genuine",
+      "label": "誓约的萌芽",
+      "prompt": "{{player.surname}}握住雪乃的手，诚恳地向她表达了自己追寻彼此坦诚、毫无伪饰的‘真物’关系的决心。雪乃愣在原地，眼眶微湿地低下了头，并没有甩开手。由比滨和八幡在旁边默默看着，心中有了某种预感。四人协力解决了圣诞活动。",
+      "effects": {
+        "flags": { "genuine_complete": true }
+      },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "圣诞联合活动在嘈杂中落幕了。由于{{player.surname}}没有深度参与，八幡在关键时刻的一句‘我想要真物’解开了侍奉部的矛盾。雪乃和八幡再次走到了一起，共同完成了联合企划。",
+    "effects": {
+      "flags": {
+        "genuine_complete": true,
+        "hachiman_genuine_triggered": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[真物] 被比企谷八幡的‘真物’表白所震撼并和解", "expires": 365, "tone": "期待" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[真物] 表达了想要‘真物’的渴望，重组了社团", "expires": 365, "tone": "期待" }
+        ]
+      }
+    }
+  }
+}

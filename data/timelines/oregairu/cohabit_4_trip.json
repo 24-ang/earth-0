@@ -1,0 +1,245 @@
+{
+  "id": "if_yukino_cohabit_trip",
+  "title": "更衣室意外与酒店背德之夜",
+  "source": "同人IF·同居",
+  "trigger": {
+    "min_day": 380,
+    "max_day": 386,
+    "location": "家_玩家房间",
+    "flags": {
+      "cohabit_climax_completed": true
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 5,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "在小町怀孕报告出来前夕，比企谷猿畠带大家前往邻县医院和商场采购。在更衣室里，雪乃正穿着雪白的连衣裙，而八幡临时离开，只留下猿畠在门外……",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "cohabit_trip_mall",
+      "label": "更衣室的以毒攻毒",
+      "prompt": "雪之下雪乃试穿了一套洁白的连衣裙和贝雷帽，却发现八幡早已离开去看小町的物品。猿畠在门外看到美丽的雪乃勃起出洋相，店员正在走来。为了避嫌，雪乃将猿畠拉进了狭小的更衣室。看着猿畠顶起的牛仔裤，决定：",
+      "outcomes": [
+        {
+          "pick": "[雪之下雪乃的妥协] 决定在打烊前用小嘴帮叔叔弄软下来，虽然极其生疏，但被迫把粗大的龟头全部吞入喉咙深处，咽下了全部滚烫的浓精……",
+          "effects": {
+            "flags": {
+              "cohabit_trip_mall_bj": true
+            },
+            "affection": {
+              "雪之下雪乃": 10
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["唇"],
+              "thoughts": ["在商场更衣室的狭小空间里，为了不被店员发现，竟然跪下来把八幡父亲那根二十厘米的巨根含进了嘴里，被他按着头野蛮地灌满了整个喉咙……全部吞了下去……"],
+              "duration": 25
+            }
+          },
+          "next_beat": "cohabit_trip_hotel_room"
+        },
+        {
+          "pick": "[比企谷猿畠的兽行] 猿畠欲火中烧，强行剥开白色连衣裙，将雪乃推倒在更衣室凳子上，直接挺入粉嫩的肉鲍中狂干至内射……",
+          "effects": {
+            "flags": {
+              "cohabit_trip_mall_sex": true,
+              "yukino_mall_sex_corrupted": true
+            },
+            "affection": {
+              "雪之下雪乃": -20
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["唇", "秘部", "乳"],
+              "thoughts": ["在更衣室里穿着刚换好的雪白连衣裙，就被八幡的父亲粗野地顶开了身体，在狭窄的椅子上被他剧烈地抽插并射在了子宫最深处……"],
+              "duration": 30
+            }
+          },
+          "next_beat": "cohabit_trip_hotel_room"
+        },
+        {
+          "pick": "[比企谷八幡的折返] 八幡由于忘了拿零钱半路折返回来，推开门大声询问老爸和雪之下好了没有，打断了更衣室里的暧昧空气。",
+          "effects": {
+            "flags": {
+              "cohabit_trip_mall_prevented": true
+            },
+            "affection": {
+              "雪之下雪乃": 10
+            }
+          },
+          "next_beat": "cohabit_trip_hotel_room"
+        }
+      ]
+    },
+    {
+      "id": "cohabit_trip_hotel_room",
+      "label": "双人房的妥协",
+      "prompt": "当晚入住酒店，因为小町的安排，雪乃和猿畠被分配到了只有一张双人床的房间。八幡在晚上来送拿错的丝袜，震惊地看到双人床和只裹着浴巾的父亲。决定：",
+      "outcomes": [
+        {
+          "pick": "[比企谷八幡的装聋] 送完包后，虽然心中极其震惊和怀疑，但由于别扭怪的理性，决定不问，默默返回小町所在的房间睡觉",
+          "effects": {
+            "flags": {
+              "cohabit_trip_hotel_night_triggered": true
+            }
+          },
+          "next_beat": "cohabit_trip_hotel_night"
+        },
+        {
+          "pick": "[比企谷八幡的交换] 强烈向父亲提出交换房间：“爸，你和小町一间，我和雪之下换一下，这样比较合适。”",
+          "effects": {
+            "flags": {
+              "cohabit_trip_hotel_swapped": true
+            },
+            "affection": {
+              "雪之下雪乃": 20
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷猿畠的打发] 猿畠接过丝袜并嘲笑八幡脑子不灵光，拍拍他的肩膀直接将其打发走，反锁房门走向正在吹头发的雪乃",
+          "effects": {
+            "flags": {
+              "cohabit_trip_hotel_night_triggered": true
+            }
+          },
+          "next_beat": "cohabit_trip_hotel_night"
+        }
+      ]
+    },
+    {
+      "id": "cohabit_trip_hotel_night",
+      "label": "双人床的背德狂欢",
+      "prompt": "八幡离去后，房门反锁。猿畠帮雪乃吹干头发，巨根抵住她的后背。雪乃换上了八幡送来的油亮黑丝袜，在双人床上再次向这个中年人拉开了双腿。决定：",
+      "outcomes": [
+        {
+          "pick": "[雪之下雪乃的沉沦] 彻底放弃反抗，在长达数小时的抽插中，经历了避孕套套弄、书桌后入、被抱着在全身镜前放尿、以及倒立被粗大肉棒顶穿子宫的极致快感……",
+          "effects": {
+            "flags": {
+              "yukino_hotel_night_corrupted": true
+            },
+            "affection": {
+              "雪之下雪乃": 20
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["秘部", "唇", "乳", "臀", "脚"],
+              "thoughts": ["在酒店的双人床上……穿着八幡送来的丝袜，在全身镜前一边放尿一边被叔叔疯狂抽插到白眼狂翻……甚至被他倒立提起，子宫被大量温热的精液灌得鼓起……完全变成了叔叔的玩具……"],
+              "duration": 90
+            }
+          },
+          "next_beat": "cohabit_trip_morning"
+        },
+        {
+          "pick": "[比企谷猿畠的蹂躏] 猿畠吃下了精力剂，拉着雪乃的美腿，用各种高难度姿势将这个清冷的高中女生狠狠干到虚脱高潮数十次，直到其彻底昏死……",
+          "effects": {
+            "flags": {
+              "yukino_hotel_night_abused": true
+            },
+            "affection": {
+              "雪之下雪乃": -10
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["秘部", "乳", "臀", "口"],
+              "thoughts": ["在精力剂的作用下被叔叔像发了疯的野兽一样疯狂索取……被他粗暴地玩弄了一整晚，高潮了无数次直到失去意识，醒来时满身都是黏糊糊的白浊……"],
+              "duration": 120
+            }
+          },
+          "next_beat": "cohabit_trip_morning"
+        },
+        {
+          "pick": "[雪之下雪乃的坚守] 极力保全底线，拒绝了在书桌上被干、全身镜前尿尿和倒立等屈辱姿势，仅戴套进行了两次普通的性交便推开猿畠休息",
+          "effects": {
+            "flags": {
+              "yukino_hotel_night_defended": true
+            },
+            "affection": {
+              "雪之下雪乃": 5
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["秘部"],
+              "thoughts": ["虽然抵挡不住大肉棒的诱惑，但还是守住了自尊，拒绝了叔叔那些荒诞下流的姿势要求，只戴套做了两次……"],
+              "duration": 30
+            }
+          },
+          "next_beat": "cohabit_trip_morning"
+        }
+      ]
+    },
+    {
+      "id": "cohabit_trip_morning",
+      "label": "清晨的撞破与狼藉",
+      "prompt": "清晨退房前，八幡前来敲门，却目睹了狼藉不堪的房间：满地的垃圾水渍、湿透的床单、散落的套子与白色液体，以及疲惫不堪、光着黑丝在被窝里的雪乃。退房时收银员告知要多收20%清洁费。决定：",
+      "outcomes": [
+        {
+          "pick": "[比企谷八幡的逃避] 装作什么都没看见，默默拿着零钱下楼，全家在各怀鬼胎与雪乃愧疚的愧疚沉默中乘车返回千叶",
+          "effects": {
+            "flags": {
+              "cohabit_trip_completed": true
+            },
+            "affection": {
+              "雪之下雪乃": -10
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷八幡的崩溃] 八幡再也无法克制内心的怀疑，当着小町的面向老爸愤怒地大声对质，雪乃羞愧得当场痛哭掩面跑走",
+          "effects": {
+            "flags": {
+              "cohabit_trip_completed": true,
+              "cohabit_trip_ruined": true
+            },
+            "affection": {
+              "雪之下雪乃": -30
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷猿畠的豪爽] 猿畠微笑着交了罚款，面带得意地拍拍儿子的肩膀：“年轻人多出糗也是好事，回程你坐后排，让雪之下坐副驾驶。”",
+          "effects": {
+            "flags": {
+              "cohabit_trip_completed": true,
+              "saruhata_triumphant": true
+            },
+            "affection": {
+              "雪之下雪乃": -15
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "八幡不曾察觉，在去往邻县的路上，雪乃因为意外与猿畠在商场更衣室完成了口交。当晚入住酒店，雪乃在猿畠狂乱的冲撞中完全放弃抵抗，在全身镜放尿以及倒立顶子宫的极致快感中被猿畠用避孕套与无套狠狠蹂躏了一整晚，清晨留下了一屋子套子水渍狼藉，退房时被额外收取了20%清洁费……",
+    "effects": {
+      "flags": {
+        "cohabit_trip_completed": true
+      },
+      "affection": {
+        "雪之下雪乃": -15
+      },
+      "sex": {
+        "npc": "雪之下雪乃",
+        "partner": "比企谷猿畠",
+        "touched_parts": ["秘部", "唇", "乳", "臀", "脚"],
+        "thoughts": ["在更衣室的口交，以及在酒店里穿着丝袜在镜子前一边失禁放尿一边被叔叔狠命抽插……甚至被他提起双腿灌满了精液……这一切的荒唐细节全都被八幡清晨看到了……真是糟糕透顶了……"],
+        "duration": 90
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "summer_camp",
+  "title": "千叶村合宿",
+  "source": "春物",
+  "trigger": {
+    "min_day": 200,
+    "time_of_day": ["morning"],
+    "flags": { "club_founded": true, "met_yukino_first": true },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "平冢静",
+    "hook_text": "平冢静在班会上敲了敲讲台，宣布下周将前往千叶村进行学习合宿。侍奉部全员被点名——八幡在后排啧了一声，被平冢静一记粉笔头精准命中。{{player.surname}}也被要求参加。合宿地点在千叶县山区，三天两夜，白天安排林间学习 and 户外实践，晚上是自由时间和篝火活动。",
+    "urgency": "high"
+  },
+  "beats": [
+    {
+      "id": "accept",
+      "label": "参加合宿",
+      "prompt": "大巴车载着学生们驶入千叶村。白天的安排是林间学习和户外活动——平冢静给侍奉部分配了辅导其他学生功课的任务。雪之下以她一贯的高效组织着学习小组，由比滨负责分发点心和鼓励士气，八幡则试图躲在角落看轻小说但每次都被平冢静揪出来。到了晚上，女生们在温泉里的谈话声隐约传到男生休息区，八幡用枕头盖住了自己的头。",
+      "outcomes": [
+        { "pick": "认真辅导功课", "effects": { "affection": { "雪之下雪乃": 10, "由比滨结衣": 10 }, "flags": { "camp_helped": true } }, "next_beat": "bonfire" },
+        { "pick": "和八幡一起偷懒去后山探险", "effects": { "affection": { "比企谷八幡": 8 }, "flags": { "camp_sneaked": true } }, "next_beat": "bonfire" }
+      ]
+    },
+    {
+      "id": "bonfire",
+      "label": "篝火晚会",
+      "prompt": "合宿的最后一晚，篝火在空地上燃起。侍奉部的人自然而然地坐到了一起——雪之下端正地坐着，火光在她脸上投下柔和的阴影；由比滨抱着膝盖坐在八幡旁边，时不时往火堆里添树枝；八幡盯着火焰发呆，偶尔回答一句由比滨的问话，眼神却不自觉地往雪之下的方向偏。平冢静远远地举了举啤酒罐。这是夏天结束前最后一个值得记住的夜晚。",
+      "effects": { "flags": { "camp_complete": true } }
+    },
+    {
+      "id": "ignore",
+      "label": "逃掉合宿",
+      "prompt": "{{player.surname}}找了个借口没有登上大巴。后来八幡说起合宿那几天的事——学习辅导、温泉骚动、篝火晚会上由比滨不小心把棉花糖掉进了火堆里。雪之下在开学后看到{{player.surname}}时语气明显冷淡了几度。有些事情错过了就是错过了。",
+      "effects": { "affection": { "雪之下雪乃": -10 }, "flags": { "camp_skipped": true, "camp_complete": true } },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "合宿的大巴已经驶离了校门。操场上只剩下几个没去的学生在闲逛。八幡从车窗里看了外面一眼，然后缩回座位继续看他的文库本。今年的夏天，千叶村的篝火在{{player.surname}}不知道的地方点燃又熄灭了。",
+    "effects": {
+      "flags": {
+        "camp_missed": true,
+        "camp_complete": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[合宿] 辅导小学生川崎大志与鹤见留美", "expires": 365, "tone": "无感" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[合宿] 协助解决留美的人际问题", "expires": 365, "tone": "无感" }
+        ]
+      }
+    }
+  }
+}

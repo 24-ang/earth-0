@@ -1,0 +1,145 @@
+{
+  "id": "if_yukino_cohabit_start",
+  "title": "同居开始与浴室意外",
+  "source": "同人IF·同居",
+  "trigger": {
+    "min_day": 315,
+    "max_day": 320,
+    "location": "家_玩家房间",
+    "player_stage": "高中",
+    "flags": {
+      "route_pure": false,
+      "route_brainwash": false
+    }
+  },
+  "expires_days": 5,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "雪乃因为公寓旁火灾搬入比企谷家暂住。晚餐时比企谷一家接待了她。深夜，比企谷猿畠在浴室洗澡，突然浴室门被拉开……",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "cohabit_start",
+      "label": "浴室的羞耻撞见",
+      "prompt": "雪乃因刚才自慰被撞见想要冲凉冷静，推开门却正好看到比企谷猿畠正在以她为幻想对象打飞机，射出来的精液飞溅在墙上。两人错愕地看着对方。此时门外传来八幡寻找笔记本的声音。决定：",
+      "outcomes": [
+        {
+          "pick": "[比企谷八幡的抉择] 站在门口询问小町的笔记本在哪里，这让门内的两人在慌乱中因为浴室地滑摔在一起并发生了肉体结合……",
+          "effects": {
+            "flags": {
+              "cohabit_bath_occurred": true
+            },
+            "affection": {
+              "雪之下雪乃": -10
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["唇", "秘部"],
+              "thoughts": ["在浴室里因为地滑摔倒，意外与八幡的父亲紧密结合并被粗暴夺走了初夜……在八幡隔着一扇门敲门问话的极端屈辱中，攀上了绝顶。"],
+              "duration": 30
+            }
+          },
+          "next_beat": "cohabit_room_remedy"
+        },
+        {
+          "pick": "[比企谷猿畠的强占] 一把捂住雪乃的小嘴，将其按在浴室湿滑的墙壁上，就着肥皂水粗暴地顶穿了她的初夜防线……",
+          "effects": {
+            "flags": {
+              "cohabit_bath_occurred": true,
+              "cohabit_bath_forced": true
+            },
+            "affection": {
+              "雪之下雪乃": -25
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["唇", "乳", "秘部"],
+              "thoughts": ["在浴室被八幡的父亲强行捂住嘴巴，毫无怜悯地顶破了处女之壁，在强力的占有中被迫高潮……好脏，好屈辱……"],
+              "duration": 35
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[雪之下雪乃的反抗] 雪乃在极度羞愤中狠狠扇了比企谷猿畠一记耳光，尖叫着推开门跑回自己的房间反锁求救……",
+          "effects": {
+            "flags": {
+              "cohabit_bath_escaped": true,
+              "cohabit_bath_alerted": true
+            },
+            "affection": {
+              "雪之下雪乃": -5
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷八幡的避嫌] 觉得浴室可能有动静，决定不打扰，红着脸退回自己的房间睡觉。",
+          "effects": {
+            "flags": {
+              "cohabit_bath_escaped": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "cohabit_room_remedy",
+      "label": "房间里的缓解方式",
+      "prompt": "破瓜之痛让雪乃咬紧牙关，比企谷猿畠忍受着结合状态从八幡房门前将雪乃抱回她的房间。为了从她紧致的小穴里拔出大肉棒，决定帮她自慰：",
+      "outcomes": [
+        {
+          "pick": "[比企谷猿畠] 以极其熟练的手法按压揉搓雪乃的私处并爱抚乳头，催发她的高潮以顺利拔出肉棒",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 15
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["胸", "秘部"],
+              "thoughts": ["被叔叔那只粗厚的手粗暴地揉搓着小红豆与乳头……耻辱和极度爽快交织在一起，在他的大肉棒里迎来了失控的第一次性高潮。"],
+              "duration": 20
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[雪之下雪乃] 咬紧牙关含泪推开猿畠，强忍着撕裂般的剧痛自己向后挣脱，缩在床脚默默垂泪拒绝他的触碰",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": -15
+            },
+            "flags": {
+              "cohabit_remedy_refused": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "由于八幡未曾察觉，在水流声的掩盖下，比企谷猿畠在浴室里因为意外和雪乃摔在一起并夺走了她的处女第一次……",
+    "effects": {
+      "flags": {
+        "cohabit_bath_occurred": true
+      },
+      "affection": {
+        "雪之下雪乃": -15
+      },
+      "sex": {
+        "npc": "雪之下雪乃",
+        "partner": "比企谷猿畠",
+        "touched_parts": ["唇", "秘部"],
+        "thoughts": ["浴室地滑发生的荒唐事故……在水流声中，自己那保留至今的第一次竟然被八幡的父亲粗暴地占有了……"],
+        "duration": 30
+      }
+    }
+  }
+}

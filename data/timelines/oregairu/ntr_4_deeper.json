@@ -1,0 +1,100 @@
+{
+  "id": "yukino_ntr_deeper",
+  "title": "屋顶",
+  "source": "同人IF·NTR",
+  "trigger": {
+    "min_day": 300,
+    "location": "总武高",
+    "time_of_day": ["evening"],
+    "flags": {
+      "yukino_sexual_awakening": true,
+      "route_ntr": true,
+      "yukino_ntr_beach": true,
+      "yukino_ntr_storage": true
+    },
+    "min_skills": {
+      "sex_technique": 8
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "放学后的天台，狂风呼啸。雪乃收到短信后没有回复，但她依然按时来了。她走近并坐在护栏旁的{{player.surname}}身边，没有问为什么要约她来。她心里一清二楚。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "rooftop_encounter",
+      "label": "天台的强风",
+      "prompt": "两人并肩坐着，闲聊了几句分班和学期末的日常。雪乃并没有提起八幡，但她的每句话里似乎都藏着他的影子。{{player.surname}}将手放在她细嫩的膝盖上。雪乃看了一眼那只手，随后平静地自己动手解开了制服最上面的扣子。这是她第一次主动，她不想再伪装每次都是被动接受。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "扶住她的纤腰，任由她跨坐上来，引导肉棒进入她的体内",
+          "effects": {
+            "flags": {
+              "rooftop_riding_started": true
+            }
+          },
+          "next_beat": "rooftop_riding"
+        },
+        {
+          "pick": "收回手，告诉她风太大了，催促她一起穿好外套下楼",
+          "effects": {
+            "flags": {
+              "rooftop_ntr_declined": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "rooftop_riding",
+      "label": "天台上的律动",
+      "prompt": "雪乃跨坐在{{player.surname}}的小腹上，自己掌控着缓慢而沉重的起伏节奏。她的眼睛一直睁着直视过来。中途，她突然停下了动作，双手撑在{{player.surname}}的胸口，喘息着说：‘你知道吗……八幡从来没有这样看过我。’{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "托起她的臀部，加速向上顶撞，在操场社团晚训的背景声中冲刺",
+          "effects": {},
+          "next_beat": "rooftop_sex_finish"
+        }
+      ]
+    },
+    {
+      "id": "rooftop_sex_finish",
+      "label": "余韵与冰冷",
+      "prompt": "在猛烈的冲击下，雪乃死死搂住{{player.surname}}的脖子，在呜咽声中迎来了极致的高潮。内射结束后，她又坐了一分钟才起身，平静地用手帕将大腿内侧滑落的浊液擦净。她穿好校服，拿出手机看了一眼，屏幕锁屏上一片空白，没有任何八幡的未接消息。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "帮她捡起掉在地上的发夹，目送她拉开铁门离去",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 5
+            },
+            "flags": {
+              "yukino_ntr_deeper": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "唇", "乳"],
+              "thoughts": ["在狂风怒号的天台上跨坐交合，感受她亲口说出八幡从未用这种充满占有欲的眼神看过她的事实..."],
+              "duration": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "天台上只有凄冷的晚风。{{player.surname}}独自一人坐在护栏边等待了很久。雪乃最终没有来——她可能意识到了这一步代表着沉沦。风越来越冷了。",
+    "effects": {
+      "flags": {
+        "yukino_ntr_deeper_missed": true
+      }
+    }
+  }
+}

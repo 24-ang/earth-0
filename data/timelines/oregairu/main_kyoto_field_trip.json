@@ -1,0 +1,117 @@
+{
+  "id": "kyoto_field_trip",
+  "title": "京都修学旅行",
+  "source": "春物",
+  "trigger": {
+    "min_day": 340,
+    "time_of_day": ["morning"],
+    "flags": {
+      "cultural_festival_complete": true,
+      "route_pure": false,
+      "route_brainwash": false,
+      "route_ntr": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "户部翔",
+    "hook_text": "户部翔风风火火地冲进活动室，脸上带着少见的紧张。他喜欢上了班上的海老名姬菜，想在即将到来的京都修学旅行中向她告白。但他完全不会察言观色，所以跑来找侍奉部求助。海老名是叶山集团的成员，这件事如果处理不好，整个小圈子的平衡都会被打破。八幡在角落里合上了文库本，眼神沉了下来。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "tobe_request",
+      "label": "户部的委托",
+      "prompt": "户部详细说明了计划——在京都的自由活动日约海老名去清水寺，然后在落日时分告白。由比滨拍手说听起来很浪漫，雪乃却冷静地反问户部是否察觉到海老名对他有没有特殊感情。户部愣住的表情说明了一切。八幡在角落里看着这一幕，似乎已经在想什么了。",
+      "outcomes": [
+        {
+          "pick": "让八幡去处理——他显然已经有了什么计画（走原著线）",
+          "effects": {
+            "flags": { "hachiman_kyoto_plan": true }
+          },
+          "next_beat": "hachiman_scheme"
+        },
+        {
+          "pick": "主动提议帮户部切实提升自己，并在京都先试探海老名的心意（走玩家线）",
+          "effects": {
+            "affection": { "雪之下雪乃": 10, "比企谷八幡": 5 },
+            "flags": { "player_kyoto_plan": true }
+          },
+          "next_beat": "player_approach",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hachiman_scheme",
+      "label": "京都的假告白",
+      "prompt": "京都的自由活动日。八幡把户部支开，单独约了海老名到渡月桥。在落日映红的桂川边，八幡用他那种独特的方式——不是告白，而是用一种自我牺牲式的独白——向海老名表达了'喜欢'。他的逻辑是：如果自己先被拒绝，海老名就不会答应户部，户部就不会受伤，而海老名也不必因为拒绝同学而被孤立。但海老名看穿了一切。她打断他说：'八幡你啊，真的什么都不懂呢。我喜欢的是BL里的关系——现实中的恋爱我没有兴趣。'她的话干净利落。八幡站在桥上，看着夕阳一点点沉下去。他在转身离开时踩空了，整个人落进了河里。",
+      "outcomes": [
+        {
+          "pick": "在河边把八幡拉上来，什么都没说",
+          "effects": {
+            "affection": { "比企谷八幡": 10 },
+            "flags": { "hachiman_river_fall": true }
+          },
+          "next_beat": "club_crisis"
+        }
+      ],
+      "expires_quest": false
+    },
+    {
+      "id": "player_approach",
+      "label": "诚实的试探",
+      "prompt": "在京都的自由活动日，{{player.surname}}决定用更诚实的方式解决。先请由比滨私下问海老名对户部的感觉——海老名很坦率地表示户部是重要的朋友，但不是恋爱对象。随后{{player.surname}}在清水寺下找到紧张的户部，坦诚地把情况告诉了他。户部沉默了一会儿，但没有崩溃——他说至少现在知道了答案，不用在落日时分当众被拒绝。当晚，他反而在自由活动时和海老名自然地聊了天，小圈子的气氛也没有被破坏。雪乃看着{{player.surname}}的方式，若有所思地点了点头。",
+      "effects": {
+        "flags": { "kyoto_trip_complete": true, "kyoto_resolved_peacefully": true }
+      },
+      "expires_quest": true
+    },
+    {
+      "id": "club_crisis",
+      "label": "侍奉部的裂痕",
+      "prompt": "回到千叶后，雪乃和由比滨都知道了八幡在京都做的事。活动室里压抑得像是能拧出水来。雪乃用她最冰冷的语气质问八幡为什么要用那种方式——不是帮户部，而是伤害自己来让别人不受伤害。由比滨站在中间，眼眶通红，不知道该怎么办。八幡低着头，一句话也不说。他想起花火大会上平冢静的话，想起自己说过的'不想让她受伤'——但他做的事偏偏让她露出了最失望的表情。门被用力关上了。侍奉部里没有人说话。{{player.surname}}站在走廊上，听到里面由比滨压抑的哭声。",
+      "effects": {
+        "flags": { "kyoto_trip_complete": true, "club_crisis_triggered": true },
+        "memoryTags": {
+          "雪之下雪乃": [
+            { "tag": "[京都] 对八幡在修学旅行中的自毁式假告白感到极度失望和愤怒", "expires": 365, "tone": "失望" }
+          ],
+          "比企谷八幡": [
+            { "tag": "[京都] 假告白被海老名拒绝，落水，引发了侍奉部最严重的信任危机", "expires": 365, "tone": "苦涩" }
+          ],
+          "由比滨结衣": [
+            { "tag": "[京都] 夹在八幡和雪乃之间，感到无能为力和痛苦的压抑", "expires": 365, "tone": "苦涩" }
+          ]
+        }
+      },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "京都修学旅行结束了。{{player.surname}}没有参与这件事，八幡独自执行了他一贯的自爆式做法——在渡月桥边向海老名假告白，被干净利落地拒绝，还落进了河里。回到千叶后，侍奉部的气氛降到了冰点，雪乃和八幡之间的不信任感比任何时候都更尖锐。有些裂痕，一旦出现就不会自己愈合。",
+    "effects": {
+      "flags": {
+        "kyoto_trip_complete": true,
+        "kyoto_trip_missed": true,
+        "hachiman_river_fall": true,
+        "club_crisis_triggered": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[京都] 八幡的假告白自爆行为让她对社团关系产生了根本性的怀疑", "expires": 365, "tone": "失望" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[京都] 在渡月桥落水，引发了与雪乃之间最深的裂痕", "expires": 365, "tone": "苦涩" }
+        ],
+        "由比滨结衣": [
+          { "tag": "[京都] 无法调和雪乃和八幡的矛盾，在社团中感到深深的无力", "expires": 365, "tone": "苦涩" }
+        ]
+      }
+    }
+  }
+}

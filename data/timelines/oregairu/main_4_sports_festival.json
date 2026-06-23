@@ -1,0 +1,53 @@
+{
+  "id": "sports_festival",
+  "title": "体育祭",
+  "source": "春物",
+  "trigger": {
+    "min_day": 310,
+    "location": "总武高",
+    "time_of_day": ["morning"],
+    "flags": { "cultural_festival_complete": true, "club_founded": true },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "平冢静",
+    "hook_text": "平冢静在班会上敲了敲讲台，宣布下周体育祭。全班红白分队已贴在后墙——八幡和你被分到白组。她补充了一句：侍奉部全员被征用为后勤委员。八幡把脸埋进文库本里。",
+    "urgency": "high"
+  },
+  "beats": [
+    {
+      "id": "prep",
+      "label": "体育祭准备",
+      "prompt": "体育祭前一周，操场上已经开始划线。侍奉部被分配去整理器材仓库——竹刀、跳马箱、借物竞走用的纸箱乱七八糟地堆着。雪之下戴着袖套在清单上逐项核对，由比滨搬垫子搬到一半被垫子压倒了，八幡蹲在角落给骑马战的竹竿贴胶布。你被平冢静叫去搬计分板。各班的应援团在走廊上练口号，吵得八幡的文库本翻不了页。",
+      "outcomes": [
+        { "pick": "帮雪之下清点器材，把缺的编号记下来", "effects": { "affection": { "雪之下雪乃": 8 }, "flags": { "sports_prep_helped": true } }, "next_beat": "festival_day" },
+        { "pick": "和八幡一起贴胶布（歪得离谱）", "effects": { "affection": { "比企谷八幡": 5 }, "flags": { "sports_prep_helped": true } }, "next_beat": "festival_day" }
+      ]
+    },
+    {
+      "id": "festival_day",
+      "label": "体育祭当日",
+      "prompt": "体育祭当天，操场被红白两色淹没。骑马战是第一个高潮——白组的八幡被户冢骑在肩上（八幡的表情介于幸福和缺氧之间），红组的叶山队三秒就被集火掀翻。借物竞走环节，材木座抽到「剑豪」后高举竹刀在跑道上来回冲刺，被平冢静用纸扇抽了回去。接力赛压轴——雪之下被强行报名了白组最后一棒。她穿着体操服站在起跑线上，马尾扎得很紧，表情冷静得不像刚跑完的人。接棒瞬间她看了一眼观众席。她以第三名冲线，过线后弯着腰喘了很久。",
+      "outcomes": [
+        { "pick": "在终点扶住她，把运动饮料递过去", "effects": { "affection": { "雪之下雪乃": 12 }, "flags": { "sports_festival_complete": true } } },
+        { "pick": "从观众席喊了她的名字", "effects": { "affection": { "雪之下雪乃": 8 }, "flags": { "sports_festival_complete": true } } }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "体育祭的喧嚣在操场那头消散了。你没有去器材仓库，没有站在终点线前。雪之下一个人跑完了接力——没有人在终点扶她，她自己弯腰喘匀了气，自己去饮水机接了水。",
+    "effects": {
+      "flags": {
+        "sports_festival_missed": true,
+        "sports_festival_complete": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[体育祭] 担任后勤委员，对人际关系感到疲惫", "expires": 365, "tone": "无感" }
+        ]
+      }
+    }
+  }
+}

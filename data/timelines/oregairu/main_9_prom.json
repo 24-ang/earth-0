@@ -1,0 +1,147 @@
+{
+  "id": "main_9_prom",
+  "title": "毕业舞会与真挚的告白",
+  "source": "春物",
+  "trigger": {
+    "min_day": 580,
+    "time_of_day": ["morning"],
+    "flags": {
+      "park_complete": true,
+      "route_pure": false,
+      "route_brainwash": false,
+      "route_ntr": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "随着高三学长们的毕业季临近，雪之下雪乃为了向母亲证明自己，主动接下了筹办‘毕业舞会’(Prom)的委托。然而，舞会计划遭到了雪乃母亲以及家长会的极力反对。雪乃在特别大楼的社办里，独自对着企划书思索。她需要一份坚定的力量支持。",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "prom_dilemma",
+      "label": "舞会风波",
+      "prompt": "雪乃坚持一个人完成毕业舞会的筹办工作，甚至为此在校外奔走，身体已有些吃不消。八幡为了在暗中帮她解决来自家长会的阻力，计划自己做一份看似更乱的‘备用舞会企划’作为诱饵来促成雪乃企划的通过。由比滨在一旁协助他。但如果{{player.surname}}站出来，或许能直接正面解决家长会的刁难。",
+      "outcomes": [
+        {
+          "pick": "让八幡去协助运作备用舞会企划，并让雪乃依靠八幡的帮助来解决危机（走原著线）",
+          "effects": {
+            "flags": { "hachiman_prom_led": true }
+          },
+          "next_beat": "hachiman_bridge"
+        },
+        {
+          "pick": "自己正面出面游说学校与家长会，用更完美的方案彻底打消反对意见，并正式向雪乃告白（走玩家线）",
+          "effects": {
+            "flags": { "player_prom_led": true }
+          },
+          "next_beat": "player_bridge",
+          "auto_if": {
+            "romance": { "雪之下雪乃": "恋人" },
+            "flags": { "player_park_led": true }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hachiman_bridge",
+      "label": "桥头上的诉求",
+      "prompt": "在寒风料峭的校外大桥上，八幡追上了雪乃。他固执地用自己那一套‘想要有借口一辈子和雪乃产生纠葛’的借口，彻底击碎了雪乃紧闭的心防。两人紧紧拥抱在一起，确立了恋人关系。",
+      "effects": {
+        "npcRelations": {
+          "比企谷八幡": {
+            "雪之下雪乃": {
+              "stage": "情侣",
+              "tone": "甜蜜",
+              "notes": "在毕业舞会后大桥告白，成为恋人"
+            }
+          },
+          "雪之下雪乃": {
+            "比企谷八幡": {
+              "stage": "情侣",
+              "tone": "甜蜜",
+              "notes": "在毕业舞会后接受了八幡的告白，成为恋人"
+            }
+          }
+        },
+        "flags": { "prom_complete": true }
+      },
+      "expires_quest": true
+    },
+    {
+      "id": "player_bridge",
+      "label": "黄昏下的誓约",
+      "prompt": "在舞会圆满成功的黄昏，{{player.surname}}在空无一人的天台上找到了雪乃，并向她真挚地表白了心意。雪乃面颊微红，眼含清亮泪水地伸出手紧紧抱住{{player.surname}}，轻声道：‘我想要一辈子都在你身边。’与此同时，八幡和结衣结伴走在桥头，夕阳下，八幡有些羞赧地牵起了结衣的手，两人的羁绊终于也开花结果。",
+      "effects": {
+        "playerRelations": {
+          "雪之下雪乃": {
+            "stage": "至交",
+            "romance": "恋人",
+            "notes": "在毕业天台告白，成为恋人"
+          }
+        },
+        "npcRelations": {
+          "比企谷八幡": {
+            "由比滨结衣": {
+              "stage": "情侣",
+              "tone": "甜蜜",
+              "notes": "八幡与结衣在毕业舞会后走到了一起，确立了恋爱关系"
+            }
+          },
+          "由比滨结衣": {
+            "比企谷八幡": {
+              "stage": "情侣",
+              "tone": "甜蜜",
+              "notes": "结衣最终与心仪的八幡牵手，确立了恋爱关系"
+            }
+          }
+        },
+        "flags": {
+          "route_pure": true,
+          "prom_complete": true
+        },
+        "affection": {
+          "雪之下雪乃": 30,
+          "由比滨结衣": 10
+        }
+      },
+      "expires_quest": true
+    }
+  ],
+  "on_expire": {
+    "narrative": "毕业舞会落下了帷幕。在{{player.surname}}没有主动介入的情况下，八幡通过备用企划为雪乃排除了阻力，并在最终的校外大桥上向雪乃表露了心迹。雪乃感动之下接受了八幡，两人的关系终于在舞会的终曲中升华为恋人。",
+    "effects": {
+      "flags": {
+        "prom_complete": true,
+        "hachiman_prom_led": true
+      },
+      "npcRelations": {
+        "比企谷八幡": {
+          "雪之下雪乃": {
+            "stage": "情侣",
+            "tone": "甜蜜",
+            "notes": "在舞会大桥告白中成为恋人"
+          }
+        },
+        "雪之下雪乃": {
+          "比企谷八幡": {
+            "stage": "情侣",
+            "tone": "甜蜜",
+            "notes": "接受了大桥告白成为恋人"
+          }
+        }
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[舞会] 在大桥上被八幡表白并确立关系", "expires": 365, "tone": "期待" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[舞会] 在大桥上向雪乃告白并确立关系", "expires": 365, "tone": "期待" }
+        ]
+      }
+    }
+  }
+}

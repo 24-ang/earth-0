@@ -1,0 +1,76 @@
+{
+  "id": "cultural_festival",
+  "title": "文化祭",
+  "source": "春物",
+  "trigger": {
+    "min_day": 280,
+    "location": "2年F班",
+    "time_of_day": ["morning"],
+    "calendar_event": "文化祭",
+    "flags": { "camp_complete": true, "met_yukino_first": true },
+    "player_stage": "高中"
+  },
+  "expires_days": 0,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "平冢静",
+    "hook_text": "平冢静在讲台上宣布下周就是文化祭，每个班都要出节目。全班一片哀嚎。她叼着烟扫视了一圈，目光先落在八幡身上——八幡立刻低头假装看书。平冢静的目光移到了{{player.surname}}身上。执行委员会缺人手，{{player.surname}}被点名去帮忙。八幡在座位上松了一口气，但平冢静头也不回地补了一句：'八幡你也去。'",
+    "urgency": "high"
+  },
+  "beats": [
+    {
+      "id": "committee",
+      "label": "执行委员会",
+      "prompt": "{{player.surname}}和八幡一起被塞进了文化祭执行委员会。一年级的相模南被推举为委员长，虽然她看起来并不情愿。雪之下也被分配了进来，她一如既往地平静高效，默默地在相模拖延的每个环节补上缺口。没有人感谢她，甚至大多数人没有注意到工作是谁完成的。八幡蹲在角落整理文件，但他那双死鱼眼一直在观察。他注意到了和{{player.surname}}一样的事：相模看雪之下的眼神里，不是对工作被抢的愤怒，而是对被比下去的不甘。",
+      "outcomes": [
+        { "pick": "帮雪之下分担杂务", "effects": { "affection": { "雪之下雪乃": 8 } }, "next_beat": "class_prep" },
+        { "pick": "和八幡蹲在一起，交换观察到的暗流", "effects": { "affection": { "比企谷八幡": 5 }, "flags": { "noticed_phase_mogami": true } }, "next_beat": "class_prep" },
+        { "pick": "什么都不做", "effects": { "affection": { "雪之下雪乃": -5 } }, "next_beat": "class_prep" }
+      ]
+    },
+    {
+      "id": "class_prep",
+      "label": "班级准备",
+      "prompt": "F班的节目定了下来——搞怪咖啡厅。叶山隼人负责统筹，三浦优美子抓外联，户部和大和搬桌椅。由比滨在缝桌布角上的花边，针脚歪歪扭扭但充满干劲，缝隙间偷看八幡的背影至少三次。{{player.surname}}被分配去画招牌，八幡被发配去写菜单。材木座自告奋勇来帮忙，结果把价目表写成了RPG魔法阵风格。八幡看着那堆'必杀·拿铁咖啡'和'魔法·咖喱饭'，沉默了很长时间。平冢静路过时看了一眼，给出了'邪教仪式'的评价后走了。",
+      "outcomes": [
+        { "pick": "按住材木座的肩膀让他把字写正", "effects": { "affection": { "材木座义辉": 3 } }, "next_beat": "yukino_excluded" },
+        { "pick": "和八幡一起把招牌擦掉重写", "effects": { "affection": { "比企谷八幡": 5, "材木座义辉": -3 } }, "next_beat": "yukino_excluded" }
+      ]
+    },
+    {
+      "id": "yukino_excluded",
+      "label": "雪之下的孤立",
+      "prompt": "文化祭前一天的傍晚。{{player.surname}}在走廊上看到雪之下独自站在窗边。教室里工作人员正在热火朝天地布置场地，但没有一个人叫她加入。她只是静静看着窗外的夕阳和渐渐成型的摊位帐篷。{{player.surname}}走到她旁边站定。她没有转头，问了一句陈述句式的'你有什么事'。然后她提到了另一个人：'比企谷同学刚才也来过。他站在你站的位置，说了同样的话。他说他不擅长这种场面。'她轻微地动了一下肩膀那不是责怪，是已经习惯被看到又被留下的平静。",
+      "outcomes": [
+        { "pick": "只说了一句'我不是来站一下就走的人'", "effects": { "affection": { "雪之下雪乃": 12 } }, "next_beat": "festival_day" },
+        { "pick": "告诉她不用一个人做。她不是一个人", "effects": { "affection": { "雪之下雪乃": 8 } }, "next_beat": "festival_day" }
+      ]
+    },
+    {
+      "id": "festival_day",
+      "label": "文化祭当天",
+      "prompt": "文化祭当天，F班的搞怪咖啡厅意外地成功。叶山的招牌笑容、三浦的强硬揽客和由比滨的亲和力配合得天衣无缝。由比滨时不时往八幡的方向看一眼，后者正蹲在收银台后面不知道在笔记本上写什么。下午的舞台环节，叶山的乐队上台时女生们的尖叫声淹没了体育馆。压轴是相模南的闭幕致辞。她握着麦克风，对着满场观众一个字也说不出来。台下开始窃窃私语。就在这个时刻，雪之下站起来了。她从相模手中接过麦克风，用清晰而平静的声音完成了闭幕致辞。掌声响起。相模低着头，眼泪掉在手背上。雪之下把手轻轻放在相模肩上，然后转身离开。八幡从收银台后面站起来，目送她走出体育馆的背影，然后对{{player.surname}}说了句：'那个人啊……'话没有说完。",
+      "outcomes": [
+        { "pick": "在散场后的走廊上等到雪之下，说'辛苦了'", "effects": { "affection": { "雪之下雪乃": 15 }, "flags": { "cultural_festival_complete": true } } },
+        { "pick": "追上相模，告诉她闭幕致辞是雪之下替她写的", "effects": { "affection": { "相模南": 5 }, "flags": { "cultural_festival_complete": true } } }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "文化祭结束后{{player.surname}}才从别人口中听说。执行委员会的工作几乎全部是雪之下一个人顶下来的，八幡在旁边默默地递了几次茶。但闭幕式上雪之下没有站在台上，也没有人提到她的名字。",
+    "effects": {
+      "flags": {
+        "cultural_festival_missed": true,
+        "cultural_festival_complete": true
+      },
+      "memoryTags": {
+        "雪之下雪乃": [
+          { "tag": "[文化祭] 独自承担执委会的繁重工作，比企谷恶劣自爆", "expires": 365, "tone": "困惑" }
+        ],
+        "比企谷八幡": [
+          { "tag": "[文化祭] 执行委员会的工作自爆，与相模南发生冲突", "expires": 365, "tone": "无感" }
+        ]
+      }
+    }
+  }
+}

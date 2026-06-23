@@ -46,6 +46,7 @@ import spawnItemTool from "./action/spawn_item.ts";
 import inflictDamageTool from "./action/inflict_damage.ts";
 import lookupBodyTool from "./state/lookup_body.ts";
 import lookupLoreTool from "./lookup/lookup_lore.ts";
+import lookupVillainTool from "./lookup/lookup_villain.ts";
 import addMemoryTagTool from "./state/add_memory_tag.ts";
 import setNpcRelationTool from "./state/set_npc_relation.ts";
 import tableCreateTool from "./action/table_create.ts";
@@ -103,6 +104,7 @@ import shopCommand from "./tui/shop.ts";
 import scheduleCommand from "./tui/schedule.ts";
 import rerollCommand from "./tui/reroll.ts";
 import worldCommand from "./tui/world.ts";
+import achievementsCommand from "./tui/achievements.ts";
 
 export function registerAll(pi: ExtensionAPI) {
   setPi(pi);
@@ -159,6 +161,7 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerTool(inflictDamageTool);
   pi.registerTool(lookupBodyTool);
   pi.registerTool(lookupLoreTool);
+  pi.registerTool(lookupVillainTool);
   pi.registerTool(addMemoryTagTool);
   pi.registerTool(setNpcRelationTool);
   pi.registerTool(tableCreateTool);
@@ -218,4 +221,6 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerCommand("schedule", scheduleCommand);
   pi.registerCommand("reroll", rerollCommand);
   pi.registerCommand("world", worldCommand);
+  pi.registerCommand("achievements", achievementsCommand);
+  pi.registerCommand("ach", achievementsCommand);
 }
