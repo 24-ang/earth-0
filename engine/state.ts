@@ -3325,7 +3325,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
 
   // P1: Apply calendar org_effects before normal schedule processing
   try {
-    applyOrgEffects();
+    await applyOrgEffects();
   } catch (e) {
     console.error("applyOrgEffects error:", e);
   }
@@ -3619,8 +3619,8 @@ export async function updateNPCSchedules(): Promise<string[]> {
 }
 
 /** P1: 应用日历事件的 org_effects — 为匹配组织的 NPC 自动设 pendingOverride */
-function applyOrgEffects(): void {
-  const { getCalendarPhase } = require("./timeline.ts");
+async function applyOrgEffects(): Promise<void> {
+  const { getCalendarPhase } = await import("./timeline.ts");
   const { phase, entries } = getCalendarPhase(gameState.time.game_date, gameState.player.location);
   if (phase !== "today") return;
 
