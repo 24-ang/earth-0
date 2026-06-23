@@ -3152,6 +3152,13 @@ export async function updateNPCSchedules(): Promise<string[]> {
     roomCounts[pLocKey] = 1;
   }
 
+  // P1: Apply calendar org_effects before normal schedule processing
+  try {
+    applyOrgEffects();
+  } catch (e) {
+    console.error("applyOrgEffects error:", e);
+  }
+
   for (const [name, npc] of Object.entries(gameState.npcs)) {
     // Tier 1: 一次性覆盖（生病/约定/紧急事件）
     if (npc.pendingOverride) {
@@ -3438,6 +3445,72 @@ export async function updateNPCSchedules(): Promise<string[]> {
   } catch (_) {}
 
   return events;
+}
+
+/** P1: 应用日历事件的 org_effects — 为匹配组织的 NPC 自动设 pendingOverride */
+function applyOrgEffects(): void {
+  const { getCalendarPhase } = require("./timeline.ts");
+  const { phase, entries } = getCalendarPhase(gameState.time.game_date, gameState.player.location);
+  if (phase !== "today") return;
+
+  for (const entry of entries) {
+    if (!entry.org_effects) continue;
+    for (const effect of entry.org_effects) {
+      for (const [name, npc] of Object.entries(gameState.npcs)) {
+        if (npcBelongsToOrg(name, npc, effect.org)) {
+          // Fill template variables
+          const role = inferRoleForNPC(name, npc);
+          const roleAction = inferRoleActionForNPC(name, npc);
+          const action = effect.override_action_template
+            .replace("{role}", role)
+            .replace("{role_action}", roleAction);
+
+          npc.pendingOverride = {
+            location: effect.override_location,
+            action,
+            reason: `日历事件: ${entry.text.slice(0, 30)}`,
+            expiresAt: gameState.time.game_date, // expires end of day
+          };
+        }
+      }
+    }
+  }
+}
+
+/** P1 启发式：判断 NPC 是否属于某组织 */
+function npcBelongsToOrg(name: string, npc: NPCRuntimeState, org: string): boolean {
+  // Check schedule_group for membership
+  const src = (characters as any[]).find((c: any) => c.name === name);
+  const group = npc.scheduleGroup || src?.schedule_group || "";
+  const defLoc = src?.default_location || "";
+
+  // Heuristic: schedule_group contains org-like names OR default_location contains org substring
+  if (group.includes(org.replace("总武", "")) || defLoc.includes(org.replace("高", ""))) return true;
+  // Generic student/teacher groups: check if org is a school and NPC is in school-like schedule
+  if ((group === "学生" || group === "高校生" || group === "总武高学生" || group === "总武高教师") && org.includes("高")) return true;
+  if ((group === "教师" || group === "总武高教师") && org.includes("高")) return true;
+
+  return false;
+}
+
+/** P1: 从 NPC 的 tags/skills 推断 {role} */
+function inferRoleForNPC(name: string, npc: NPCRuntimeState): string {
+  const src = (characters as any[]).find((c: any) => c.name === name);
+  const tags = src?.tags || [];
+  if (tags.includes("学生会") || tags.includes("生徒会")) return "作为学生会成员";
+  if (tags.includes("运动部") || tags.includes("体育部")) return "作为运动部员";
+  if (npc.scheduleGroup === "总武高教师" || npc.scheduleGroup === "教师") return "作为教师";
+  return "";
+}
+
+/** P1: 从 NPC 的 skills 推断 {role_action} */
+function inferRoleActionForNPC(name: string, npc: NPCRuntimeState): string {
+  const src = (characters as any[]).find((c: any) => c.name === name);
+  const tags = src?.tags || [];
+  if (tags.includes("学生会")) return "组织开幕式";
+  if (tags.includes("田径部") || src?.skills?.["运动"] || src?.skills?.["跑步"]) return "为自己的项目热身";
+  if (tags.includes("读书部") || tags.includes("文化部")) return "做后勤记录";
+  return "参与活动";
 }
 
 // --- 空间统计注入 LLM 上下文 ---

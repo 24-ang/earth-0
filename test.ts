@@ -1168,6 +1168,44 @@ test("getTodayCalendar 无匹配日期返回空", () => {
   if (text !== "") throw new Error(`12月1日无条目应返回空，实际: "${text.slice(0,60)}"`);
 });
 
+test("P1: 日历 org_effects — 体育祭当天总武高学生自动移到操场", async () => {
+  resetState();
+  const { getOrCreateNPC, updateNPCSchedules } = await import("./engine/state.ts");
+  const { clearCalendarCache } = await import("./engine/timeline.ts");
+
+  // Set date to 体育祭 day (6月5日)
+  gameState.time.game_date = "2018-06-05";
+  gameState.time.day_of_week = "火";
+  gameState.time.time_of_day = "morning";
+
+  // Create an NPC that should be affected
+  const yui = getOrCreateNPC("由比滨结衣");
+  yui.scheduleGroup = "总武高学生";
+  yui.currentRoom = "2年F班";
+
+  // Add org_effects calendar entry via calendarEvents
+  clearCalendarCache();
+  gameState.calendarEvents = [{
+    year: null, date: "6月5日", location: "总武高",
+    text: "总武高体育祭当日",
+    org_effects: [{
+      org: "总武高",
+      override_location: "操场",
+      override_action_template: "{role}参加体育祭{role_action}中"
+    }]
+  }];
+
+  gameState.player.location = "总武高";
+  await updateNPCSchedules();
+
+  if (yui.currentRoom !== "操场") {
+    throw new Error(`由比滨应在操场，实际在 ${yui.currentRoom}`);
+  }
+  if (!yui.action || !yui.action.includes("体育祭")) {
+    throw new Error(`由比滨动作应包含"体育祭"，实际: ${yui.action}`);
+  }
+});
+
 // ── 剧情钩子 ──
 console.log("── 剧情钩子 (timelines/) ──");
 
