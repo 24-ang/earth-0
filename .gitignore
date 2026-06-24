@@ -8,3 +8,4 @@ node_modules/
 *.bak
 *.pyc
 __pycache__/
+_audit.js
