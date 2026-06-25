@@ -1,6 +1,7 @@
 {
   "model_mappings": {
     "logic_engine_model": "deepseek/deepseek-v4-pro",
-    "narrative_render_model": "deepseek/deepseek-v4-pro"
+    "narrative_render_model": "deepseek/deepseek-v4-pro",
+    "npc_agent_model": "deepseek/deepseek-v4-flash"
   }
 }

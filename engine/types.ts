@@ -658,6 +658,7 @@ export interface GameState {
   shops?: Record<string, { items: string[] }>;       // 运行时货架覆盖（由restock_shop写入，优先级高于shops.json）
   // P4 新增
   tempNPCs?: TempNPCState[];
+  schemaVersion?: number;      // 存档结构版本号（1=2026-06-25 初始版本化）
 }
 
 // ── 手机数据（存储在 Item.phoneData）──

@@ -229,13 +229,8 @@ export async function advanceTimeMinutes(mins: number, ctx: any, gs: any, save: 
   const events = await updateNPCSchedules();
   const { tickSexStates } = await import("../engine/state.ts");
   await tickSexStates(result.daysAdvanced, mins);
-  const { checkTimelineEvents, expireHooks } = await import("../engine/timeline.ts");
-  const { checkDriveDrivenHooks } = await import("../engine/drives.ts");
-  checkTimelineEvents();
-  checkDriveDrivenHooks();
-  const { tickLifeEvents } = await import("../engine/life-events.ts");
-  tickLifeEvents();
-  await expireHooks();
+  const { runWorldTick } = await import("../engine/tick.ts");
+  await runWorldTick();
   gs.player.fatigue = Math.min(100, (gs.player.fatigue ?? 0) + Math.round(mins / 12));
   save();
 
@@ -586,12 +581,12 @@ export async function showPhoneTUI(ctx: any, phoneItem: any) {
   const phoneMenu: MenuItem[] = [];
   const { time, weather } = gameState;
   const { getTodayCalendar } = await import("../engine/timeline.ts");
+  const { getClockParts } = await import("../engine/time.ts");
   const todayEvents = getTodayCalendar();
-  const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
-  const dayStr = dayNames[time.day];
-  
-  phoneMenu.push({ label: `📅 ${time.year}年${time.month}月${time.date}日 星期${dayStr} ${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`, detail: "" });
-  phoneMenu.push({ label: `⛅ ${time.season}季 | ${weather.type} (${weather.temp}°C)`, detail: "" });
+  const clock = getClockParts(time);
+
+  phoneMenu.push({ label: `📅 ${clock.display_date} ${clock.display_time}`, detail: "" });
+  phoneMenu.push({ label: `⛅ ${clock.season}季 | ${weather.type} (${weather.temp}°C)`, detail: "" });
   if (todayEvents) {
     phoneMenu.push({ label: `📌 今日提醒: ${todayEvents}`, detail: "" });
   }

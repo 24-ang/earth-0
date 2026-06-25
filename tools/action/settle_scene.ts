@@ -23,6 +23,8 @@ export default {
       gameState.turn++;
       if (gameState.turn % 4 === 0) refreshWeather();
       const events = await updateNPCSchedules();
+      const { runWorldTick } = await import("../../engine/tick.ts");
+      await runWorldTick();
       // 疲劳累积（受气温疲劳乘数影响）
       const { getFatigueMultiplier } = await import("../../engine/weather.ts");
       const kFatigue = getFatigueMultiplier(gameState.weather?.temp ?? 16);

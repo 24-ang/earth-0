@@ -257,14 +257,16 @@ export default {
 
       try {
         // 从 rendering.json 读取模型配置，不再硬编码 flash 模型名
-        let narrativeModel = "deepseek/deepseek-v4-pro";
+        let narrativeModel = "deepseek/deepseek-v4-flash";
         try {
           const fs = await import("node:fs");
           const path = await import("node:path");
           const cfgPath = path.resolve(process.cwd(), "data", "rendering.json");
           if (fs.existsSync(cfgPath)) {
             const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
-            if (cfg.model_mappings?.narrative_render_model) {
+            if (cfg.model_mappings?.npc_agent_model) {
+              narrativeModel = cfg.model_mappings.npc_agent_model;
+            } else if (cfg.model_mappings?.narrative_render_model) {
               narrativeModel = cfg.model_mappings.narrative_render_model;
             }
           }
@@ -275,7 +277,7 @@ export default {
         }
         // 自动写入 NPC 记忆 + 结构化状态表
         try {
-          const { addMemoryTag } = await import("../../engine/state.ts");
+          const { addMemoryTag, saveState } = await import("../../engine/state.ts");
           addMemoryTag(params.npcName, `[Agent自主发言] ${response.slice(0, 80)}`, 7);
           try {
             const { createRow } = await import("../../engine/scenario-tables.ts");
@@ -283,6 +285,7 @@ export default {
           } catch (err) {
             console.error("createRow error in spawn_npc_agent:", err);
           }
+          saveState();
         } catch (err) {
           console.error("addMemoryTag error in spawn_npc_agent:", err);
         }

@@ -11,7 +11,7 @@ export default {
       reason: Type.String({ description: "出现原因，写入事件日志" }),
     }),
     async execute(_id: string, params: any, _s: any, _o: any, _ctx: any) {
-      const { spawnTempNPC } = await import("../../engine/state.ts");
+      const { spawnTempNPC, saveState } = await import("../../engine/state.ts");
       const result = spawnTempNPC({
         name: params.name,
         act: params.act,
@@ -19,6 +19,7 @@ export default {
         body_hint: params.body_hint,
         reason: params.reason,
       });
+      saveState();
       return {
         content: [{ type: "text", text: result }],
         details: { tempNPC: params.name },

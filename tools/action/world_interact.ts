@@ -66,8 +66,8 @@ export default {
           };
           const result = perceptionCheck(actor, observer, context);
           if (result.seen || result.heard) {
-            gameState.player.flags.exposed = true;
-            gameState.player.flags.wanted = true;
+            gameState.flags.exposed = true;
+            gameState.flags.wanted = true;
             wantedWarning = ` (此区域非你所有，${npc.name}目击/听到了你的非法改造行为并被通缉！)`;
             break;
           }

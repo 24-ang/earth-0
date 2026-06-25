@@ -51,8 +51,8 @@ export function executeGamble(
   // 5. 判定自然大成功/大失败
   if (roll === 1) {
     // 强制失败且被抓包
-    gameState.player.flags.exposed = true;
-    gameState.player.flags.wanted = true;
+    gameState.flags.exposed = true;
+    gameState.flags.wanted = true;
     return {
       success: false,
       roll,

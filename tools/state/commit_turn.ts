@@ -19,6 +19,8 @@ export default {
       gameState.turn++;
       if (gameState.turn % 4 === 0) refreshWeather();
       const events = await updateNPCSchedules();
+      const { runWorldTick } = await import("../../engine/tick.ts");
+      await runWorldTick();
       stampRoom();
       // 疲劳累积：每推进1小时+5疲劳
       gameState.player.fatigue = Math.min(100, (gameState.player.fatigue ?? 0) + Math.round(mins / 12));

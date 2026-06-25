@@ -154,6 +154,7 @@ function createInitialState(): GameState {
     dynamicEvents: [],
     academic_year_offset: 0,
     world_states: {},
+    schemaVersion: 1,
   };
 }
 
@@ -162,7 +163,7 @@ export function recordTurnLog(entry: Omit<TurnLogEntry, "turn" | "timestamp">): 
   const log: TurnLogEntry = {
     ...entry,
     turn: gameState.turn,
-    timestamp: `${gameState.time.year}年${gameState.time.month}月${gameState.time.day}日 ${gameState.time.timeOfDay ?? ""}`,
+    timestamp: gameState.time.game_date + " " + (gameState.time.time_of_day ?? ""),
   };
   gameState.turnLog.push(log);
   // 滚动压缩：超过 10 条时，把最旧 5 条压成摘要
@@ -271,6 +272,10 @@ export function saveState(filepath?: string): void {
   const deltaPath = path.join(targetDir, "locations_delta.json");
   fs.writeFileSync(deltaPath, JSON.stringify(LOCATIONS_DELTA, null, 2));
 
+  // 家具容器持久化（抽屉/柜子里的东西）
+  const fcPath = path.join(targetDir, "furniture_containers.json");
+  fs.writeFileSync(fcPath, JSON.stringify(_furnitureContainerStore, null, 2));
+
   fs.writeFileSync(fp, JSON.stringify(gameState, null, 2));
 }
 
@@ -307,12 +312,18 @@ export function loadState(filepath?: string): boolean {
   } else {
     DYNAMIC_CHARACTERS = {};
   }
-  // 迁移：旧存档无 roomTimestamps
-  if (!gameState.roomTimestamps) gameState.roomTimestamps = {};
-  if (!gameState.world_states) gameState.world_states = {};
-  if (!gameState.player.properties) gameState.player.properties = {};
+  // 恢复家具容器
+  const fcPath = path.join(targetDir, "furniture_containers.json");
+  if (fs.existsSync(fcPath)) {
+    try {
+      Object.assign(_furnitureContainerStore, JSON.parse(fs.readFileSync(fcPath, "utf-8")));
+    } catch (_) {}
+  }
+  // 存档版本迁移——旧档无 schemaVersion 视为 v0，按版本增量跑迁移
+  const currentSchemaVersion = 1;
+  const loadedVersion = gameState.schemaVersion ?? 0;
 
-  // 还原 player.sex 引用，保障跨会话内存修改同步
+  // 还原 player.sex 引用（每次加载都跑，不是迁移）
   if (gameState.player.sex && gameState.sexStates) {
     const partnerName = (gameState.player.sex.profile as any).name;
     if (partnerName && gameState.sexStates[partnerName]) {
@@ -320,102 +331,87 @@ export function loadState(filepath?: string): boolean {
     }
   }
 
-  // 迁移：旧存档 sexStates 中 null 数值字段 → 初始化为 0
-  if (gameState.sexStates) {
-    for (const ss of Object.values(gameState.sexStates)) {
-      if (ss.arousal == null) ss.arousal = 0;
-      if (ss.desire == null) ss.desire = ss.profile.baselineDesire;
-      if (ss.climaxCount == null) ss.climaxCount = 0;
-      if (ss.squirtCount == null) ss.squirtCount = 0;
-      if (ss.climaxed == null) ss.climaxed = false;
-      if (!ss.thoughts) ss.thoughts = [];
-      // 迁移：无 milestones 的旧存档 → 按 experience 推断初始状态
-      if (!ss.milestones) {
-        const isDev = ss.profile.experience === "熟练" || ss.profile.experience === "深度开发";
-        ss.milestones = {
-          virginity: { isVirgin: !isDev, lostTo: isDev ? "?" : null, lostAt: null },
-          firstKiss: { given: isDev, partner: isDev ? "?" : null, date: null },
-          analVirginity: { isVirgin: true, lostTo: null, lostAt: null },
-        };
+  if (loadedVersion < 1) {
+    // ── v0 → v1 迁移：旧存档缺失字段补齐 ──
+    if (!gameState.roomTimestamps) gameState.roomTimestamps = {};
+    if (!gameState.world_states) gameState.world_states = {};
+    if (!gameState.player.properties) gameState.player.properties = {};
+
+    // 旧存档 sexStates 中 null 数值字段 → 初始化为 0
+    if (gameState.sexStates) {
+      for (const ss of Object.values(gameState.sexStates)) {
+        if (ss.arousal == null) ss.arousal = 0;
+        if (ss.desire == null) ss.desire = ss.profile.baselineDesire;
+        if (ss.climaxCount == null) ss.climaxCount = 0;
+        if (ss.squirtCount == null) ss.squirtCount = 0;
+        if (ss.climaxed == null) ss.climaxed = false;
+        if (!ss.thoughts) ss.thoughts = [];
+        if (!ss.milestones) {
+          const isDev = ss.profile.experience === "熟练" || ss.profile.experience === "深度开发";
+          ss.milestones = {
+            virginity: { isVirgin: !isDev, lostTo: isDev ? "?" : null, lostAt: null },
+            firstKiss: { given: isDev, partner: isDev ? "?" : null, date: null },
+            analVirginity: { isVirgin: true, lostTo: null, lostAt: null },
+          };
+        }
       }
     }
-  }
 
-  // 迁移：旧存档 player.age 与 time.player_age 不同步 → 用 time 覆盖 player
-  if (gameState.time?.player_age && gameState.player.age !== gameState.time.player_age) {
-    gameState.player.age = gameState.time.player_age;
-  }
-  // 迁移：旧 bug 存档（timeline_origin.age === 0 → 原为 {year:1992, age:0} 导致 NPC 年龄偏移 16 岁）
-  // 仅修复 age===0 的破档；正常存档的 timeline_origin 必须保持不变（否则 NPC 年龄 delta 清零）
-  if (gameState.time?.timeline_origin && gameState.time.timeline_origin.age === 0) {
-    gameState.time.timeline_origin.age = gameState.time.player_age;
-    gameState.time.timeline_origin.year = Number(gameState.time.game_date.split("-")[0]);
-  }
+    // 旧存档 player.age 与 time.player_age 不同步 → 用 time 覆盖 player
+    if (gameState.time?.player_age && gameState.player.age !== gameState.time.player_age) {
+      gameState.player.age = gameState.time.player_age;
+    }
+    // 旧 bug 存档（timeline_origin.age === 0 → NPC 年龄偏移 16 岁）
+    if (gameState.time?.timeline_origin && gameState.time.timeline_origin.age === 0) {
+      gameState.time.timeline_origin.age = gameState.time.player_age;
+      gameState.time.timeline_origin.year = Number(gameState.time.game_date.split("-")[0]);
+    }
 
-  // 迁移：旧存档 npcs 属性/技能/生命值/存活状态补齐 (包含针对旧字段格式及 partial 对象的容错处理)
-  if (gameState.npcs) {
-    for (const [name, npc] of Object.entries(gameState.npcs)) {
-      const src = findCharacter(name);
-      const defaultAttrs: Attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
-      
-      // 1. 补齐属性 (防范局部属性缺失)
-      npc.attributes ??= { ...defaultAttrs };
-      for (const key of Object.keys(defaultAttrs) as (keyof Attributes)[]) {
-        if (npc.attributes[key] === undefined || typeof npc.attributes[key] !== "number") {
-          npc.attributes[key] = src?.attributes?.[key] ?? defaultAttrs[key];
-        }
-      }
+    // 旧存档 npcs 属性/技能/生命值/存活状态补齐
+    if (gameState.npcs) {
+      for (const [name, npc] of Object.entries(gameState.npcs)) {
+        const src = findCharacter(name);
+        const defaultAttrs: Attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
 
-      // 2. 补齐生命值
-      if (!npc.hp) {
-        const npcAge = src ? getNpcCurrentAge(src.base_age || 16) : 16;
-        const maxHP = src?.hp?.max ?? calcMaxHP(npc.attributes.体质, npcAge);
-        const currentHP = src?.hp?.current ?? maxHP;
-        npc.hp = { current: currentHP, max: maxHP };
-      }
-      if (npc.alive === undefined) {
-        npc.alive = true;
-      }
-
-      // 3. 补齐并归一化技能映射 (支持旧版 Record<string, number> 格式)
-      if (!npc.skills || typeof npc.skills !== "object") {
-        npc.skills = {};
-      }
-      for (const [sName, sVal] of Object.entries(npc.skills) as any) {
-        if (typeof sVal === "number") {
-          npc.skills[sName] = {
-            level: sVal,
-            exp: 0,
-            nextLevel: sVal * 10
-          };
-        } else if (!sVal || typeof sVal.level !== "number") {
-          const defaultLevel = src?.skills?.[sName] ?? 1;
-          npc.skills[sName] = {
-            level: defaultLevel,
-            exp: 0,
-            nextLevel: defaultLevel * 10
-          };
-        }
-      }
-      // 从模板合并缺失的技能
-      if (src && src.skills) {
-        for (const [sName, sLevel] of Object.entries(src.skills)) {
-          if (!npc.skills[sName]) {
-            npc.skills[sName] = {
-              level: sLevel as number,
-              exp: 0,
-              nextLevel: (sLevel as number) * 10
-            };
+        npc.attributes ??= { ...defaultAttrs };
+        for (const key of Object.keys(defaultAttrs) as (keyof Attributes)[]) {
+          if (npc.attributes[key] === undefined || typeof npc.attributes[key] !== "number") {
+            npc.attributes[key] = src?.attributes?.[key] ?? defaultAttrs[key];
           }
         }
-      }
 
-      // 4. 补齐能力映射
-      if (!npc.abilities || typeof npc.abilities !== "object") {
-        npc.abilities = {};
+        if (!npc.hp) {
+          const npcAge = src ? getNpcCurrentAge(src.base_age || 16) : 16;
+          const maxHP = src?.hp?.max ?? calcMaxHP(npc.attributes.体质, npcAge);
+          const currentHP = src?.hp?.current ?? maxHP;
+          npc.hp = { current: currentHP, max: maxHP };
+        }
+        if (npc.alive === undefined) npc.alive = true;
+
+        if (!npc.skills || typeof npc.skills !== "object") npc.skills = {};
+        for (const [sName, sVal] of Object.entries(npc.skills) as any) {
+          if (typeof sVal === "number") {
+            npc.skills[sName] = { level: sVal, exp: 0, nextLevel: sVal * 10 };
+          } else if (!sVal || typeof sVal.level !== "number") {
+            const defaultLevel = src?.skills?.[sName] ?? 1;
+            npc.skills[sName] = { level: defaultLevel, exp: 0, nextLevel: defaultLevel * 10 };
+          }
+        }
+        if (src && src.skills) {
+          for (const [sName, sLevel] of Object.entries(src.skills)) {
+            if (!npc.skills[sName]) {
+              npc.skills[sName] = { level: sLevel as number, exp: 0, nextLevel: (sLevel as number) * 10 };
+            }
+          }
+        }
+
+        if (!npc.abilities || typeof npc.abilities !== "object") npc.abilities = {};
       }
     }
   }
+
+  // 写回最新版本号
+  gameState.schemaVersion = currentSchemaVersion;
 
   return true;
 }
