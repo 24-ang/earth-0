@@ -1,9 +1,9 @@
 import { Type } from "typebox";
-import { generateCompletion, setLastRenderParams, pi } from "../helpers.ts";
+import { generateCompletion, setLastRenderParams, setLastRenderedProse, pi } from "../helpers.ts";
 
 export default {
     name: "render_scene", label: "渲染场景",
-    description: "结算轮完成后调用。传入导演单，引擎调用渲染模型（Flash）产出纯叙事正文。调用后直接输出返回值，禁止再调任何工具。",
+    description: "结算轮完成后调用。引擎拼接导演单，调用叙事模型产出纯叙事正文（可通过rendering.json配置不同于主GM的模型）。调用后禁止再调工具。",
     parameters: Type.Object({
       playerAction: Type.String({ description: "玩家实际做了什么" }),
       resolvedChanges: Type.String({ description: "本轮工具落地的变化，无则写'无'" }),
@@ -47,7 +47,8 @@ export default {
       // 获取 flag 覆盖
       const flagModel = pi.getFlag("render-model") as string | undefined;
       const narrativeModel = flagModel || modelMappings.narrative_render_model;
-      const logicModel = modelMappings.logic_engine_model;
+      // logicModel 预留用于未来可能的多模型分离——当前未使用
+      const _logicModel = modelMappings.logic_engine_model;
 
       // 传统单步回退 Prompt（以备不时之需）
       const fallbackPrompt = [
@@ -68,7 +69,7 @@ export default {
       ].join("\n");
 
       try {
-        // 不需要 LLM 额外调用逻辑模型，直接用纯代码快速、零 Token 拼接生成 <directors_note>
+        // 纯代码拼接 <directors_note>（零 Token 成本）。多模型分离基建已预留（rendering.json + _logicModel），当前未使用。
         const directorsNote = `
 <directors_note>
   <engine_events>
@@ -103,12 +104,19 @@ export default {
           throw new Error("Render model returned empty prose.");
         }
 
-        // 渲染后 Lint 扫描
+        // 渲染后 Lint 扫描 → block 命中自动 retry（最多 3 次）
         const { lintProse } = await import("../../engine/audit/lint-rules.ts");
-        const lintResult = lintProse(prose, gameState);
-        if (lintResult.findings.length > 0) {
+        let retries = 0;
+        const maxRetries = 3;
+        let retryExhausted = false;
+        let allFindings: any[] = [];
+
+        while (retries <= maxRetries) {
+          const lintResult = lintProse(prose, gameState);
+          allFindings = lintResult.findings;
           const blocks = lintResult.findings.filter(f => f.severity === "block");
           const warns = lintResult.findings.filter(f => f.severity === "warn");
+
           if (blocks.length > 0) {
             console.error(`[lint] render_scene: ${blocks.length} block(s) — ${blocks.map(b => b.ruleId).join(", ")}`);
           }
@@ -116,9 +124,32 @@ export default {
             console.warn(`[lint] render_scene: ${warns.length} warn(s) — ${warns.map(w => w.ruleId).join(", ")}`);
           }
           prose = lintResult.prose;
+
+          if (!lintResult.needsRetry) break;
+          if (retries >= maxRetries) {
+            retryExhausted = true;
+            console.warn(`[lint] render_scene: retry exhausted after ${maxRetries} attempts`);
+            break;
+          }
+
+          // 构建纠正 prompt：把违规片段 + 规则喂给模型
+          const blockFindings = allFindings.filter(f => f.severity === "block");
+          const violations = blockFindings.map(f => `• [${f.ruleId}] 违规片段: "${f.excerpt}"`).join("\n");
+          const retryPrompt = [
+            "你的上一版正文触发了以下质量规则，请避免这些问题后重写全文：",
+            violations,
+            "",
+            "重写要求：保持原意和场景不变，≤2段叙事+≤5句对白，融入身体触觉，对话用「」或『』，结尾输出4个扮演选项。",
+            "现在重新输出完整叙事正文：",
+          ].join("\n");
+          retries++;
+          console.warn(`[lint] render_scene: retry ${retries}/${maxRetries}`);
+          prose = await generateCompletion(retryPrompt, 4096, _ctx, narrativeModel);
+          if (!prose) break; // 模型返回空就不重试了
         }
 
-        return { content: [{ type: "text", text: prose }], details: { directorsNote, lintFindings: lintResult?.findings ?? [] } };
+        setLastRenderedProse(prose);
+        return { content: [{ type: "text", text: prose }], details: { directorsNote, lintFindings: allFindings, retries, retryExhausted } };
 
       } catch (e) {
         console.warn("Two-stage rendering pipeline failed, falling back to single-stage rendering:", e);
@@ -133,6 +164,7 @@ export default {
           if (lintResult.findings.length > 0) {
             prose = lintResult.prose;
           }
+          setLastRenderedProse(prose);
           return { content: [{ type: "text", text: prose }], details: { lintFindings: lintResult?.findings ?? [] } };
         } catch (fallbackError) {
           return { content: [{ type: "text", text: fallbackPrompt + `\n(渲染模型调用失败: ${fallbackError instanceof Error ? fallbackError.message : fallbackError}，请GM自行输出叙事)` }], details: {} };

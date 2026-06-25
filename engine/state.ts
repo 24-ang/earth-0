@@ -158,6 +158,23 @@ function createInitialState(): GameState {
   };
 }
 
+// ── 本轮工具调用追踪 ──
+const _turnToolCalls: string[] = [];
+
+/** 记录一个工具被调用（由 registry wrapper 自动调用） */
+export function pushToolCall(name: string): void {
+  if (!_turnToolCalls.includes(name)) {
+    _turnToolCalls.push(name);
+  }
+}
+
+/** 取出并清空本轮工具调用列表 */
+export function drainToolCalls(): string[] {
+  const names = [..._turnToolCalls];
+  _turnToolCalls.length = 0;
+  return names;
+}
+
 // ── Layer 2 回合台账 ──
 export function recordTurnLog(entry: Omit<TurnLogEntry, "turn" | "timestamp">): TurnLogEntry {
   const log: TurnLogEntry = {

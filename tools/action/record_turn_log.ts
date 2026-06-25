@@ -11,14 +11,14 @@ export default {
       nextPressure: Type.String({ description: "下轮应推动什么，无则写'无'" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { recordTurnLog } = await import("../../engine/state.ts");
+      const { recordTurnLog, drainToolCalls } = await import("../../engine/state.ts");
       const entry = recordTurnLog({
         playerAction: params.playerAction,
         resolvedChanges: params.resolvedChanges,
         sceneResult: params.sceneResult,
         openHooks: params.openHooks,
         nextPressure: params.nextPressure,
-        toolsCalled: [], // 引擎自动从本轮工具调用补充
+        toolsCalled: drainToolCalls(),
       });
       return { content: [{ type: "text", text: `台账已记录 (第${entry.turn}回合)` }], details: entry };
     },

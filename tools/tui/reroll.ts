@@ -67,11 +67,29 @@ export default {
           await showPanel(ctx, "🔄 重渲染", ["重渲染失败：模型返回为空。"]);
           return;
         }
-        // 过 lint
+        // 过 lint → block 命中自动 retry（最多 3 次）
         const { lintProse: rerollLint } = await import("../../engine/audit/lint-rules.ts");
-        const lintRes = rerollLint(prose, gameState);
-        if (lintRes.findings.length > 0) {
+        let retries = 0;
+        const maxRetries = 3;
+        while (retries <= maxRetries) {
+          const lintRes = rerollLint(prose, gameState);
+          const blocks = lintRes.findings.filter(f => f.severity === "block");
+          if (blocks.length > 0) {
+            console.error(`[lint] reroll: ${blocks.length} block(s) — ${blocks.map(b => b.ruleId).join(", ")}`);
+          }
           prose = lintRes.prose;
+          if (!lintRes.needsRetry) break;
+          if (retries >= maxRetries) break;
+          const violations = blocks.map(f => `• [${f.ruleId}] "${f.excerpt}"`).join("\n");
+          const retryPrompt = [
+            "上一版正文触发了质量规则，请避免以下问题后重写：",
+            violations,
+            "重写要求：保持原意，≤2段叙事+≤5句对白，融入身体触觉，对话用「」或『』，结尾输出4个扮演选项。",
+            "现在重新输出完整叙事正文：",
+          ].join("\n");
+          retries++;
+          prose = await generateCompletion(retryPrompt, 4096, ctx, narrativeModel);
+          if (!prose) break;
         }
         await showPanel(ctx, "🔄 重渲染", prose.split("\n"));
       } catch (e) {

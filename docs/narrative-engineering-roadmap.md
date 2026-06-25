@@ -75,6 +75,9 @@ visibility: "player_known" | "protagonist_known" | "scene_public" | "hidden_cano
 | **未触发剧情** | 对玩家不可见 |
 
 ### 第 4 层：两段式渲染 (Two-Pass Rendering)
+
+**当前状态**（2026-06-26）：✅ 单模型先行版已落地。gm-contract.md 定义了三段式工作流（结算轮→角色轮→渲染轮），三个阶段职责边界清晰（结算轮禁写叙事，渲染轮禁调工具）。纯代码拼接 `<directors_note>` 零 Token 成本。双模型物理分离（结算用便宜模型、渲染用贵模型）的基建已预留（`rendering.json` 的 `logic_engine_model` 字段），待 pi 框架支持或用户需求驱动时激活。
+
 **目标**：将工具纪律与文笔剥离，达到顶级的叙事体验与逻辑稳定性。
 
 **做法**：利用 `pi` 框架未来的插件或脚本，将一个回合拆分为两次调用：

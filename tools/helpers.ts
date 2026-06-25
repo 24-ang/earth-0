@@ -19,9 +19,18 @@ export let lastRenderParams: {
   npcResponses?: string;
 } | null = null;
 
+/** 最近一次 render_scene 的正文（含选项），供 /choice 解析 */
+export let lastRenderedProse: string | null = null;
+
 export function setLastRenderParams(params: typeof lastRenderParams) {
   lastRenderParams = params;
 }
+
+export function setLastRenderedProse(prose: string) {
+  lastRenderedProse = prose;
+}
+
+export { parseRoleOptions } from "../engine/parse-options.ts";
 
 export function getStringWidth(str: string): number {
   return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);

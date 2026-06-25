@@ -5,7 +5,9 @@ export default {
     description: "推进游戏时间（分钟）。下课/放学/等待时调用。",
     parameters: Type.Object({ minutes: Type.Number() }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
-      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, stampRoom, cleanupTempNPCs } = await import("../../engine/state.ts");
+      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, stampRoom, cleanupTempNPCs, drainToolCalls } = await import("../../engine/state.ts");
+      // 清掉上轮残留（如果有），开始新一轮追踪
+      drainToolCalls();
       const { advanceMinutes } = await import("../../engine/time.ts");
       const cleanupMsgs = cleanupTempNPCs("回合结束");
       const mins = params.minutes;

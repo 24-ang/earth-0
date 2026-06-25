@@ -22,8 +22,10 @@ import {
   mountVehicle, dismountVehicle, getVehicleMul, calcInventoryVolume,
   getCurrency, getConstructionMultiplier, loadActiveWorld,
   getNearbyNPCs, getContainersAt, transferBetweenContainers, findContainerById,
+  pushToolCall, drainToolCalls,
 } from "./engine/state.ts";
 
+import { parseRoleOptions } from "./engine/parse-options.ts";
 import { check, checkDC, attackRoll, rollDamage } from "./engine/dice.ts";
 import { perceptionCheck } from "./engine/perception.ts";
 import { lookupRegion } from "./engine/router.ts";
@@ -4710,6 +4712,85 @@ test("INTEGRATION: reveal_secret 调了 saveState", async () => {
   if (mtimeAfter <= mtimeBefore) {
     throw new Error("reveal_secret 执行后 session.json 未更新——可能漏了 saveState()");
   }
+});
+
+test("INTEGRATION: pushToolCall / drainToolCalls 追踪本轮工具调用", () => {
+  // 清掉前置测试残留
+  drainToolCalls();
+  // 模拟一轮：工具调用被追踪 → drain 清空
+  pushToolCall("buy_item");
+  pushToolCall("adjust_relation");
+  pushToolCall("buy_item"); // 重复调用只记一次
+  const calls = drainToolCalls();
+  if (!calls.includes("buy_item")) throw new Error("toolsCalled 缺少 buy_item");
+  if (!calls.includes("adjust_relation")) throw new Error("toolsCalled 缺少 adjust_relation");
+  if (calls.length !== 2) throw new Error(`toolsCalled 应含 2 个去重工具，实际 ${calls.length}: ${calls.join(",")}`);
+  // drain 后应清空
+  const after = drainToolCalls();
+  if (after.length !== 0) throw new Error("drainToolCalls 未清空");
+});
+
+test("INTEGRATION: recordTurnLog 的 toolsCalled 非空", async () => {
+  // 先 push 几个工具
+  pushToolCall("buy_item");
+  pushToolCall("world_interact");
+  // 调 record_turn_log（它会 drain）
+  const { recordTurnLog } = await import("./engine/state.ts");
+  const entry = recordTurnLog({
+    playerAction: "test buy",
+    resolvedChanges: "bought item",
+    sceneResult: "done",
+    openHooks: "无",
+    nextPressure: "无",
+    toolsCalled: drainToolCalls(),
+  });
+  if (!entry.toolsCalled.includes("buy_item")) {
+    throw new Error(`台账 toolsCalled 缺 buy_item，实际: ${entry.toolsCalled}`);
+  }
+  if (!entry.toolsCalled.includes("world_interact")) {
+    throw new Error(`台账 toolsCalled 缺 world_interact，实际: ${entry.toolsCalled}`);
+  }
+});
+
+test("INTEGRATION: parseRoleOptions 正确分离正文和选项", () => {
+  const prose = [
+    "风从走廊尽头灌进来。雪之下头也没抬，「那是你的问题。」",
+    "",
+    "---",
+    "> ① [普通]: 「打扰了，学姐。」",
+    "> ② [理智]: 「其实我只是陈述事实。」",
+    "> ③ [吐槽]: 「还是一如既往的冷啊。」",
+    "> ④ [大胆]: *走上前凑近看书页*",
+  ].join("\n");
+  const { prose: clean, options } = parseRoleOptions(prose);
+  if (!clean.includes("风从走廊尽头灌进来")) throw new Error("clean prose 应保留正文");
+  if (clean.includes("---")) throw new Error("clean prose 不应含分割线");
+  if (options.length !== 4) throw new Error(`应有 4 个选项，实际 ${options.length}`);
+  if (options[0] !== "「打扰了，学姐。」") throw new Error(`选项1 应为台词，实际: ${options[0]}`);
+  if (options[3] !== "*走上前凑近看书页*") throw new Error(`选项4 应为行动，实际: ${options[3]}`);
+});
+
+test("INTEGRATION: parseRoleOptions 无选项正文 → 空数组", () => {
+  const prose = "风从走廊尽头灌进来。雪之下头也没抬，「那是你的问题。」";
+  const { prose: clean, options } = parseRoleOptions(prose);
+  if (clean !== prose) throw new Error("无选项正文应原样返回");
+  if (options.length !== 0) throw new Error(`应无选项，实际 ${options.length}`);
+});
+
+test("INTEGRATION: lint 引擎 block-rule 命中 → needsRetry=true", async () => {
+  const { lintProse } = await import("./engine/audit/lint-rules.ts");
+  // panel-value-leak: "好感度 50" 应触发 block
+  const r1 = lintProse("他看了一眼雪乃。好感度 50。", gameState);
+  if (!r1.needsRetry) throw new Error("panel-value-leak 应触发 needsRetry");
+  // pseudo-menu-ending: "你可以...也可以..." 应触发 block
+  const r2 = lintProse("风吹过走廊。你可以选择去教室，也可以去操场。", gameState);
+  if (!r2.needsRetry) throw new Error("pseudo-menu-ending 应触发 needsRetry");
+  // report-sentence: "目标完成" 应触发 block
+  const r3 = lintProse("今天去了便利店。目标完成。", gameState);
+  if (!r3.needsRetry) throw new Error("report-sentence 应触发 needsRetry");
+  // 正常叙事不应触发 block
+  const r4 = lintProse("风从走廊尽头灌进来。雪之下头也没抬，「那是你的问题。」", gameState);
+  if (r4.needsRetry) throw new Error("正常叙事不应触发 needsRetry");
 });
 
 test("INTEGRATION: set_flags 改状态后 saveState 有调", () => {
