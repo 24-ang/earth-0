@@ -4633,6 +4633,105 @@ test("INTEGRATION: 手机顶栏渲染无脏值", async () => {
   }
 });
 
+// ── saveState 自检测试：确保改状态的工具真正落盘 ──
+// 以后新加工具如果改 gameState 但不调 saveState，这个测试会炸。
+
+test("INTEGRATION: toggle_layer1 调了 saveState", async () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+
+  const tool = require("./tools/state/toggle_layer1.ts").default;
+  await tool.execute("test", {}, null, null, null);
+
+  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
+  if (mtimeAfter <= mtimeBefore) {
+    throw new Error("toggle_layer1 执行后 session.json 未更新——可能漏了 saveState()");
+  }
+});
+
+test("INTEGRATION: add_calendar_event 调了 saveState", async () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+
+  const tool = require("./tools/action/add_calendar_event.ts").default;
+  await tool.execute("test", { date: "1月1日", location: "测试", text: "集成测试" }, null, null, null);
+
+  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
+  if (mtimeAfter <= mtimeBefore) {
+    throw new Error("add_calendar_event 执行后 session.json 未更新——可能漏了 saveState()");
+  }
+});
+
+test("INTEGRATION: spawn_temp_npc 调了 saveState", async () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+
+  const tool = require("./tools/action/spawn_temp_npc.ts").default;
+  await tool.execute("test", { name: "测试路人", act: "站着发呆", reason: "集成测试" }, null, null, null);
+
+  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
+  if (mtimeAfter <= mtimeBefore) {
+    throw new Error("spawn_temp_npc 执行后 session.json 未更新——可能漏了 saveState()");
+  }
+});
+
+test("INTEGRATION: reveal_secret 调了 saveState", async () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+
+  // 先往 revealLog 塞一条可升级的秘密
+  gameState.revealLog.push({
+    id: "_test_secret",
+    content: "测试秘密",
+    fromLevel: "hidden_canonical" as any,
+    toLevel: "protagonist_known" as any,
+    revealedAt: gameState.time.game_date,
+    turn: gameState.turn,
+  });
+  saveState();
+
+  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+  const tool = require("./tools/action/reveal_secret.ts").default;
+  await tool.execute("test", {
+    id: "_test_secret",
+    content: "揭示内容",
+    fromLevel: "protagonist_known",
+    toLevel: "player_known",
+  }, null, null, null);
+
+  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
+  if (mtimeAfter <= mtimeBefore) {
+    throw new Error("reveal_secret 执行后 session.json 未更新——可能漏了 saveState()");
+  }
+});
+
+test("INTEGRATION: set_flags 改状态后 saveState 有调", () => {
+  // set_flags 是通用的改状态工具，验证它落盘
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+
+  // 确保 session.json 存在
+  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+
+  gameState.flags._test_set_flags = true;
+  saveState();
+
+  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
+  if (mtimeAfter <= mtimeBefore) {
+    throw new Error("set_flags 落盘验证失败：saveState 未刷新 session.json");
+  }
+  delete gameState.flags._test_set_flags;
+  saveState();
+});
+
 (async () => {
   for (const t of testQueue) {
     try {
