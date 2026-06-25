@@ -10,8 +10,9 @@ export default {
       toLevel: Type.String({ description: "目标可见级别" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { revealSecret, gameState } = await import("../../engine/state.ts");
+      const { revealSecret, gameState, saveState } = await import("../../engine/state.ts");
       const r = revealSecret(params.id, params.content, params.fromLevel as any, params.toLevel as any);
+      saveState();
       return { content: [{ type: "text", text: `秘密已揭示: ${r.id} (${r.fromLevel} → ${r.toLevel})` }], details: r };
     },
   };

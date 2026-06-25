@@ -142,6 +142,45 @@ export function advanceMinutes(state: TimeState, minutes: number): { newDate: st
   return { newDate, dayOfWeek, timeOfDay: tod, daysAdvanced };
 }
 
+// --- 时间显示辅助 ---
+export interface ClockParts {
+  year: number;
+  month: number;
+  date: number;
+  hour: number;
+  minute: number;
+  weekday: string;        // "月" / "火" / ...
+  season: string;         // "春" / "夏" / "秋" / "冬"
+  display_date: string;   // "2018年4月7日 星期土"
+  display_time: string;   // "08:00"
+}
+
+/** 从 TimeState 的真实字段算出所有显示用的时间组件。
+ *  TimeState 只有 game_date + minute_of_day + day_of_week，没有 year/month/hour 等独立字段。
+ *  手机顶栏、台账时间戳等需要这些字段的地方，统一通过这个函数拿，不要再直接读 time.xxx。 */
+export function getClockParts(t: TimeState): ClockParts {
+  const [y, m, d] = t.game_date.split("-").map(Number);
+  const hour = Math.floor(t.minute_of_day / 60);
+  const minute = t.minute_of_day % 60;
+
+  let season = "冬";
+  if (m >= 3 && m <= 5) season = "春";
+  else if (m >= 6 && m <= 8) season = "夏";
+  else if (m >= 9 && m <= 11) season = "秋";
+
+  return {
+    year: y,
+    month: m,
+    date: d,
+    hour,
+    minute,
+    weekday: t.day_of_week,
+    season,
+    display_date: `${y}年${m}月${d}日 星期${t.day_of_week}`,
+    display_time: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+  };
+}
+
 /** 初始时间状态 */
 export const INITIAL_TIME_STATE: TimeState = {
   game_date: "2018-04-07",

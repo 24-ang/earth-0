@@ -389,6 +389,7 @@ test("loadState 修复旧 bug 存档 timeline_origin.age===0", () => {
   gameState.time.timeline_origin = { year: 1992, age: 0 };
   gameState.player.age = 16;
   gameState.time.game_date = "2018-04-07";
+  gameState.schemaVersion = undefined; // 模拟旧存档无版本号
   saveState();
   loadState();
   // 旧存档应被修复：age 从 0 纠正为 player_age
@@ -502,6 +503,7 @@ test("loadState 迁移旧存档补 milestones", async () => {
     profile: { baselineDesire: 40, attitude: "顺从" as any, experience: "未开发" as any, bodyParts: {}, cycleDay: 7, climaxThreshold: 35, likes: [], dislikes: [] },
     desire: 40, arousal: 0, cycleDay: 7, cyclePhase: "安全期", climaxed: false, climaxCount: 0, squirtCount: 0, thoughts: [],
   };
+  gameState.schemaVersion = undefined; // 模拟旧存档无版本号
   saveState();
   loadState();
   const ss = gameState.sexStates?.["测试"];
@@ -514,6 +516,7 @@ test("loadState 迁移熟練角色推断为非处", async () => {
     profile: { baselineDesire: 50, attitude: "主动" as any, experience: "熟练" as any, bodyParts: {}, cycleDay: 8, climaxThreshold: 50, likes: [], dislikes: [] },
     desire: 50, arousal: 0, cycleDay: 8, cyclePhase: "安全期", climaxed: false, climaxCount: 0, squirtCount: 0, thoughts: [],
   };
+  gameState.schemaVersion = undefined; // 模拟旧存档无版本号
   saveState();
   loadState();
   const ss = gameState.sexStates?.["测试2"];
@@ -2553,7 +2556,7 @@ test("⑳ Gambling: executeGamble & getBlackMarketPrice", async () => {
   if (res1.success || res1.critical !== "fail") {
     throw new Error("Math.random 为 0.0 时应触发 Nat 1 失败");
   }
-  if (!gameState.player.flags.exposed || !gameState.player.flags.wanted) {
+  if (!gameState.flags.exposed || !gameState.flags.wanted) {
     throw new Error("Nat 1 失败后应被通缉/暴露");
   }
   if (gameState.player.funds !== 50) {
@@ -2699,7 +2702,7 @@ test("㉑ Housing: purchaseOrRentProperty, transferHousingStorage & settleHousin
   const interactTool = registeredTools["world_interact"];
   await interactTool.execute("id", { action: "place", item: "台灯" }, null, null, null);
 
-  if (!gameState.player.flags.exposed || !gameState.player.flags.wanted) {
+  if (!gameState.flags.exposed || !gameState.flags.wanted) {
     throw new Error("安全屋外非法改装应该触发通缉暴露");
   }
 });
@@ -4424,6 +4427,50 @@ test("P4: hostile NPC stored correctly", async () => {
   const enemy = temps.find(t => t.name === "敌方混混");
   if (!enemy) throw new Error("敌方混混未找到");
   if (enemy.hostility !== "敌对") throw new Error(`应为敌对，实际: ${enemy.hostility}`);
+});
+
+// ── 集成测试：接线层回归防线 ──
+
+test("INTEGRATION: getClockParts 输出不含 undefined", () => {
+  const { getClockParts } = require("./engine/time.ts");
+  const clock = getClockParts(gameState.time);
+  if (clock.year === undefined || clock.year === null) throw new Error("year 为 undefined/null");
+  if (clock.month === undefined || clock.month === null) throw new Error("month 为 undefined/null");
+  if (clock.date === undefined || clock.date === null) throw new Error("date 为 undefined/null");
+  if (clock.hour === undefined || clock.hour === null) throw new Error("hour 为 undefined/null");
+  if (clock.minute === undefined || clock.minute === null) throw new Error("minute 为 undefined/null");
+  if (clock.weekday === undefined || clock.weekday === null) throw new Error("weekday 为 undefined/null");
+  if (clock.season === undefined || clock.season === null) throw new Error("season 为 undefined/null");
+  if (clock.display_date.includes("undefined")) throw new Error(`display_date 包含 undefined: ${clock.display_date}`);
+  if (clock.display_time.includes("undefined")) throw new Error(`display_time 包含 undefined: ${clock.display_time}`);
+});
+
+test("INTEGRATION: 工具执行后 saveState 确实落盘", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+  if (!fs.existsSync(STATE_FILE)) throw new Error("session.json 不存在");
+  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+  // 模拟一次工具里的写操作
+  gameState.flags._test_save_detection = true;
+  saveState();
+  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
+  if (mtimeAfter <= mtimeBefore) {
+    throw new Error("saveState() 后 session.json mtime 未变化——saveState 未真正写入磁盘");
+  }
+  delete gameState.flags._test_save_detection;
+  saveState();
+});
+
+test("INTEGRATION: buildStatePrompt 输出不含 undefined", async () => {
+  const prompt = await buildStatePrompt();
+  // 时间相关不能有 undefined
+  if (prompt.includes("undefined年") || prompt.includes("undefined月") || prompt.includes("undefined日")) {
+    throw new Error("buildStatePrompt 输出包含 undefined 时间——手机顶栏会显示乱码");
+  }
+  if (prompt.includes("undefined:")) {
+    throw new Error("buildStatePrompt 输出包含 undefined: 前缀——有字段读取了不存在的属性");
+  }
 });
 
 (async () => {

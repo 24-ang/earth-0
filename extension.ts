@@ -59,6 +59,8 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
       const parts: string[] = [];
       
       for (const key of layers) {
+        // 开局流程只在第一回合需要。开局后跳过，省 ~1.5KB/回合。
+        if (key === "start" && gameState.turn > 0) continue;
         const layerKey = key.replace("{mode}", gameState.mode);
         const layerConfig = presetData.layers[layerKey];
         if (!layerConfig) continue;

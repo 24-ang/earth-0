@@ -6,6 +6,7 @@
 
 - `docs/framework-optimization-log.md` — 为什么这么设计（工具压缩/场景提示/时间线/世界观挂载）
 - `docs/module-template.md` — 新模块开发模板（工具注册/场景映射/prompt注入/数据文件）
+- `docs/decisions.md` — 反直觉的设计决策（容易被当成 bug 删掉的东西）
 
 ## 核心原则
 
@@ -13,7 +14,8 @@
 2. **工具 description ≤ 25 中文字**：一行说清，action 值用 `|` 分隔
 3. **新模块只需三件事**：注册工具 → 加场景映射 → 放数据文件
 4. **改框架层代码前**：先开新分支，在分支上实验，验证后再合并回 rebuild
-5. **做任何改动后**：跑 `npx tsx test.ts`，必须 ≥ 125 passed, 0 failed
+5. **做任何改动后**：跑 `npx tsx test.ts`，必须 ≥ 215 passed, 0 failed
+6. **每次改动后记录决策**：加了新工具/修了坑/做了反直觉取舍 → 在 `docs/decisions.md` 末尾补一条（一句话够）。新增工具还要在 `docs/tools-list.md` 登记一行。改动前先和用户商量，确认后再写代码和记录。
 
 ## 不要做的事
 

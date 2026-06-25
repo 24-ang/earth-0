@@ -1,4 +1,4 @@
-state/
+/state/
 sessions/
 scratch/
 .pi/agent/auth.json

@@ -26,6 +26,7 @@ export default {
       
       gameState.calendarEvents.push(newEvent);
       clearCalendarCache();
+      saveState();
       return { content: [{ type: "text", text: `已成功在日历中添加日程: ${params.date} [${params.location || "任意地点"}] ${params.text}` }], details: { event: newEvent } };
     }
   };
