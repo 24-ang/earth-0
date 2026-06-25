@@ -128,6 +128,24 @@
 
 ---
 
+## 8. 所有世界专属数据只改 worldpacks/<世界>/，不改 data/
+
+**是什么**：角色、物品、房间、商店、日程、sex_profiles 等世界专属数据，真正的"活数据"在 `worldpacks/<世界>/` 下面。`data/` 下的同名文件只是 TS 静态导入需要的兜底模板——**改了也不会在游戏里生效**。
+
+**为什么**：
+- 引擎的 `loadJSON()` 逻辑是：worldpack 有这个文件 → 用它；没有 → 回退读 `data/`
+- 每次启动都跑 `loadJSON()`，永远覆盖掉 `data/` 的静态导入版本
+- `data/` 保留这些文件是因为 TypeScript 的 `import ... with { type: "json" }` 必须在编译时找到文件，删了启动炸
+
+**怎么知道自己改对了没有**：引擎启动时会自动比较 `data/` 和 `worldpacks/<世界>/` 的条目数。如果 data/ 比 worldpack 多，会打印明确的警告。
+
+**不要做**：❌ 在 `data/` 下改角色卡、改物品、改商店——改了你白干。❌ 删掉 `data/` 下的世界专属文件——启动会炸。
+**可以做**：跨世界通用的（achievements、housing、villain_templates、world_secrets、rendering）留在 `data/`，这些都是没有 worldpack 对应文件的。
+
+**相关代码**：`engine/state.ts:4050-4070`（loadJSON 加载逻辑）, `state.ts:1118-1144`（脑裂检测警告）
+
+---
+
 ## 模板
 
 新决策用这个格式：

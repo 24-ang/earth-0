@@ -4069,6 +4069,44 @@ export function loadActiveWorld(worldName?: string): void {
     roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
     sexProfilesData = loadJSON("sex_profiles.json", sexProfilesStatic);
 
+    // ── 脑裂检测：data/ 比 worldpack 内容多 → 警告 ──
+    // 你正在改 data/ 下的文件，但游戏运行时读的是 worldpacks/<world>/。
+    // 如果 data/ 版本条目数明显大于 worldpack 版本，说明有修改不会在游戏中生效。
+    try {
+      const checks: Array<{ label: string; dataVar: any; worldVar: any; measure: (v: any) => number }> = [
+        { label: "characters.json",      dataVar: charactersStatic,      worldVar: characters,           measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
+        { label: "sex_profiles.json",    dataVar: sexProfilesStatic,     worldVar: sexProfilesData,      measure: v => Object.keys(v).length },
+        { label: "items.json",           dataVar: itemsCatalogStatic,    worldVar: itemsCatalog,         measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
+        { label: "rooms.json",           dataVar: roomsStatic,           worldVar: rooms,                measure: v => Object.keys(v).length },
+        { label: "shops.json",           dataVar: shopsCatalogStatic,    worldVar: shopsCatalog,         measure: v => Object.keys(v).length },
+        { label: "regions.json",         dataVar: regionsDataStatic,     worldVar: regionsData,          measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
+        { label: "locations.json",       dataVar: locationsDataStatic,   worldVar: locationsData,        measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
+        { label: "schedule_templates.json", dataVar: scheduleTemplatesStatic, worldVar: scheduleTemplates, measure: v => Object.keys(v).length },
+        { label: "school_map.json",      dataVar: schoolMapDataStatic,   worldVar: schoolMapData,        measure: v => Object.keys(v).length },
+        { label: "city_map.json",        dataVar: cityMapDataStatic,     worldVar: cityMapData,          measure: v => Object.keys(v).length },
+        { label: "character_stages.json",dataVar: charStagesStatic,      worldVar: charStages,           measure: v => Object.keys(v).length },
+        { label: "title_rules.json",     dataVar: titleRulesStatic,      worldVar: titleRules,           measure: v => Object.keys(v).length },
+        { label: "nameless_npc_templates.json", dataVar: namelessNpcTemplatesStatic, worldVar: namelessNpcTemplates, measure: v => Object.keys(v).length },
+        { label: "economy.json",         dataVar: economyConfigStatic,   worldVar: economyConfig,        measure: v => Object.keys(v).length },
+        { label: "phone_apps.json",      dataVar: phoneAppsCatalogStatic,worldVar: phoneAppsCatalog,     measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
+        { label: "positions.json",       dataVar: positionsCatalogStatic,worldVar: positionsCatalog,     measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
+        { label: "room_templates.json",  dataVar: roomTemplatesStatic,   worldVar: roomTemplates,        measure: v => Object.keys(v).length },
+      ];
+      const warnings: string[] = [];
+      for (const c of checks) {
+        const dataSize = c.measure(c.dataVar);
+        const worldSize = c.measure(c.worldVar);
+        if (dataSize > worldSize) {
+          warnings.push(`  data/${c.label} (${dataSize}条) > worldpacks/${world}/${c.label} (${worldSize}条)`);
+        }
+      }
+      if (warnings.length > 0) {
+        console.warn(`\n[脑裂警告] data/ 下以下文件内容比 worldpacks/${world}/ 多，你改的东西不会在游戏中生效：`);
+        console.warn(warnings.join("\n"));
+        console.warn(`请把修改同步到 worldpacks/${world}/ 下的对应文件。\n`);
+      }
+    } catch (_) {}
+
     // Re-initialize dependent variables
     ROOMS = structuredClone(rooms);
     LOCATIONS_BASE = locationsData as any;
