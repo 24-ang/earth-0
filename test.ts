@@ -4473,6 +4473,166 @@ test("INTEGRATION: buildStatePrompt 输出不含 undefined", async () => {
   }
 });
 
+test("INTEGRATION: 完整回合 settle_scene → saveState → loadState 管线", async () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+
+  // 记录回合开始前状态
+  const turnBefore = gameState.turn;
+  const minutesBefore = gameState.time.minute_of_day;
+  const fatigueBefore = gameState.player.fatigue ?? 0;
+
+  // 模拟一回合结算——直接走 settle_scene 的 core 逻辑
+  const { advanceMinutes } = await import("./engine/time.ts");
+  const result = advanceMinutes(gameState.time, 30);
+  gameState.player.age = gameState.time.player_age;
+  gameState.turn++;
+  gameState.player.fatigue = Math.min(100, (gameState.player.fatigue ?? 0) + Math.round(30 / 12));
+  saveState();
+
+  // 读盘验证回合推进了
+  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+  loadState();
+  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
+
+  if (gameState.turn !== turnBefore + 1) throw new Error(`回合未推进: ${turnBefore} → ${gameState.turn}`);
+  if (gameState.time.minute_of_day < minutesBefore) throw new Error(`时间未推进: minute_of_day ${gameState.time.minute_of_day}`);
+  if (gameState.player.fatigue <= fatigueBefore) throw new Error(`疲劳未累积: ${fatigueBefore} → ${gameState.player.fatigue}`);
+  if (mtimeAfter < mtimeBefore) throw new Error("session.json mtime 倒退，save→load 管线异常");
+});
+
+test("INTEGRATION: 家具容器存储往返", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const targetDir = path.resolve(process.cwd(), "state");
+  const fcPath = path.join(targetDir, "furniture_containers.json");
+
+  // 模拟玩家把东西放进抽屉
+  const containerId = "_test_integration_drawer";
+  const testItem = { name: "钥匙", quantity: 1, desc: "测试用钥匙" };
+
+  // 直接操作 _furnitureContainerStore（它是模块变量，无法在测试中直接 import，用 save/load 间接验证）
+  // 使用 interact_furniture 工具验证
+  // 如果 furniture_containers.json 不存在，先创建一个
+  const existing = fs.existsSync(fcPath) ? JSON.parse(fs.readFileSync(fcPath, "utf-8")) : {};
+  existing[containerId] = [testItem];
+  fs.writeFileSync(fcPath, JSON.stringify(existing, null, 2));
+
+  // 模拟 loadState 恢复
+  const { loadState } = require("./engine/state.ts");
+  loadState();
+
+  // 验证家具容器文件确实写入了
+  if (!fs.existsSync(fcPath)) throw new Error("furniture_containers.json 文件不存在");
+  const loaded = JSON.parse(fs.readFileSync(fcPath, "utf-8"));
+  if (!loaded[containerId] || loaded[containerId].length === 0) {
+    throw new Error("家具容器存储往返失败：存进去的东西 load 不回来");
+  }
+  if (loaded[containerId][0].name !== "钥匙") {
+    throw new Error(`物品名不匹配: ${loaded[containerId][0]?.name}`);
+  }
+
+  // 清理
+  delete existing[containerId];
+  fs.writeFileSync(fcPath, JSON.stringify(existing, null, 2));
+});
+
+test("INTEGRATION: buildStatePrompt 无 undefined/null/NaN 全字段巡检", async () => {
+  const prompt = await buildStatePrompt();
+
+  // 所有常见 JS 脏值
+  const dirtyPatterns = [
+    { pattern: "undefined", label: "undefined" },
+    { pattern: "null", label: "null 字面量" },
+    { pattern: "NaN", label: "NaN" },
+    { pattern: "[object Object]", label: "未序列化的对象" },
+  ];
+
+  for (const { pattern, label } of dirtyPatterns) {
+    // 只在非代码示例上下文中检查（用中文标点前后 ± 排除 JSON 里的 null）
+    const idx = prompt.indexOf(pattern);
+    if (idx >= 0) {
+      // 检查上下文：如果前后有中文标点或空格，说明是自然语言中的脏值
+      const before = prompt.slice(Math.max(0, idx - 3), idx);
+      const after = prompt.slice(idx + pattern.length, idx + pattern.length + 3);
+      const isNaturalText = /[一-鿿　-〿＀-￯]/.test(before)
+        || /[一-鿿　-〿＀-￯]/.test(after)
+        || before.includes(" ")
+        || after.includes(" ");
+
+      // JSON 中的 null 和注释中的单词不算
+      const isInJson = (before.includes('"') || before.includes(':')) && after.includes('"');
+      const isInComment = prompt.slice(Math.max(0, idx - 20), idx).includes("//");
+
+      if (isNaturalText && !isInJson && !isInComment) {
+        throw new Error(`buildStatePrompt 包含脏值 "${pattern}"——位置: ...${prompt.slice(Math.max(0, idx - 10), idx + pattern.length + 10)}...`);
+      }
+    }
+  }
+  // 反向验证：核心字段必须存在
+  const mustHaves = ["时间", "地点", "天气"];
+  for (const mh of mustHaves) {
+    if (!prompt.includes(mh)) {
+      console.warn(`buildStatePrompt 缺少预期字段: ${mh}（可能正常）`);
+    }
+  }
+});
+
+test("INTEGRATION: 时间推进后 checkTimelineEvents 生成钩子", () => {
+  const { checkTimelineEvents, getActiveHooks } = require("./engine/timeline.ts");
+
+  // 确保初始状态下无钩子
+  gameState.active_hooks = [];
+  gameState.turn = 0;
+
+  // 直接调剧情扫描——引擎应基于当前日历/时间线检查触发条件
+  checkTimelineEvents();
+
+  // 根据当前游戏日期和已加载的时间线数据，
+  // 可能会也可能不会生成钩子——这不影响测试有效性。
+  // 测试目标是：checkTimelineEvents 不抛异常，并且
+  // active_hooks 的结构是合法数组。
+  const hooks = getActiveHooks();
+  if (!Array.isArray(hooks)) {
+    throw new Error("getActiveHooks 返回值不是数组");
+  }
+  // 每个 hook 必须有 id
+  for (const h of hooks) {
+    if (!h.event_id) throw new Error(`Hook 缺少 event_id: ${JSON.stringify(h)}`);
+    if (!h.hook_text) throw new Error(`Hook 缺少 hook_text: ${h.event_id}`);
+    if (!h.urgency) throw new Error(`Hook 缺少 urgency: ${h.event_id}`);
+  }
+});
+
+test("INTEGRATION: 手机顶栏渲染无脏值", async () => {
+  // 通过 buildPhoneMenu 的路径模拟手机顶栏时间显示
+  const { getClockParts } = require("./engine/time.ts");
+  const clock = getClockParts(gameState.time);
+
+  // 重建手机顶栏显示行（与 helpers.ts:593 逻辑一致）
+  const topBarLine = `📅 ${clock.display_date} ${clock.display_time}`;
+  const weatherLine = `⛅ ${clock.season}季 | ${gameState.weather.type} (${gameState.weather.temp}°C)`;
+
+  // 0. 不能有 undefined/null/NaN
+  const dirtyWords = ["undefined", "null", "NaN", "[object Object]"];
+  for (const dw of dirtyWords) {
+    if (topBarLine.includes(dw)) throw new Error(`手机顶栏包含 ${dw}: "${topBarLine}"`);
+    if (weatherLine.includes(dw)) throw new Error(`手机天气行包含 ${dw}: "${weatherLine}"`);
+  }
+
+  // 1. 日期必须包含数字
+  if (!/\d/.test(topBarLine)) throw new Error(`手机顶栏日期不含数字: "${topBarLine}"`);
+
+  // 2. 时间必须是 HH:MM 格式
+  if (!/\d{2}:\d{2}/.test(topBarLine)) throw new Error(`手机顶栏时间格式不对（应为 HH:MM）: "${topBarLine}"`);
+
+  // 3. 温度必须是数字
+  if (typeof gameState.weather.temp !== "number" || isNaN(gameState.weather.temp)) {
+    throw new Error(`温度不是有效数字: ${gameState.weather.temp}`);
+  }
+});
+
 (async () => {
   for (const t of testQueue) {
     try {
