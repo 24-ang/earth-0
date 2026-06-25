@@ -23,9 +23,9 @@ export default {
       const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
       const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
 
-      async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<string> {
+      async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<{response: string; outfit: string}> {
         const src = findCharacter(npcName);
-        if (!src) return `${npcName}（未找到）`;
+        if (!src) return {response: `${npcName}（未找到）`, outfit: ""};
 
         const npc = getOrCreateNPC(npcName);
         const rel = gameState.player.relationships[npcName];
@@ -117,11 +117,11 @@ export default {
             }
           } catch (_) {}
           const response = await generateCompletion(prompt, 512, _ctx, narrativeModel);
-          if (!response) return `${npcName}（沉默）`;
-          return response;
+          if (!response) return {response: `${npcName}（沉默）`, outfit: ""};
+          return {response, outfit: outfit || ""};
         } catch (e) {
           console.error("generateCompletion error in spawn_npc_agents runOne:", e);
-          return `${npcName}（沉默）`;
+          return {response: `${npcName}（沉默）`, outfit: ""};
         }
       }
 
@@ -135,11 +135,12 @@ export default {
       try {
         const { addMemoryTag, saveState } = await import("../../engine/state.ts");
         for (let i = 0; i < filteredNPCs.length; i++) {
-          if (!results[i].includes("（沉默）") && !results[i].includes("（未找到）")) {
-            addMemoryTag(filteredNPCs[i].npcName, `[Agent自主发言] ${results[i].slice(0, 80)}`, 7);
+          const text = results[i].response;
+          if (!text.includes("（沉默）") && !text.includes("（未找到）")) {
+            addMemoryTag(filteredNPCs[i].npcName, `[Agent自主发言] ${text.slice(0, 80)}`, 7);
             try {
               const { createRow } = await import("../../engine/scenario-tables.ts");
-              createRow("角色状态表", { 角色名: filteredNPCs[i].npcName, 穿着: "", 精确动作: results[i].slice(0,60), 情绪: "", 精确位置: gameState.player.location });
+              createRow("角色状态表", { 角色名: filteredNPCs[i].npcName, 穿着: (results[i].outfit||"").slice(0,30), 精确动作: text.slice(0,60), 情绪: "", 精确位置: gameState.player.location });
             } catch (err) {
               console.error("createRow error in spawn_npc_agents:", err);
             }
@@ -149,7 +150,7 @@ export default {
       } catch (err) {
         console.error("addMemoryTag error in spawn_npc_agents:", err);
       }
-      const text = filteredNPCs.map((n, i) => `[${n.npcName}] ${results[i]}`).join("\n");
+      const text = filteredNPCs.map((n, i) => `[${n.npcName}] ${results[i].response}`).join("\n");
       return { content: [{ type: "text", text }], details: {} };
     },
   };

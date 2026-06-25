@@ -112,6 +112,20 @@ import scheduleCommand from "./tui/schedule.ts";
 import rerollCommand from "./tui/reroll.ts";
 import worldCommand from "./tui/world.ts";
 import achievementsCommand from "./tui/achievements.ts";
+import choiceCommand from "./tui/choice.ts";
+
+function withToolTracking(tool: any) {
+  const origExec = tool.execute;
+  return {
+    ...tool,
+    async execute(id: string, params: any, signal: any, onUpdate: any, ctx: any) {
+      // lazy-import to avoid circular deps at module load time
+      const { pushToolCall, drainToolCalls } = await import("../engine/state.ts");
+      pushToolCall(tool.name);
+      return origExec(id, params, signal, onUpdate, ctx);
+    },
+  };
+}
 
 export function registerAll(pi: ExtensionAPI) {
   setPi(pi);
@@ -121,86 +135,34 @@ export function registerAll(pi: ExtensionAPI) {
     type: "string",
   });
 
-  // Register Tools
-  pi.registerTool(lookupCharacterTool);
-  pi.registerTool(lookupRegionTool);
-  pi.registerTool(diceRollTool);
-  pi.registerTool(getStatusTool);
-  pi.registerTool(transferItemTool);
-  pi.registerTool(adjustRelationTool);
-  pi.registerTool(grantSkillExpTool);
-  pi.registerTool(initGameTool);
-  pi.registerTool(commitTurnTool);
-  pi.registerTool(setFlagsTool);
-  pi.registerTool(toggleLayer1Tool);
-  pi.registerTool(toggleAumodeTool);
-  pi.registerTool(sexTouchTool);
-  pi.registerTool(masturbateTool);
-  pi.registerTool(combatActionTool);
-  pi.registerTool(stealItemTool);
-  pi.registerTool(equipItemTool);
-  pi.registerTool(useItemTool);
-  pi.registerTool(moveTool);
-  pi.registerTool(moveToTool);
-  pi.registerTool(worldInteractTool);
-  pi.registerTool(settleSceneTool);
-  pi.registerTool(recordTurnLogTool);
-  pi.registerTool(revealSecretTool);
-  pi.registerTool(renderSceneTool);
-  pi.registerTool(spawnNpcAgentTool);
-  pi.registerTool(spawnNpcAgentsTool);
-  pi.registerTool(createRoomTool);
-  pi.registerTool(updateReputationTool);
-  pi.registerTool(scheduleOverrideTool);
-  pi.registerTool(createCharacterTool);
-  pi.registerTool(setNpcOutfitTool);
-  pi.registerTool(mountVehicleTool);
-  pi.registerTool(dismountVehicleTool);
-  pi.registerTool(boardTrainTool);
-  pi.registerTool(createLocationTool);
-  pi.registerTool(buyItemTool);
-  pi.registerTool(identityCheckTool);
-  pi.registerTool(sellItemTool);
-  pi.registerTool(monthlyGrowthTool);
-  pi.registerTool(workJobTool);
-  pi.registerTool(completeTravelTool);
-  pi.registerTool(spawnItemTool);
-  pi.registerTool(inflictDamageTool);
-  pi.registerTool(lookupBodyTool);
-  pi.registerTool(lookupLoreTool);
-  pi.registerTool(lookupVillainTool);
-  pi.registerTool(addMemoryTagTool);
-  pi.registerTool(setNpcDrivesTool);
-  pi.registerTool(setNpcRelationTool);
-  pi.registerTool(tableCreateTool);
-  pi.registerTool(tableUpdateTool);
-  pi.registerTool(tableDeleteTool);
-  pi.registerTool(tableReadTool);
-  pi.registerTool(openQuestTool);
-  pi.registerTool(advanceQuestTool);
-  pi.registerTool(abandonQuestTool);
-  pi.registerTool(addToPartyTool);
-  pi.registerTool(removeFromPartyTool);
-  pi.registerTool(checkPhoneTool);
-  pi.registerTool(sendSmsTool);
-  pi.registerTool(browseSnsTool);
-  pi.registerTool(postSnsTool);
-  pi.registerTool(makeCallTool);
-  pi.registerTool(addCalendarEventTool);
-  pi.registerTool(createStoryHookTool);
-  pi.registerTool(instantiateNpcTool);
-  pi.registerTool(spawnTempNpcTool);
-  pi.registerTool(addLifeEventTool);
-  pi.registerTool(gambleBetTool);
-  pi.registerTool(blackMarketTradeTool);
-  pi.registerTool(managePropertyTool);
-  pi.registerTool(housingStorageTool);
-  pi.registerTool(lookupWeatherTool);
-  pi.registerTool(travelIntercityTool);
-  pi.registerTool(interactFurnitureTool);
-  pi.registerTool(restockShopTool);
-  pi.registerTool(useAbilityTool);
-  pi.registerTool(lookupAbilityTool);
+  // Lookup tools: NOT tracked (pure queries that don't modify state)
+  const lookupTools = [
+    lookupRegionTool, diceRollTool, moveTool, moveToTool, boardTrainTool,
+    createLocationTool, completeTravelTool, lookupLoreTool, lookupVillainTool,
+    checkPhoneTool, sendSmsTool, browseSnsTool, postSnsTool, makeCallTool,
+    lookupWeatherTool, travelIntercityTool, lookupAbilityTool,
+  ];
+  for (const t of lookupTools) pi.registerTool(t);
+
+  // Action + State tools: track for turn log (modify game state)
+  const trackedTools = [
+    lookupCharacterTool, getStatusTool, transferItemTool, adjustRelationTool,
+    grantSkillExpTool, initGameTool, commitTurnTool, setFlagsTool, toggleLayer1Tool,
+    toggleAumodeTool, sexTouchTool, masturbateTool, combatActionTool, stealItemTool,
+    equipItemTool, useItemTool, worldInteractTool, settleSceneTool, recordTurnLogTool,
+    revealSecretTool, renderSceneTool, spawnNpcAgentTool, spawnNpcAgentsTool,
+    createRoomTool, updateReputationTool, scheduleOverrideTool, createCharacterTool,
+    setNpcOutfitTool, mountVehicleTool, dismountVehicleTool, buyItemTool,
+    identityCheckTool, sellItemTool, monthlyGrowthTool, workJobTool, spawnItemTool,
+    inflictDamageTool, lookupBodyTool, addMemoryTagTool, setNpcDrivesTool,
+    setNpcRelationTool, tableCreateTool, tableUpdateTool, tableDeleteTool,
+    tableReadTool, openQuestTool, advanceQuestTool, abandonQuestTool, addToPartyTool,
+    removeFromPartyTool, addCalendarEventTool, createStoryHookTool, instantiateNpcTool,
+    spawnTempNpcTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
+    managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
+    useAbilityTool,
+  ];
+  for (const t of trackedTools) pi.registerTool(withToolTracking(t));
 
   // Register Commands
   pi.registerCommand("gamble", gambleCommand);
@@ -237,4 +199,5 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerCommand("world", worldCommand);
   pi.registerCommand("achievements", achievementsCommand);
   pi.registerCommand("ach", achievementsCommand);
+  pi.registerCommand("choice", choiceCommand);
 }

@@ -163,4 +163,57 @@
 
 ---
 
-> 最后更新：2026-06-25。新决策随时追加。
+---
+
+## 9. toolsCalled 追踪：registry wrapper 不改 55 个工具文件
+
+**是什么**：`registry.ts` 用 `withToolTracking()` 包裹所有 action/state 工具（不含 lookup/TUI），在 execute 前自动调 `pushToolCall()`。工具文件本身不需要改动。
+
+**为什么**：
+- 如果改 55 个工具文件，每个加一行 `pushToolCall(this.name)`，维护负担大，未来新工具容易忘
+- registry wrapper 集中管理——加新工具时只要放进 `trackedTools` 数组就自动追踪
+- lookup 工具不追踪（纯查询不改状态），TUI 命令不追踪（用户操作不走工具流）
+
+**放弃了什么**：wrapper 在每个工具调用时多一次 lazy import → 有微小性能开销（<1ms）。
+
+**不要做**：❌ 在每个工具文件里手动加 `pushToolCall`。❌ 把 lookup 类工具放进 trackedTools。
+
+**相关代码**：`tools/registry.ts:116-123` (withToolTracking), `engine/state.ts:161-175` (pushToolCall/drainToolCalls)
+
+---
+
+## 10. Lint retry：最多 3 次，只重试 block 规则
+
+**是什么**：`render_scene` 和 `/reroll` 在 lint 发现 `needsRetry=true` 时，把违规片段 + 规则名拼成纠正 prompt，让模型重写全文。最多 3 次，3 次后标记 `retryExhausted` 并返回最后结果。
+
+**为什么**：
+- warn 级别的规则（感知报告、模糊镜头、禁止词汇）只记录不打断——这些是风格偏好，不值得重试
+- block 级别的规则（伪菜单、报告句、面板值泄露、秘密泄露）必须拦截——这是硬伤，prompt 骂模型没用，只有 machine lint + retry 才能根治
+- 3 次是经验上限（fate-sandbox 用 6 次，earth-0 保守用 3 次——多次 retry 可能陷入 LLM 自激振荡）
+
+**放弃了什么**：retry 是全文重写（不是局部修复），token 消耗翻倍。但 block 命中本身很少见（<5% 回合），所以实际代价不大。
+
+**不要做**：❌ 对 warn 规则触发 retry（浪费 token）。❌ 无限 retry（会死循环）。
+
+**相关代码**：`tools/action/render_scene.ts:107-151`, `tools/tui/reroll.ts:70-91`, `engine/audit/lint-rules.ts`
+
+---
+
+## 11. /choice 作为 TUI 命令而非内联按钮
+
+**是什么**：`/choice` 是一个 TUI 命令，解析最近一次 render_scene 输出的扮演选项，渲染为可点击菜单。点击选项后通过 `ctx.chat.addSystemMessage()` 发送到聊天框。
+
+**为什么**：
+- pi 框架的 content item 不支持 button 类型——无法在正文中嵌入可点击按钮
+- TUI 命令是 pi 框架的标准 UI 扩展方式，与其他面板（/status、/bag）一致
+- 保留完全自由输入——用户可以不调 /choice，自己打字
+
+**放弃了什么**：不是 fate 式的 "正文输出后自动弹按钮"。需要用户主动输入 `/choice`。
+
+**可以做**：如果 pi 框架未来支持 content button，改为自动弹出。
+
+**相关代码**：`tools/tui/choice.ts`, `engine/parse-options.ts`, `tools/action/render_scene.ts:151,167`
+
+---
+
+> 最后更新：2026-06-26。新决策随时追加。

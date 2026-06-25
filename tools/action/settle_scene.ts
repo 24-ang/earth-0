@@ -12,7 +12,9 @@ export default {
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom, cleanupTempNPCs } = await import("../../engine/state.ts");
+      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom, cleanupTempNPCs, drainToolCalls } = await import("../../engine/state.ts");
+      // 清掉上轮残留（如果有），开始新一轮追踪
+      drainToolCalls();
       const { advanceMinutes } = await import("../../engine/time.ts");
       const cleanupMsgs = cleanupTempNPCs("场景结算");
       const mins = params.elapsed_minutes;
