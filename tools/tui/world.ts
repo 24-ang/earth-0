@@ -8,7 +8,9 @@ export default {
       const path = await import("node:path");
       const { loadActiveWorld, saveState } = await import("../../engine/state.ts");
 
-      const action = args[0] || "list";
+      const parts = args ? args.split(/\s+/) : ["list"];
+      const action = parts[0] || "list";
+      const targetWorld = parts[1];
       const dataDir = path.resolve(process.cwd(), "data");
 
       if (action === "list") {
@@ -32,7 +34,6 @@ export default {
       }
 
       if (action === "load") {
-        const targetWorld = args[1];
         if (!targetWorld) {
           ctx.ui.notify("错误: 必须指定世界观名称，如 /world load oregairu", "error");
           return;
@@ -50,5 +51,5 @@ export default {
         saveState();
         ctx.ui.notify(`✅ 成功切换世界观为: ${targetWorld}。刷新存档完毕。`, "info");
       }
-    }
+    },
   };
