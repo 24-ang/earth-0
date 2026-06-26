@@ -13,10 +13,10 @@ export default {
       if ((f as any).school_alert) alerts.push({ flag: "school_alert", icon: "🏫", desc: `校园警戒: ${(f as any).school_alert}` });
       if ((f as any).identity_exposed) alerts.push({ flag: "identity_exposed", icon: "🎭", desc: `身份暴露: ${(f as any).identity_exposed}` });
       if ((f as any).wanted) alerts.push({ flag: "wanted", icon: "👮", desc: `被通缉: ${(f as any).wanted}` });
-      if ((f as any).steal_caught_by) {
-        const caught = (f as any).steal_caught_by;
-        const names = Array.isArray(caught) ? caught.join("、") : String(caught);
-        alerts.push({ flag: "steal_caught", icon: "👀", desc: `偷窃目击者: ${names}` });
+      const stealCaughtFlags = Object.keys(f as any).filter(k => k.startsWith("steal_caught_by_"));
+      if (stealCaughtFlags.length > 0) {
+        const names = stealCaughtFlags.map(k => k.replace("steal_caught_by_", ""));
+        alerts.push({ flag: "steal_caught", icon: "👀", desc: `偷窃目击者: ${names.join("、")}` });
       }
 
       lines.push("🚨 当前警报状态");
