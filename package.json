@@ -2,20 +2,28 @@
   "name": "earth-0",
   "version": "0.2.0",
   "private": true,
-  "description": "LLM 驱动文字 RPG 引擎 — 引擎算数字，LLM 叙事",
+  "description": "Multi-agent LLM runtime for interactive fiction with a deterministic engine. 230 tests. MIT.",
   "scripts": {
     "test": "npx tsx test.ts",
-    "start": "bash start.sh"
+    "start": "bash start.sh",
+    "lint": "npx oxlint",
+    "lint:fix": "npx oxlint --fix"
   },
   "dependencies": {
     "tsx": "^4.0.0",
     "typebox": "^1.2.9"
   },
   "keywords": [
-    "rpg",
     "llm",
-    "text-game",
-    "pi-mono"
+    "agent",
+    "narrative",
+    "interactive-fiction",
+    "game-engine",
+    "typescript",
+    "multi-agent",
+    "storytelling",
+    "world-simulation",
+    "npc-agent"
   ],
   "license": "MIT"
 }

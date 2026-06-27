@@ -21,7 +21,7 @@ export default {
       try {
         const fileContent = fs.existsSync(wPath) ? fs.readFileSync(wPath, "utf-8") : fs.readFileSync(defaultPath, "utf-8");
         cityMapConfig = JSON.parse(fileContent);
-      } catch (_) {}
+      } catch (e) { console.error("travel_intercity: city_map.json load error", e); }
 
       const connection = cityMapConfig.connections?.[params.route] || cityMapConfig.intercity_lines?.[params.route];
       if (!connection) {

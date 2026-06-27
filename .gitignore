@@ -1,6 +1,7 @@
 /state/
 sessions/
 scratch/
+tmp/
 .pi/agent/auth.json
 .pi/agent/models.json
 .pi/npm/
@@ -9,3 +10,20 @@ node_modules/
 *.pyc
 __pycache__/
 _audit.js
+
+# Private extras (adult content not tracked in public repo)
+/private_extras/
+/engine/sex.ts
+/tools/action/masturbate.ts
+/tools/action/sex_touch.ts
+/agents/gm-mode-sex.md
+/agents/gm-mode-gal.md
+/data/sex_profiles.json
+/worldpacks/oregairu/sex_profiles.json
+/skills/sex文风SKILL.md
+/data/timelines/oregairu/ntr_*.json
+/data/timelines/oregairu/brainwash_*.json
+/data/timelines/oregairu/ed_*.json
+/data/timelines/oregairu/cohabit_*.json
+/data/timelines/oregairu/oshi_*.json
+/data/timelines/oregairu/pure_*.json

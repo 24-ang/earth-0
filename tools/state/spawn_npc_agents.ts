@@ -1,5 +1,5 @@
 import { Type } from "typebox";
-import { generateCompletion } from "../helpers.ts";
+import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction } from "../helpers.ts";
 
 export default {
     name: "spawn_npc_agents", label: "批量NPC代理",
@@ -45,29 +45,7 @@ export default {
           .map((n: any) => n.npcName);
 
         // 社交情境 → 按 NPC 个体生成约束标签
-        let socialTags = "";
-        if (params.socialContext) {
-          try {
-            const { SEX_PROFILES, getSocialContextTags } = await import("../../engine/sex.ts");
-            const { getOrCreateSexState } = await import("../../engine/state.ts");
-            const profile = SEX_PROFILES[npcName];
-            if (profile) {
-              const sState = await getOrCreateSexState(npcName);
-              if (sState) {
-                socialTags = getSocialContextTags(profile, sState, {
-                  trigger: params.socialContext.trigger as any,
-                  exposure: params.socialContext.exposure as any,
-                  setting: params.socialContext.setting as any,
-                  present: params.socialContext.present || [],
-                  firstTime: params.socialContext.firstTime ?? true,
-                  worldliness: params.socialContext.worldliness as any,
-                });
-              }
-            }
-          } catch (e) {
-            console.error("spawn_npc_agents socialTags extraction error:", e);
-          }
-        }
+        const socialTags = await getSocialContextTagsForNPC(npcName, params.socialContext);
 
         const prompt = [
           `你是${npcName}。你现在正在${gameState.player.location}。`,
@@ -81,15 +59,7 @@ export default {
           initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。" : "",
           "",
           socialTags ? `【情境约束】以下是引擎给出的当前情境事实和禁止事项。在此约束内自由发挥，不要复述这些标签本身：\n${socialTags}\n` : "",
-          "【角色动机 — 嘴上那套不是动机】",
-          "先想清楚：你现在说的/做的不一定是真心的——那可能是保护壳。追问：你在保护什么？",
-          "① 嘴上那套: 你此刻在说什么/做什么？（嘴硬/傲娇/冷淡/说教/岔开话题——这些都是防御，不是目标）",
-          "② 真正想要的（内驱力）: 你内心深处在追什么？（被认可/怕被冷落/想保护某人/试探底线/掩饰不安/确认自己的位置）",
-          "  提示: 如果你嘴上在挑刺，你可能怕被拒绝；如果你在说教，你可能想确认自己的价值；如果你沉默，你可能在等对方先表态。",
-          "③ 潜台词强度(beneath 0-3): 这轮你的真心藏得多深？",
-          "  0-1 = 淡淡的小心思，一个微妙的停顿或移开视线就够了。",
-          "  2-3 = 嘴上说的和心里想的完全相反。表面一套+深层一套，用两个互相矛盾的小动作泄漏真相。",
-          "④ 行为泄漏: 哪个具体的小动作会出卖你？（停顿的时长、移开视线的方向、放杯子力道重了一点、话说到一半咽回去）",
+          NPC_MOTIVATION_PROMPT,
           "",
           "【回应规则 — beat响应链 ≥2步】",
           "你的回应不是单步反应。按这个链条输出：",
@@ -102,20 +72,7 @@ export default {
         ].filter(Boolean).join("\n");
 
         try {
-          let narrativeModel = "deepseek/deepseek-v4-flash";
-          try {
-            const fs = await import("node:fs");
-            const path = await import("node:path");
-            const cfgPath = path.resolve(process.cwd(), "data", "rendering.json");
-            if (fs.existsSync(cfgPath)) {
-              const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
-              if (cfg.model_mappings?.npc_agent_model) {
-                narrativeModel = cfg.model_mappings.npc_agent_model;
-              } else if (cfg.model_mappings?.narrative_render_model) {
-                narrativeModel = cfg.model_mappings.narrative_render_model;
-              }
-            }
-          } catch (_) {}
+          const narrativeModel = await getNpcAgentModel();
           const response = await generateCompletion(prompt, 512, _ctx, narrativeModel);
           if (!response) return {response: `${npcName}（沉默）`, outfit: ""};
           return {response, outfit: outfit || ""};
@@ -132,23 +89,11 @@ export default {
 
       const results = await Promise.all(filteredNPCs.map(n => runOne(n.npcName, n.sceneContext, (n as any).initiative)));
       // 自动写入所有 NPC 的记忆 + 结构化状态表
-      try {
-        const { addMemoryTag, saveState } = await import("../../engine/state.ts");
-        for (let i = 0; i < filteredNPCs.length; i++) {
-          const text = results[i].response;
-          if (!text.includes("（沉默）") && !text.includes("（未找到）")) {
-            addMemoryTag(filteredNPCs[i].npcName, `[Agent自主发言] ${text.slice(0, 80)}`, 7);
-            try {
-              const { createRow } = await import("../../engine/scenario-tables.ts");
-              createRow("角色状态表", { 角色名: filteredNPCs[i].npcName, 穿着: (results[i].outfit||"").slice(0,30), 精确动作: text.slice(0,60), 情绪: "", 精确位置: gameState.player.location });
-            } catch (err) {
-              console.error("createRow error in spawn_npc_agents:", err);
-            }
-          }
+      for (let i = 0; i < filteredNPCs.length; i++) {
+        const text = results[i].response;
+        if (!text.includes("（沉默）") && !text.includes("（未找到）")) {
+          await recordNpcAgentAction(filteredNPCs[i].npcName, text, results[i].outfit || "", gameState.player.location);
         }
-        saveState();
-      } catch (err) {
-        console.error("addMemoryTag error in spawn_npc_agents:", err);
       }
       const text = filteredNPCs.map((n, i) => `[${n.npcName}] ${results[i].response}`).join("\n");
       return { content: [{ type: "text", text }], details: {} };

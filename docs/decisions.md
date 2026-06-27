@@ -146,9 +146,43 @@
 
 ---
 
-## 模板
+## 12. tsconfig strict mode — 渐进收紧
 
-新决策用这个格式：
+**是什么**：`tsconfig.json` 设 `strict: true`，但 `noImplicitAny: false` + `noUncheckedIndexedAccess: false`（暂）。模块系统用 `Preserve`（配合 tsx 的 ESM 处理）。`noEmit: true`（tsx 负责运行，不用 tsc 编译）。
+
+**为什么**：
+- 项目之前零 tsconfig，完全依赖 tsx 宽松默认 — `args[0]` 这种 bug 如果有类型检查会在编译期被拦下
+- 全开 strict 会炸（200+ 处 `as any` 转换、索引访问），不能一步到位
+- `noImplicitAny`/`noUncheckedIndexedAccess` 先开 false，每轮清理一批类型后收紧一级
+- `module: "Preserve"` + `moduleResolution: "bundler"` 兼容 tsx 的 ESM 处理，不改现有 import 模式
+
+**放弃了什么**：当前不能享受 `noImplicitAny` 的保护。
+
+**不要做**：❌ 一步全开 strict 然后修 200+ 类型错误（风险太高）。❌ 删掉 tsconfig.json。
+**可以做**：→ 每清理完一批 `any` 就收紧一级。
+
+**相关代码**：`tsconfig.json`（新建）
+
+---
+
+## 13. 静默 catch 必须打日志
+
+**是什么**：`catch (_) {}` 一律替换为 `catch (e) { console.error("函数名: 描述", e); }`。预期可恢复的 catch（`fs.unlinkSync` 清理等）可以静默。
+
+**为什么**：
+- 审计发现 ~30 处静默 catch（上次声称 44→0 是错的）
+- 数据加载失败 / JSON 解析失败 / 模块 import 失败被静默吞掉 → 故障不可观测
+- `console.error` 不影响正常流程，但出问题时能看到日志
+
+**放弃了什么**：无。仅加日志，不改变控制流。
+
+**不要做**：❌ 对 `fs.unlinkSync` / 清理类操作加日志（噪音大于价值）。
+
+**相关代码**：本轮批量修改 — engine/*.ts + tools/**/*.ts + test.ts
+
+---
+
+> 最后更新：2026-06-26。新决策随时追加。
 
 ```
 ## N. 决策标题

@@ -2,7 +2,10 @@
  * 骰子引擎 - d20 + AC + 伤害 + 掩体
  */
 
-import { attrMod } from "./state.ts";
+/** D&D 属性修正： (val - 10) / 2 向下取整 */
+export function attrMod(val: number): number {
+  return Math.floor((val - 10) / 2);
+}
 
 export type Difficulty = "简单" | "普通" | "困难" | "极难" | "不可能";
 export type Advantage = "优势" | "劣势" | "平";

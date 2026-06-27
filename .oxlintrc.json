@@ -1,0 +1,6 @@
+{
+  "ignorePatterns": ["state/**", "sessions/**", "scratch/**", "tmp/**", "node_modules/**", ".pi/**", ".rpiv/**", "scripts/**", "data/**", "worldpacks/**", "extensions/**"],
+  "rules": {
+    "no-unused-vars": "warn"
+  }
+}

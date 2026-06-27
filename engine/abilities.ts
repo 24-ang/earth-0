@@ -60,7 +60,7 @@ export function loadAbilities(world?: string): Record<string, AbilityDef> {
           if (entry?.name) _catalog[entry.name] = entry;
         }
       }
-    } catch (_) { /* skip missing files */ }
+    } catch (e) { console.error("loadAbilitiesCatalog: 解析能力 JSON 失败", e); }
   }
   return _catalog;
 }

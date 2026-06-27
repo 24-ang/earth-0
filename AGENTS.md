@@ -26,6 +26,13 @@
 - ❌ 工具描述写成多行拼接字符串
 - ❌ 在没读 PHILOSOPHY.md 和 decisions.md 的情况下质疑现有设计然后推翻重做
 - ❌ 改 `data/characters.json` 或 `data/items.json` 等世界专属数据——改 worldpacks/oregairu/ 下的同名文件
+- ❌ 写静默 `catch (_) {}` — 至少加 `console.error("函数名: 失败原因", e)`
+
+## 代码质量
+
+- **tsconfig.json**：`strict: true`，`noImplicitAny`/`noUncheckedIndexedAccess` 暂为 false（渐进收紧）。提交前确保 `npx tsx test.ts` 全绿。
+- **catch 规范**：数据加载/解析失败必须 `console.error`；`fs.unlinkSync` 等非关键清理可以静默。
+- **死代码**：`git rm` 不要的 `.bak`/实验脚本；删掉未调用的函数；`scratch/` 和 `tmp/` 在 `.gitignore` 中。
 
 ## 项目结构速查
 
