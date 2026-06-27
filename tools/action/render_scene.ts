@@ -42,7 +42,7 @@ export default {
             modelMappings = { ...modelMappings, ...config.model_mappings };
           }
         }
-      } catch (_) {}
+      } catch (e) { console.error("render_scene: rendering.json model mappings error", e); }
 
       // 获取 flag 覆盖
       const flagModel = pi.getFlag("render-model") as string | undefined;

@@ -12,8 +12,13 @@ import commitTurnTool from "./state/commit_turn.ts";
 import setFlagsTool from "./state/set_flags.ts";
 import toggleLayer1Tool from "./state/toggle_layer1.ts";
 import toggleAumodeTool from "./state/toggle_aumode.ts";
-import sexTouchTool from "./action/sex_touch.ts";
-import masturbateTool from "./action/masturbate.ts";
+// Conditional imports — files may not exist in public repo (private_extras/)
+let _sexTouchTool: any = null;
+let _masturbateTool: any = null;
+try {
+  _sexTouchTool = require("./action/sex_touch.ts").default;
+  _masturbateTool = require("./action/masturbate.ts").default;
+} catch { /* private_extras not present */ }
 import combatActionTool from "./action/combat_action.ts";
 import stealItemTool from "./action/steal_item.ts";
 import equipItemTool from "./action/equip_item.ts";
@@ -50,15 +55,11 @@ import lookupVillainTool from "./lookup/lookup_villain.ts";
 import addMemoryTagTool from "./state/add_memory_tag.ts";
 import setNpcDrivesTool from "./state/set_npc_drives.ts";
 import setNpcRelationTool from "./state/set_npc_relation.ts";
-import tableCreateTool from "./action/table_create.ts";
-import tableUpdateTool from "./action/table_update.ts";
-import tableDeleteTool from "./action/table_delete.ts";
-import tableReadTool from "./action/table_read.ts";
+import tableCrudTool from "./action/table_crud.ts";
 import openQuestTool from "./action/open_quest.ts";
 import advanceQuestTool from "./action/advance_quest.ts";
 import abandonQuestTool from "./action/abandon_quest.ts";
-import addToPartyTool from "./state/add_to_party.ts";
-import removeFromPartyTool from "./state/remove_from_party.ts";
+import partyManagementTool from "./state/party_management.ts";
 import checkPhoneTool from "./lookup/check_phone.ts";
 import sendSmsTool from "./lookup/send_sms.ts";
 import browseSnsTool from "./lookup/browse_sns.ts";
@@ -95,7 +96,7 @@ import savesCommand from "./tui/saves.ts";
 import redoCommand from "./tui/redo.ts";
 import sleepCommand from "./tui/sleep.ts";
 import layer1Command from "./tui/layer1.ts";
-import sexCommand from "./tui/sex.ts";
+import sexCommand from "./tui/sex.ts"; // conditional: may not exist in public repo
 import roomCommand from "./tui/room.ts";
 import trainCommand from "./tui/train.ts";
 import bagCommand from "./tui/bag.ts";
@@ -137,32 +138,33 @@ export function registerAll(pi: ExtensionAPI) {
 
   // Lookup tools: NOT tracked (pure queries that don't modify state)
   const lookupTools = [
-    lookupRegionTool, diceRollTool, moveTool, moveToTool, boardTrainTool,
-    createLocationTool, completeTravelTool, lookupLoreTool, lookupVillainTool,
-    checkPhoneTool, sendSmsTool, browseSnsTool, postSnsTool, makeCallTool,
-    lookupWeatherTool, travelIntercityTool, lookupAbilityTool,
+    lookupRegionTool, diceRollTool, createLocationTool, lookupLoreTool,
+    lookupVillainTool, checkPhoneTool, browseSnsTool, lookupWeatherTool,
+    lookupAbilityTool,
   ];
-  for (const t of lookupTools) pi.registerTool(t);
+  for (const t of lookupTools) if (t) pi.registerTool(t);
 
   // Action + State tools: track for turn log (modify game state)
   const trackedTools = [
     lookupCharacterTool, getStatusTool, transferItemTool, adjustRelationTool,
     grantSkillExpTool, initGameTool, commitTurnTool, setFlagsTool, toggleLayer1Tool,
-    toggleAumodeTool, sexTouchTool, masturbateTool, combatActionTool, stealItemTool,
+    toggleAumodeTool, _sexTouchTool, _masturbateTool, combatActionTool, stealItemTool,
     equipItemTool, useItemTool, worldInteractTool, settleSceneTool, recordTurnLogTool,
     revealSecretTool, renderSceneTool, spawnNpcAgentTool, spawnNpcAgentsTool,
     createRoomTool, updateReputationTool, scheduleOverrideTool, createCharacterTool,
     setNpcOutfitTool, mountVehicleTool, dismountVehicleTool, buyItemTool,
     identityCheckTool, sellItemTool, monthlyGrowthTool, workJobTool, spawnItemTool,
     inflictDamageTool, lookupBodyTool, addMemoryTagTool, setNpcDrivesTool,
-    setNpcRelationTool, tableCreateTool, tableUpdateTool, tableDeleteTool,
-    tableReadTool, openQuestTool, advanceQuestTool, abandonQuestTool, addToPartyTool,
-    removeFromPartyTool, addCalendarEventTool, createStoryHookTool, instantiateNpcTool,
+    setNpcRelationTool, tableCrudTool, openQuestTool, advanceQuestTool,
+    abandonQuestTool, partyManagementTool, addCalendarEventTool, createStoryHookTool, instantiateNpcTool,
     spawnTempNpcTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
     managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
     useAbilityTool,
+    // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
+    moveTool, moveToTool, boardTrainTool, completeTravelTool,
+    sendSmsTool, postSnsTool, makeCallTool, travelIntercityTool,
   ];
-  for (const t of trackedTools) pi.registerTool(withToolTracking(t));
+  for (const t of trackedTools) if (t) pi.registerTool(withToolTracking(t));
 
   // Register Commands
   pi.registerCommand("gamble", gambleCommand);

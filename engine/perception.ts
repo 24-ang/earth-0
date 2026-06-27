@@ -3,8 +3,7 @@
  * 所有视觉/听觉检测都走此函数，引擎零硬编码。
  */
 
-import { checkDC } from "./dice.ts";
-import { attrMod } from "./state.ts";
+import { checkDC, attrMod } from "./dice.ts";
 
 export interface PerceptionActor {
   attributes: Record<string, number>;

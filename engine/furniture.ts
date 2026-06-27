@@ -112,13 +112,13 @@ export function loadFurnitureCatalog(worldName?: string): FurnitureCatalog {
   const wpPath = path.resolve(process.cwd(), "worldpacks", world, "furniture.json");
   if (fs.existsSync(wpPath)) {
     try { _catalog = JSON.parse(fs.readFileSync(wpPath, "utf-8")); _catalogWorld = world; return _catalog!; }
-    catch (_) {}
+    catch (e) { console.error("loadFurnitureCatalog: 解析 worldpack 家具 JSON 失败", e); }
   }
 
   // 默认
   const defaultPath = path.resolve(process.cwd(), "data", "furniture.json");
   try { _catalog = JSON.parse(fs.readFileSync(defaultPath, "utf-8")); _catalogWorld = world; }
-  catch (_) { _catalog = {}; _catalogWorld = world; }
+  catch (e) { console.error("loadFurnitureCatalog: 解析默认家具 JSON 失败", e); _catalog = {}; _catalogWorld = world; }
   return _catalog!;
 }
 
@@ -376,7 +376,7 @@ async function applyEffect(def: FurnitureActionDef, gs: GameState, furnitureDef?
             shopType.includes(k as string) || (k as string).includes(shopType)
           )?.[1] || shops["便利店"];
           itemList = shelf?.items || [];
-        } catch (_) {}
+        } catch (e) { console.error("furniture execute: 导入商店数据失败", e); }
       }
       const itemStr = itemList.length > 0 ? `货架: ${itemList.join("、")}` : "货架空";
       if (!narrative) narrative = itemStr;

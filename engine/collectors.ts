@@ -47,8 +47,8 @@ export class CollectorRegistry {
       try {
         const node = await c.collect(state);
         if (node) results.push(node);
-      } catch (_) {
-        // 单个 collector 失败不影响整体
+      } catch (e) {
+        console.error("collectAll: collector 执行失败", e);
       }
     }
     return results;

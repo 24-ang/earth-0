@@ -34,7 +34,7 @@ export function loadOrgLore(world?: string): LoreOrgFile[] {
         const data = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"));
         if (Array.isArray(data)) files.push(...data);
         else files.push(data);
-      } catch (_) {}
+      } catch (e) { console.error("getLoreCatalog: 解析 lore 文件失败", e); }
     }
   }
 
@@ -50,7 +50,7 @@ function getBreadcrumb(location: string): string[] {
   try {
     const nav = getLocationNav(location);
     return nav?.breadcrumb || [];
-  } catch (_) { return []; }
+  } catch (e) { console.error("getBreadcrumb: getLocationNav 失败", e); return []; }
 }
 
 /** Check if any trigger condition matches */

@@ -15,6 +15,8 @@ import titleRulesStatic from "../data/title_rules.json" with { type: "json" };
 import namelessNpcTemplatesStatic from "../data/nameless_npc_templates.json" with { type: "json" };
 import economyConfigStatic from "../data/economy.json" with { type: "json" };
 import { getSeason, mapChineseWeather, transitionWeather } from "./weather.ts";
+import { attrMod } from "./dice.ts";
+import { findFurnitureDef } from "./furniture.ts";
 
 export let characters = charactersStatic as any[];
 export let rooms = roomsStatic as Record<string, RoomGrid>;
@@ -36,7 +38,6 @@ import itemsCatalogStatic from "../data/items.json" with { type: "json" };
 import phoneAppsCatalogStatic from "../data/phone_apps.json" with { type: "json" };
 import positionsCatalogStatic from "../data/positions.json" with { type: "json" };
 import regionsStatic from "../data/regions.json" with { type: "json" };
-import sexProfilesStatic from "../data/sex_profiles.json" with { type: "json" };
 import scheduleTemplatesStatic from "../data/schedule_templates.json" with { type: "json" };
 import roomTemplatesStatic from "../data/room_templates.json" with { type: "json" };
 
@@ -131,7 +132,7 @@ function createInitialState(): GameState {
           turn: 0
         });
       }
-    } catch (_) {}
+    } catch (e) { console.error("createInitialState: 解析 world_secrets.json 失败", e); }
   }
 
   return {
@@ -309,7 +310,8 @@ export function loadState(filepath?: string): boolean {
   if (fs.existsSync(roomsDeltaPath)) {
     try {
       ROOMS = JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8"));
-    } catch (_) {
+    } catch (e) {
+      console.error("loadState: 解析 rooms_delta.json 失败，回退到静态rooms", e);
       ROOMS = structuredClone(rooms);
     }
   } else {
@@ -334,7 +336,7 @@ export function loadState(filepath?: string): boolean {
   if (fs.existsSync(fcPath)) {
     try {
       Object.assign(_furnitureContainerStore, JSON.parse(fs.readFileSync(fcPath, "utf-8")));
-    } catch (_) {}
+    } catch (e) { console.error("loadState: 解析 furniture_containers.json 失败", e); }
   }
   // 存档版本迁移——旧档无 schemaVersion 视为 v0，按版本增量跑迁移
   const currentSchemaVersion = 1;
@@ -476,7 +478,7 @@ export function listSaves(): { name: string; date: string; turn: number; locatio
       const raw = fs.readFileSync(path.join(SAVES_DIR, f), "utf-8");
       const meta = JSON.parse(raw)._save_meta;
       if (meta) result.push(meta);
-    } catch (_) {}
+    } catch (e) { console.error("listSaves: 解析存档元数据失败", e); }
   }
   result.sort((a, b) => b.turn - a.turn);
   return result;
@@ -893,7 +895,9 @@ function ensureCollectors(): void {
     name: "layer1", priority: 30, layer: "enhanced", degradeStrategy: "drop",
     async collect(_gs) {
       try {
-        const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, getThoughtsSummary, getMoodHint, SEX_PROFILES } = await import("./sex.ts");
+        let sexMod: any = null;
+        try { sexMod = await import("./sex.ts"); } catch { return lines; /* public repo */ }
+        const { getDesireNarrative, getArousalNarrative, getDevNarrative, getCyclePhase, getThoughtsSummary, getMoodHint, SEX_PROFILES } = sexMod;
         const profiles = SEX_PROFILES as Record<string, any>;
         const lines: string[] = [];
         const p = s().player;
@@ -1167,27 +1171,12 @@ export async function buildStatePrompt(): Promise<string> {
   const collectorText = await buildCollectorContext();
   if (collectorText) tpl += "\n" + collectorText;
 
-/** 按房间名给默认sex氛围描述 */
-function getDefaultSexAtmosphere(location: string): string {
-  if (location.includes("教室") || location.includes("班")) return "空旷的教室，课桌椅整齐排列——在这里做点什么有种背德的刺激。";
-  if (location.includes("部室") || location.includes("社团")) return "狭小的部室，窗外隐约传来操场上的喧闹声。";
-  if (location.includes("屋顶")) return "天台的凉风不时吹过，远处的城市景色尽收眼底。";
-  if (location.includes("保健室")) return "消毒水的气味，拉上帘子就是一个小天地。";
-  if (location.includes("更衣室") || location.includes("体育馆")) return "潮湿的空气里混着运动后的汗味和沐浴露的香气。";
-  if (location.includes("住宅") || location.includes("自宅")) return "熟悉的房间里，窗帘透进来的光让一切都显得柔和。";
-  if (location.includes("走廊")) return "随时可能有人经过的走廊转角——紧张感和刺激并存。";
-  if (location.includes("中庭")) return "夜晚的中庭空无一人，只有路灯洒下昏黄的光。";
-  if (location.includes("泳池")) return "水面反射着波光，空气中有氯气的气味。";
-  if (location.includes("浴室") || location.includes("温泉")) return "氤氲的蒸汽模糊了视线，水滴声在瓷砖墙间回荡。";
-  return "";
-}
-
   // 手机通知注入
   try {
     const { getPlayerPhoneData, getUnreadSummary } = await import("./phone.ts");
     const phoneNote = getUnreadSummary(getPlayerPhoneData());
     if (phoneNote) tpl += `\n${phoneNote}`;
-  } catch (_) {}
+  } catch (e) { console.error("buildStatePrompt: 手机通知注入失败", e); }
 
   // ── 场景工具提示（软约束，不屏蔽工具）──
   // 根据当前场景告诉LLM哪些工具优先。来自顶会论文验证过的attention scoping方法。
@@ -1246,10 +1235,6 @@ function getDefaultSexAtmosphere(location: string): string {
 }
 
 // --- 属性调整值 ---
-export function attrMod(val: number): number {
-  return Math.floor((val - 10) / 2);
-}
-
 // --- HP计算 ---
 export function calcMaxHP(体质: number, age: number): number {
   const base = 体质 * 2;
@@ -1546,9 +1531,8 @@ export function getContainersAt(location: string, gridPos?: [number, number]): C
             // 尝试从 furniture.json 读取容器定义
             let furnitureDef: any = null;
             try {
-              const { findFurnitureDef } = require("./furniture.ts");
               furnitureDef = findFurnitureDef(name, gameState.activeWorld);
-            } catch (_) {}
+            } catch (e) { console.error("getContainersAt: findFurnitureDef 失败", e); }
 
             if (furnitureDef?.containers && furnitureDef.containers.length > 0) {
               // 为每个子容器创建 ContainerState
@@ -2125,8 +2109,6 @@ export function getNPCOutfitDesc(npcName: string): string {
   const getFlavor = (itemName) => {
     if (!itemsData) {
       try {
-        const fs = require("node:fs");
-        const path = require("node:path");
         itemsData = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "data", "items.json"), "utf-8"));
       } catch { itemsData = {}; }
     }
@@ -2150,7 +2132,14 @@ export function getNPCOutfitDesc(npcName: string): string {
 export async function getOrCreateSexState(npcName: string): Promise<SexState | null> {
   gameState.sexStates ??= {};
   if (!gameState.sexStates[npcName]) {
-    const { SEX_PROFILES, createSexState } = await import("./sex.ts");
+    let SEX_PROFILES: Record<string, any> = {};
+    let createSexState: any = null;
+    try {
+      const sexMod = await import("./sex.ts");
+      SEX_PROFILES = sexMod.SEX_PROFILES;
+      createSexState = sexMod.createSexState;
+    } catch { /* sex.ts not present in public repo */ }
+    if (!createSexState) return null;
     let profile = SEX_PROFILES[npcName];
     // 玩家不在 SEX_PROFILES 中 → 按性别构建默认 profile
     if (!profile && npcName === gameState.player.name) {
@@ -2192,7 +2181,9 @@ export async function getOrCreateSexState(npcName: string): Promise<SexState | n
 /** 时间驱动：推进所有 NPC SexState（欲望累积 + 周期推进 + 自主行为） */
 export async function tickSexStates(daysAdvanced: number, minutesPassed: number): Promise<void> {
   if (!gameState.sexStates) return;
-  const { getCyclePhase, calcDesire, masturbate } = await import("./sex.ts");
+  let sexMod: any = null;
+  try { sexMod = await import("./sex.ts"); } catch { return; /* sex.ts not present in public repo */ }
+  const { getCyclePhase, calcDesire, masturbate } = sexMod;
 
   for (const [name, ss] of Object.entries(gameState.sexStates)) {
     // 1. 推进生理周期
@@ -3281,7 +3272,7 @@ export function refreshWeather(): string {
 }
 
 // --- NPC 日程更新 ---
-export let sexProfilesData = sexProfilesStatic as any;
+export let sexProfilesData: any = {};
 const TEMPLATES = scheduleTemplates as any;
 
 export function getFallbackRoom(roomName: string): string {
@@ -3626,7 +3617,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
         }
       }
     }
-  } catch (_) {}
+  } catch (e) { console.error("updateNPCSchedules: 手机消息投递失败", e); }
 
   return events;
 }
@@ -3794,7 +3785,7 @@ export function getRegionContext(location: string): string {
     const rcPath = path.resolve(process.cwd(), "data", "region_contexts.json");
     if (fs.existsSync(rcPath)) {
       try { _regionContexts = JSON.parse(fs.readFileSync(rcPath, "utf-8")); }
-      catch (_) { _regionContexts = {}; }
+      catch (e) { console.error("getRegionContext: 解析 region_contexts.json 失败", e); _regionContexts = {}; }
     } else {
       _regionContexts = {};
     }
@@ -4084,7 +4075,7 @@ export function loadActiveWorld(worldName?: string): void {
     phoneApps = phoneAppsCatalog;
     scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
     roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
-    sexProfilesData = loadJSON("sex_profiles.json", sexProfilesStatic);
+    sexProfilesData = loadJSON("sex_profiles.json", null);
 
     // ── 脑裂检测：data/ 比 worldpack 内容多 → 警告 ──
     // 你正在改 data/ 下的文件，但游戏运行时读的是 worldpacks/<world>/。
@@ -4092,7 +4083,6 @@ export function loadActiveWorld(worldName?: string): void {
     try {
       const checks: Array<{ label: string; dataVar: any; worldVar: any; measure: (v: any) => number }> = [
         { label: "characters.json",      dataVar: charactersStatic,      worldVar: characters,           measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
-        { label: "sex_profiles.json",    dataVar: sexProfilesStatic,     worldVar: sexProfilesData,      measure: v => Object.keys(v).length },
         { label: "items.json",           dataVar: itemsCatalogStatic,    worldVar: itemsCatalog,         measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
         { label: "rooms.json",           dataVar: roomsStatic,           worldVar: rooms,                measure: v => Object.keys(v).length },
         { label: "shops.json",           dataVar: shopsCatalogStatic,    worldVar: shopsCatalog,         measure: v => Object.keys(v).length },
@@ -4122,7 +4112,7 @@ export function loadActiveWorld(worldName?: string): void {
         console.warn(warnings.join("\n"));
         console.warn(`请把修改同步到 worldpacks/${world}/ 下的对应文件。\n`);
       }
-    } catch (_) {}
+    } catch (e) { console.error("loadActiveWorld: 脑裂检测失败", e); }
 
     // Re-initialize dependent variables
     ROOMS = structuredClone(rooms);
@@ -4145,7 +4135,7 @@ export function loadActiveWorld(worldName?: string): void {
     }).catch(() => {
       import("./sex.ts").then(sexModule => {
         sexModule.setSexProfiles(sexProfilesData);
-      }).catch(() => {});
+      }).catch(() => { /* sex.ts not present in public repo */ });
     });
 
     import("./timeline.js").then(timelineModule => {

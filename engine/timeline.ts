@@ -36,7 +36,7 @@ function loadCalendar(): CalendarEntry[] {
     try {
       const data = JSON.parse(fs.readFileSync(wpPath, "utf-8"));
       if (Array.isArray(data)) entries.push(...data);
-    } catch (_) {}
+    } catch (e) { console.error("loadCalendar: 解析 worldpack 日历 JSON 失败", e); }
   }
 
   // 2. Try data/calendar/
@@ -48,7 +48,7 @@ function loadCalendar(): CalendarEntry[] {
       try {
         const data = JSON.parse(fs.readFileSync(path.join(CALENDAR_DIR, f), "utf-8"));
         if (Array.isArray(data)) entries.push(...data);
-      } catch (_) {}
+      } catch (e) { console.error("loadCalendar: 解析日历文件失败", e); }
     }
   }
 
@@ -228,7 +228,7 @@ function locationMatches(entryLoc: string, playerLoc: string): boolean {
   try {
     const nav = getLocationNav(playerLoc);
     if (nav?.breadcrumb?.some((b: string) => isSameLocation(entryLoc, b))) return true;
-  } catch (_) {}
+  } catch (e) { console.error("locationMatches: getLocationNav 失败", e); }
   return false;
 }
 
@@ -245,7 +245,7 @@ export function getPlayerNameParts() {
   if (fs.existsSync(configPath)) {
     try {
       config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-    } catch (_) {}
+    } catch (e) { console.error("getPlayerNameParts: 解析主角配置文件失败", e); }
   }
 
   const defaultProtagonist = config?.default_protagonist || { full: "比企谷八幡", surname: "比企谷", givenName: "八幡" };
@@ -295,7 +295,7 @@ function loadAllTimelines(): TimelineEvent[] {
           const data = JSON.parse(raw);
           if (Array.isArray(data)) events.push(...data);
           else if (data.id) events.push(data);
-        } catch (_) {}
+        } catch (e) { console.error("loadAllTimelines: 解析时间线 JSON 失败", e); }
       }
     }
   }
@@ -364,7 +364,7 @@ function checkTrigger(event: TimelineEvent, day: number): boolean {
       if (nav && nav.breadcrumb) {
         breadcrumb = nav.breadcrumb;
       }
-    } catch (_) {}
+    } catch (e) { console.error("checkTrigger: getLocationNav 失败", e); }
     const match = isSameLocation(t.location, gameState.player.location) || breadcrumb.some(b => isSameLocation(t.location!, b));
     if (!match) return false;
   }
@@ -850,7 +850,9 @@ async function applyBeatEffects(effects: {
   }
   if (effects.sex) {
     const { getOrCreateSexState } = await import("./state.ts");
-    const { settleAfterSex } = await import("./sex.ts");
+    let settleAfterSex: any = null;
+    try { settleAfterSex = (await import("./sex.ts")).settleAfterSex; } catch { /* public repo */ }
+    if (!settleAfterSex) return;
     const ss = await getOrCreateSexState(effects.sex.npc);
     if (ss) {
       settleAfterSex(

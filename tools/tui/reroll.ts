@@ -29,7 +29,7 @@ export default {
               modelMappings = { ...modelMappings, ...config.model_mappings };
             }
           }
-        } catch (_) {}
+        } catch (e) { console.error("reroll: rendering.json model mappings error", e); }
 
         const flagModel = pi.getFlag("render-model") as string | undefined;
         const narrativeModel = flagModel || modelMappings.narrative_render_model;

@@ -49,14 +49,12 @@ export function getHousingCatalog(gameState: GameState): Record<string, any> {
   if (fs.existsSync(worldpackPath)) {
     try {
       return JSON.parse(fs.readFileSync(worldpackPath, "utf-8"));
-    } catch (_) {}
+    } catch (e) { console.error("getHousingCatalog: 解析 worldpack 房产 JSON 失败", e); }
   }
   const defaultPath = path.resolve(process.cwd(), "data", "housing.json");
   try {
     return JSON.parse(fs.readFileSync(defaultPath, "utf-8"));
-  } catch (_) {
-    return {};
-  }
+  } catch (e) { console.error("getHousingCatalog: 解析默认房产 JSON 失败", e); return {}; }
 }
 
 /**

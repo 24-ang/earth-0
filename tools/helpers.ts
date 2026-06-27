@@ -830,3 +830,84 @@ export async function runStatus(ctx: any) {
 
   await showMenu(ctx, `👤 状态与装备`, buildMenu);
 }
+
+// ── spawn_npc_agent / spawn_npc_agents 共用工具函数 ──
+
+/** 从 rendering.json 读取 npc_agent_model（fallback: flash） */
+export async function getNpcAgentModel(): Promise<string> {
+  try {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const cfgPath = path.resolve(process.cwd(), "data", "rendering.json");
+    if (fs.existsSync(cfgPath)) {
+      const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
+      if (cfg.model_mappings?.npc_agent_model) return cfg.model_mappings.npc_agent_model;
+      if (cfg.model_mappings?.narrative_render_model) return cfg.model_mappings.narrative_render_model;
+    }
+  } catch (e) { console.error("getNpcAgentModel: rendering.json read error", e); }
+  return "deepseek/deepseek-v4-flash";
+}
+
+/** NPC Agent 角色动机 prompt 块（共用） */
+export const NPC_MOTIVATION_PROMPT = [
+  "【角色动机 — 嘴上那套不是动机】",
+  "先想清楚：你现在说的/做的不一定是真心的——那可能是保护壳。追问：你在保护什么？",
+  "① 嘴上那套: 你此刻在说什么/做什么？（嘴硬/傲娇/冷淡/说教/岔开话题——这些都是防御，不是目标）",
+  "② 真正想要的（内驱力）: 你内心深处在追什么？（被认可/怕被冷落/想保护某人/试探底线/掩饰不安/确认自己的位置）",
+  "  提示: 如果你嘴上在挑刺，你可能怕被拒绝；如果你在说教，你可能想确认自己的价值；如果你沉默，你可能在等对方先表态。",
+  "③ 潜台词强度(beneath 0-3): 这轮你的真心藏得多深？",
+  "  0-1 = 淡淡的小心思，一个微妙的停顿或移开视线就够了。",
+  "  2-3 = 嘴上说的和心里想的完全相反。表面一套+深层一套，用两个互相矛盾的小动作泄漏真相。",
+  "④ 行为泄漏: 哪个具体的小动作会出卖你？（停顿的时长、移开视线的方向、放杯子力道重了一点、话说到一半咽回去）",
+].join("\n");
+
+/** 为单个 NPC 提取社交情境约束标签 */
+export async function getSocialContextTagsForNPC(
+  npcName: string,
+  socialContext: any,
+): Promise<string> {
+  if (!socialContext) return "";
+  try {
+    const { SEX_PROFILES, getSocialContextTags } = await import("../engine/sex.ts");
+    const { getOrCreateSexState } = await import("../engine/state.ts");
+    const profile = SEX_PROFILES[npcName];
+    if (!profile) return "";
+    const sState = await getOrCreateSexState(npcName);
+    if (!sState) return "";
+    return getSocialContextTags(profile, sState, {
+      trigger: socialContext.trigger,
+      exposure: socialContext.exposure,
+      setting: socialContext.setting,
+      present: socialContext.present || [],
+      firstTime: socialContext.firstTime ?? true,
+      worldliness: socialContext.worldliness,
+    });
+  } catch (e) {
+    console.error("getSocialContextTagsForNPC error:", e);
+    return "";
+  }
+}
+
+/** 记录 NPC Agent 自主发言: memory tag + 角色状态表 + saveState */
+export async function recordNpcAgentAction(
+  npcName: string,
+  response: string,
+  outfit: string,
+  location: string,
+): Promise<void> {
+  try {
+    const { addMemoryTag, saveState } = await import("../engine/state.ts");
+    addMemoryTag(npcName, `[Agent自主发言] ${response.slice(0, 80)}`, 7);
+    try {
+      const { createRow } = await import("../engine/scenario-tables.ts");
+      createRow("角色状态表", {
+        角色名: npcName,
+        穿着: (outfit || "").slice(0, 30),
+        精确动作: response.slice(0, 60),
+        情绪: "",
+        精确位置: location,
+      });
+    } catch (err) { console.error("recordNpcAgentAction: createRow error", err); }
+    saveState();
+  } catch (err) { console.error("recordNpcAgentAction: addMemoryTag error", err); }
+}
