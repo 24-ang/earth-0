@@ -102,5 +102,13 @@
     "weekday_afternoon": "自由",
     "weekday_evening": "自宅",
     "weekend": "自宅"
+  },
+  "格斗家": {
+    "reputation_group": "格斗家",
+    "weekday_morning": "道场",
+    "weekday_lunch": "道场 / 商店街",
+    "weekday_afternoon": "道场 / 山里",
+    "weekday_evening": "道场 / 自宅",
+    "weekend": "商店街 / 温泉 / 自由"
   }
 }
