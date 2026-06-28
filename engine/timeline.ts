@@ -9,7 +9,7 @@
  */
 
 import type { TimelineEvent, Hook, QuestState, CalendarEntry, DynamicEvent, NPCRuntimeState } from "./types.ts";
-import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation, findCharacter } from "./state.ts";
+import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation, findCharacter, npcBelongsToOrg } from "./state.ts";
 import { queryLore } from "./lore.ts";
 import { LIFE_STAGES } from "./time.ts";
 import fs from "node:fs";
@@ -78,7 +78,7 @@ export function getNPCEventContext(npcName: string): string {
       const npc = gameState.npcs[npcName];
       if (npc) {
         for (const eff of e.org_effects) {
-          if (npcBelongsToOrgCheck(npcName, npc, eff.org)) {
+          if (npcBelongsToOrg(npcName, npc, eff.org)) {
             npcAffected = true;
             break;
           }
@@ -101,17 +101,6 @@ export function getNPCEventContext(npcName: string): string {
   return relevant.length > 0
     ? `[NPC·事件感知·素材]\n${relevant.map(r => `  ${r}`).join("\n")}\n（GM 可在 sceneContext 中覆写为角色特化版本）`
     : "";
-}
-
-/** P1: 启发式判断 NPC 是否属于某组织（与 state.ts 中 npcBelongsToOrg 同逻辑） */
-function npcBelongsToOrgCheck(name: string, npc: NPCRuntimeState, org: string): boolean {
-  const src = findCharacter(name);
-  const group = npc.scheduleGroup || src?.schedule_group || "";
-  const defLoc = src?.default_location || "";
-  if (group.includes(org.replace("总武", "")) || defLoc.includes(org.replace("高", ""))) return true;
-  if ((group === "学生" || group === "高校生" || group === "总武高学生" || group === "总武高教师") && org.includes("高")) return true;
-  if ((group === "教师" || group === "总武高教师") && org.includes("高")) return true;
-  return false;
 }
 
 /** P1: 计算从 todayMD 到 targetMD 的天数差（正 = 未来） */

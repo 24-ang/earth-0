@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "world_interact", label: "世界交互",
-    description: "建造/拆除/拾取/丢弃/开关门。action: place|remove|pick_up|drop|build_wall|remove_wall|toggle_door。item/material须在背包里。place时可附带furniture_actions声明家具交互。",
+    description: "建造/拆除/拾取/丢弃/开关门。action：place|remove|pick_up|drop|build_wall|remove_wall|toggle_door。",
     parameters: Type.Object({
       action: Type.String({ description: "place / remove / pick_up / drop / build_wall / remove_wall / toggle_door" }),
       item: Type.Optional(Type.String({ description: "物品名（place时必需）" })),

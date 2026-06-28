@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "lookup_lore", label: "查设定",
-    description: "搜索世界观设定。先查 data/lore/{ip}_world.json 关键词匹配，再查 worldpacks/{ip}/*.json 用 TF-IDF 相似度检索。如'侍奉部规则'、'英灵召唤条件'。",
+    description: "搜索世界观设定。先查lore关键词匹配，再TF-IDF检索。",
     parameters: Type.Object({
       keyword: Type.String({ description: "搜索关键词，如'侍奉部'、'魔术协会'、'千叶地理'" }),
     }),

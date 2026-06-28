@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "reveal_secret", label: "揭示秘密",
-    description: "将秘密从隐藏级提升为可见级。id:秘密标识/content:揭示内容/fromLevel:当前级别/toLevel:目标级别。如揭露NPC秘密: fromLevel=hidden_canonical toLevel=scene_public",
+    description: "提升秘密可见级别。id:标识/content:内容/fromLevel→toLevel。",
     parameters: Type.Object({
       id: Type.String({ description: "秘密标识" }),
       content: Type.String({ description: "揭示的内容描述" }),

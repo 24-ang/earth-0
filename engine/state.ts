@@ -3791,7 +3791,7 @@ async function applyOrgEffects(): Promise<void> {
 }
 
 /** P1 启发式：判断 NPC 是否属于某组织 */
-function npcBelongsToOrg(name: string, npc: NPCRuntimeState, org: string): boolean {
+export function npcBelongsToOrg(name: string, npc: NPCRuntimeState, org: string): boolean {
   // Check schedule_group for membership
   const src = (characters as any[]).find((c: any) => c.name === name);
   const group = npc.scheduleGroup || src?.schedule_group || "";
@@ -4115,6 +4115,12 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
 }
 
 // ── 世界状态冻结与热挂载 ──
+/** 查找玩家持有的手机（背包或装备栏） */
+function findPlayerPhone(): any {
+  return gameState.player.inventory.find(i => i.phoneData !== undefined)
+    || Object.values(gameState.player.equipment).find(item => item && item.phoneData !== undefined);
+}
+
 export function freezeWorldState(worldName: string): void {
   const npcsSnapshot = structuredClone(gameState.npcs);
   const roomDeltasSnapshot = structuredClone(ROOMS);
@@ -4122,8 +4128,7 @@ export function freezeWorldState(worldName: string): void {
   const knownLocationsSnapshot = structuredClone(gameState.player.known_locations);
 
   let snsFeedSnapshot: any[] = [];
-  const phone = gameState.player.inventory.find(i => i.phoneData !== undefined)
-    || Object.values(gameState.player.equipment).find(item => item && item.phoneData !== undefined);
+  const phone = findPlayerPhone();
   if (phone && phone.phoneData) {
     snsFeedSnapshot = structuredClone(phone.phoneData.snsPosts || []);
   }
@@ -4154,8 +4159,7 @@ export function switchActiveWorld(targetWorld: string): void {
     LOCATIONS_DELTA = structuredClone(snapshot.dynamic_locations);
     gameState.player.known_locations = structuredClone(snapshot.known_locations || []);
 
-    const phone = gameState.player.inventory.find(i => i.phoneData !== undefined)
-      || Object.values(gameState.player.equipment).find(item => item && item.phoneData !== undefined);
+    const phone = findPlayerPhone();
     if (phone && phone.phoneData) {
       phone.phoneData.snsPosts = structuredClone(snapshot.sns_feed || []);
     }
@@ -4165,8 +4169,7 @@ export function switchActiveWorld(targetWorld: string): void {
     LOCATIONS_DELTA = {};
     gameState.player.known_locations = [];
 
-    const phone = gameState.player.inventory.find(i => i.phoneData !== undefined)
-      || Object.values(gameState.player.equipment).find(item => item && item.phoneData !== undefined);
+    const phone = findPlayerPhone();
     if (phone && phone.phoneData) {
       phone.phoneData.snsPosts = [];
     }

@@ -3,7 +3,7 @@ import { Type } from "typebox";
 export default {
     name: "equip_item", label: "装备",
     description: "装备/卸下物品到指定槽位。",
-    parameters: Type.Object({ item: Type.String(), slot: Type.Optional(Type.String()) }),
+    parameters: Type.Object({ item: Type.String({ description: "物品名" }), slot: Type.Optional(Type.String({ description: "装备槽位: head/body/hands/legs/feet/accessory" })) }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, saveState } = await import("../../engine/state.ts");
       const p = gameState.player;
