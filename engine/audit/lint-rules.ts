@@ -26,6 +26,63 @@ export interface LintResult {
   needsRetry: boolean;
 }
 
+// ── 自补丁 ──
+// 追踪每个 NPC 每个 block 规则的连续触发次数，用于 auto-patch spawn prompt
+
+const npcLintFailures = new Map<string, Map<string, number>>();
+
+/** 记录一次 lint block 失败，关联到指定 NPC */
+export function recordLintFailure(npcName: string, ruleId: string): void {
+  if (!npcLintFailures.has(npcName)) {
+    npcLintFailures.set(npcName, new Map());
+  }
+  const rules = npcLintFailures.get(npcName)!;
+  rules.set(ruleId, (rules.get(ruleId) || 0) + 1);
+}
+
+/** 清除某个 NPC 的 lint 失败计数（规则成功通过后重置） */
+export function clearLintFailures(npcName: string): void {
+  npcLintFailures.delete(npcName);
+}
+
+/** 获取需要注入到 NPC prompt 的强化提醒列表 */
+export function getNpcLintPatches(npcName: string): string[] {
+  const rules = npcLintFailures.get(npcName);
+  if (!rules) return [];
+  const patches: string[] = [];
+  for (const [ruleId, count] of rules) {
+    if (count >= 2) {
+      const warning = RULE_WARNINGS[ruleId];
+      if (warning) patches.push(warning);
+    }
+  }
+  return patches;
+}
+
+/** 根据 finding excerpt 推断涉及的 NPC 名列表 */
+export function extractNpcNamesFromFindings(findings: LintFinding[], gameState?: any): string[] {
+  if (!gameState?.npcs) return [];
+  const npcNames = Object.keys(gameState.npcs);
+  const matched = new Set<string>();
+  for (const f of findings) {
+    for (const name of npcNames) {
+      if (f.excerpt.includes(name) || f.match.includes(name)) {
+        matched.add(name);
+      }
+    }
+  }
+  return [...matched];
+}
+
+const RULE_WARNINGS: Record<string, string> = {
+  "pseudo-menu-ending": "[追加提醒] 不要在叙事结尾列出选项菜单。叙事正文后不应出现'你可以…'、'左边是…右边是…'等交互提示。",
+  "report-sentence": "[追加提醒] 不要使用报告式总结句。避免'目标完成''威胁提升''当前局势…''可选行动如下'等GM视角措辞。",
+  "panel-value-leak": "[追加提醒] 不要在叙事正文中暴露游戏数值。禁止出现'好感度+3''HP 15''STR 12'等面板数据。",
+  "secret-leak-true-name": "[追加提醒] 不要在叙事中泄露角色的隐藏真名。该信息目前对玩家不可见。",
+  "secret-leak-noble-phantasm": "[追加提醒] 不要在叙事中泄露角色的隐藏宝具/能力。该信息目前对玩家不可见。",
+  "secret-leak-motive": "[追加提醒] 不要在叙事中泄露角色的隐藏动机。该信息目前对玩家不可见。",
+};
+
 // ── 规则定义 ──
 
 interface ProseRule {

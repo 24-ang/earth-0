@@ -1,5 +1,6 @@
 import { Type } from "typebox";
 import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction } from "../helpers.ts";
+import { getNpcLintPatches } from "../../engine/audit/lint-rules.ts";
 
 export default {
     name: "spawn_npc_agents", label: "批量NPC代理",
@@ -58,6 +59,13 @@ export default {
           `穿着: ${outfit}`,
           `关系: ${stage}（好感${affection}）`,
           memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
+          (() => {
+            try {
+              const patches = getNpcLintPatches(npcName);
+              if (patches.length > 0) return patches.join("\n");
+            } catch { /* lint-rules not loaded */ }
+            return "";
+          })(),
           (() => {
             if (!npc.shortTermBuffer) return "";
             const parts = [];

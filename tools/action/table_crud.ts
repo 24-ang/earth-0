@@ -7,9 +7,9 @@ export default {
       action: Type.String({ description: "create|read|update|delete" }),
       table: Type.Optional(Type.String({ description: "表格名" })),
       row: Type.Optional(Type.Record(Type.String(), Type.String())),
-      rowId: Type.Optional(Type.String()),
-      col: Type.Optional(Type.String()),
-      val: Type.Optional(Type.String()),
+      rowId: Type.Optional(Type.String({ description: "行ID" })),
+      col: Type.Optional(Type.String({ description: "列名" })),
+      val: Type.Optional(Type.String({ description: "更新值" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { createRow, getAllTables, updateCell, deleteRow } = await import("../../engine/scenario-tables.ts");

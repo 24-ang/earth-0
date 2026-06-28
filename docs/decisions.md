@@ -272,5 +272,28 @@
 
 ---
 
-> 最后更新：2026-06-29。新决策随时追加。
+## 15. 多 NPC 社交心智隔离与广播机制
 
+**是什么**：
+1. **心智硬隔离**：每个 NPC 在并行角色轮只读取自己私有的长期记忆（Heuristic Memory Tags）和短期对话/事件缓冲（Short-term Buffer），彻底防止超游与脑回路共用。
+2. **本地启发式打分**：在引擎层用纯 TypeScript 计算权重：
+   $$\text{Score} = \text{priority} \times 10 + \text{在场人物命中} \times 8 + \text{地点命中} \times 5 + \text{新近度衰减} - \text{过期排除}$$
+   替代消耗 Token 和高时延的 LLM 记忆过滤，返回前 3 条最相关的长期记忆。
+3. **即时社交广播**：当任意 NPC 说话时，该发言会通过广播函数自动同步追加到**自身及所有周边在场 NPC** 的 `shortTermBuffer.recentExchanges` 对话槽中，确保多智能体间共享即时物理听觉。
+
+**为什么**：
+- **物理听觉保真**：避免多角色交谈时，未轮到的角色“失聪”或遗忘上一秒的台词，进而产生答非所问或对话断代。
+- **性能与开销纪律**：在 buildStatePrompt 和角色轮状态拼装时，禁止任何检索式的 LLM 预处理，保证毫秒级拼装。
+
+**放弃了什么**：
+- 放弃了在每次回合开始前调用 LLM 对 NPC 记忆进行向量检索或自动生成摘要的做法。
+
+**不要做**：
+- ❌ 在打分或广播逻辑中硬编码角色名/地名，应保持引擎的通用化和动态运行时驱动。
+- ❌ 在短期 buffer 中无限制追加记录，严格执行 10 对话 / 5 事件的滑动窗口先进先出（FIFO）截断。
+
+**相关代码**：`engine/types.ts` (`MemoryTag`, `shortTermBuffer`), `engine/state.ts` (`addMemoryTag`, `recallRelevantMemories`, `appendShortTermBuffer`), `tools/helpers.ts` (`recordNpcAgentAction`)
+
+---
+
+> 最后更新：2026-06-29。新决策随时追加。

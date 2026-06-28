@@ -1,5 +1,6 @@
 import { Type } from "typebox";
 import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction } from "../helpers.ts";
+import { getNpcLintPatches } from "../../engine/audit/lint-rules.ts";
 
 export async function buildNpcAgentContext(
   npcName: string,
@@ -90,7 +91,7 @@ export async function buildNpcAgentContext(
 
 export default {
     name: "spawn_npc_agent", label: "NPC角色代理",
-    description: "派生独立NPC Agent。npcName:NPC名/sceneContext:场景/initiative:true=自主发言。intimacyContext传入时自动注入真实身体反应指导(暴露程度/私密性/初次)。",
+    description: "派生独立NPC Agent发言。npcName:角色名/sceneContext:场景简述。",
     parameters: Type.Object({
       npcName: Type.String({ description: "NPC 名" }),
       sceneContext: Type.String({ description: "场景简述，如'维邀请雪乃去便利店'" }),
@@ -222,6 +223,12 @@ export default {
         }).join("、")}` : "  在场其他人: 无",
         `  提示: 对你的态度有明确记忆或长期关系的人，你的回应应自然地体现出来。`,
         memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
+        (() => {
+          try {
+            const patches = getNpcLintPatches(npcName);
+            return patches.length > 0 ? patches.join("\n") : "";
+          } catch { return ""; }
+        })(),
         (() => { const ctx = getNPCContext(params.npcName); return ctx.length > 0 ? `你的已知情报:\n${ctx.join("\n")}` : ""; })(),
         // P1: NPC 事件感知素材
         npcEventContext || "",

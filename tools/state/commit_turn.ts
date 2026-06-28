@@ -1,10 +1,11 @@
 import { Type } from "typebox";
 
 export default {
-    name: "commit_turn", label: "推进时间",
-    description: "推进游戏时间（分钟）。下课/放学/等待时调用。",
+    name: "commit_turn", label: "推进时间 [已废弃]",
+    description: "【已废弃，请用 settle_scene】推进游戏时间（分钟）。下课/放学/等待时调用。settle_scene 已包含时间推进+记忆+疲劳+住宅维护，功能更完整。",
     parameters: Type.Object({ minutes: Type.Number({ description: "推进分钟数，如 5/30/60" }) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
+      console.warn("[commit_turn] 已废弃，请使用 settle_scene。settle_scene 已包含时间推进+记忆+疲劳+住宅维护。");
       const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, stampRoom, cleanupTempNPCs, drainToolCalls } = await import("../../engine/state.ts");
       // 清掉上轮残留（如果有），开始新一轮追踪
       drainToolCalls();

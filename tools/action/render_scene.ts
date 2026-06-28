@@ -3,7 +3,7 @@ import { generateCompletion, setLastRenderParams, setLastRenderedProse, pi } fro
 
 export default {
     name: "render_scene", label: "渲染场景",
-    description: "结算轮完成后调用。引擎拼接导演单，调用叙事模型产出纯叙事正文（可通过rendering.json配置不同于主GM的模型）。调用后禁止再调工具。",
+    description: "结算后渲染叙事正文。调叙事模型产出正文，调用后禁调其他工具。",
     parameters: Type.Object({
       playerAction: Type.String({ description: "玩家实际做了什么" }),
       resolvedChanges: Type.String({ description: "本轮工具落地的变化，无则写'无'" }),
@@ -174,6 +174,24 @@ export default {
           console.warn(`[lint] render_scene: retry ${retries}/${maxRetries}`);
           prose = await generateCompletion(retryPrompt, 4096, _ctx, narrativeModel);
           if (!prose) break;
+        }
+
+        // Lint 自补丁：记录 block 失败，追踪 NPC→规则关联
+        const { recordLintFailure, extractNpcNamesFromFindings, clearLintFailures } = await import("../../engine/audit/lint-rules.ts");
+        const blockFindings = allFindings.filter((f: any) => f.severity === "block");
+        if (blockFindings.length > 0) {
+          const npcNames = extractNpcNamesFromFindings(blockFindings, gameState);
+          if (npcNames.length > 0) {
+            for (const name of npcNames) {
+              for (const f of blockFindings) {
+                recordLintFailure(name, f.ruleId);
+              }
+            }
+          }
+        } else {
+          for (const npcName of Object.keys(gameState.npcs)) {
+            clearLintFailures(npcName);
+          }
         }
 
         if (localViewpointText) {

@@ -3,7 +3,7 @@ import { Type } from "typebox";
 export default {
     name: "steal_item", label: "偷窃",
     description: "偷NPC物品。失败→好感-20+alert标记。不可替代正常获取。",
-    parameters: Type.Object({ target: Type.String(), item: Type.String() }),
+    parameters: Type.Object({ target: Type.String({ description: "偷窃目标 NPC 名" }), item: Type.String({ description: "要偷的物品名" }) }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, stealItem, saveState, updateRelation, updateReputation, getNearbyNPCs, getRoom } = await import("../../engine/state.ts");
       const { perceptionCheck } = await import("../../engine/perception.ts");
