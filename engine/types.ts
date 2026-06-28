@@ -334,6 +334,17 @@ export interface LifeEvent {
   day_started: number;
 }
 
+export interface MemoryTag {
+  tag: string;
+  since: string;
+  expires: number;
+  tone?: "感激" | "愧疚" | "喜欢" | "厌恶" | "受伤" | "困惑" | "期待" | "无感";
+  priority?: number;                                        // 重要度：1=日常, 2=重要, 3=核心机密（默认 1）
+  emotional_valence?: "positive" | "negative" | "neutral";  // 情感效价（默认 neutral）
+  related_npcs?: string[];                                  // 记忆关联人物（默认空数组）
+  category?: "fact" | "emotion" | "milestone" | "general";  // 记忆类型（默认 general）
+}
+
 export interface NPCRuntimeState {
   inventory: Item[];
   equipment: EquipmentSlots;
@@ -343,7 +354,11 @@ export interface NPCRuntimeState {
   scheduleGroup: string;           // 日程模板标签
   scheduleOverrides?: Record<string, string>;
   funds: number;                   // NPC 现金
-  memoryTags: { tag: string; since: string; expires: number; tone?: "感激" | "愧疚" | "喜欢" | "厌恶" | "受伤" | "困惑" | "期待" | "无感" }[];
+  memoryTags: MemoryTag[];
+  shortTermBuffer?: {
+    recentExchanges: string[];   // 最近的原始对话流缓存（上限 10 条）
+    recentEvents: string[];      // 最近发生的场景事件简述（上限 5 条）
+  };
   currentOutfit: OutfitKey;        // 当前激活的服装卡（默认 school）
   pendingOverride?: {              // 一次性最高优先级（生病/约定等）
     location: string;

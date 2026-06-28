@@ -170,6 +170,34 @@ npx tsx test.ts
 
 ---
 
+## 常用 TUI 命令
+
+首次进入游戏后，GM 会输出新手指南。以下为常用终端命令速查：
+
+| 分类 | 命令 | 说明 |
+|------|------|------|
+| 🧭 状态 | `/status` | 属性、HP、疲劳、装备、称号 |
+| | `/bag` | 查看背包与随身物品 |
+| | `/look` | 观察周围——NPC、家具、出口 |
+| | `/room` | 当前房间的网格地图 |
+| 🚶 移动 | `/go` | 旅行——区域→建筑→楼层→房间 |
+| | `/goskip` | 直接传送到已知地点 |
+| 📅 时间 | `/sleep` | 睡觉推进时间 |
+| | `/calendar` | 日历事件 + 日程 |
+| | `/weather` | 天气与温度 |
+| 👥 角色 | `/relations` | NPC 关系网 |
+| | `/memory` | NPC 对你的记忆标签 |
+| | `/schedule` | 查看 NPC 日程 |
+| ⚔️ 交互 | `/choice` | 在叙事末尾弹出扮演选项 |
+| | `/reroll` | 重新渲染最后一段正文 |
+| 💾 存档 | `/save` | 保存进度 |
+| | `/load` | 读取存档 |
+| 🎭 切换 | `/world` | 切换世界数据包 |
+
+全部命令见 `tools/tui/` 目录（34 个面板）。
+
+---
+
 ## 项目结构
 
 ```
@@ -205,10 +233,31 @@ earth-0/
 
 ---
 
+## 许可
+
+**代码**（`engine/` `tools/` `agents/` 及除下述外的所有 `.ts` 源文件）：
+
+[MIT](LICENSE) — 自由使用、修改、商用。
+
+**世界数据包**（`worldpacks/` 及 `data/` 下的角色卡、物品、时间线、日程等 JSON 文件）：
+
+这些是基于第三方动漫/轻小说作品整理的同人设定数据。角色、地名、剧情事件的知识产权归各自原作者所有。仅供非商业同人用途，不适用 MIT 协议。详见 [`worldpacks/NOTICE.md`](worldpacks/NOTICE.md)。
+
+---
+
+## Tester Notes
+
+- 游玩存档在 `state/`，备份回合在 `state/turn_backups/`。
+- `state/` 目录已被 gitignore——不会提交到仓库。
+- `private_extras/` 是本地私有内容目录（gitignored），如 Layer1/Sex 模块扩展。
+- 如果 pi-coding-agent 的认证信息在 `.pi/agent/auth.json`，不要分享。
+
+---
+
 ## 测试
 
 ```bash
 npx tsx test.ts
 ```
 
-230+ 测试，2 秒跑完，不依赖 LLM。覆盖引擎算法、工具落盘验证、集成管线（包括剧情引擎接线、手机顶栏无脏值、lint 引擎、toolsCalled 追踪）。
+234 测试，2 秒跑完，不依赖 LLM。覆盖引擎算法、工具落盘验证、集成管线（剧情引擎接线、手机顶栏无脏值、lint 引擎、toolsCalled 追踪、叙事视角模式切换、切镜与幕间生成、秘密防火墙浅拷贝）。

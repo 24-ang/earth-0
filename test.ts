@@ -13,7 +13,7 @@ import {
   monthlyGrowth, refreshWeather, updateNPCSchedules,
   buildStatePrompt, getBodyForAge, getNpcCurrentAge,
   setPlayerLocation, calcMaxHP, calcAC,
-  addSkillExp, updateRelation, getOrCreateNPC,
+  addSkillExp, addMemoryTag, updateRelation, getOrCreateNPC,
   calcReputationBonus, updateReputation,
   checkAndGrantTitles,
   stampRoom, getRoomAgingLine,
@@ -4955,6 +4955,130 @@ test("VIEWPOINT: secret firewall linting shallow copy", async () => {
     }
   } finally {
     globalThis.fetch = originalFetch;
+  }
+});
+
+console.log("\n── C 模块: NPC 记忆升级 ──");
+
+test("addMemoryTag 升级参数写入及默认值验证", () => {
+  resetState();
+  const npcName = "由比滨结衣";
+  // 写入一条完整带新字段的记忆
+  addMemoryTag(
+    npcName,
+    "在侍奉部和维度过了开心的下午",
+    365,
+    "喜欢",
+    2,
+    "positive",
+    ["比企谷八幡"],
+    "emotion"
+  );
+  
+  const npc = getOrCreateNPC(npcName);
+  const tagObj = npc.memoryTags[0];
+  if (!tagObj) throw new Error("记忆未能写入");
+  if (tagObj.priority !== 2) throw new Error(`期待 priority 2, 得到 ${tagObj.priority}`);
+  if (tagObj.emotional_valence !== "positive") throw new Error(`期待 positive, 得到 ${tagObj.emotional_valence}`);
+  if (!tagObj.related_npcs?.includes("比企谷八幡")) throw new Error("related_npcs 丢失");
+  if (tagObj.category !== "emotion") throw new Error(`期待 category emotion, 得到 ${tagObj.category}`);
+
+  // 写入一条无任何可选参数的记忆以验证向后兼容与默认值
+  addMemoryTag(npcName, "日常闲聊", 7);
+  const tagObjDefault = npc.memoryTags[1];
+  if (tagObjDefault.priority !== 1) throw new Error("默认 priority 应为 1");
+  if (tagObjDefault.emotional_valence !== "neutral") throw new Error("默认 emotional_valence 应为 neutral");
+  if (tagObjDefault.related_npcs?.length !== 0) throw new Error("默认 related_npcs 应为空数组");
+  if (tagObjDefault.category !== "general") throw new Error("默认 category 应为 general");
+});
+
+test("recallRelevantMemories 打分与召回逻辑验证", async () => {
+  resetState();
+  const npcName = "由比滨结衣";
+  
+  // 1. 写入普通日常闲聊几条
+  addMemoryTag(npcName, "由比滨结衣吃面包", 365, undefined, 1, "neutral", [], "general");
+  addMemoryTag(npcName, "今天天气不错", 365, undefined, 1, "neutral", [], "general");
+  addMemoryTag(npcName, "去便利店买饮料", 365, undefined, 1, "neutral", [], "general");
+  addMemoryTag(npcName, "路过猫咪点了个头", 365, undefined, 1, "neutral", [], "general");
+
+  // 2. 写入高优 Milestone 记忆并且关联"雪之下雪乃"
+  addMemoryTag(
+    npcName,
+    "在教室里和雪之下雪乃探讨了猫咪",
+    365,
+    "喜欢",
+    3,              // priority 3
+    "positive",
+    ["雪之下雪乃"],  // 关联人
+    "milestone"      // milestone
+  );
+
+  // 3. 写入已过期记忆
+  addMemoryTag(
+    npcName,
+    "过期的老旧事",
+    -1,             // 已经过期（expires = -1）
+    undefined,
+    3,
+    "neutral",
+    [],
+    "general"
+  );
+
+  const { recallRelevantMemories } = await import("./engine/state.ts");
+  
+  // 场景 context: 教室，雪之下雪乃在场
+  const memories = recallRelevantMemories(npcName, {
+    location: "教室",
+    presentNPCs: ["雪之下雪乃"]
+  });
+
+  // 验证 1: 召回数量最多 3 条
+  if (memories.length > 3) throw new Error(`召回条数不应超过3, 实际为 ${memories.length}`);
+  
+  // 验证 2: 高优/在场人匹配/地点匹配的 Milestone 记忆应该处于第一位
+  if (!memories[0].includes("探讨了猫咪")) {
+    throw new Error(`第一条应为高优教室记忆，实际为: ${memories[0]}`);
+  }
+
+  // 验证 3: 已过期记忆绝对不应该被召回
+  if (memories.some(m => m.includes("过期的老旧事"))) {
+    throw new Error("过期记忆不应被召回");
+  }
+});
+
+test("shortTermBuffer 追加与限制上限验证", async () => {
+  resetState();
+  const npcName = "由比滨结衣";
+  const { appendShortTermBuffer } = await import("./engine/state.ts");
+
+  // 写入 12 条对话
+  for (let i = 1; i <= 12; i++) {
+    appendShortTermBuffer(npcName, `对话_${i}`, undefined);
+  }
+  // 写入 6 条事件
+  for (let i = 1; i <= 6; i++) {
+    appendShortTermBuffer(npcName, undefined, `事件_${i}`);
+  }
+
+  const npc = getOrCreateNPC(npcName);
+  if (!npc.shortTermBuffer) throw new Error("shortTermBuffer 丢失");
+  
+  // 验证最近对话上限 10 条，且移除了最旧的 对话_1、对话_2
+  if (npc.shortTermBuffer.recentExchanges.length !== 10) {
+    throw new Error(`对话列表长度应为10, 实际为 ${npc.shortTermBuffer.recentExchanges.length}`);
+  }
+  if (npc.shortTermBuffer.recentExchanges[0] !== "对话_3") {
+    throw new Error(`应保留最新对话，最旧应为 对话_3, 实际为 ${npc.shortTermBuffer.recentExchanges[0]}`);
+  }
+
+  // 验证最近事件上限 5 条，且移除了最旧的 事件_1
+  if (npc.shortTermBuffer.recentEvents.length !== 5) {
+    throw new Error(`事件列表长度应为5, 实际为 ${npc.shortTermBuffer.recentEvents.length}`);
+  }
+  if (npc.shortTermBuffer.recentEvents[0] !== "事件_2") {
+    throw new Error(`应保留最新事件，最旧应为 事件_2, 实际为 ${npc.shortTermBuffer.recentEvents[0]}`);
   }
 });
 

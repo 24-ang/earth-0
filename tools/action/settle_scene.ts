@@ -9,6 +9,11 @@ export default {
       memory_tags: Type.Optional(Type.Array(Type.Object({
         target: Type.String({ description: "NPC 名" }),
         tag: Type.String({ description: "记忆标签，如'接受了维的帮助'" }),
+        tone: Type.Optional(Type.String({ description: "情绪色彩" })),
+        priority: Type.Optional(Type.Number({ description: "重要度: 1=日常, 2=重要, 3=核心" })),
+        emotional_valence: Type.Optional(Type.Union([Type.Literal("positive"), Type.Literal("negative"), Type.Literal("neutral")], { description: "情感效价" })),
+        related_npcs: Type.Optional(Type.Array(Type.String(), { description: "关联NPC名字" })),
+        category: Type.Optional(Type.Union([Type.Literal("fact"), Type.Literal("emotion"), Type.Literal("milestone"), Type.Literal("general")], { description: "记忆类型" })),
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
@@ -52,8 +57,21 @@ export default {
       await processViewpointTriggers(gameState, previousRoundNPCs, currentRoundNPCs, _ctx);
 
       if (params.memory_tags && params.memory_tags.length > 0) {
+        const { appendShortTermBuffer } = await import("../../engine/state.ts");
         for (const m of params.memory_tags) {
-          addMemoryTag(m.target, m.tag, 365);
+          addMemoryTag(
+            m.target,
+            m.tag,
+            365,
+            (m as any).tone,
+            (m as any).priority,
+            (m as any).emotional_valence,
+            (m as any).related_npcs,
+            (m as any).category
+          );
+          try {
+            appendShortTermBuffer(m.target, undefined, `场景结算事件: ${m.tag}`);
+          } catch (e) { console.error("settle_scene appendShortTermBuffer error:", e); }
         }
       }
 
