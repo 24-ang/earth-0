@@ -95,7 +95,7 @@ if (gameState.xxxCondition) {
 
 ```bash
 # 每加一个新模块，测试数只增不减
-npx tsx test.ts  # 当前基准：125 passed, 0 failed
+npx tsx test.ts  # 当前基准：230+ passed, 0 failed
 
 # 新模块至少 2 个测试：
 # - 正常路径
@@ -122,22 +122,39 @@ export function placeBet(game: string, amount: number): string {
 }
 ```
 
-### 3. 注册工具（在 extension.ts 末尾的工具区）
+### 3. 注册工具（在 `tools/action/` 或 `tools/state/` 下新建文件）
+
+> ⚠️ **不要在 `extension.ts` 里直接 `pi.registerTool`。** 现在所有工具统一在 `tools/registry.ts` 的对应数组里注册，由 `withToolTracking()` 自动追踪工具调用到台账，加新工具只加文件 + 追加数组条目即可。
+
 ```ts
-pi.registerTool({
+// tools/action/place_bet.ts
+import { Type } from "@sinclair/typebox";
+import type { Tool } from "../../types.ts";
+
+const placeBetTool: Tool = {
   name: "place_bet", label: "下注",
   description: "赌博下注。game: 骰子|扑克|赛马。amount须≤余额。",
   parameters: Type.Object({
     game: Type.String({ description: "骰子|扑克|赛马" }),
     amount: Type.Number({ description: "下注金额" }),
   }),
-  async execute(_id, params, _s, _o, _ctx) {
-    const { placeBet, saveState } = await import("./engine/gamble.ts");
+  async execute(_id, params) {
+    const { placeBet } = await import("../../engine/gamble.ts");
+    const { saveState } = await import("../../engine/state.ts");
     const r = placeBet(params.game, params.amount);
     saveState();
-    return { content: [{ type: "text", text: r }], details: {} };
+    return { content: [{ type: "text", text: r }] };
   },
-});
+};
+
+export default placeBetTool;
+```
+
+然后在 `tools/registry.ts` 的 `actionTools` 数组里追加一行：
+```ts
+import placeBetTool from "./action/place_bet.ts";
+// ...
+export const actionTools = [ ..., placeBetTool ];
 ```
 
 ### 4. 场景映射（在 engine/state.ts 的 buildStatePrompt 中）
@@ -158,6 +175,6 @@ gamble: ["place_bet", "dice_roll"],
 - [ ] 所有参数有 description
 - [ ] 引擎函数在 `engine/` + 数据在 `data/`
 - [ ] 场景映射已添加
-- [ ] `npx tsx test.ts` 测试数 ≥ 125
+- [ ] `npx tsx test.ts` 测试数 ≥ 230（在原有基准上只增不减）
 - [ ] 不包含任何硬编码的题材特定内容（人物名、地名、作品名）
 - [ ] 如有世界设定，放入 `data/lore/`
