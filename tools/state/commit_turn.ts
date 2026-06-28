@@ -3,7 +3,7 @@ import { Type } from "typebox";
 export default {
     name: "commit_turn", label: "推进时间",
     description: "推进游戏时间（分钟）。下课/放学/等待时调用。",
-    parameters: Type.Object({ minutes: Type.Number() }),
+    parameters: Type.Object({ minutes: Type.Number({ description: "推进分钟数，如 5/30/60" }) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, stampRoom, cleanupTempNPCs, drainToolCalls } = await import("../../engine/state.ts");
       // 清掉上轮残留（如果有），开始新一轮追踪

@@ -4,6 +4,24 @@
 
 import type { TimeState } from "./time.ts";
 
+// --- 地点层级节点 ---
+export interface LocationNode {
+  key: string;
+  name: string;
+  type: "root" | "region" | "prefecture" | "district" | "school" | "landmark" | "custom";
+  children: LocationNode[];
+  parent: LocationNode | null;
+}
+
+// --- 时间线到期性效果 ---
+export interface SexEffect {
+  npc: string;
+  duration?: number;
+  touched_parts?: string[];
+  thoughts?: string[];
+  partner?: string;
+}
+
 // --- 六维属性 (1-20) ---
 export interface Attributes {
   力量: number;
@@ -402,7 +420,7 @@ export interface ContainerState {
   ownerType: "furniture" | "room" | "player" | "npc" | "vehicle";
   ownerId: string;
   def: ContainerDef;
-  items: any[];  // items inside (simplified — full ItemData for now)
+  items: Item[];
   current_volume: number;
   current_weight: number;
 }
@@ -451,9 +469,15 @@ export interface TimelineEvent {
     urgency: "low" | "medium" | "high";
   };
   beats: TimelineBeat[];
+  /** 此事件必须覆盖的关键情节点（GM 必须推进到这些 beat label） */
+  must_cover?: string[];
+  /** 标志性台词（高优先级注入 NPC 生成上下文） */
+  iconic_lines?: string[];
+  /** 推荐预加载的 lore 标签（自动触发 queryLore） */
+  recommended_lore?: string[];
   on_expire?: {
     narrative: string;
-    effects?: { flags?: Record<string, boolean>; affection?: Record<string, number>; sex?: any };
+    effects?: { flags?: Record<string, boolean>; affection?: Record<string, number>; sex?: SexEffect };
   };
 }
 
@@ -567,6 +591,8 @@ export interface Hook {
   expires_day: number;
   seen_count: number;
   novelty?: string;
+  /** 标志性台词（高优先级注入 NPC 生成上下文） */
+  iconic_lines?: string[];
 }
 
 // --- 动态事件（LLM/引擎运行时创建，不入 JSON 文件） ---
@@ -622,10 +648,24 @@ export interface RevealEntry {
 
 export interface WorldStateSnapshot {
   npcs: Record<string, NPCRuntimeState>;
-  room_deltas: Record<string, any>;
-  dynamic_locations: Record<string, any>;
+  room_deltas: Record<string, Partial<CellData>>;
+  dynamic_locations: Record<string, LocationNode>;
   known_locations: string[];
-  sns_feed: any[];
+  sns_feed: SnsPost[];
+}
+
+export interface CutawayDirective {
+  type: "他者之眼" | "余波" | "同场复述" | "幕间";
+  npc: string;
+  weight: number;
+  trigger?: string;
+  npcs?: string[];
+  setting?: string;
+  topic?: string;
+  length?: "short" | "long";
+  tone?: string;
+  must_cover?: string[];
+  reveal_level?: string;
 }
 
 // --- 游戏状态 ---
@@ -652,13 +692,23 @@ export interface GameState {
   turnLog: TurnLogEntry[];                 // Layer 2 回合台账
   storySoFar: string;                      // 前情滚动摘要（旧回合压缩）
   revealLog: RevealEntry[];                // Layer 3 秘密揭示日志
-  dynamicCharacters?: Record<string, any>;   // LLM 运行时创建的角色（name → StaticCharacter 字段）
+  dynamicCharacters?: Record<string, Partial<StaticCharacter>>;
   calendarEvents?: CalendarEntry[];          // 动态可写日历事件
   world_states: Record<string, WorldStateSnapshot>; // 冷冻世界线的状态快照
   shops?: Record<string, { items: string[] }>;       // 运行时货架覆盖（由restock_shop写入，优先级高于shops.json）
   // P4 新增
   tempNPCs?: TempNPCState[];
   schemaVersion?: number;      // 存档结构版本号（1=2026-06-25 初始版本化）
+  
+  // 叙事视角系统
+  interactionMode?: "novel" | "turn_based";
+  turnsSinceLastNPCInteraction?: number;
+  turnsInConversation?: number;
+  _cutaway_queue?: CutawayDirective[];
+  _cutaway_cooldown?: number;
+  _replay_pov?: string;
+  _npc_last_responses?: Record<string, string>;
+  _pending_viewpoint_text?: { text: string; turn: number };
 }
 
 // ── 手机数据（存储在 Item.phoneData）──

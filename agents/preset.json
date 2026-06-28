@@ -21,12 +21,14 @@
     "state":     { "file": "agents/gm-state.md",       "desc": "状态简报（模板，engine 填入实时数据）", "template": true },
     "mode_gal":  { "file": "agents/gm-mode-gal.md",    "desc": "日常/GAL 叙事规则", "mode": "gal" },
     "mode_rpg":  { "file": "agents/gm-mode-rpg.md",    "desc": "检定/探索叙事规则", "mode": "rpg" },
-    "mode_sex":  { "file": "agents/gm-mode-sex.md",    "desc": "亲密叙事规则", "mode": "sex" }
+    "mode_sex":  { "file": "agents/gm-mode-sex.md",    "desc": "亲密叙事规则", "mode": "sex" },
+    "voice_novel":      { "file": "agents/gm-voice-novel.md",      "desc": "小说制叙事结构与人称规则" },
+    "voice_turn_based": { "file": "agents/gm-voice-turnbased.md", "desc": "回合制叙事结构与人称规则" }
   },
 
   "assembly": {
-    "default": ["start", "pre", "rules", "contract", "state", "mode_{mode}"],
-    "lite":    ["start", "pre", "contract", "state", "mode_{mode}"]
+    "default": ["start", "pre", "rules", "contract", "state", "voice_{interactionMode}", "mode_{mode}"],
+    "lite":    ["start", "pre", "contract", "state", "voice_{interactionMode}", "mode_{mode}"]
   },
 
   "layer1": {

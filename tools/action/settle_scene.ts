@@ -12,7 +12,10 @@ export default {
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom, cleanupTempNPCs, drainToolCalls } = await import("../../engine/state.ts");
+      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom, cleanupTempNPCs, drainToolCalls, isSameLocation } = await import("../../engine/state.ts");
+      // 1. 计算结算前的同场 NPC 数量
+      const previousRoundNPCs = Object.values(gameState.npcs).filter((n: any) => n.alive && isSameLocation(n.currentRoom, gameState.player.location)).length;
+
       // 清掉上轮残留（如果有），开始新一轮追踪
       drainToolCalls();
       const { advanceMinutes } = await import("../../engine/time.ts");
@@ -37,6 +40,16 @@ export default {
         const { settleHousingContracts } = await import("../../engine/housing.ts");
         settleHousingContracts(gameState);
       }
+
+      // 2. 计算结算后的同场 NPC 数量，并检测更新视角模式
+      const currentRoundNPCs = Object.values(gameState.npcs).filter((n: any) => n.alive && isSameLocation(n.currentRoom, gameState.player.location)).length;
+      const { detectInteractionMode } = await import("../../engine/detect-mode.ts");
+      const modeResult = detectInteractionMode(gameState, currentRoundNPCs);
+      gameState.interactionMode = modeResult.interactionMode;
+
+      // 3. 处理切镜与幕间触发及异步生成
+      const { processViewpointTriggers } = await import("../../engine/viewpoint.ts");
+      await processViewpointTriggers(gameState, previousRoundNPCs, currentRoundNPCs, _ctx);
 
       if (params.memory_tags && params.memory_tags.length > 0) {
         for (const m of params.memory_tags) {

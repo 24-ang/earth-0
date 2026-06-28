@@ -1,12 +1,33 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { Type } from "typebox";
-import { gameState, getNamelessNPCs, getCurrency } from "../engine/state.ts";
+import { gameState, getNamelessNPCs, getCurrency, normalizeLocationName } from "../engine/state.ts";
 import { getNPCContext } from "../engine/scenario-tables.ts";
 
 export let pi: ExtensionAPI | null = null;
 export function setPi(piInstance: ExtensionAPI) {
   pi = piInstance;
 }
+
+export const SLOT_NAMES: Record<string, string> = {
+  top: "外套大衣",
+  shirt: "内搭衬衫",
+  inner_top: "胸罩/裹胸",
+  bottom: "下装/裙子",
+  inner_bot: "内裤/胖次",
+  legs: "丝袜/连裤袜",
+  feet: "脚部鞋子",
+  head: "头部/发饰",
+  acc: "配饰/挂件",
+  left_hand: "副手/左手",
+  right_hand: "主手/右手",
+  back: "背部/背包"
+};
+
+/** TUI 面板用短标签（节省屏幕空间） */
+export const SLOT_NAMES_SHORT: Record<string, string> = {
+  top: "外套", shirt: "内搭", inner_top: "胸罩", bottom: "下装", inner_bot: "内裤",
+  legs: "袜", feet: "鞋", head: "头饰", acc: "配饰", left_hand: "副手", right_hand: "主手", back: "背"
+};
 
 export interface MenuItem { label: string; detail?: string; action?: (done: () => void) => void | Promise<void>; }
 
@@ -137,9 +158,8 @@ function buildStatusBarText(): string | null {
   try {
     if (gameState && gameState.time && gameState.player) {
       const loc = gameState.player.location;
-      const clean = (s: string) => s ? s.replace(/[（(].*[）)]/, "").trim().toLowerCase() : "";
-      const cLoc = clean(loc);
-      const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => clean(n.currentRoom) === cLoc).length;
+      const cLoc = normalizeLocationName(loc);
+      const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => normalizeLocationName(n.currentRoom) === cLoc).length;
       const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
       const totalCount = npcsHereCount + namelessCount;
       return `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
@@ -633,21 +653,6 @@ export async function runStatus(ctx: any) {
   const burden = isOverburdened(curW, maxC);
   const pocketVol = calcPocketVolume(p.equipment);
   const invVol = calcInventoryVolume(p.inventory, p.equipment);
-
-  const SLOT_NAMES: Record<string, string> = {
-    top: "外套大衣",
-    shirt: "内搭衬衫",
-    inner_top: "胸罩/裹胸",
-    bottom: "下装/裙子",
-    inner_bot: "内裤/胖次",
-    legs: "丝袜/连裤袜",
-    feet: "脚部鞋子",
-    head: "头部/发饰",
-    acc: "配饰/挂件",
-    left_hand: "副手/左手",
-    right_hand: "主手/右手",
-    back: "背部/背包"
-  };
 
   const buildMenu = () => {
     const items: MenuItem[] = [];

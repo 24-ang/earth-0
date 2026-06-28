@@ -1,5 +1,5 @@
 import { Type } from "typebox";
-import { showMenu, showPanel } from "../helpers.ts";
+import { showMenu, showPanel, SLOT_NAMES, SLOT_NAMES_SHORT } from "../helpers.ts";
 
 export default {
     description: "查看角色/物品详情。用法: /look <名>",
@@ -52,13 +52,9 @@ export default {
           } catch (e) {
             console.error("showMenu status bar itemsCatalog flavor lookup error:", e);
           }
-          const SLOT_NAMES: Record<string, string> = {
-            top: "外套", shirt: "内搭", inner_top: "胸罩", bottom: "下装", inner_bot: "内裤",
-            legs: "袜", feet: "鞋", head: "头饰", acc: "配饰", left_hand: "副手", right_hand: "主手", back: "背"
-          };
           eq.forEach(([s, it]) => {
             const flavor = flavorMap.get(it!.name);
-            lines.push(`[${SLOT_NAMES[s] || s}] ${flavor ? `${it!.name}（${flavor}）` : it!.name}`);
+            lines.push(`[${SLOT_NAMES_SHORT[s] || s}] ${flavor ? `${it!.name}（${flavor}）` : it!.name}`);
           });
         }
         await showPanel(ctx, p.name, lines);
@@ -152,9 +148,6 @@ export default {
         const eq = Object.entries(npcState.equipment).filter(([k, v]) => v && !clothingSlots.includes(k));
         if (eq.length > 0) {
           lines.push(`── 携带装备 ──`);
-          const SLOT_NAMES: Record<string, string> = {
-            head: "头部/发饰", acc: "配饰/挂件", left_hand: "副手/左手", right_hand: "主手/右手", back: "背部/背包"
-          };
           eq.forEach(([s, it]) => {
             const flavor = flavorMap.get(it!.name);
             lines.push(`[${SLOT_NAMES[s]||s}] ${flavor ? `${it!.name}（${flavor}）` : it!.name}`);

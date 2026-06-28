@@ -10,6 +10,7 @@
 
 import type { TimelineEvent, Hook, QuestState, CalendarEntry, DynamicEvent, NPCRuntimeState } from "./types.ts";
 import { gameState, getOrCreateNPC, updateRelation, getLocationNav, isSameLocation, findCharacter } from "./state.ts";
+import { queryLore } from "./lore.ts";
 import { LIFE_STAGES } from "./time.ts";
 import fs from "node:fs";
 import path from "node:path";
@@ -473,6 +474,7 @@ export function checkTimelineEvents(): void {
       created_day: day,
       expires_day: day + ev.expires_days,
       seen_count: 0,
+      iconic_lines: ev.iconic_lines,
     };
     gameState.active_hooks.push(hook);
   }
@@ -492,6 +494,7 @@ export function checkTimelineEvents(): void {
       created_day: day,
       expires_day: day + ev.expires_days,
       seen_count: 0,
+      iconic_lines: (ev as any).iconic_lines,
     };
     gameState.active_hooks.push(hook);
   }
@@ -511,6 +514,16 @@ export function checkTimelineEvents(): void {
     for (const h of removed) {
       const ev = jsonEvents.find(e => e.id === h.event_id) ?? gameState.dynamicEvents.find(e => e.id === h.event_id);
       if (ev) expireHookSync(h, ev);
+    }
+  }
+
+  // 预加载 active hooks 关联的 recommended_lore（自动触发 queryLore）
+  for (const h of gameState.active_hooks) {
+    const ev = events.find(e => e.id === h.event_id);
+    if (ev?.recommended_lore?.length) {
+      for (const tag of ev.recommended_lore) {
+        queryLore(tag, [], gameState.flags);
+      }
     }
   }
 }
@@ -647,6 +660,29 @@ function checkAutoIf(autoIf: { romance?: Record<string, string>; flags?: Record<
   return false;
 }
 
+function checkAndQueueIntermission(outcome: any) {
+  if (outcome?.intermission) {
+    const inter = outcome.intermission;
+    const povNpc = inter.npc || inter.npcs?.[0] || "旁白";
+    const otherNpcs = inter.npc ? inter.npcs : (inter.npcs ? inter.npcs.slice(1) : undefined);
+
+    gameState._cutaway_queue ??= [];
+    gameState._cutaway_queue.push({
+      type: "幕间",
+      npc: povNpc,
+      weight: inter.weight !== undefined ? inter.weight : 80,
+      setting: inter.setting,
+      topic: inter.topic,
+      npcs: otherNpcs,
+      length: inter.length || "long",
+      tone: inter.tone,
+      must_cover: inter.must_cover,
+      reveal_level: inter.reveal_level,
+      trigger: inter.trigger || "剧情节点触发"
+    });
+  }
+}
+
 /** 自动推进所有满足 auto_if 条件的 beat，返回推进描述列表 */
 async function autoAdvanceQuest(ev: any, q: any): Promise<string[]> {
   const logs: string[] = [];
@@ -656,7 +692,7 @@ async function autoAdvanceQuest(ev: any, q: any): Promise<string[]> {
     const currentBeat = ev.beats.find((b: any) => b.id === q.current_beat);
     if (!currentBeat) break;
 
-    // 无 outcomes 的终结 beat：如果 expires_quest，完成它
+    // 无 outcomes 的终结 beat：如果 expires_quest，完成 it
     if (!currentBeat.outcomes) {
       if (currentBeat.expires_quest) {
         if (currentBeat.effects) await applyBeatEffects(currentBeat.effects);
@@ -674,6 +710,7 @@ async function autoAdvanceQuest(ev: any, q: any): Promise<string[]> {
 
     // 执行自动选择
     q.outcomes[currentBeat.id] = autoOutcome.pick;
+    checkAndQueueIntermission(autoOutcome);
     if (currentBeat.effects) await applyBeatEffects(currentBeat.effects);
     if (autoOutcome.effects) await applyBeatEffects(autoOutcome.effects);
     logs.push(`${currentBeat.label} → ${autoOutcome.pick}`);
@@ -758,6 +795,7 @@ export async function advanceQuest(eventId: string, outcomeKey?: string): Promis
   if (outcomeKey && currentBeat.outcomes) {
     const oc = currentBeat.outcomes.find(o => o.pick === outcomeKey);
     if (oc?.effects) await applyBeatEffects(oc.effects);
+    checkAndQueueIntermission(oc);
   }
 
 

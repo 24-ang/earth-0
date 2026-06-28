@@ -77,10 +77,10 @@ export let DYNAMIC_CHARACTERS: Record<string, any> = {};
 export function getRoomKey(roomName: string): string | null {
   if (!roomName) return null;
   if (ROOMS[roomName]) return roomName;
-  const cleanName = roomName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+  const cleanName = normalizeLocationName(roomName);
   if (ROOMS[cleanName]) return cleanName;
   for (const key of Object.keys(ROOMS)) {
-    const cleanKey = key.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+    const cleanKey = normalizeLocationName(key);
     if (cleanKey === cleanName || cleanKey.includes(cleanName) || cleanName.includes(cleanKey)) {
       return key;
     }
@@ -95,9 +95,8 @@ export function isSameLocation(loc1: string, loc2: string): boolean {
   const k2 = getRoomKey(loc2);
   if (k1 && k2) return k1 === k2;
   
-  const clean = (s: string) => s.replace(/[（(].*[）)]/, "").trim().toLowerCase();
-  const c1 = clean(loc1);
-  const c2 = clean(loc2);
+  const c1 = normalizeLocationName(loc1);
+  const c2 = normalizeLocationName(loc2);
   if (c1 === c2) return true;
 
   if (c1.includes("总武") && c2.includes("总武")) return true;
@@ -115,8 +114,10 @@ const AGENTS_DIR = path.resolve(process.cwd(), "agents");
 export let gameState: GameState = createInitialState();
 
 function createInitialState(): GameState {
-  // 加载世界级秘密
-  const worldSecretsPath = path.resolve(process.cwd(), "data", "world_secrets.json");
+  // 加载世界级秘密，worldpack 优先
+  const worldSecretsWorldpackPath = path.resolve(process.cwd(), "worldpacks", activeWorldName, "world_secrets.json");
+  const worldSecretsDataPath = path.resolve(process.cwd(), "data", "world_secrets.json");
+  const worldSecretsPath = fs.existsSync(worldSecretsWorldpackPath) ? worldSecretsWorldpackPath : worldSecretsDataPath;
   let initRevealLog: RevealEntry[] = [];
   if (fs.existsSync(worldSecretsPath)) {
     try {
@@ -156,6 +157,12 @@ function createInitialState(): GameState {
     academic_year_offset: 0,
     world_states: {},
     schemaVersion: 1,
+    interactionMode: "turn_based",
+    turnsSinceLastNPCInteraction: 0,
+    turnsInConversation: 0,
+    _cutaway_queue: [],
+    _cutaway_cooldown: 0,
+    _npc_last_responses: {},
   };
 }
 
@@ -428,6 +435,14 @@ export function loadState(filepath?: string): boolean {
       }
     }
   }
+
+  // 补齐视角系统新字段的向下兼容默认值
+  gameState.interactionMode ??= "turn_based";
+  gameState.turnsSinceLastNPCInteraction ??= 0;
+  gameState.turnsInConversation ??= 0;
+  gameState._cutaway_queue ??= [];
+  gameState._cutaway_cooldown ??= 0;
+  gameState._npc_last_responses ??= {};
 
   // 写回最新版本号
   gameState.schemaVersion = currentSchemaVersion;
@@ -1077,6 +1092,9 @@ export async function buildStatePrompt(): Promise<string> {
     for (const h of hooks) {
       const seenNote = h.seen_count > 0 ? `（第${h.seen_count + 1}次提及，请换角度）` : "";
       tpl += `\n  • [${h.urgency}][${h.event_id}] ${h.hook_text} ${seenNote}`;
+      if (h.iconic_lines?.length) {
+        tpl += `\n    💬 标志性台词参考: ${h.iconic_lines.join(" | ")}`;
+      }
     }
     tpl += `\n→ 玩家接受委托后，调用 open_quest 工具开启任务。`;
   }
@@ -1698,17 +1716,31 @@ export function growAttribute(attrs: Record<string, number>, key: AttrKey, delta
 
 // --- 关系 ---
 export function updateRelation(rels: Record<string, Relationship>, name: string, delta: number, note?: string): Record<string, Relationship> {
+  const oldStage = rels[name]?.stage || "陌生";
   if (!rels[name]) {
     rels[name] = { stage: "陌生", affection: 0, romance: null, notes: "", history: [] };
   }
   rels[name].affection = Math.max(0, Math.min(100, rels[name].affection + delta));
   rels[name].stage = affectionToStage(rels[name].affection);
+  const newStage = rels[name].stage;
   if (note) rels[name].notes = note;
   // 记录历史
   rels[name].history ??= [];
   rels[name].history!.push({ delta, reason: note || "未记录原因", date: gameState.time.game_date });
   // 只保留最近20条
   if (rels[name].history!.length > 20) rels[name].history = rels[name].history!.slice(-20);
+
+  // 关系阶段突破触发他者之眼切镜
+  if (oldStage !== newStage && newStage !== "陌生") {
+    gameState._cutaway_queue ??= [];
+    gameState._cutaway_queue.push({
+      type: "他者之眼",
+      npc: name,
+      weight: 100,
+      trigger: `她与玩家的关系从${oldStage}变为${newStage}: ${note || "关系进展"}`
+    });
+  }
+
   return rels;
 }
 
@@ -2226,12 +2258,9 @@ export function listNPCItems(name: string): Item[] {
 
 // --- 地点层级系统（locations.json 树形结构） ---
 
-export interface LocationNode {
-  key: string;           // 内部key，如 "chiba"
-  name: string;          // 显示名，如 "千叶县"
-  type: "root" | "region" | "prefecture" | "district" | "school" | "landmark" | "custom";
-  children: LocationNode[];
-  parent: LocationNode | null;
+/** 规范化地点名：去掉括号注释、首尾空格、转小写 */
+export function normalizeLocationName(s: string): string {
+  return s.replace(/[（(].*[）)]/, "").trim().toLowerCase();
 }
 
 /** 递归构建地点树 */
@@ -2306,8 +2335,8 @@ function buildLocationTree(): LocationNode {
 
 /** 在树中查找匹配地点（模糊匹配） */
 function findInTree(node: LocationNode, locName: string): LocationNode | null {
-  const cleanLoc = locName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
-  if (node.name.replace(/[（(].*[）)]/, "").trim().toLowerCase() === cleanLoc) return node;
+  const cleanLoc = normalizeLocationName(locName);
+  if (normalizeLocationName(node.name) === cleanLoc) return node;
   if (isSameLocation(node.name, locName)) return node;
   for (const child of node.children) {
     const found = findInTree(child, locName);
@@ -2320,7 +2349,7 @@ function findInTree(node: LocationNode, locName: string): LocationNode | null {
 /** 通过 school_map.json 查找房间所属的学校和楼层，找不到则返回 null */
 function findSchoolContext(locName: string): { school: string; building: string; floor: string } | null {
   if (!SCHOOL_MAP?.buildings) return null;
-  const cleanLoc = locName.replace(/[（(].*[）)]/, "").trim();
+  const cleanLoc = normalizeLocationName(locName);
   for (const [bname, bdata] of Object.entries(SCHOOL_MAP.buildings)) {
     const b = bdata as any;
     if (b.rooms) {
@@ -2851,7 +2880,7 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
 }
 
 export async function createRoom(roomName: string, width: number, height: number, floor: number): Promise<{ success: boolean; reason: string }> {
-  const cleanName = roomName.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+  const cleanName = normalizeLocationName(roomName);
   if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
   if (width < 1 || height < 1) return { success: false, reason: "房间尺寸无效" };
   if (width * height > 10000) return { success: false, reason: `房间面积过大（${width*height}m²，上限10000m²）` };  // 防 LLM 恶意巨型房间
@@ -3778,11 +3807,18 @@ export function getGridContext(): string {
 
 let _regionContexts: Record<string, { keys: string[]; context: string; social_norms?: string; npc_beauty_ref?: string }> | null = null;
 
+export function clearRegionContextCache(): void {
+  _regionContexts = null;
+}
+
 /** 根据玩家位置匹配 region_contexts.json 中的区域设定，自动注入到 prompt */
 export function getRegionContext(location: string): string {
-  // 懒加载
+  // 懒加载，worldpack 优先
   if (!_regionContexts) {
-    const rcPath = path.resolve(process.cwd(), "data", "region_contexts.json");
+    // 优先读 worldpacks/{activeWorld}/region_contexts.json
+    const worldpackPath = path.resolve(process.cwd(), "worldpacks", activeWorldName, "region_contexts.json");
+    const dataPath = path.resolve(process.cwd(), "data", "region_contexts.json");
+    const rcPath = fs.existsSync(worldpackPath) ? worldpackPath : dataPath;
     if (fs.existsSync(rcPath)) {
       try { _regionContexts = JSON.parse(fs.readFileSync(rcPath, "utf-8")); }
       catch (e) { console.error("getRegionContext: 解析 region_contexts.json 失败", e); _regionContexts = {}; }
@@ -3999,6 +4035,7 @@ export function switchActiveWorld(targetWorld: string): void {
   freezeWorldState(oldWorld);
 
   gameState.activeWorld = targetWorld;
+  clearRegionContextCache();
   loadActiveWorld(targetWorld);
 
   const snapshot = gameState.world_states[targetWorld];

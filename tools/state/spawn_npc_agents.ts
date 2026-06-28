@@ -92,6 +92,8 @@ export default {
       for (let i = 0; i < filteredNPCs.length; i++) {
         const text = results[i].response;
         if (!text.includes("（沉默）") && !text.includes("（未找到）")) {
+          gameState._npc_last_responses ??= {};
+          gameState._npc_last_responses[filteredNPCs[i].npcName] = text;
           await recordNpcAgentAction(filteredNPCs[i].npcName, text, results[i].outfit || "", gameState.player.location);
         }
       }
