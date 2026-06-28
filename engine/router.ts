@@ -6,7 +6,9 @@
  */
 
 /** 动态引用——随 Worldpack 切换自动更新。懒加载避免循环引用。 */
-import { normalizeLocationName } from "./state.ts";
+function normalizeLocationName(s: string): string {
+  return s.replace(/[（(].*[）)]/, "").trim().toLowerCase();
+}
 function getRegions(): any[] {
   return regions || [];
 }

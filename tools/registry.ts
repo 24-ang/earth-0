@@ -95,13 +95,8 @@ import loadCommand from "./tui/load.ts";
 import savesCommand from "./tui/saves.ts";
 import redoCommand from "./tui/redo.ts";
 import sleepCommand from "./tui/sleep.ts";
-// Conditional imports — files may not exist in public repo (private_extras/)
-let _layer1Command: any = null;
-let _sexCommand: any = null;
-try {
-  _layer1Command = require("./tui/layer1.ts").default;
-  _sexCommand = require("./tui/sex.ts").default;
-} catch { /* private_extras not present */ }
+import layer1Command from "./tui/layer1.ts";
+import sexCommand from "./tui/sex.ts";
 import roomCommand from "./tui/room.ts";
 import trainCommand from "./tui/train.ts";
 import bagCommand from "./tui/bag.ts";
@@ -187,8 +182,8 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerCommand("saves", savesCommand);
   pi.registerCommand("redo", redoCommand);
   pi.registerCommand("sleep", sleepCommand);
-  if (_layer1Command) pi.registerCommand("layer1", _layer1Command);
-  if (_sexCommand) pi.registerCommand("sex", _sexCommand);
+  pi.registerCommand("layer1", layer1Command);
+  pi.registerCommand("sex", sexCommand);
   pi.registerCommand("room", roomCommand);
   pi.registerCommand("train", trainCommand);
   pi.registerCommand("bag", bagCommand);
