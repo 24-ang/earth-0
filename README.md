@@ -197,6 +197,8 @@ earth-0/
 |--------|---------|
 | [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) | 理解"为什么 earth-0 是现在这个样子" |
 | [`docs/decisions.md`](docs/decisions.md) | 查看每个具体设计决策的取舍理由 |
+| [`docs/新建文件夹/earth-0-A-叙事视角系统.md`](docs/新建文件夹/earth-0-A-叙事视角系统.md) | 理解叙事视角与双轨幕间系统的设计思路（为什么做、怎么触发、和幕间的区别） |
+| [`docs/新建文件夹/earth-0-narrative-viewpoint.md`](docs/新建文件夹/earth-0-narrative-viewpoint.md) | 叙事视角系统的逐步工程实现参考（开发时照着敲） |
 | [`docs/COMPARISON-FATE-SANDBOX.md`](docs/COMPARISON-FATE-SANDBOX.md) | 和 fate-sandbox 的诚实对比 |
 | [`docs/AUDIT-2026-06-25.md`](docs/AUDIT-2026-06-25.md) | 最新一次全面审计 |
 | [`docs/module-template.md`](docs/module-template.md) | 学习怎么加新模块 |
