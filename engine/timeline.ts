@@ -904,10 +904,13 @@ async function applyBeatEffects(effects: {
     }
   }
   if (effects.memoryTags) {
-    const { addMemoryTag } = await import("./state.ts");
+    const { addMemoryTag, appendShortTermBuffer } = await import("./state.ts");
     for (const [npc, tags] of Object.entries(effects.memoryTags)) {
       for (const t of tags) {
-        addMemoryTag(npc, t.tag, t.expires ?? 365, t.tone);
+        addMemoryTag(npc, t.tag, t.expires ?? 365, t.tone, (t as any).priority, (t as any).emotional_valence, (t as any).related_npcs, (t as any).category);
+        try {
+          appendShortTermBuffer(npc, undefined, `剧情事件: ${t.tag}`);
+        } catch (e) { console.error("applyBeatEffects appendShortTermBuffer error:", e); }
       }
     }
   }

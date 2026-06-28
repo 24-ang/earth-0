@@ -20,7 +20,7 @@ export default {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
+      const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
       const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
 
       async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<{response: string; outfit: string}> {
@@ -31,7 +31,14 @@ export default {
         const rel = gameState.player.relationships[npcName];
         const affection = rel?.affection ?? 0;
         const stage = rel?.stage ?? "陌生";
-        const memories = getMemoryTags(npcName);
+        const batchOthers = params.npcs
+          .filter((n: any) => n.npcName !== npcName)
+          .map((n: any) => n.npcName);
+        const memories = recallRelevantMemories(npcName, {
+          location: gameState.player.location,
+          presentNPCs: batchOthers,
+          topic: sceneContext ? sceneContext.slice(0, 50) : undefined
+        });
         const curAge = getNpcCurrentAge(src.base_age || 16);
         const body = getBodyForAge(src, curAge);
         const outfit = getNPCOutfitDesc(npcName);
@@ -39,10 +46,6 @@ export default {
         const cs = (charStages as any)[npcName];
         const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
         const personality = cs?.[stageKey] || "";
-
-        const batchOthers = params.npcs
-          .filter((n: any) => n.npcName !== npcName)
-          .map((n: any) => n.npcName);
 
         // 社交情境 → 按 NPC 个体生成约束标签
         const socialTags = await getSocialContextTagsForNPC(npcName, params.socialContext);
@@ -54,7 +57,19 @@ export default {
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,
           `关系: ${stage}（好感${affection}）`,
-          memories.length > 0 ? `记忆: ${memories.join("；")}` : "",
+          memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
+          (() => {
+            if (!npc.shortTermBuffer) return "";
+            const parts = [];
+            if (npc.shortTermBuffer.recentExchanges && npc.shortTermBuffer.recentExchanges.length > 0) {
+              parts.push(`【即时对话历史】(供你参考刚才发生的话题，不要重复或复读)：\n${npc.shortTermBuffer.recentExchanges.join("\n")}`);
+            }
+            if (npc.shortTermBuffer.recentEvents && npc.shortTermBuffer.recentEvents.length > 0) {
+              parts.push(`【即时事件历史】(最近场景变动)：\n${npc.shortTermBuffer.recentEvents.map(e => `  • ${e}`).join("\n")}`);
+            }
+            return parts.length > 0 ? parts.join("\n\n") : "";
+          })(),
+          "",
           `当前场景: ${sceneContext}`,
           initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。" : "",
           "",

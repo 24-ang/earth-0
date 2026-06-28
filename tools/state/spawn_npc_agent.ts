@@ -4,9 +4,10 @@ import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_M
 export async function buildNpcAgentContext(
   npcName: string,
   otherNPCs?: string[],
-  socialContext?: any
+  socialContext?: any,
+  sceneContext?: string
 ) {
-  const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
+  const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
   const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
 
   const src = findCharacter(npcName);
@@ -16,7 +17,11 @@ export async function buildNpcAgentContext(
   const rel = gameState.player.relationships[npcName];
   const affection = rel?.affection ?? 0;
   const stage = rel?.stage ?? "陌生";
-  const memories = getMemoryTags(npcName);
+  const memories = recallRelevantMemories(npcName, {
+    location: gameState.player.location,
+    presentNPCs: otherNPCs || [],
+    topic: sceneContext ? sceneContext.slice(0, 50) : undefined
+  });
   const curAge = getNpcCurrentAge(src.base_age || 16);
   const body = getBodyForAge(src, curAge);
   const outfit = getNPCOutfitDesc(npcName);
@@ -116,7 +121,7 @@ export default {
           n.currentRoom.replace(/[（(].*[）)]/, "").trim().toLowerCase() === gameState.player.location.replace(/[（(].*[）)]/, "").trim().toLowerCase())
         .map(([name]) => name);
 
-      const context = await buildNpcAgentContext(params.npcName, otherNPCs, params.socialContext);
+      const context = await buildNpcAgentContext(params.npcName, otherNPCs, params.socialContext, params.sceneContext);
       if (!context) {
         return { content: [{ type: "text", text: `${params.npcName}（角色数据未找到）` }], details: {} };
       }
@@ -224,6 +229,17 @@ export default {
         npcLoreContext || "",
         // P3: NPC 对他人的印象
         npcImpressionsContext || "",
+        (() => {
+          if (!npc.shortTermBuffer) return "";
+          const parts = [];
+          if (npc.shortTermBuffer.recentExchanges && npc.shortTermBuffer.recentExchanges.length > 0) {
+            parts.push(`【即时对话历史】(供你参考刚才发生的话题，不要重复或复读)：\n${npc.shortTermBuffer.recentExchanges.join("\n")}`);
+          }
+          if (npc.shortTermBuffer.recentEvents && npc.shortTermBuffer.recentEvents.length > 0) {
+            parts.push(`【即时事件历史】(最近场景变动)：\n${npc.shortTermBuffer.recentEvents.map(e => `  • ${e}`).join("\n")}`);
+          }
+          return parts.length > 0 ? parts.join("\n\n") : "";
+        })(),
         "",
         `当前场景: ${params.sceneContext}`,
         params.initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。可以是对环境的反应、对在场其他人的观察、或者你正在忙自己的事。不要等玩家开口。" : "",

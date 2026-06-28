@@ -901,8 +901,47 @@ export async function recordNpcAgentAction(
   location: string,
 ): Promise<void> {
   try {
-    const { addMemoryTag, saveState } = await import("../engine/state.ts");
-    addMemoryTag(npcName, `[Agent自主发言] ${response.slice(0, 80)}`, 7);
+    const { addMemoryTag, saveState, isSameLocation, appendShortTermBuffer } = await import("../engine/state.ts");
+    
+    // 1. 扫描当前在场的其他 NPC 作为 related_npcs
+    const normalizedLoc = normalizeLocationName(location);
+    const relatedNPCs = Object.entries(gameState.npcs || {})
+      .filter(([name, n]) => name !== npcName && n.alive && n.currentRoom && normalizeLocationName(n.currentRoom) === normalizedLoc)
+      .map(([name]) => name);
+
+    // 2. 分析语气与情感倾向 (根据文本粗略映射)
+    let emotionalValence: "positive" | "negative" | "neutral" = "neutral";
+    const cleanResponse = response.toLowerCase();
+    if (cleanResponse.includes("谢谢") || cleanResponse.includes("开心") || cleanResponse.includes("喜欢") || cleanResponse.includes("感激") || cleanResponse.includes("高兴")) {
+      emotionalValence = "positive";
+    } else if (cleanResponse.includes("讨厌") || cleanResponse.includes("生气") || cleanResponse.includes("愧疚") || cleanResponse.includes("受伤") || cleanResponse.includes("难过") || cleanResponse.includes("烦人")) {
+      emotionalValence = "negative";
+    }
+
+    // 3. 写入长期记忆
+    addMemoryTag(
+      npcName,
+      `[Agent自主发言] ${response.slice(0, 80)}`,
+      7,                // 默认 7 天过期
+      undefined,        // tone
+      1,                // priority (1 = 日常)
+      emotionalValence,
+      relatedNPCs,
+      "general"         // category
+    );
+
+    // 4. 追加对话到自身的 shortTermBuffer 对话缓冲中
+    try {
+      appendShortTermBuffer(npcName, `${npcName}: "${response.slice(0, 100)}"`, undefined);
+      
+      // 5. 【社交广播】：也将其余在场 NPC 的短期对话缓冲同步追加（让其他人“听到”这句发言）
+      for (const otherNpc of relatedNPCs) {
+        appendShortTermBuffer(otherNpc, `${npcName}: "${response.slice(0, 100)}"`, undefined);
+      }
+    } catch (e) {
+      console.error("recordNpcAgentAction appendShortTermBuffer error:", e);
+    }
+
     try {
       const { createRow } = await import("../engine/scenario-tables.ts");
       createRow("角色状态表", {

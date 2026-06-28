@@ -3094,16 +3094,125 @@ export function toggleDoor(x: number, y: number): { success: boolean; reason: st
 }
 
 // --- 记忆标签：LLM观察到某事 → 打标签 ---
-export function addMemoryTag(npcName: string, tag: string, expiresDays: number = 365, tone?: string): void {
+// --- 记忆标签：LLM观察到某事 → 打标签 ---
+export function addMemoryTag(
+  npcName: string,
+  tag: string,
+  expiresDays: number = 365,
+  tone?: string,
+  priority?: number,
+  emotional_valence?: "positive" | "negative" | "neutral",
+  related_npcs?: string[],
+  category?: "fact" | "emotion" | "milestone" | "general"
+): void {
   const npc = getOrCreateNPC(npcName);
   npc.memoryTags ??= [];
-  npc.memoryTags.push({ tag, since: gameState.time.game_date, expires: expiresDays, tone: tone as any });
+  npc.memoryTags.push({
+    tag,
+    since: gameState.time.game_date,
+    expires: expiresDays,
+    tone: tone as any,
+    priority: priority ?? 1,
+    emotional_valence: emotional_valence ?? "neutral",
+    related_npcs: related_npcs ?? [],
+    category: category ?? "general"
+  });
 }
 
 export function getMemoryTags(npcName: string): string[] {
   const npc = gameState.npcs[npcName];
   if (!npc?.memoryTags) return [];
   return npc.memoryTags.slice(-5).map(t => `${t.tag}${t.tone ? ` [${t.tone}]` : ""}`);
+}
+
+export function recallRelevantMemories(
+  npcName: string,
+  context: { location: string; presentNPCs: string[]; topic?: string }
+): string[] {
+  const npc = gameState.npcs[npcName];
+  if (!npc?.memoryTags || npc.memoryTags.length === 0) return [];
+
+  const currentDate = gameState.time?.game_date ? new Date(gameState.time.game_date).getTime() : Date.now();
+  const ONE_DAY_MS = 86400000;
+
+  // 1. 过滤已过期标签
+  const activeTags = npc.memoryTags.filter(t => {
+    const time = new Date(t.since).getTime();
+    if (isNaN(time)) return true; // 无法解析时间则安全保留
+    const daysSince = (currentDate - time) / ONE_DAY_MS;
+    return daysSince < t.expires;
+  });
+
+  if (activeTags.length === 0) return [];
+
+  // 2. 打分排序
+  const scoredTags = activeTags.map((t, index) => {
+    let score = (t.priority ?? 1) * 10;
+
+    // 命中在场其他 NPC：求 presentNPCs ∩ related_npcs 的交集长度
+    if (t.related_npcs && t.related_npcs.length > 0 && context.presentNPCs && context.presentNPCs.length > 0) {
+      const intersectCount = context.presentNPCs.filter(p => t.related_npcs!.includes(p)).length;
+      score += intersectCount * 8;
+    }
+
+    // 命中当前位置
+    if (context.location && t.tag.includes(context.location)) {
+      score += 5;
+    }
+
+    // 分类加分
+    if (t.category === "milestone") {
+      score += 6;
+    } else if (t.category === "emotion") {
+      score += 4;
+    } else if (t.category === "fact" && context.location && t.tag.includes(context.location)) {
+      score += 3;
+    }
+
+    // 新近度时间衰减：按索引渐进加分，最远 0，最近 +3 
+    const recencyBonus = Math.min(3, (index / Math.max(1, activeTags.length - 1)) * 3);
+    score += recencyBonus;
+
+    // 场景话题语义匹配（可选）
+    if (context.topic && t.tag.includes(context.topic)) {
+      score += 5;
+    }
+
+    return { tag: t, score };
+  });
+
+  // 降序排序
+  scoredTags.sort((a, b) => b.score - a.score);
+
+  // 取前三条最相关的长期记忆
+  const topTags = scoredTags.slice(0, 3).map(st => st.tag);
+
+  return topTags.map(t => `${t.tag}${t.tone ? ` [${t.tone}]` : ""}`);
+}
+
+export function appendShortTermBuffer(
+  npcName: string,
+  exchange?: string,
+  event?: string
+): void {
+  const npc = getOrCreateNPC(npcName);
+  npc.shortTermBuffer ??= { recentExchanges: [], recentEvents: [] };
+  npc.shortTermBuffer.recentExchanges ??= [];
+  npc.shortTermBuffer.recentEvents ??= [];
+
+  if (exchange) {
+    npc.shortTermBuffer.recentExchanges.push(exchange);
+    if (npc.shortTermBuffer.recentExchanges.length > 10) {
+      npc.shortTermBuffer.recentExchanges.shift();
+    }
+  }
+
+  if (event) {
+    npc.shortTermBuffer.recentEvents.push(event);
+    if (npc.shortTermBuffer.recentEvents.length > 5) {
+      npc.shortTermBuffer.recentEvents.shift();
+    }
+  }
 }
 
 // --- 多维声望 ---
