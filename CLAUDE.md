@@ -15,6 +15,7 @@
 1. **引擎零题材硬编码**：engine/ 下没有任何角色名、地名、作品名。题材数据在 worldpacks/。
 2. **引擎守恒，叙事自由**：引擎只拦截不可逆的守恒量（钱/物/HP/时间/位置/信息可见性），其余全权交 LLM。
 3. **工具 description ≤ 25 中文字**：一行说清，action 值用 `|` 分隔。
+   **每个参数必须有 `description`**：`Type.Number({ description: "..." })`，不要裸 `Type.Number()`。
 4. **新模块只需三件事**：注册工具 → 加场景映射 → 放数据文件。详见 `docs/module-template.md`。
 5. **做了反直觉的设计决定 → 马上记到 `docs/decisions.md`**。格式照搬现有条目。
 6. **改框架层代码前先开分支**，验证后再合并。
@@ -24,6 +25,7 @@
 - ❌ 在 engine/ 里硬编码角色名/地名/作品名
 - ❌ 绕过引擎工具直接叙事改变物理世界（"你造好了墙"但没调 world_interact）
 - ❌ 工具描述写成多行拼接字符串
+- ❌ 工具参数用裸 `Type.Number()` 不加 description
 - ❌ 在没读 PHILOSOPHY.md 和 decisions.md 的情况下质疑现有设计然后推翻重做
 - ❌ 改 `data/characters.json` 或 `data/items.json` 等世界专属数据——改 worldpacks/oregairu/ 下的同名文件
 - ❌ 写静默 `catch (_) {}` — 至少加 `console.error("函数名: 失败原因", e)`

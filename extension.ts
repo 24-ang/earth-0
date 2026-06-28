@@ -61,17 +61,21 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
       for (const key of layers) {
         // 开局流程只在第一回合需要。开局后跳过，省 ~1.5KB/回合。
         if (key === "start" && gameState.turn > 0) continue;
-        const layerKey = key.replace("{mode}", gameState.mode);
+        const layerKey = key.replace("{mode}", gameState.mode).replace("{interactionMode}", gameState.interactionMode || "turn_based");
         const layerConfig = presetData.layers[layerKey];
         if (!layerConfig) continue;
         
         if (layerKey === "state") {
           parts.push(statePrompt);
         } else {
-          const fileResolved = layerConfig.file.replace("{mode}", gameState.mode);
+          const fileResolved = layerConfig.file.replace("{mode}", gameState.mode).replace("{interactionMode}", gameState.interactionMode || "turn_based");
           const filePath = path.resolve(process.cwd(), fileResolved);
-          const content = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8").trim() : "";
-          if (content) parts.push(content);
+          let content = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf-8").trim() : "";
+          if (content) {
+            const personText = (gameState.mode === "gal" || gameState.mode === "sex") ? "第一人称「我」" : "第三人称「他」（镜头需钉在主角身边，采用第三人称限知视角）";
+            content = content.replace(/\{\{person\}\}/g, personText);
+            parts.push(content);
+          }
         }
       }
       gmPrompt = parts.filter(Boolean).join("\n\n---\n\n");
@@ -79,8 +83,11 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
       console.error("Failed to parse preset.json, falling back to hardcoded default:", e);
       const read = (name: string) => {
         const p = path.join(agentsDir, name);
-        return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+        let content = fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+        const personText = (gameState.mode === "gal" || gameState.mode === "sex") ? "第一人称「我」" : "第三人称「他」（镜头需钉在主角身边，采用第三人称限知视角）";
+        return content.replace(/\{\{person\}\}/g, personText);
       };
+      const voiceFile = (gameState.interactionMode === "novel") ? "gm-voice-novel.md" : "gm-voice-turnbased.md";
       const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
         : gameState.mode === "rpg" ? "gm-mode-rpg.md"
         : "gm-mode-gal.md";
@@ -89,14 +96,18 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
         read("gm-rules.md"),
         read("gm-contract.md"),
         statePrompt,
+        read(voiceFile),
         read(modeFile),
       ].filter(Boolean).join("\n\n---\n\n");
     }
   } else {
     const read = (name: string) => {
       const p = path.join(agentsDir, name);
-      return fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+      let content = fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+      const personText = (gameState.mode === "gal" || gameState.mode === "sex") ? "第一人称「我」" : "第三人称「他」（镜头需钉在主角身边，采用第三人称限知视角）";
+      return content.replace(/\{\{person\}\}/g, personText);
     };
+    const voiceFile = (gameState.interactionMode === "novel") ? "gm-voice-novel.md" : "gm-voice-turnbased.md";
     const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
       : gameState.mode === "rpg" ? "gm-mode-rpg.md"
       : "gm-mode-gal.md";
@@ -105,6 +116,7 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
       read("gm-rules.md"),
       read("gm-contract.md"),
       statePrompt,
+      read(voiceFile),
       read(modeFile),
     ].filter(Boolean).join("\n\n---\n\n");
   }

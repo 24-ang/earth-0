@@ -4811,6 +4811,153 @@ test("INTEGRATION: set_flags 改状态后 saveState 有调", () => {
   saveState();
 });
 
+test("VIEWPOINT: detectInteractionMode debouncing and overrides", async () => {
+  const { detectInteractionMode } = await import("./engine/detect-mode.ts");
+  resetState();
+  
+  // 1. Combat/Sex overrides
+  gameState.mode = "sex";
+  let mode = detectInteractionMode(gameState, 1);
+  if (mode.interactionMode !== "turn_based" || mode.person !== "first") {
+    throw new Error("Sex mode should force turn_based + first person");
+  }
+  
+  gameState.mode = "combat" as any;
+  mode = detectInteractionMode(gameState, 0);
+  if (mode.interactionMode !== "turn_based" || mode.person !== "third") {
+    throw new Error("Combat mode should force turn_based + third person");
+  }
+
+  // 2. Debouncing: nearbyNPCs > 0 -> turn_based
+  gameState.mode = "gal";
+  gameState.turnsSinceLastNPCInteraction = 0;
+  mode = detectInteractionMode(gameState, 2);
+  if (mode.interactionMode !== "turn_based" || gameState.turnsSinceLastNPCInteraction !== 0) {
+    throw new Error("With nearby NPCs, interactionMode should be turn_based");
+  }
+
+  // 3. Debouncing: nearbyNPCs === 0
+  // Turn 1
+  mode = detectInteractionMode(gameState, 0);
+  if (mode.interactionMode !== "turn_based" || gameState.turnsSinceLastNPCInteraction !== 1) {
+    throw new Error("Turn 1 of no NPCs should keep turn_based (debouncing)");
+  }
+  // Turn 2
+  mode = detectInteractionMode(gameState, 0);
+  if (mode.interactionMode !== "novel" || gameState.turnsSinceLastNPCInteraction !== 2) {
+    throw new Error("Turn 2 of no NPCs should switch to novel");
+  }
+});
+
+test("VIEWPOINT: updateRelation triggers he_zhe_zhi_yan cutaway", async () => {
+  resetState();
+  const { updateRelation } = await import("./engine/state.ts");
+  
+  // Try updating relationship
+  updateRelation(gameState.player.relationships, "雪之下雪乃", 50, "关系进展中");
+  
+  // Stage was "陌生", now should be "熟人" or "至交"? 50 affection is "至交" or "熟人"?
+  const queue = gameState._cutaway_queue || [];
+  const triggerItem = queue.find(q => q.type === "他者之眼" && q.npc === "雪之下雪乃");
+  if (!triggerItem) {
+    throw new Error("updateRelation did not trigger '他者之眼' cutaway!");
+  }
+  if (triggerItem.weight !== 100) {
+    throw new Error("Relation breakthrough cutaway should have weight 100");
+  }
+});
+
+test("VIEWPOINT: processViewpointTriggers aftermath", async () => {
+  resetState();
+  const { processViewpointTriggers } = await import("./engine/viewpoint.ts");
+  const { getOrCreateNPC } = await import("./engine/state.ts");
+
+  const npc = getOrCreateNPC("由比滨结衣");
+  npc.currentRoom = "侍奉部";
+  gameState.player.location = "侍奉部";
+  
+  // Simulate 3 turns of conversation in the room
+  await processViewpointTriggers(gameState, 2, 2, null);
+  await processViewpointTriggers(gameState, 2, 2, null);
+  await processViewpointTriggers(gameState, 2, 0, null); // Exit co-presence
+  
+  const queue = gameState._cutaway_queue || [];
+  const aftermath = queue.find(q => q.type === "余波" && q.npc === "由比滨结衣");
+  if (!aftermath) {
+    throw new Error("Exit co-presence after >= 3 turns did not trigger aftermath cutaway");
+  }
+});
+
+test("VIEWPOINT: secret firewall linting shallow copy", async () => {
+  resetState();
+  const { processViewpointTriggers } = await import("./engine/viewpoint.ts");
+  const { getOrCreateNPC } = await import("./engine/state.ts");
+
+  const npc = getOrCreateNPC("雪之下雪乃");
+  npc.currentRoom = "侍奉部";
+  gameState.player.location = "侍奉部";
+  gameState.interactionMode = "novel";
+  gameState._cutaway_cooldown = 0;
+
+  // Let's inject a secret
+  gameState.secrets = {
+    "雪之下雪乃": {
+      trueName: { value: "秘密雪乃", revealState: "hidden" }
+    }
+  } as any;
+
+  // Add a directive to the queue with intermission that mentions the secret
+  gameState._cutaway_queue = [{
+    type: "幕间",
+    npc: "雪之下雪乃",
+    weight: 90,
+    topic: "秘密泄露测试",
+    must_cover: ["她就是秘密雪乃"],
+    reveal_level: "hidden_canonical"
+  }];
+
+  const originalFetch = globalThis.fetch;
+  let fetchedPrompt = "";
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    fetchedPrompt = body.messages[0].content;
+    return {
+      ok: true,
+      json: async () => ({
+        content: [{ text: "这里记录着：她就是秘密雪乃。" }]
+      })
+    } as any;
+  };
+
+  try {
+    // Process triggers to start the async LLM generation
+    await processViewpointTriggers(gameState, 0, 0, null);
+    
+    // Read the pending viewpoint promise
+    const { getPendingViewpointPromise, clearPendingViewpointPromise } = await import("./engine/viewpoint.ts");
+    const promise = getPendingViewpointPromise();
+    if (!promise) {
+      throw new Error("No pending viewpoint promise started");
+    }
+    const resultText = await promise;
+    clearPendingViewpointPromise();
+
+    if (!resultText) {
+      throw new Error("Async intermission generation failed");
+    }
+    if (!resultText.includes("秘密雪乃")) {
+      throw new Error("Generated intermission text should contain secret text");
+    }
+    
+    // Check that gameState.secrets remains hidden (read-only verification)
+    if (gameState.secrets["雪之下雪乃"].trueName.revealState !== "hidden") {
+      throw new Error("Intermission should not change actual revealState of secrets");
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 (async () => {
   for (const t of testQueue) {
     try {

@@ -23,9 +23,35 @@ export default {
         npcResponses: params.npcResponses,
       });
 
-      const { gameState, getRecentTurnLogContext } = await import("../../engine/state.ts");
+      const { gameState, getRecentTurnLogContext, saveState } = await import("../../engine/state.ts");
       const fs = await import("node:fs");
       const path = await import("node:path");
+
+      // 立即读取、校验并清除 _pending_viewpoint_text
+      let localViewpointText = "";
+      if (gameState._pending_viewpoint_text) {
+        if (gameState._pending_viewpoint_text.turn === gameState.turn) {
+          localViewpointText = gameState._pending_viewpoint_text.text;
+        }
+        delete gameState._pending_viewpoint_text;
+        saveState();
+      }
+
+      // 获取并清理 viewpoint 异步 Promise
+      const { getPendingViewpointPromise, clearPendingViewpointPromise } = await import("../../engine/viewpoint.ts");
+      const promise = getPendingViewpointPromise();
+      if (promise) {
+        try {
+          const vpText = await promise;
+          if (vpText) {
+            localViewpointText = (localViewpointText ? localViewpointText + "\n" : "") + vpText;
+          }
+        } catch (err) {
+          console.error("render_scene: error awaiting viewpoint promise:", err);
+        } finally {
+          clearPendingViewpointPromise();
+        }
+      }
 
       const recentContext = getRecentTurnLogContext(3);
 
@@ -47,7 +73,6 @@ export default {
       // 获取 flag 覆盖
       const flagModel = pi.getFlag("render-model") as string | undefined;
       const narrativeModel = flagModel || modelMappings.narrative_render_model;
-      // logicModel 预留用于未来可能的多模型分离——当前未使用
       const _logicModel = modelMappings.logic_engine_model;
 
       // 传统单步回退 Prompt（以备不时之需）
@@ -63,13 +88,14 @@ export default {
         "",
         params.npcResponses ? `NPC 独立回应：\n${params.npcResponses}\n` : "",
         recentContext ? `前情摘要: ${recentContext}\n` : "",
-        "规则：≤2段叙事+≤5句对白。融入身体触觉（支撑点）。微观空间定位准确。对话用「」或『』。结尾输出4个扮演选项（按gm-contract格式: ---分割线+> blockquote+[风格]+圈号）。绝对不分析心理。不替玩家说话。",
+        "规则：融入身体触觉（支撑点）。如果本轮包含身体动作，用 1-2 句写清楚力的方向、重心转移、身体接触点的具体感觉。微观空间定位准确。对话用「」或『』。绝对不分析心理。不替玩家说话。人称、字数及格式结尾请完全遵守系统提示词末尾的Voice和Mode层规则。",
         "",
         "现在输出纯叙事正文：",
       ].join("\n");
 
       try {
-        // 纯代码拼接 <directors_note>（零 Token 成本）。多模型分离基建已预留（rendering.json + _logicModel），当前未使用。
+        const interactionMode = gameState.interactionMode || "turn_based";
+        const wordBudget = interactionMode === "novel" ? "400-800" : "200-400";
         const directorsNote = `
 <directors_note>
   <engine_events>
@@ -79,6 +105,8 @@ export default {
     <atmosphere>常规</atmosphere>
     <npc_emotion>${params.npcResponses ? "有回应" : "常规"}</npc_emotion>
     <action_outcome>${params.sceneResult}</action_outcome>
+    <interaction_mode>${interactionMode}</interaction_mode>
+    <word_budget>${wordBudget}</word_budget>
   </scene_directives>
   ${params.npcResponses ? `<subtext>${params.npcResponses}</subtext>` : ""}
 </directors_note>
@@ -94,7 +122,7 @@ export default {
           directorsNote,
           "",
           recentContext ? `前情摘要: ${recentContext}\n` : "",
-          "规则：≤2段叙事+≤5句对白。融入身体触觉（支撑点）。微观空间定位准确。对话用「」或『』。结尾输出4个扮演选项（按gm-contract格式: ---分割线+> blockquote+[风格]+圈号）。绝对不分析心理。不替玩家说话。",
+          "规则：融入身体触觉（支撑点）。如果本轮包含身体动作，用 1-2 句写清楚力的方向、重心转移、身体接触点的具体感觉。微观空间定位准确。对话用「」或『』。绝对不分析心理。不替玩家说话。人称、字数及格式结尾请完全遵守系统提示词末尾的Voice和Mode层规则。",
           "",
           "现在输出纯叙事正文："
         ].join("\n");
@@ -108,46 +136,49 @@ export default {
         const { lintProse } = await import("../../engine/audit/lint-rules.ts");
         let retries = 0;
         const maxRetries = 3;
-        let retryExhausted = false;
         let allFindings: any[] = [];
+        let retryExhausted = false;
 
-        while (retries <= maxRetries) {
+        while (true) {
           const lintResult = lintProse(prose, gameState);
-          allFindings = lintResult.findings;
-          const blocks = lintResult.findings.filter(f => f.severity === "block");
-          const warns = lintResult.findings.filter(f => f.severity === "warn");
-
-          if (blocks.length > 0) {
-            console.error(`[lint] render_scene: ${blocks.length} block(s) — ${blocks.map(b => b.ruleId).join(", ")}`);
+          if (lintResult.findings.length > 0) {
+            allFindings.push(...lintResult.findings);
           }
-          if (warns.length > 0) {
-            console.warn(`[lint] render_scene: ${warns.length} warn(s) — ${warns.map(w => w.ruleId).join(", ")}`);
-          }
-          prose = lintResult.prose;
 
-          if (!lintResult.needsRetry) break;
-          if (retries >= maxRetries) {
-            retryExhausted = true;
-            console.warn(`[lint] render_scene: retry exhausted after ${maxRetries} attempts`);
+          if (!lintResult.needsRetry) {
+            prose = lintResult.prose;
             break;
           }
 
-          // 构建纠正 prompt：把违规片段 + 规则喂给模型
-          const blockFindings = allFindings.filter(f => f.severity === "block");
-          const violations = blockFindings.map(f => `• [${f.ruleId}] 违规片段: "${f.excerpt}"`).join("\n");
+          if (retries >= maxRetries) {
+            console.error(`[lint] render_scene: retries exhausted (${maxRetries} times)`);
+            retryExhausted = true;
+            prose = lintResult.prose;
+            break;
+          }
+
+          // Build retry prompt
+          const violations = lintResult.findings.map(f => `[${f.severity.toUpperCase()}] 规则: ${f.ruleId} | 原因: ${f.message}`).join("\n");
           const retryPrompt = [
-            "你的上一版正文触发了以下质量规则，请避免这些问题后重写全文：",
+            renderPrompt,
+            "",
+            "---",
+            "",
+            "【上一轮输出未通过安全及格式审计，被拦截并要求重写。以下为违规列表】:",
             violations,
             "",
-            "重写要求：保持原意和场景不变，≤2段叙事+≤5句对白，融入身体触觉，对话用「」或『』，结尾输出4个扮演选项。",
+            "重写要求：保持原意和场景不变，融入身体触觉，对话用「」或『』，人称、字数与格式结尾必须严格遵守Voice和Mode层规则。",
             "现在重新输出完整叙事正文：",
           ].join("\n");
           retries++;
           console.warn(`[lint] render_scene: retry ${retries}/${maxRetries}`);
           prose = await generateCompletion(retryPrompt, 4096, _ctx, narrativeModel);
-          if (!prose) break; // 模型返回空就不重试了
+          if (!prose) break;
         }
 
+        if (localViewpointText) {
+          prose = prose.trim() + "\n" + localViewpointText.trim();
+        }
         setLastRenderedProse(prose);
         return { content: [{ type: "text", text: prose }], details: { directorsNote, lintFindings: allFindings, retries, retryExhausted } };
 
@@ -163,6 +194,9 @@ export default {
           const lintResult = lintProse(prose, gameState);
           if (lintResult.findings.length > 0) {
             prose = lintResult.prose;
+          }
+          if (localViewpointText) {
+            prose = prose.trim() + "\n" + localViewpointText.trim();
           }
           setLastRenderedProse(prose);
           return { content: [{ type: "text", text: prose }], details: { lintFindings: lintResult?.findings ?? [] } };

@@ -1,6 +1,88 @@
 import { Type } from "typebox";
 import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction } from "../helpers.ts";
 
+export async function buildNpcAgentContext(
+  npcName: string,
+  otherNPCs?: string[],
+  socialContext?: any
+) {
+  const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
+  const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
+
+  const src = findCharacter(npcName);
+  if (!src) return null;
+
+  const npc = getOrCreateNPC(npcName);
+  const rel = gameState.player.relationships[npcName];
+  const affection = rel?.affection ?? 0;
+  const stage = rel?.stage ?? "陌生";
+  const memories = getMemoryTags(npcName);
+  const curAge = getNpcCurrentAge(src.base_age || 16);
+  const body = getBodyForAge(src, curAge);
+  const outfit = getNPCOutfitDesc(npcName);
+  const app = getAppearanceForAge(src, curAge);
+
+  // 阶段性格
+  const cs = (charStages as any)[npcName];
+  const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
+  const personality = src.personality_text || cs?.[stageKey] || "";
+
+  // 社交情境标签
+  const socialTags = await getSocialContextTagsForNPC(npcName, socialContext);
+
+  // P1: NPC event awareness
+  let npcEventContext = "";
+  try {
+    const { getNPCEventContext } = await import("../../engine/timeline.ts");
+    npcEventContext = getNPCEventContext(npcName);
+  } catch (e) { console.error("buildNpcAgentContext: getNPCEventContext error", e); }
+
+  // P2: NPC world knowledge
+  let npcLoreContext = "";
+  try {
+    const { getNPCLore } = await import("../../engine/lore.ts");
+    const loreTexts = getNPCLore(npcName);
+    if (loreTexts.length > 0) {
+      npcLoreContext = `[NPC·常识]\n${loreTexts.map(t => `  • ${t}`).join("\n")}`;
+    }
+  } catch (e) { console.error("buildNpcAgentContext: getNPCLore error", e); }
+
+  // P3: NPC impressions of other characters
+  let npcImpressionsContext = "";
+  try {
+    const { getNPCCharacterImpressions } = await import("../../engine/state.ts");
+    const allSceneNPCs = [gameState.player.name, ...(otherNPCs || [])].filter(n => n !== npcName);
+    const impressions = getNPCCharacterImpressions(npcName, allSceneNPCs);
+    const impressionLines: string[] = [];
+    for (const [target, facts] of Object.entries(impressions)) {
+      for (const fact of facts) {
+        impressionLines.push(`  对${target}的印象: ${fact}`);
+      }
+    }
+    if (impressionLines.length > 0) {
+      npcImpressionsContext = `[NPC·对他人的印象]\n${impressionLines.join("\n")}`;
+    }
+  } catch (e) { console.error("buildNpcAgentContext: getNPCCharacterImpressions error", e); }
+
+  return {
+    src,
+    npc,
+    rel,
+    affection,
+    stage,
+    memories,
+    curAge,
+    body,
+    outfit,
+    app,
+    personality,
+    socialTags,
+    npcEventContext,
+    npcLoreContext,
+    npcImpressionsContext
+  };
+}
+
 export default {
     name: "spawn_npc_agent", label: "NPC角色代理",
     description: "派生独立NPC Agent。npcName:NPC名/sceneContext:场景/initiative:true=自主发言。intimacyContext传入时自动注入真实身体反应指导(暴露程度/私密性/初次)。",
@@ -21,7 +103,6 @@ export default {
       const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
       const { getNPCContext } = await import("../../engine/scenario-tables.ts");
       const sexMod: any = await import("../../engine/sex.ts").catch(() => null);
-      const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
 
       const { getPlayerNameParts } = await import("../../engine/timeline.ts");
       const protagonistName = getPlayerNameParts().full;
@@ -30,34 +111,17 @@ export default {
         return { content: [{ type: "text", text: `${params.npcName}是当前主角或玩家，无法派生为NPC Agent。` }], details: {} };
       }
 
-      const src = findCharacter(params.npcName);
-      if (!src) {
-        return { content: [{ type: "text", text: `${params.npcName}（角色数据未找到）` }], details: {} };
-      }
-
-      const npc = getOrCreateNPC(params.npcName);
-      const rel = gameState.player.relationships[params.npcName];
-      const affection = rel?.affection ?? 0;
-      const stage = rel?.stage ?? "陌生";
-      const memories = getMemoryTags(params.npcName);
-      const curAge = getNpcCurrentAge(src.base_age || 16);
-      const body = getBodyForAge(src, curAge);
-      const outfit = getNPCOutfitDesc(params.npcName);
-      const app = getAppearanceForAge(src, curAge);
-
-      // 阶段性格
-      const cs = (charStages as any)[params.npcName];
-      const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
-      const personality = src.personality_text || cs?.[stageKey] || "";
-
-      // 获取在场其他 NPC（排除自己），给 NPC 提供场景共识
       const otherNPCs = Object.entries(gameState.npcs)
         .filter(([name, n]) => name !== params.npcName && n.currentRoom && gameState.player.location &&
           n.currentRoom.replace(/[（(].*[）)]/, "").trim().toLowerCase() === gameState.player.location.replace(/[（(].*[）)]/, "").trim().toLowerCase())
         .map(([name]) => name);
 
-      // 社交情境 → 生成约束标签（而非剧本）
-      const socialTags = await getSocialContextTagsForNPC(params.npcName, params.socialContext);
+      const context = await buildNpcAgentContext(params.npcName, otherNPCs, params.socialContext);
+      if (!context) {
+        return { content: [{ type: "text", text: `${params.npcName}（角色数据未找到）` }], details: {} };
+      }
+
+      const { src, npc, rel, affection, stage, memories, curAge, body, outfit, app, personality, socialTags, npcEventContext, npcLoreContext, npcImpressionsContext } = context;
 
       // 辅助：生成一个角色外貌简述（复用 lookup_character 同款字段）
       const describePerson = (name: string, src: any, targetAge: number) => {
@@ -75,40 +139,6 @@ export default {
       };
       const myHeight = body?.height_cm || 160;
       const hDiff = (h: number) => h > myHeight + 8 ? "需仰视" : h > myHeight + 3 ? "稍高" : h < myHeight - 8 ? "需俯视" : h < myHeight - 3 ? "稍矮" : "";
-
-      // P1: NPC event awareness — engine provides素材, GM can override in sceneContext
-      let npcEventContext = "";
-      try {
-        const { getNPCEventContext } = await import("../../engine/timeline.ts");
-        npcEventContext = getNPCEventContext(params.npcName);
-      } catch (e) { console.error("spawn_npc_agent: getNPCEventContext error", e); }
-
-      // P2: NPC world knowledge injection
-      let npcLoreContext = "";
-      try {
-        const { getNPCLore } = await import("../../engine/lore.ts");
-        const loreTexts = getNPCLore(params.npcName);
-        if (loreTexts.length > 0) {
-          npcLoreContext = `[NPC·常识]\n${loreTexts.map(t => `  • ${t}`).join("\n")}`;
-        }
-      } catch (e) { console.error("spawn_npc_agent: getNPCLore error", e); }
-
-      // P3: NPC impressions of other characters in scene
-      let npcImpressionsContext = "";
-      try {
-        const { getNPCCharacterImpressions } = await import("../../engine/state.ts");
-        const allSceneNPCs = [gameState.player.name, ...otherNPCs].filter(n => n !== params.npcName);
-        const impressions = getNPCCharacterImpressions(params.npcName, allSceneNPCs);
-        const impressionLines: string[] = [];
-        for (const [target, facts] of Object.entries(impressions)) {
-          for (const fact of facts) {
-            impressionLines.push(`  对${target}的印象: ${fact}`);
-          }
-        }
-        if (impressionLines.length > 0) {
-          npcImpressionsContext = `[NPC·对他人的印象]\n${impressionLines.join("\n")}`;
-        }
-      } catch (e) { console.error("spawn_npc_agent: getNPCCharacterImpressions error", e); }
 
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
@@ -231,6 +261,8 @@ export default {
         if (!response) {
           return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
         }
+        gameState._npc_last_responses ??= {};
+        gameState._npc_last_responses[params.npcName] = response;
         await recordNpcAgentAction(params.npcName, response, outfit || "", gameState.player.location);
         return { content: [{ type: "text", text: response }], details: {} };
       } catch (err) {
