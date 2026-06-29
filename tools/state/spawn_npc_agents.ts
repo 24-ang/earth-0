@@ -58,6 +58,26 @@ export default {
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,
           `关系: ${stage}（好感${affection}）`,
+          (() => {
+            if (batchOthers.length === 0) return "";
+            const textsToScan = [personality, src.personality_brief, src.anchors?.private, ...memories].filter(Boolean);
+            const lines: string[] = [];
+            for (const oName of batchOthers) {
+              for (const txt of textsToScan) {
+                if (typeof txt === "string" && txt.includes(oName)) {
+                  const idx = txt.indexOf(oName);
+                  const start = Math.max(0, idx - 15);
+                  const end = Math.min(txt.length, idx + oName.length + 30);
+                  let snippet = txt.slice(start, end).replace(/\n/g, "");
+                  if (start > 0) snippet = "…" + snippet;
+                  if (end < txt.length) snippet += "…";
+                  lines.push(`  你认识${oName}：${snippet}`);
+                  break;
+                }
+              }
+            }
+            return lines.length > 0 ? `【身份识别】在场的人中：\n${lines.join("\n")}` : "";
+          })(),
           memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
           (() => {
             try {
