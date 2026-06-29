@@ -27,8 +27,8 @@
   },
 
   "assembly": {
-    "default": ["start", "pre", "rules", "contract", "state", "voice_{interactionMode}", "mode_{mode}"],
-    "lite":    ["start", "pre", "contract", "state", "voice_{interactionMode}", "mode_{mode}"]
+    "default": ["start", "pre", "rules", "state", "voice_{interactionMode}", "mode_{mode}", "contract"],
+    "lite":    ["start", "pre", "state", "voice_{interactionMode}", "mode_{mode}", "contract"]
   },
 
   "layer1": {

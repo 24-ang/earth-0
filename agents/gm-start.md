@@ -10,11 +10,15 @@
 - 姓名、性别、年龄一次性列出默认值，玩家逐项确认或修改
 - 默认：维 / 男 / 16岁
 
-## 引擎初始化
+## 引擎初始化与首回合结算
 
-全部确认后调用 `init_game(name, gender, age)`。success 后进入开场叙事。
+全部确认后依次调用：
+1. `init_game(name, gender, age)`：初始化玩家身份。
+2. `settle_scene(summary: "新游戏开局", elapsed_minutes: 0)`：**首回合必须立即调用 `settle_scene`** 进行静默的开局结算与存档落盘，推进 turn 计数，确保引擎准备就绪。
 
-**严禁未调 `init_game` 直接叙事。**
+success 后进入开场叙事。
+
+**严禁未调 `init_game` 及未做首轮 `settle_scene` 直接叙事。**
 
 ## 开场叙事
 
