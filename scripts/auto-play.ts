@@ -61,11 +61,23 @@ async function main() {
   console.log(`玩家模型: ${CONFIG.playerModel} | 叙事模型: ${CONFIG.narrativeModel}\n`);
 
   // 动态导入引擎
-  const { gameState, resetState, loadState, saveState, getNearbyNPCs, getOrCreateNPC,
+  const state = await import("../engine/state.ts");
+  const { resetState, loadState, saveState, getNearbyNPCs, getOrCreateNPC,
           updateNPCSchedules, refreshWeather, addMemoryTag, appendShortTermBuffer,
           stampRoom, cleanupTempNPCs, drainToolCalls, buildStatePrompt, findCharacter,
           getNPCOutfitDesc, getNpcCurrentAge, getBodyForAge, getAppearanceForAge,
-          isSameLocation, recordTurnLog } = await import("../engine/state.ts");
+          isSameLocation, recordTurnLog } = state;
+
+  const gameState = new Proxy({}, {
+    get(_, prop) {
+      return (state.gameState as any)[prop];
+    },
+    set(_, prop, value) {
+      (state.gameState as any)[prop] = value;
+      return true;
+    }
+  }) as any;
+
   const { advanceMinutes } = await import("../engine/time.ts");
   const { runWorldTick } = await import("../engine/tick.ts");
   const { lintProse } = await import("../engine/audit/lint-rules.ts");
@@ -325,6 +337,7 @@ async function main() {
     }
 
     // 5. 叙事渲染
+    const npcText = npcResponses.join("\n");
     const movedNote = movedTo ? `玩家移动到了: ${movedTo}。` : "";
     const npcNote = npcText ? `NPC说了:\n${npcText}` : "附近没有可对话的人物。";
     const directorsNote = [
@@ -353,7 +366,7 @@ async function main() {
     const lintResult = lintProse(narrative, gameState as any);
     if (lintResult.needsRetry) {
       const violations = lintResult.findings.map(f => `[${f.ruleId}] ${f.message || f.match}`).join("; ");
-      console.log(`  ⚠ Lint 拦截: ${violations.slice(0, 120)}`);
+      console.log("  ⚠ Lint 拦截: " + violations.slice(0, 120));
       narrative = lintResult.prose || narrative;
     }
 
@@ -367,6 +380,13 @@ async function main() {
       nextPressure: "无",
       toolsCalled: drainToolCalls(),
     });
+
+    try {
+      const { reviewTurn } = await import("../engine/audit/review-agent.ts");
+      await reviewTurn(null);
+    } catch (e) {
+      console.error("  Review Agent error in auto-play:", e);
+    }
 
     // 8. 日志记录 + 叙事历史
     narrativeHistory.push(narrative);

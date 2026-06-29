@@ -185,8 +185,19 @@ export function drainToolCalls(): string[] {
 
 // ── Layer 2 回合台账 ──
 export function recordTurnLog(entry: Omit<TurnLogEntry, "turn" | "timestamp">): TurnLogEntry {
+  let resolvedChanges = entry.resolvedChanges;
+  if (gameState.lastReviewFindings && gameState.lastReviewFindings.length > 0) {
+    resolvedChanges = resolvedChanges + "\n[复盘警报]\n" + gameState.lastReviewFindings.map(f => `- ${f}`).join("\n");
+  }
+
+  const toolsCalled = (entry.toolsCalled && entry.toolsCalled.length > 0)
+    ? entry.toolsCalled
+    : (gameState._lastTurnToolsCalled || []);
+
   const log: TurnLogEntry = {
     ...entry,
+    resolvedChanges,
+    toolsCalled,
     turn: gameState.turn,
     timestamp: gameState.time.game_date + " " + (gameState.time.time_of_day ?? ""),
   };
@@ -252,7 +263,7 @@ function createDefaultPlayer(): PlayerState {
     name: "维",
     gender: "男",
     age: 16,
-    location: "住宅区",
+    location: "家_玩家房間",
     body: {
       height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
       skin: { base_tone: "普通", tan: 0, texture: "普通" },
@@ -273,7 +284,7 @@ function createDefaultPlayer(): PlayerState {
     party: [],
     gridPos: null,
     reputation: {},
-    known_locations: ["住宅区"],
+    known_locations: ["家_玩家房間"],
     titles: [],
     properties: {},
   };
@@ -1247,6 +1258,10 @@ export async function buildStatePrompt(): Promise<string> {
     // 始终提醒可用的核心工具（不随场景变）
     const always = "始终可用: lookup_character, lookup_region, lookup_lore, dice_roll, get_status, commit_turn, add_to_party, remove_from_party, lookup_weather, spawn_item, grant_skill_exp, create_story_hook, instantiate_npc";
     tpl += `\n[工具提示] ${[...sceneHints, always].join(" | ")}`;
+  }
+
+  if (gameState.lastReviewFindings && gameState.lastReviewFindings.length > 0) {
+    tpl += `\n[系统复盘警报] 上一回合复盘检出以下问题，请在叙事中注意遵守设定或进行合理找补：\n` + gameState.lastReviewFindings.map(f => `  • ${f}`).join("\n");
   }
 
   return tpl;

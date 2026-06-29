@@ -21,8 +21,8 @@ export default {
       // 1. 计算结算前的同场 NPC 数量
       const previousRoundNPCs = Object.values(gameState.npcs).filter((n: any) => n.alive && isSameLocation(n.currentRoom, gameState.player.location)).length;
 
-      // 清掉上轮残留（如果有），开始新一轮追踪
-      drainToolCalls();
+      // 暂存本轮工具，开始新一轮追踪
+      gameState._lastTurnToolsCalled = drainToolCalls();
       const { advanceMinutes } = await import("../../engine/time.ts");
       const cleanupMsgs = cleanupTempNPCs("场景结算");
       const mins = params.elapsed_minutes;
@@ -76,6 +76,14 @@ export default {
       }
 
       stampRoom();
+
+      try {
+        const { reviewTurn } = await import("../../engine/audit/review-agent.ts");
+        await reviewTurn(_ctx);
+      } catch (e) {
+        console.error("[Review Agent Error] 复盘执行发生未捕获异常/超时:", e);
+      }
+
       saveState();
 
       const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
