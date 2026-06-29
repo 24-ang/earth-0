@@ -44,6 +44,18 @@ const testQueue: { name: string; fn: () => any }[] = [];
 function test(name: string, fn: () => any) {
   testQueue.push({ name, fn });
 }
+function privateTest(name: string, requiredFiles: string[], fn: () => any) {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const allExist = requiredFiles.every(f => fs.existsSync(path.resolve(process.cwd(), f)));
+  if (allExist) {
+    test(name, fn);
+  } else {
+    test(name + " (已跳过 - 缺少私有资产)", () => {
+      console.log(`  [SKIP] 跳过测试: "${name}"，云端不包含私有资产: ${requiredFiles.join(", ")}`);
+    });
+  }
+}
 
 console.log("=== earth-0 引擎冒烟测试 ===\n");
 
@@ -571,7 +583,7 @@ test("自慰不计入初体验", async () => {
   if (s.milestones!.firstKiss.given) throw new Error("自慰后初吻应仍为未");
 });
 
-test("buildStatePrompt 注入里程碑信息", async () => {
+privateTest("buildStatePrompt 注入里程碑信息", ["data/sex_profiles.json"], async () => {
   resetState();
   const { getOrCreateSexState } = await import("./engine/state.ts");
   const sState = await getOrCreateSexState("由比滨结衣");
@@ -586,7 +598,7 @@ test("buildStatePrompt 注入里程碑信息", async () => {
   gameState.player.sex = undefined;
 });
 
-test("buildStatePrompt 注入 [mood_hint]", async () => {
+privateTest("buildStatePrompt 注入 [mood_hint]", ["data/sex_profiles.json"], async () => {
   resetState();
   const { getOrCreateSexState, updateRelation } = await import("./engine/state.ts");
   const sState = await getOrCreateSexState("由比滨结衣");
@@ -1535,7 +1547,7 @@ test("getActiveQuests 仅返回active状态", async () => {
   if (getActiveQuests().length !== 0) throw new Error("放弃后应0个活跃quest");
 });
 
-test("timeline events applying sex effects successfully", async () => {
+privateTest("timeline events applying sex effects successfully", ["data/sex_profiles.json"], async () => {
   resetState();
   const fs = require('fs');
   const path = require('path');
@@ -3227,7 +3239,7 @@ test("散文Lint: 秘密泄露检测", async () => {
 });
 
 
-test("autonomic_chain: expireHooks executes background sex and memory resolution", async () => {
+privateTest("autonomic_chain: expireHooks executes background sex and memory resolution", ["data/sex_profiles.json"], async () => {
   resetState();
   const { expireHooks } = require("./engine/timeline.ts");
   const { getOrCreateSexState, updateRelation } = require("./engine/state.ts");
@@ -3277,7 +3289,7 @@ test("autonomic_chain: expireHooks executes background sex and memory resolution
   }
 });
 
-test("autonomic_chain: trip expireHooks executes background hotel sex", async () => {
+privateTest("autonomic_chain: trip expireHooks executes background hotel sex", ["data/sex_profiles.json"], async () => {
   resetState();
   const { expireHooks } = require("./engine/timeline.ts");
   const { updateRelation } = require("./engine/state.ts");
@@ -3431,7 +3443,7 @@ test("achievements: query achievements from flags", () => {
   }
 });
 
-test("spawn_npc_agent: system prompt contains sex milestones", async () => {
+privateTest("spawn_npc_agent: system prompt contains sex milestones", ["data/sex_profiles.json"], async () => {
   resetState();
   const spawnNpcAgent = require("./tools/state/spawn_npc_agent.ts").default;
   const { getOrCreateSexState } = require("./engine/state.ts");
@@ -3472,7 +3484,7 @@ test("spawn_npc_agent: system prompt contains sex milestones", async () => {
   }
 });
 
-test("trigger_rules: if_ed_treatment blocks if cohabit occurred", () => {
+privateTest("trigger_rules: if_ed_treatment blocks if cohabit occurred", ["data/timelines/oregairu/ed_treatment.json"], () => {
   resetState();
   clearCalendarCache();
   gameState.active_hooks = [];
@@ -3494,7 +3506,7 @@ test("trigger_rules: if_ed_treatment blocks if cohabit occurred", () => {
   }
 });
 
-test("trigger_rules: if_ed_treatment triggers if conditions met", () => {
+privateTest("trigger_rules: if_ed_treatment triggers if conditions met", ["data/timelines/oregairu/ed_treatment.json"], () => {
   resetState();
   clearCalendarCache();
   gameState.active_hooks = [];
@@ -4173,7 +4185,7 @@ test("auto_if: main_9 全自动完成（romance→player_bridge→route_pure）"
 // 纯爱 IF 线 playerRelations 闭环
 // ═══════════════════════════════════════════════
 
-test("pure_1_gate: first_time_finish sets playerRelations romance=恋人", () => {
+privateTest("pure_1_gate: first_time_finish sets playerRelations romance=恋人", ["data/timelines/oregairu/pure_1_gate.json"], () => {
   const fs = require('fs');
   const path = require('path');
   const ev = JSON.parse(fs.readFileSync(
@@ -4193,7 +4205,7 @@ test("pure_1_gate: first_time_finish sets playerRelations romance=恋人", () =>
   if (pr.stage !== "至交") throw new Error(`stage应为至交, 实际: ${pr.stage}`);
 });
 
-test("pure_5_fireworks: date_sex_finish confirms playerRelations romance=恋人", () => {
+privateTest("pure_5_fireworks: date_sex_finish confirms playerRelations romance=恋人", ["data/timelines/oregairu/pure_5_fireworks.json"], () => {
   const fs = require('fs');
   const path = require('path');
   const ev = JSON.parse(fs.readFileSync(
