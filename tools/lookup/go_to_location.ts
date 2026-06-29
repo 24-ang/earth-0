@@ -71,9 +71,13 @@ export default {
         : route === "电车" ? "描述车厢内的氛围、车窗外的风景。到站后调 complete_travel。"
         : "描述沿途的街区和交通状况。到达后调 complete_travel。";
 
-      ctx.chat.addSystemMessage(
-        `玩家出发前往 ${dest}（${route}，约${minutes}分钟）。${vehicleHint}到达目的地后请调用 complete_travel 完成移动。`
-      );
+      if (ctx?.chat) {
+        try {
+          ctx.chat.addSystemMessage(
+            `玩家出发前往 ${dest}（${route}，约${minutes}分钟）。${vehicleHint}到达目的地后请调用 complete_travel 完成移动。`
+          );
+        } catch {}
+      }
 
       return {
         content: [{ type: "text", text: `已设pendingTravel: ${currentLoc} → ${dest}（${route}，约${minutes}分钟）。请在叙事途中到达后调用 complete_travel 收口。` }],
