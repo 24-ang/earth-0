@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { gameState, getOrCreateNPC, getNpcCurrentAge, findCharacter, isSameLocation, addMemoryTag, updateRelation } from "../state.ts";
 import { generateCompletion, getNpcAgentModel, lastRenderedProse } from "../../tools/helpers.ts";
 
@@ -12,7 +14,8 @@ export async function reviewTurn(ctx: any): Promise<void> {
   const playerRoom = gameState.player.location;
   if (!playerRoom) return;
 
-  const charStages = (await import("../../data/character_stages.json", { with: { type: "json" } })).default;
+  const charStagesPath = path.resolve(process.cwd(), "data", "character_stages.json");
+  const charStages = JSON.parse(fs.readFileSync(charStagesPath, "utf-8"));
 
   const presentNPCs: string[] = [];
   const presentNPCDescriptions: string[] = [];
