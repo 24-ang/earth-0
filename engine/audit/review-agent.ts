@@ -1,5 +1,5 @@
 import { gameState, getOrCreateNPC, getNpcCurrentAge, findCharacter, isSameLocation, addMemoryTag, updateRelation } from "../state.ts";
-import { generateCompletion, getNpcAgentModel } from "../../tools/helpers.ts";
+import { generateCompletion, getNpcAgentModel, lastRenderedProse } from "../../tools/helpers.ts";
 
 export async function reviewTurn(ctx: any): Promise<void> {
   // 1. 防爆开关
@@ -70,7 +70,7 @@ export async function reviewTurn(ctx: any): Promise<void> {
   }
 
   // 4. 获取当前回合的渲染正文
-  const prose = (await import("../../tools/helpers.ts")).lastRenderedProse || "";
+  const prose = lastRenderedProse || "";
   if (!prose) {
     gameState.lastReviewFindings = [];
     return;

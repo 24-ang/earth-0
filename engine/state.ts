@@ -141,7 +141,7 @@ function createInitialState(): GameState {
     player: createDefaultPlayer(),
     npcs: {},
     sexStates: {},
-    mode: "gal",
+    mode: "rpg",
     activeWorld: "oregairu",
     layer1Enabled: false,
     auMode: false,

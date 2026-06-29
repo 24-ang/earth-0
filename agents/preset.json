@@ -38,7 +38,7 @@
 
   "mode_switch": {
     "trigger": "engine 或玩家主动切换",
-    "default": "gal",
+    "default": "rpg",
     "notes": "战斗强制切 rpg；Sex 场景切 sex；结束后恢复。不受 preset 切换影响。"
   }
 }
