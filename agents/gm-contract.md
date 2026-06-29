@@ -17,13 +17,14 @@
 
 ### 第一步：结算轮（静默，不给玩家看）
 
-1. 分析玩家输入，确定需要调用的工具
-2. **先查再写**：调用 lookup 工具获取需要的信息
-3. **调用引擎工具**：interact_furniture / world_interact / buy_item / steal_item / restock_shop 等
-4. 完成导演单（内部场记格式）
-5. 调用 `record_turn_log` 将导演单落盘
-6. 如需揭示秘密，调用 `reveal_secret`
-7. **剧情共创**（可选）：如果你判断此时应该产生新的剧情钩子（好感突破、重大事件、伏笔铺设），调用 `create_story_hook`；如果路人应该成为角色，调用 `instantiate_npc`
+1. 分析玩家输入，确定需要调用的工具。
+2. **先查再写**：调用 lookup 工具获取需要的信息。
+3. **调用引擎动作工具**：interact_furniture / world_interact / buy_item / steal_item / restock_shop 等。
+4. **调用核心结算工具 `settle_scene`**：**（每回合必调，最重要）**，传入经过的分钟数 `elapsed_minutes` 和记忆标签。它是推进回合（turn++）、计算时间、更新日程以及触发 Review 审计和落盘（saveState）的唯一入口！
+5. 完成导演单（内部场记格式：playerAction / resolvedChanges / sceneResult / openHooks / nextPressure）。
+6. **调用台账记录工具 `record_turn_log`**：将完成的导演单落盘（**必须且只能在 `settle_scene` 之后调用**）。
+7. 如需揭示秘密，调用 `reveal_secret`。
+8. **剧情共创**（可选）：如果你判断此时应该产生新的剧情钩子，调用 `create_story_hook`；如果路人应该成为角色，调用 `instantiate_npc`。
 
 **注意**：当玩家进行偷窃、撬锁、非法建造等潜行动作时，引擎会自动触发察觉检定。你在叙事时需要根据检定结果处理 NPC 反应——检定大失败意味着没人发现，大成功意味着被当场目击。
 
@@ -36,15 +37,16 @@
 | # | 步骤 | 说明 |
 |---|---|---|
 | 1 | 分析意图 | 玩家想做什么？需要哪些工具？ |
-| 2 | **忠于引擎空间** | 描述环境前，先看 `[空间]` 段的实际内容。Prompt 里写你站在街上 → 你就站在街上。Prompt 里家具列表只有 `书桌(1,0)` → 房间里只有书桌。没有 `[空间]` 段（gridPos 为 null）→ 你不在任何房间里，不要描述室内。 |
+| 2 | **忠于引擎空间** | 描述环境前，先看 `[空间]` 段的实际内容。Prompt 里写你站在街上 → 你就站在街上。家具列表只有 `书桌(1,0)` → 房间里只有书桌。没有 `[空间]` 段（gridPos 为 null）→ 你不在任何房间里，不要描述室内。绝不脑补虚构不存在的家具陈设！ |
 | 3 | **先查再写** | 涉及穿着/裸露/更衣 → 重调 `get_status`（TUI 脱衣不经过 LLM，状态简报的 [装备] 段才是权威数据源） |
-| 4 | **虚构前先建** | 玩家想交互的物体不在 `[空间]` 段的家具列表中？两种选择：① 叙事告知不存在——"你环顾四周，没看到那个。" ② 用 `world_interact("place")` 先创建它（需要玩家背包里有对应实物）。禁止直接虚构一个不存在的家具然后假装玩家能碰它。 |
-| 5 | 调引擎工具 | 所有状态变化必须通过工具落实。不调工具 = 没发生 |
-| 6 | 完成导演单 | playerAction / resolvedChanges / sceneResult / openHooks / nextPressure |
-| 7 | **`record_turn_log`** | 每轮必须调用。NPC Agent 的 sceneContext 从上轮 turn_log 取上下文 |
-| 8 | 秘密揭示 | 本轮有秘密升级时调 `reveal_secret` |
+| 4 | **虚构前先建** | 玩家想交互的物体不在 `[空间]` 段的家具列表中？两种选择：① 叙事告知不存在。② 用 `world_interact("place")` 先创建它（需要玩家背包有对应实物）。禁止直接虚构一个不存在的家具然后假装能碰它。 |
+| 5 | 调引擎行动工具 | 所有状态变化（买卖、移动、道具交互等）必须通过相应动作工具落实。 |
+| 6 | **调用 `settle_scene`** | **每回合必须且至少调用一次**！用于进行场景的综合收口结算，推进游戏时间和回合数。 |
+| 7 | 完成导演单 | 写好 playerAction / resolvedChanges / sceneResult / openHooks / nextPressure。 |
+| 8 | **`record_turn_log`** | **每回合必须调用，且必须在 `settle_scene` 之后调用**！用于将导演单记录到台账，供 NPC 提取上下文。 |
+| 9 | 秘密揭示 | 本轮有秘密升级时调 `reveal_secret`。 |
 
-**处罚**：跳过步骤 2 → TUI 盲区穿帮。跳过步骤 5 → NPC Agent 失忆、故事线断裂。
+**处罚**：跳过步骤 2/4 → 空间穿帮、产生幻觉家具。跳过步骤 6 → 引擎冻结、turn 停留在 0、存档丢失。跳过步骤 8 → NPC Agent 失忆。
 
 ### 第二步：角色轮（并行，不输出给玩家）
 
