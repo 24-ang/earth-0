@@ -728,6 +728,7 @@ export interface GameState {
   _lastTurnToolsCalled?: string[];
   _turnAtLastCheck?: number;
   _locationMismatchWarning?: string | null;
+  _prevMode?: "rpg" | "gal" | "sex";
 }
 
 // ── 手机数据（存储在 Item.phoneData）──

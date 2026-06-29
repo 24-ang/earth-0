@@ -10,6 +10,8 @@ export default {
       skill: Type.Optional(Type.String({ description: "攻击技能名，默认格斗。如剑术/射击/拳法" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
+      const { autoSwitchMode } = await import("../helpers.ts");
+      autoSwitchMode("combat_action");
       const { gameState, saveState, getOrCreateNPC, damageItem, calcAC } = await import("../../engine/state.ts");
       const { resolveAttack, defend, attemptFlee, makeDeathSave, getRoundSummary } = await import("../../engine/combat.ts");
       const { findCharacter } = await import("../../engine/state.ts");
