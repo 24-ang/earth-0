@@ -955,3 +955,17 @@ export async function recordNpcAgentAction(
     saveState();
   } catch (err) { console.error("recordNpcAgentAction: addMemoryTag error", err); }
 }
+
+/** 自动切换 mode：sex_touch/masturbate 调用时切 sex，战斗时切 rpg */
+export function autoSwitchMode(toolName: string): void {
+  const sexTools = ["sex_touch", "masturbate"];
+  const combatTools = ["combat_action"];
+  if (sexTools.includes(toolName) && gameState.mode !== "sex") {
+    gameState._prevMode = gameState.mode;
+    gameState.mode = "sex";
+    gameState.layer1Enabled = true;
+  } else if (combatTools.includes(toolName) && gameState.mode !== "rpg") {
+    gameState._prevMode = gameState.mode;
+    gameState.mode = "rpg";
+  }
+}

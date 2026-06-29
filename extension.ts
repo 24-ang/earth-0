@@ -33,7 +33,7 @@ export default function (pi: ExtensionAPI) {
     saveState();
   });
 
-  // 每轮组装 GM 系统提示词（含 settle_scene 漏调兜底）
+  // 每轮组装 GM 系统提示词（含 settle_scene 漏调兜底 + mode 自动切换）
   pi.on("before_agent_start", async (event) => {
     const { buildStatePrompt, gameState, saveState, isSameLocation } = await import("./engine/state.ts");
 
@@ -56,6 +56,22 @@ export default function (pi: ExtensionAPI) {
       autoSettled = true;
     }
     gameState._turnAtLastCheck = gameState.turn;
+
+    // Mode 自动切换：上轮有 sex 工具 → auto sex；sex 无 sex 工具 → 恢复
+    const lastTools = gameState._lastTurnToolsCalled || [];
+    const sexTools = ["sex_touch", "masturbate"];
+    const hadSex = lastTools.some((t: string) => sexTools.includes(t));
+    if (hadSex && gameState.mode !== "sex") {
+      gameState._prevMode = gameState.mode;
+      gameState.mode = "sex";
+      gameState.layer1Enabled = true;
+      saveState();
+    } else if (!hadSex && gameState.mode === "sex" && gameState._prevMode) {
+      gameState.mode = gameState._prevMode;
+      gameState.layer1Enabled = false;
+      gameState._prevMode = undefined;
+      saveState();
+    }
 
     const statePrompt = await buildStatePrompt();
     if (gameState.mode === "sex") gameState.layer1Enabled = true;
