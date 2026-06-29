@@ -23,8 +23,8 @@ jobs:
         if: always()
         run: |
           if [ -f test-result.log ]; then
-            PASTE_URL=$(curl -s --data-binary @test-result.log https://paste.c-net.org/)
-            curl -d "CI Logs URL: $PASTE_URL" https://ntfy.sh/earth-0-ci-logs
+            tail -n 80 test-result.log > short-log.txt
+            curl -d @short-log.txt https://ntfy.sh/earth-0-ci-logs
           else
             curl -d "No log file found" https://ntfy.sh/earth-0-ci-logs
           fi
