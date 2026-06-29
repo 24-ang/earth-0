@@ -3162,13 +3162,13 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶市街",
+          "exitTo": "千叶_住宅区",
           "label": "DR"
         },
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶市街",
+          "exitTo": "千叶_住宅区",
           "label": "DR"
         },
         {
@@ -4059,7 +4059,7 @@
       ]
     ]
   },
-  "千葉市街": {
+  "千叶_住宅区": {
     "width": 30,
     "height": 5,
     "cellSize": 10,

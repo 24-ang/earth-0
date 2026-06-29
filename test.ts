@@ -4451,13 +4451,13 @@ test("INTEGRATION: 工具执行后 saveState 确实落盘", () => {
   const path = require("node:path");
   const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
   if (!fs.existsSync(STATE_FILE)) throw new Error("session.json 不存在");
-  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
-  // 模拟一次工具里的写操作
+
+  // 模拟一次工具里的写操作并校验内容
   gameState.flags._test_save_detection = true;
   saveState();
-  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
-  if (mtimeAfter <= mtimeBefore) {
-    throw new Error("saveState() 后 session.json mtime 未变化——saveState 未真正写入磁盘");
+  const content = fs.readFileSync(STATE_FILE, "utf-8");
+  if (!content.includes("_test_save_detection")) {
+    throw new Error("saveState() 后 session.json 未包含测试标记——saveState 未真正写入磁盘");
   }
   delete gameState.flags._test_save_detection;
   saveState();
@@ -4639,54 +4639,70 @@ test("INTEGRATION: 手机顶栏渲染无脏值", async () => {
 
 test("INTEGRATION: toggle_layer1 调了 saveState", async () => {
   const fs = require("node:fs");
-  const path = require("node:path");
-  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
-  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+  const originalWrite = fs.writeFileSync;
+  let writeCalled = false;
+  fs.writeFileSync = (...args: any[]) => {
+    writeCalled = true;
+    return originalWrite.apply(fs, args);
+  };
 
-  let tool: any;
-  try { tool = require("./tools/state/toggle_layer1.ts").default; } catch { return; }
-  await tool.execute("test", {}, null, null, null);
+  try {
+    let tool: any;
+    try { tool = require("./tools/state/toggle_layer1.ts").default; } catch { return; }
+    await tool.execute("test", {}, null, null, null);
+  } finally {
+    fs.writeFileSync = originalWrite;
+  }
 
-  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
-  if (mtimeAfter <= mtimeBefore) {
+  if (!writeCalled) {
     throw new Error("toggle_layer1 执行后 session.json 未更新——可能漏了 saveState()");
   }
 });
 
 test("INTEGRATION: add_calendar_event 调了 saveState", async () => {
   const fs = require("node:fs");
-  const path = require("node:path");
-  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
-  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+  const originalWrite = fs.writeFileSync;
+  let writeCalled = false;
+  fs.writeFileSync = (...args: any[]) => {
+    writeCalled = true;
+    return originalWrite.apply(fs, args);
+  };
 
-  const tool = require("./tools/action/add_calendar_event.ts").default;
-  await tool.execute("test", { date: "1月1日", location: "测试", text: "集成测试" }, null, null, null);
+  try {
+    const tool = require("./tools/action/add_calendar_event.ts").default;
+    await tool.execute("test", { date: "1月1日", location: "测试", text: "集成测试" }, null, null, null);
+  } finally {
+    fs.writeFileSync = originalWrite;
+  }
 
-  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
-  if (mtimeAfter <= mtimeBefore) {
+  if (!writeCalled) {
     throw new Error("add_calendar_event 执行后 session.json 未更新——可能漏了 saveState()");
   }
 });
 
 test("INTEGRATION: spawn_temp_npc 调了 saveState", async () => {
   const fs = require("node:fs");
-  const path = require("node:path");
-  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
-  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
+  const originalWrite = fs.writeFileSync;
+  let writeCalled = false;
+  fs.writeFileSync = (...args: any[]) => {
+    writeCalled = true;
+    return originalWrite.apply(fs, args);
+  };
 
-  const tool = require("./tools/action/spawn_temp_npc.ts").default;
-  await tool.execute("test", { name: "测试路人", act: "站着发呆", reason: "集成测试" }, null, null, null);
+  try {
+    const tool = require("./tools/action/spawn_temp_npc.ts").default;
+    await tool.execute("test", { name: "测试路人", act: "站着发呆", reason: "集成测试" }, null, null, null);
+  } finally {
+    fs.writeFileSync = originalWrite;
+  }
 
-  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
-  if (mtimeAfter <= mtimeBefore) {
+  if (!writeCalled) {
     throw new Error("spawn_temp_npc 执行后 session.json 未更新——可能漏了 saveState()");
   }
 });
 
 test("INTEGRATION: reveal_secret 调了 saveState", async () => {
   const fs = require("node:fs");
-  const path = require("node:path");
-  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
 
   // 先往 revealLog 塞一条可升级的秘密
   gameState.revealLog.push({
@@ -4699,17 +4715,26 @@ test("INTEGRATION: reveal_secret 调了 saveState", async () => {
   });
   saveState();
 
-  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
-  const tool = require("./tools/action/reveal_secret.ts").default;
-  await tool.execute("test", {
-    id: "_test_secret",
-    content: "揭示内容",
-    fromLevel: "protagonist_known",
-    toLevel: "player_known",
-  }, null, null, null);
+  const originalWrite = fs.writeFileSync;
+  let writeCalled = false;
+  fs.writeFileSync = (...args: any[]) => {
+    writeCalled = true;
+    return originalWrite.apply(fs, args);
+  };
 
-  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
-  if (mtimeAfter <= mtimeBefore) {
+  try {
+    const tool = require("./tools/action/reveal_secret.ts").default;
+    await tool.execute("test", {
+      id: "_test_secret",
+      content: "揭示内容",
+      fromLevel: "protagonist_known",
+      toLevel: "player_known",
+    }, null, null, null);
+  } finally {
+    fs.writeFileSync = originalWrite;
+  }
+
+  if (!writeCalled) {
     throw new Error("reveal_secret 执行后 session.json 未更新——可能漏了 saveState()");
   }
 });
@@ -4794,17 +4819,16 @@ test("INTEGRATION: lint 引擎 block-rule 命中 → needsRetry=true", async () 
 });
 
 test("INTEGRATION: set_flags 改状态后 saveState 有调", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
   // set_flags 是通用的改状态工具，验证它落盘
   const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
-
-  // 确保 session.json 存在
-  const mtimeBefore = fs.statSync(STATE_FILE).mtimeMs;
 
   gameState.flags._test_set_flags = true;
   saveState();
 
-  const mtimeAfter = fs.statSync(STATE_FILE).mtimeMs;
-  if (mtimeAfter <= mtimeBefore) {
+  const content = fs.readFileSync(STATE_FILE, "utf-8");
+  if (!content.includes("_test_set_flags")) {
     throw new Error("set_flags 落盘验证失败：saveState 未刷新 session.json");
   }
   delete gameState.flags._test_set_flags;
@@ -5079,6 +5103,178 @@ test("shortTermBuffer 追加与限制上限验证", async () => {
   }
   if (npc.shortTermBuffer.recentEvents[0] !== "事件_2") {
     throw new Error(`应保留最新事件，最旧应为 事件_2, 实际为 ${npc.shortTermBuffer.recentEvents[0]}`);
+  }
+});
+
+test("D模块: 复盘异常容错测试", async () => {
+  resetState();
+  
+  // 1. 模拟 generateCompletion 发生网络报错崩溃
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new Error("DeepSeek API Timeout or Network Loss");
+  };
+
+  try {
+    const settleTool = require("./tools/action/settle_scene.ts").default;
+    // 即使复盘直调 LLM 崩溃抛错，settle_scene 也应当静默降级，正常跑通并写盘
+    const res = await settleTool.execute("test", { summary: "雪乃在走廊散步", elapsed_minutes: 10 }, null, null, null);
+    if (!res.content[0].text.includes("场景结束推进了 10分钟")) {
+      throw new Error("settle_scene 没有正确跑完结算内容");
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("D模块: OOC 人设标记与审计回写测试", async () => {
+  resetState();
+  gameState.player.location = "侍奉部";
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.currentRoom = "侍奉部";
+
+  // Mock last rendered prose
+  const { setLastRenderedProse } = require("./tools/helpers.ts");
+  setLastRenderedProse("雪之下一反常态，热烈地冲上前搂住玩家大呼小叫。");
+
+  // Mock LLM Response for OOC audit
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    return {
+      ok: true,
+      json: async () => ({
+        content: [{
+          text: JSON.stringify({
+            ooc_findings: [
+              { npc: "雪之下雪乃", finding: "雪乃搂住玩家大呼小叫，严重偏离其冷静毒舌的高冷人设" }
+            ],
+            info_leaks: [],
+            relation_changes: []
+          })
+        }]
+      })
+    } as any;
+  };
+
+  try {
+    const { reviewTurn } = require("./engine/audit/review-agent.ts");
+    await reviewTurn(null);
+
+    // 检查是否成功打上 role_deviation 标记
+    const tags = yukino.memoryTags.map((t: any) => t.tag);
+    if (!tags.includes("role_deviation")) {
+      throw new Error("OOC 检测通过，但未写入 role_deviation 记忆标签");
+    }
+    const oocTag = yukino.memoryTags.find((t: any) => t.tag === "role_deviation")!;
+    if (oocTag.tone !== "困惑" || oocTag.expires !== 3 || oocTag.priority !== 2) {
+      throw new Error(`记忆标签属性不符: expires=${oocTag.expires}, priority=${oocTag.priority}`);
+    }
+
+    // 检查 findings 警报是否存入 GameState
+    if (!gameState.lastReviewFindings || gameState.lastReviewFindings.length === 0) {
+      throw new Error("gameState.lastReviewFindings 应该存有警报");
+    }
+    if (!gameState.lastReviewFindings[0].includes("发生人设偏差")) {
+      throw new Error(`警报描述不符: ${gameState.lastReviewFindings[0]}`);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("D模块: 泄密审计与好感去重兜底集成测试", async () => {
+  resetState();
+  gameState.player.location = "侍奉部";
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.currentRoom = "侍奉部";
+  
+  // 1. 注入一个隐藏真名的秘密
+  (gameState as any).secrets = {
+    "雪之下雪乃": {
+      trueName: { value: "秘密雪乃", revealState: "hidden" }
+    }
+  };
+
+  // 2. 模拟叙事中包含了秘密名字，并且有明显的关系改善
+  const { setLastRenderedProse } = require("./tools/helpers.ts");
+  setLastRenderedProse("雪乃的真名其实叫秘密雪乃。玩家和她的关系拉近了许多。");
+
+  // 3. Mock LLM review 响应：检测到泄密 + 好感变化
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    return {
+      ok: true,
+      json: async () => ({
+        content: [{
+          text: JSON.stringify({
+            ooc_findings: [],
+            info_leaks: ["泄露了雪之下雪乃的隐藏真名'秘密雪乃'"],
+            relation_changes: [
+              { npc: "雪之下雪乃", delta: 10, reason: "对话拉近了关系" }
+            ]
+          })
+        }]
+      })
+    } as any;
+  };
+
+  try {
+    // 4. 第一回合：上一轮未调好感工具，应该应用兜底好感修正
+    gameState._lastTurnToolsCalled = ["look_around"]; // 没有 adjust_relation 等
+    const { reviewTurn } = require("./engine/audit/review-agent.ts");
+    await reviewTurn(null);
+
+    // 检查泄密警报已存入
+    const findings = gameState.lastReviewFindings || [];
+    if (!findings.some(f => f.includes("[信息泄露警告]"))) {
+      throw new Error("未检测到泄密警报");
+    }
+
+    // 检查好感度已应用兜底修正 (0 + 10 = 10)
+    const rel = gameState.player.relationships["雪之下雪乃"];
+    if (!rel || rel.affection !== 10) {
+      throw new Error(`兜底好感未生效，affection 为 ${rel?.affection}`);
+    }
+    if (rel.notes !== "对话拉近了关系") {
+      throw new Error(`兜底好感备注错误: ${rel.notes}`);
+    }
+
+    // 5. 验证 recordTurnLog 是否把警报写入 unresolved changes，且用 lastTurnToolsCalled 进行了填充
+    const { recordTurnLog } = require("./engine/state.ts");
+    const log = recordTurnLog({
+      playerAction: "探讨秘密",
+      resolvedChanges: "尝试探讨",
+      sceneResult: "雪乃脸红",
+      openHooks: "无",
+      nextPressure: "无",
+      toolsCalled: []
+    });
+
+    if (!log.resolvedChanges.includes("[复盘警报]")) {
+      throw new Error("recordTurnLog 应将复盘警报追加到 resolvedChanges");
+    }
+    if (!log.toolsCalled.includes("look_around")) {
+      throw new Error("recordTurnLog 应使用 _lastTurnToolsCalled 填充空 toolsCalled");
+    }
+
+    // 6. 验证 buildStatePrompt 会注入复盘警告
+    const { buildStatePrompt } = require("./engine/state.ts");
+    const prompt = await buildStatePrompt();
+    if (!prompt.includes("[系统复盘警报]")) {
+      throw new Error("buildStatePrompt 未注入复盘警报提示");
+    }
+
+    // 7. 第二回合：上一轮调了好感工具，应该去重、不应用兜底好感修正
+    gameState._lastTurnToolsCalled = ["adjust_relation"]; // 包含关系调整工具
+    rel.affection = 50; // 重设
+    await reviewTurn(null);
+    if (rel.affection !== 50) {
+      throw new Error(`上一轮已调用过 adjust_relation，好感度不应重复修正，但变为了 ${rel.affection}`);
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
   }
 });
 

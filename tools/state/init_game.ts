@@ -64,8 +64,8 @@ export default {
       const { getLifeStage } = await import("../../engine/time.ts");
       gameState.time.player_stage = getLifeStage(params.age);
       
-      // 重置起始地点
-      setPlayerLocation("千叶_住宅区");
+      // 重置起始地点：玩家在自家房间醒来，引擎注入 [空间] + [环境] 段
+      setPlayerLocation("家_玩家房間");
       initPlayerGrid();
       
       saveState();
