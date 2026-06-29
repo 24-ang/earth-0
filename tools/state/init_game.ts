@@ -65,7 +65,7 @@ export default {
       gameState.time.player_stage = getLifeStage(params.age);
       
       // 重置起始地点：玩家在自家房间醒来，引擎注入 [空间] + [环境] 段
-      setPlayerLocation("家_玩家房間");
+      setPlayerLocation("家_玩家房间");
       initPlayerGrid();
       
       saveState();
