@@ -221,6 +221,28 @@ export default {
           const rel = npc.npcRelationships?.[name];
           return rel ? `${name}(${rel.stage}·${rel.tone}${rel.notes ? "·因"+rel.notes : ""})` : `${name}(陌生)`;
         }).join("、")}` : "  在场其他人: 无",
+        (() => {
+          // 身份匹配：从 stage 描述/记忆/anchors 中识别在场其他人的身份
+          if (otherNPCs.length === 0) return "";
+          const textsToScan = [personality, src.personality_brief, src.anchors?.private, ...memories].filter(Boolean);
+          const lines: string[] = [];
+          for (const oName of otherNPCs) {
+            for (const txt of textsToScan) {
+              if (typeof txt === "string" && txt.includes(oName)) {
+                // 取名字前后各 30 字的上下文
+                const idx = txt.indexOf(oName);
+                const start = Math.max(0, idx - 15);
+                const end = Math.min(txt.length, idx + oName.length + 30);
+                let snippet = txt.slice(start, end).replace(/\n/g, "");
+                if (start > 0) snippet = "…" + snippet;
+                if (end < txt.length) snippet += "…";
+                lines.push(`  你认识${oName}：${snippet}`);
+                break; // 只取第一个命中
+              }
+            }
+          }
+          return lines.length > 0 ? `【身份识别】在场的人中：\n${lines.join("\n")}` : "";
+        })(),
         `  提示: 对你的态度有明确记忆或长期关系的人，你的回应应自然地体现出来。`,
         memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
         (() => {
