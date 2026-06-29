@@ -258,7 +258,7 @@ export function getPlayerNameParts() {
 
 
 /** 递归加载当前活跃世界观的 timeline 文件（只加载 data/timelines/{activeWorld}/） */
-function loadAllTimelines(): TimelineEvent[] {
+export function loadAllTimelines(): TimelineEvent[] {
   const events: TimelineEvent[] = [];
   const world = gameState.activeWorld || "oregairu";
   const pathsToScan = [
