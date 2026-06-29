@@ -15,4 +15,15 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
-      - run: npm test
+      - name: Run Tests with Log Capture
+        run: |
+          set -o pipefail
+          npx tsx test.ts 2>&1 | tee test-result.log
+      - name: Send Logs to ntfy
+        if: always()
+        run: |
+          if [ -f test-result.log ]; then
+            curl -H "Title: Earth-0 CI Logs" -d @test-result.log https://ntfy.sh/earth-0-ci-logs
+          else
+            curl -d "No log file found" https://ntfy.sh/earth-0-ci-logs
+          fi
