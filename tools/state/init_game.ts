@@ -67,7 +67,25 @@ export default {
       // 重置起始地点：玩家在自家房间醒来，引擎注入 [空间] + [环境] 段
       setPlayerLocation("家_玩家房间");
       initPlayerGrid();
-      
+
+      // 时间线快进：若开局日期晚于默认起点，自动补完已过期事件（flag/好感/NPC关系/记忆）
+      const { currentDay, fastForwardTimeline } = await import("../../engine/timeline.ts");
+      const startDay = currentDay();
+      if (startDay > 1) {
+        const completed = await fastForwardTimeline(startDay);
+        if (completed.length > 0) {
+          // 注入系统消息告知 GM
+          if (_ctx?.chat) {
+            try {
+              _ctx.chat.addSystemMessage(
+                `[引擎] 时间线快进：从 day ${startDay} 开局，已自动完成 ${completed.length} 个过期事件。\n` +
+                completed.slice(0, 10).join(", ") + (completed.length > 10 ? `…等` : "")
+              );
+            } catch {}
+          }
+        }
+      }
+
       saveState();
       return { content: [{ type: "text", text: `游戏已初始化：玩家 ${params.name}（${params.gender}，${params.age}岁）` }], details: {} };
     }

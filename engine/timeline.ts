@@ -937,3 +937,85 @@ async function applyBeatEffects(effects: {
 }
 
 
+/**
+ * 时间线快进：开局时若 game_date 晚于 timeline_origin，自动补完已过期的事件。
+ * 只跳过 location/time_of_day/flags/affection 检查 — 纯时间驱动的事件视为「已按 canonical 路径发生」。
+ * 按 min_day 升序处理，确保前序事件的 flag/affection effects 为后续事件提供前置条件。
+ * max_day 已过的事件 → 应用 on_expire 效果（标记为未发生但有后果）。
+ * 返回自动完成的 event ID 列表。
+ */
+export async function fastForwardTimeline(startingDay: number): Promise<string[]> {
+  const events = loadAllTimelines();
+  gameState.completed_events ??= [];
+  gameState.flags ??= {};
+  gameState.player.relationships ??= {};
+
+  // 按 min_day 升序排列，确保依赖链正确
+  const candidates = events
+    .filter(ev => ev.trigger?.min_day && ev.trigger.min_day < startingDay)
+    .sort((a, b) => (a.trigger.min_day || 0) - (b.trigger.min_day || 0));
+
+  const autoCompleted: string[] = [];
+
+  for (const ev of candidates) {
+    // 已标记完成或不可重复 → 跳过
+    if (gameState.completed_events.includes(ev.id) && !ev.repeatable) continue;
+
+    const t = ev.trigger;
+
+    // 仅检查与「跳过时间」无关的条件：年龄/人生阶段
+    if ((t as any).min_age && gameState.player.age < (t as any).min_age) continue;
+    if ((t as any).max_age && gameState.player.age > (t as any).max_age) continue;
+    if ((t as any).player_stage) {
+      const stageKey = gameState.time.player_stage;
+      const stageConfig = (LIFE_STAGES as any)[stageKey];
+      const label = stageConfig?.label;
+      if (stageKey !== (t as any).player_stage && label !== (t as any).player_stage) continue;
+    }
+
+    // max_day 已过 → 事件窗口关闭，应用 on_expire 效果（如果有）
+    if (t.max_day && startingDay > t.max_day) {
+      if (ev.on_expire?.effects) {
+        try { await applyBeatEffects(ev.on_expire.effects); } catch (e) { console.error(`fastForward: on_expire ${ev.id} error`, e); }
+      }
+      gameState.completed_events.push(ev.id);
+      autoCompleted.push(`${ev.id}(expired)`);
+      continue;
+    }
+
+    // 走过 canonical 路径：第一 beat 的第一个 outcome，跟随 next_beat 链
+    const processedBeats = new Set<string>();
+    let currentBeatId = ev.beats?.[0]?.id;
+    let safety = 0;
+
+    while (currentBeatId && safety < 20) {
+      safety++;
+      if (processedBeats.has(currentBeatId)) break;
+      processedBeats.add(currentBeatId);
+
+      const beat = ev.beats?.find(b => b.id === currentBeatId);
+      if (!beat) break;
+
+      // 应用 beat 级 effects
+      if (beat.effects) {
+        try { await applyBeatEffects(beat.effects); } catch (e) { console.error(`fastForward: beat ${ev.id}/${beat.id} effects error`, e); }
+      }
+
+      // 无 outcomes → 终结点
+      if (!beat.outcomes || beat.outcomes.length === 0) break;
+
+      // 选第一个 outcome（canonical 路径）
+      const outcome = beat.outcomes[0];
+      if (outcome.effects) {
+        try { await applyBeatEffects(outcome.effects); } catch (e) { console.error(`fastForward: outcome ${ev.id}/${beat.id} effects error`, e); }
+      }
+
+      currentBeatId = outcome.next_beat || null;
+    }
+
+    gameState.completed_events.push(ev.id);
+    autoCompleted.push(ev.id);
+  }
+
+  return autoCompleted;
+}
