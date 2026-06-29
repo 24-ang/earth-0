@@ -263,7 +263,7 @@ function createDefaultPlayer(): PlayerState {
     name: "维",
     gender: "男",
     age: 16,
-    location: "家_玩家房間",
+    location: "家_玩家房间",
     body: {
       height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
       skin: { base_tone: "普通", tan: 0, texture: "普通" },
@@ -284,7 +284,7 @@ function createDefaultPlayer(): PlayerState {
     party: [],
     gridPos: null,
     reputation: {},
-    known_locations: ["家_玩家房間"],
+    known_locations: ["家_玩家房间"],
     titles: [],
     properties: {},
   };
@@ -610,12 +610,13 @@ export function getNpcCurrentAge(npcBaseAge: number): number {
 /** 设置玩家位置并自动发现新地点 */
 export function setPlayerLocation(loc: string): void {
   const oldLoc = gameState.player.location;
-  gameState.player.location = loc;
+  const key = getRoomKey(loc) || loc;
+  gameState.player.location = key;
   if (!gameState.player.known_locations) gameState.player.known_locations = ["住宅区"];
-  if (!gameState.player.known_locations.includes(loc)) {
-    gameState.player.known_locations.push(loc);
+  if (!gameState.player.known_locations.includes(key)) {
+    gameState.player.known_locations.push(key);
   }
-  if (oldLoc !== loc && gameState.tempNPCs?.length > 0) {
+  if (oldLoc !== key && gameState.tempNPCs?.length > 0) {
     cleanupTempNPCs("玩家移动");
   }
 }
@@ -2778,7 +2779,7 @@ export function getNearbyNPCs(roomName: string, gridPos: [number, number], maxRa
 
 export function initPlayerGrid(): void {
   const roomName = gameState.player.location;
-  const grid = ROOMS[roomName];
+  const grid = getRoom(roomName);
   if (!grid) {
     gameState.player.gridPos = null;
     return;
@@ -2804,7 +2805,7 @@ export function movePlayer(direction: string, running: boolean = false): MoveRes
   
   if (!gameState.player.gridPos) return { success: false, newX: -1, newY: -1, blocked: true, reason: "当前位置不可步行移动", distance: 0, seconds: 0 };
   
-  const curRoom = ROOMS[gameState.player.location];
+  const curRoom = getRoom(gameState.player.location);
   if (!curRoom) return { success: false, newX: -1, newY: -1, blocked: true, reason: "当前位置没有地图数据" };
   
   const [cx, cy] = gameState.player.gridPos;
