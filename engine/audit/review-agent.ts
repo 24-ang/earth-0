@@ -12,7 +12,7 @@ export async function reviewTurn(ctx: any): Promise<void> {
   const playerRoom = gameState.player.location;
   if (!playerRoom) return;
 
-  const charStages = require("../../data/character_stages.json");
+  const charStages = (await import("../../data/character_stages.json", { with: { type: "json" } })).default;
 
   const presentNPCs: string[] = [];
   const presentNPCDescriptions: string[] = [];
@@ -70,7 +70,7 @@ export async function reviewTurn(ctx: any): Promise<void> {
   }
 
   // 4. 获取当前回合的渲染正文
-  const prose = require("../../tools/helpers.ts").lastRenderedProse || "";
+  const prose = (await import("../../tools/helpers.ts")).lastRenderedProse || "";
   if (!prose) {
     gameState.lastReviewFindings = [];
     return;
