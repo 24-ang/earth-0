@@ -33,12 +33,36 @@ export default function (pi: ExtensionAPI) {
     saveState();
   });
 
-  // 每轮组装 GM 系统提示词
+  // 每轮组装 GM 系统提示词（含 settle_scene 漏调兜底）
   pi.on("before_agent_start", async (event) => {
-    const { buildStatePrompt, gameState } = await import("./engine/state.ts");
+    const { buildStatePrompt, gameState, saveState, isSameLocation } = await import("./engine/state.ts");
+
+    // P0-2: 检测上轮是否漏调 settle_scene → 引擎兜底自动结算
+    let autoSettled = false;
+    const prevTurn = gameState._turnAtLastCheck;
+    if (prevTurn !== undefined && gameState.turn > 0 && gameState.turn === prevTurn) {
+      const { advanceMinutes } = await import("./engine/time.ts");
+      const { detectInteractionMode } = await import("./engine/detect-mode.ts");
+      if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
+      advanceMinutes(gameState.time, 5);
+      gameState.player.age = gameState.time.player_age;
+      gameState.turn++;
+      const npcCount = Object.values(gameState.npcs).filter((n: any) =>
+        n.alive && isSameLocation(n.currentRoom, gameState.player.location)
+      ).length;
+      const modeResult = detectInteractionMode(gameState, npcCount);
+      gameState.interactionMode = modeResult.interactionMode;
+      saveState();
+      autoSettled = true;
+    }
+    gameState._turnAtLastCheck = gameState.turn;
+
     const statePrompt = await buildStatePrompt();
     if (gameState.mode === "sex") gameState.layer1Enabled = true;
-    const gmPrompt = await buildSystemPrompt(gameState, statePrompt);
+    let gmPrompt = await buildSystemPrompt(gameState, statePrompt);
+    if (autoSettled) {
+      gmPrompt += `\n\n[引擎] ⚠️ 上轮 GM 未调用 settle_scene，引擎已自动结算（+5分钟，当前 turn ${gameState.turn}）。请在结束本轮叙事前务必调用 settle_scene！`;
+    }
     return { systemPrompt: gmPrompt };
   });
 }
@@ -94,10 +118,10 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
       gmPrompt = [
         read("gm-pre.md"),
         read("gm-rules.md"),
-        read("gm-contract.md"),
         statePrompt,
         read(voiceFile),
         read(modeFile),
+        read("gm-contract.md"),
       ].filter(Boolean).join("\n\n---\n\n");
     }
   } else {
@@ -114,10 +138,10 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
     gmPrompt = [
       read("gm-pre.md"),
       read("gm-rules.md"),
-      read("gm-contract.md"),
       statePrompt,
       read(voiceFile),
       read(modeFile),
+      read("gm-contract.md"),
     ].filter(Boolean).join("\n\n---\n\n");
   }
 

@@ -47,6 +47,7 @@ import sellItemTool from "./action/sell_item.ts";
 import monthlyGrowthTool from "./action/monthly_growth.ts";
 import workJobTool from "./action/work_job.ts";
 import completeTravelTool from "./lookup/complete_travel.ts";
+import goToLocationTool from "./lookup/go_to_location.ts";
 import spawnItemTool from "./action/spawn_item.ts";
 import inflictDamageTool from "./action/inflict_damage.ts";
 import lookupBodyTool from "./state/lookup_body.ts";
@@ -161,7 +162,7 @@ export function registerAll(pi: ExtensionAPI) {
     managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
     useAbilityTool,
     // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
-    moveTool, moveToTool, boardTrainTool, completeTravelTool,
+    moveTool, moveToTool, boardTrainTool, completeTravelTool, goToLocationTool,
     sendSmsTool, postSnsTool, makeCallTool, travelIntercityTool,
   ];
   for (const t of trackedTools) if (t) pi.registerTool(withToolTracking(t));

@@ -726,6 +726,8 @@ export interface GameState {
   _pending_viewpoint_text?: { text: string; turn: number };
   lastReviewFindings?: string[];
   _lastTurnToolsCalled?: string[];
+  _turnAtLastCheck?: number;
+  _locationMismatchWarning?: string | null;
 }
 
 // ── 手机数据（存储在 Item.phoneData）──
