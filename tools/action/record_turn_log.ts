@@ -11,14 +11,17 @@ export default {
       nextPressure: Type.String({ description: "下轮应推动什么，无则写'无'" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { recordTurnLog, drainToolCalls } = await import("../../engine/state.ts");
+      const { recordTurnLog, drainToolCalls, gameState } = await import("../../engine/state.ts");
+      // 优先读 settle_scene 存入的 _lastTurnToolsCalled（settle_scene 先 drain 了缓冲区），兜底自己 drain
+      const tools = gameState._lastTurnToolsCalled ?? drainToolCalls();
+      gameState._lastTurnToolsCalled = null;
       const entry = recordTurnLog({
         playerAction: params.playerAction,
         resolvedChanges: params.resolvedChanges,
         sceneResult: params.sceneResult,
         openHooks: params.openHooks,
         nextPressure: params.nextPressure,
-        toolsCalled: drainToolCalls(),
+        toolsCalled: tools,
       });
       return { content: [{ type: "text", text: `台账已记录 (第${entry.turn}回合)` }], details: entry };
     },

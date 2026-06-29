@@ -202,6 +202,19 @@ export function recordTurnLog(entry: Omit<TurnLogEntry, "turn" | "timestamp">): 
     timestamp: gameState.time.game_date + " " + (gameState.time.time_of_day ?? ""),
   };
   gameState.turnLog.push(log);
+  // P1: 位置守恒量 lint — 检测 GM 叙事声称位置变化但引擎未记录
+  gameState._locationMismatchWarning = null;
+  const locKeywords = /到达|前往|进入|离开|来到|走到|回到|抵达|出发|步行至|乘车至|回家|去学校|去操场|去教室|回房|出门/;
+  const locTools = ["travel_intercity", "complete_travel", "move", "move_to", "board_train", "go_to_location"];
+  // 扫描三个字段：动作描述 / 变化声明 / 场景结果
+  const locCheckText = [entry.playerAction, resolvedChanges, entry.sceneResult].join(" ");
+  if (locKeywords.test(locCheckText)) {
+    const hasLocTool = toolsCalled.some(t => locTools.includes(t));
+    if (!hasLocTool) {
+      const excerpt = locCheckText.length > 80 ? locCheckText.slice(0, 80) + "…" : locCheckText;
+      gameState._locationMismatchWarning = `上轮台账提到位置变化（"${excerpt}"）但未调用任何移动工具。引擎实际位置仍是 ${gameState.player.location}。跨地点请用 go_to_location（同城）或 travel_intercity（跨城），到达后调 complete_travel 收口。`;
+    }
+  }
   // 滚动压缩：超过 10 条时，把最旧 5 条压成摘要
   if (gameState.turnLog.length > 10) {
     const batch = gameState.turnLog.splice(0, 5);
@@ -1263,6 +1276,10 @@ export async function buildStatePrompt(): Promise<string> {
 
   if (gameState.lastReviewFindings && gameState.lastReviewFindings.length > 0) {
     tpl += `\n[系统复盘警报] 上一回合复盘检出以下问题，请在叙事中注意遵守设定或进行合理找补：\n` + gameState.lastReviewFindings.map(f => `  • ${f}`).join("\n");
+  }
+
+  if (gameState._locationMismatchWarning) {
+    tpl += `\n[引擎告警] ⚠️ ${gameState._locationMismatchWarning}`;
   }
 
   return tpl;
