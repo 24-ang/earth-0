@@ -62,9 +62,10 @@ export default {
       gs.time.player_age = params.age;
       gs.time.timeline_origin.age = params.age;
       const baseYear = params.year ?? 2018;
-      gs.time.timeline_origin.year = baseYear - (16 - params.age);
-      // 校准游戏日期与时间线年份一致（否则 age=6 时 game_date 仍是 2018，时间推进即跳龄）
-      gs.time.game_date = `${gs.time.timeline_origin.year}-04-07`;
+      // timeline_origin.year = 游戏开始的日历年。不依赖 age 偏移。
+      // currentDay() 从 timeline_origin.year 的 1月1日起计算天数。
+      gs.time.timeline_origin.year = baseYear;
+      gs.time.game_date = `${baseYear}-04-07`;
       // 用 getLifeStage 统一计算（不用硬编码中文标签）
       const { getLifeStage } = await import("../../engine/time.ts");
       gs.time.player_stage = getLifeStage(params.age);
