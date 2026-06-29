@@ -79,6 +79,7 @@ import travelIntercityTool from "./lookup/travel_intercity.ts";
 import interactFurnitureTool from "./action/interact_furniture.ts";
 import restockShopTool from "./action/restock_shop.ts";
 import useAbilityTool from "./action/use_ability.ts";
+import debugSexHeatTool from "./action/debug_sex_heat.ts";
 import spawnTempNpcTool from "./action/spawn_temp_npc.ts";
 import lookupAbilityTool from "./lookup/lookup_ability.ts";
 import gambleCommand from "./tui/gamble.ts";
@@ -161,6 +162,7 @@ export function registerAll(pi: ExtensionAPI) {
     spawnTempNpcTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
     managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
     useAbilityTool,
+    debugSexHeatTool,
     // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
     moveTool, moveToTool, boardTrainTool, completeTravelTool, goToLocationTool,
     sendSmsTool, postSnsTool, makeCallTool, travelIntercityTool,
