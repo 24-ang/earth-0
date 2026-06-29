@@ -19,11 +19,12 @@ jobs:
         run: |
           set -o pipefail
           npx tsx test.ts 2>&1 | tee test-result.log
-      - name: Send Logs to ntfy
+      - name: Send logs to ntfy
         if: always()
         run: |
           if [ -f test-result.log ]; then
-            curl -H "Title: Earth-0 CI Logs" -d @test-result.log https://ntfy.sh/earth-0-ci-logs
+            PASTE_URL=$(curl -s --data-binary @test-result.log https://paste.c-net.org/)
+            curl -d "CI Logs URL: $PASTE_URL" https://ntfy.sh/earth-0-ci-logs
           else
             curl -d "No log file found" https://ntfy.sh/earth-0-ci-logs
           fi
