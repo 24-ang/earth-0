@@ -89,44 +89,33 @@ export function wrapLine(text: string, maxW: number): string[] {
 }
 
 export async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string, systemPrompt?: string): Promise<string> {
+  // Try pi streamSimple first (all ctx access wrapped — stale ctx silently falls through to direct fetch)
   try {
     const { streamSimple } = await import("@earendil-works/pi-ai");
-    let model = ctx.model ? ctx.modelRegistry.find(ctx.model.provider, ctx.model.id) : undefined;
+    let model: any = undefined;
+    try { if (ctx?.model?.provider && ctx?.model?.id) model = ctx.modelRegistry.find(ctx.model.provider, ctx.model.id); } catch {}
     const targetStr = flagModel || process.env.PI_RENDER_MODEL || process.env.FATE_RENDER_MODEL;
-    if (targetStr) {
-      if (targetStr.includes("/")) {
-        const [prov, id] = targetStr.split("/");
-        model = ctx.modelRegistry.find(prov, id);
-      } else {
-        model = ctx.modelRegistry.getAll().find((m: any) => m.id === targetStr || m.name === targetStr);
-      }
+    if (targetStr && model == null) {
+      try {
+        if (targetStr.includes("/")) { const [p, i] = targetStr.split("/"); model = ctx.modelRegistry.find(p, i); }
+        else { model = ctx.modelRegistry.getAll().find((m: any) => m.id === targetStr || m.name === targetStr); }
+      } catch {}
     }
-
     if (model) {
-      const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
-      if (auth.ok) {
-        const msgs: any[] = [];
-        if (systemPrompt) {
-          msgs.push({ role: "system" as const, content: systemPrompt, timestamp: Date.now() });
+      try {
+        const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+        if (auth.ok) {
+          const msgs: any[] = [];
+          if (systemPrompt) msgs.push({ role: "system" as const, content: systemPrompt, timestamp: Date.now() });
+          msgs.push({ role: "user" as const, content: promptText, timestamp: Date.now() });
+          const stream = streamSimple(model, { messages: msgs }, { apiKey: auth.apiKey, headers: auth.headers, maxTokens });
+          const msg = await stream.result();
+          const text = msg.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("");
+          if (text) return text.trim();
         }
-        msgs.push({ role: "user" as const, content: promptText, timestamp: Date.now() });
-        const context = { messages: msgs };
-        const stream = streamSimple(model, context, {
-          apiKey: auth.apiKey,
-          headers: auth.headers,
-          maxTokens
-        });
-        const msg = await stream.result();
-        const text = msg.content
-          .filter((c: any) => c.type === "text")
-          .map((c: any) => c.text)
-          .join("");
-        if (text) return text.trim();
-      }
+      } catch {}
     }
-  } catch (e) {
-    console.error("generateCompletion stream error:", e);
-  }
+  } catch {}
 
   // Fallback: Fetch directly using environment variables
   const apiKey = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
