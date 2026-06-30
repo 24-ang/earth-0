@@ -296,36 +296,45 @@
 
 ---
 
-## 16. 三段式实体化：从 prompt 合约到代码强制执行
+## 16. 三段式实体化 + 结构性隔离：从 prompt 合约到硬分段
 
-**是什么**：将三段式工作流（结算→角色→渲染）从 gm-contract.md 的 prompt 合约改为代码强制执行的三个独立阶段：
-1. **Phase 1 — 分类 LLM**：输出 JSON 而非 tool_use blocks。引擎解析 JSON 后直接调工具。JSON parse 失败 → 回退引擎兜底（settle_scene + NPC spawn）
-2. **Phase 2 — NPC Agent**：引擎检测同场 NPC 自动 spawn（和 sex 自举相同模式）
-3. **Phase 3 — 渲染**：pi agent loop 收到渲染专用 prompt（voice/mode + director_note + NPC 回应，不含 gm-rules/gm-contract/工具提示）
-4. **Phase 4 — 创意层**（可选，best-effort）：触发条件满足时调一次 LLM 做剧情判断
+**是什么**：将三段式工作流从 gm-contract.md 的 prompt 合约改为四个引擎强制执行的独立阶段，Phase 3 从 pi agent loop 彻底拆出走裸 stream：
+
+1. **Phase 1 — 分类 LLM + 引擎执行**：LLM 输出 JSON → 引擎解析 → 引擎调工具。JSON parse 失败 → 关键词回落 → 引擎兜底。Phase 1 也负责预取描写信息（`lookup_region`/`lookup_character`/`dice_roll`）给 Phase 3。
+2. **Phase 2 — NPC Agent**：引擎自动检测同场 NPC → spawn 独立 LLM（带性格/记忆/关系上下文）。输出独立的 `[NPC名] 回应文本`，Phase 3 原文引用不改写。
+3. **交互检测**：Phase 2 后引擎分析每个 NPC 回应 → LLM mini-judge 判断哪些 NPC 在 cue 玩家。沉默 NPC 不强制切 turn_based。
+4. **GAL 场景边界锁**：一对一 + 女性 + 亲密/sex 经历 → 自动激活 GAL 第一人称。场景中锁定，人称切换只在场景边界（离开地点/时间跳跃）。
+5. **Phase 3 — 裸 stream 渲染（零工具）**：`generateCompletion` 直接调 API，物理上没有 tool definitions。pi agent loop 只负责 echo 预生成叙事。附带 lint + retry（最多 3 次）。
+6. **Phase 4 — 创意层**（可选，best-effort）：触发条件满足时调一次 LLM 做剧情判断。
 
 **为什么**：
-- DS Chat 在"写作本能"和"操作纪律"之间永远选前者。prompt 改三版、加检查清单、加处罚条款——全没用（PHILOSOPHY §1.3："只补一句 prompt 骂模型等于没有修"）
+- DS Chat 的"写作本能"永远压倒"操作纪律"。prompt 改三版、加检查清单、加处罚条款——全没用（PHILOSOPHY §1.3）
 - Phase 1 分类 LLM 输出 JSON → 引擎执行。LLM 物理上不能写叙事（输出被 parse，失败就扔）
-- Phase 3 渲染 prompt 不含 gm-contract / gm-rules / 工具提示 → LLM 没有"应该先调工具再写叙事"的认知负担
-- 引擎自举 NPC spawn 和 sex 自举相同模式——LLM 不调也跑
+- Phase 3 裸 stream 物理上没有工具列表——结构性硬隔离，不再靠 prompt 软约束
+- 交互检测替代共位近似：三个 NPC 在场但都在发呆 → novel 继续，不打断
+- GAL 场景边界锁对标真实小说/视觉小说的场景管理，人称切换不出现在对话回合边界
 
 **放弃了什么**：
-- 放弃了同一 LLM 在一次调用中完成三段式的架构（PHILOSOPHY §2.1 和决策 2 的前提——"渲染模型需要看 NPC agent 全文"——仍然成立；Phase 3 渲染 prompt 包含 NPC agent 文学文本，只是不再包含工具调用能力）
+- 放弃了同一 LLM 在一次调用中完成三段式的架构
 - 放弃了 gm-contract.md 作为行为约束（引擎代码替代）
-- Phase 1 多了一次 generateCompletion 调用（但 prompt 很小 ~3KB，且 JSON parse 失败时直接回退引擎兜底）
+- 放弃了 pi agent loop 做 Phase 3 渲染（改为裸 stream）
+- Phase 1 多了一次 LLM 调用（但 prompt 很小 ~3KB，失败有兜底）
 
 **不要做**：
-- ❌ 把 Phase 1 分类改为关键词匹配（关键词误判的代价比分类失败更大——引擎猜错 = 玩家退出）
+- ❌ 在 Phase 3 渲染 prompt 里加回工具提示或 gm-rules/gm-contract
+- ❌ 让 GAL 模式在对话回合边界切换人称
+- ❌ Phase 1 分类改为纯关键词匹配
 - ❌ 删掉 render_scene 工具（/reroll 命令依赖它）
-- ❌ 在 Phase 3 渲染 prompt 里重新加回 gm-rules / gm-contract
 
 **相关代码**：
-- `engine/phase1-classifier.ts`（分类 LLM + JSON 解析 + 工具执行 + 回退兜底）
-- `engine/phase3-render.ts`（渲染 prompt 组装，替代旧的 gm-contract 层）
-- `engine/phase4-creative.ts`（触发条件检测 + 创意 LLM 调用）
-- `extension.ts`（重写 before_agent_start + 新增 agent_end 钩子）
+- `engine/phase1-classifier.ts` — Phase 1 分类 LLM + JSON 解析 + 工具执行 + 回退兜底
+- `engine/detect-mode.ts` — 交互检测（LLM mini-judge + 关键词兜底）+ interactionMode 判定
+- `engine/phase3-render.ts` — Phase 3 渲染 prompt 组装 + 渲染合约 + 状态上下文注入
+- `engine/phase4-creative.ts` — Phase 4 创意层触发条件 + LLM 调用
+- `extension.ts` — 四阶段编排 + 交互检测 + GAL 场景边界 + Phase 3 裸 stream
+- `agents/gm-phase1-classifier.md` — Phase 1 分类器系统提示词
+- `agents/gm-mode-*.md` — 各模式叙事规则（RPG/GAL/Sex），已清除残留工具指令
 
 ---
 
-> 最后更新：2026-06-30。新决策随时追加。
+> 最后更新：2026-07-01。新决策随时追加。
