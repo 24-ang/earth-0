@@ -1,5 +1,13 @@
-# 叙事视角系统 — 设计计划
+# 叙事视角系统 — 设计计划（A 模块细案）
 
+> **当前状态（2026-07-01）**：本文档是 2026-06 月的细案设计稿。核心设计已全部落地并超出范围：
+> - `detectInteractionMode`：已从共位近似（§3.2 的 MVP 方案）升级为 **LLM mini-judge cue 检测 + 关键词兜底**
+> - 幕间/切镜管子：全部三条触发线 + 消费机制已在 `engine/viewpoint.ts` 实现
+> - 群像模式（§3.1 的第三轨）：因交互检测精度达到后不再需要独立实现——activeNPCs 精确判定自然覆盖
+> - Phase 3 裸 stream：**超过本文档范围**——渲染 LLM 从 pi agent loop 拆出走 `generateCompletion`，物理零工具
+> - GAL 场景边界锁：**超过本文档范围**——第一人称切换粒度从回合提升到场景
+> - 最新代码参考：`engine/detect-mode.ts` / `engine/viewpoint.ts` / `engine/phase3-render.ts` / `extension.ts` / `docs/decisions.md` #16
+>
 > **来源**：参考计划 `0-groovy-shannon.md` §十七。本模块是 5 个待开发模块中逻辑与叙事结合最紧密的一个。
 
 ---
