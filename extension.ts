@@ -109,6 +109,15 @@ export default function (pi: ExtensionAPI) {
     // 按当前时间段移动 NPC 到正确位置
     await (await import("./engine/state.ts")).updateNPCSchedules();
 
+    // NPC 移动完成后重新校准 interactionMode（结算时的 npcs 还是空的）
+    const { isSameLocation: isSameLoc } = await import("./engine/state.ts");
+    const postScheduleCount = Object.values(gameState.npcs).filter((n: any) =>
+      n.alive && isSameLoc(n.currentRoom, gameState.player.location)
+    ).length;
+    const { detectInteractionMode: detectIM } = await import("./engine/detect-mode.ts");
+    const freshIM = detectIM(gameState, postScheduleCount);
+    gameState.interactionMode = freshIM.interactionMode;
+
     // ── Phase 2: 引擎自举 — 自动 spawn 同场 NPC ──
     let npcResponses = "";
     try {
