@@ -60,11 +60,6 @@ const ACTION_WHITELIST = [
   "table_crud",
   "add_memory_tag",
   "add_calendar_event",
-  // 读取工具（Phase 1 也能调，用于预取描写信息给 Phase 3）
-  "lookup_region",
-  "lookup_character",
-  "dice_roll",
-  "lookup_lore",
 ];
 
 // ── 公开 API ──
@@ -143,32 +138,37 @@ export function buildClassificationPrompt(playerInput: string, gs: any): string 
   const hasFurniture = roomData?.furniture && Object.keys(roomData.furniture).length > 0;
   const furnitureNames = hasFurniture ? Object.keys(roomData.furniture).join("、") : "";
 
-  // 加载 Phase 1 分类器系统规则文件
-  let classifierRules = "";
-  try {
-    const fs2 = require("node:fs");
-    const path2 = require("node:path");
-    const agentsDir = path2.resolve(process.cwd(), "agents");
-    const p = path2.join(agentsDir, "gm-phase1-classifier.md");
-    if (fs2.existsSync(p)) {
-      classifierRules = fs2.readFileSync(p, "utf-8");
-    }
-  } catch {}
-
-  const sceneBlock = [
-    `当前位置: ${location}`,
-    `在场 NPC: ${npcList}`,
-    hasShop ? `注意: 此地点有商店，玩家可买卖物品。` : "",
-    hasFurniture ? `可交互家具: ${furnitureNames}` : "",
-  ].filter(Boolean).join("\n");
-
   return [
-    classifierRules || "你是意图分类器。将玩家输入映射为动作列表。只输出 JSON，不要解释。",
-
-    sceneBlock,
+    "你是意图分类器。将玩家输入映射为动作列表。只输出 JSON，不要解释。",
 
     `玩家输入: "${playerInput}"`,
+    `当前位置: ${location}`,
+    `在场 NPC: ${npcList}`,
+    hasShop ? `注意: 此地点有商店，玩家可以买卖物品。` : "",
+    hasFurniture ? `可交互家具: ${furnitureNames}` : "",
 
+    "",
+    "可用动作:",
+    "- travel: 移动去另一个地点。param: destination(地点名)。玩家当前在别处要去某地时必须调",
+    "- buy_item: 购买物品。param: item(物品名), price(日元)",
+    "- sell_item: 出售物品。param: item(物品名)",
+    "- intimate_touch: 亲密接触（仅sex模式）。param: part(身体部位), intensity(轻/中/重)",
+    "- interact_furniture: 与家具交互（桌椅床柜等物理物件）。param: furniture(家具名), action(坐/躺/开/关/拿/放)",
+    "- world_interact: 建造/放置/移除。param: action(place/build/remove/destroy), target(目标物)",
+    "- steal_item: 偷窃。param: item(物品名), target_npc(目标NPC)",
+    "- combat_action: 战斗。param: action(attack/defend/flee), target(目标)",
+    "- use_item: 使用背包物品。param: item(物品名)",
+    "- equip_item: 装备物品。param: item(物品名), slot(槽位)",
+    "- adjust_relation: 好感增减。param: npc(NPC名), delta(数值)",
+    "",
+
+    "规则:",
+    "1. 理解玩家真实意图，不要机械匹配关键词",
+    "2. 玩家说了要去某地 → 加 travel",
+    '3. "想去但放弃了的事" → 不做（例："想去便利店但太远了算了" → actions为空）',
+    "4. 和NPC聊天/交谈 → 不需要工具（引擎会自动处理NPC对话）",
+    "5. 不确定时不要输出。没有任何需要做的 → actions 为空数组",
+    "6. 不要使用不在上面列表中的动作名",
     "",
     "输出纯 JSON（不要 markdown 代码块，不要其他文字）:",
     '{"actions": [{"tool": "...", "params": {...}, "confidence": 0.9}], "summary": "玩家意图的一句话"}',
@@ -277,11 +277,6 @@ async function loadTool(toolName: string): Promise<any | null> {
     table_crud: "../tools/action/table_crud.ts",
     add_memory_tag: "../tools/state/add_memory_tag.ts",
     add_calendar_event: "../tools/action/add_calendar_event.ts",
-    // 读取工具
-    lookup_region: "../tools/lookup/lookup_region.ts",
-    lookup_character: "../tools/state/lookup_character.ts",
-    dice_roll: "../tools/lookup/dice_roll.ts",
-    lookup_lore: "../tools/lookup/lookup_lore.ts",
   };
 
   const relPath = toolPaths[toolName];

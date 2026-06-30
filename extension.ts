@@ -1,14 +1,10 @@
 /**
- * earth-0 扩展 — 三段式实体化 + 结构性隔离
+ * earth-0 扩展 — 三段式实体化
  *
- * Phase 1 (before_agent_start): 分类 LLM → JSON → 引擎执行工具 → 结算
+ * Phase 1 (before_agent_start): 分类 LLM → JSON → 引擎执行工具 → 结算 → NPC 自举 → 组装渲染 prompt
  * Phase 2 (before_agent_start 内): 引擎自动 spawn NPC agent
- * Phase 3 (before_agent_start, 裸 stream): generateCompletion(渲染 prompt)，零工具
+ * Phase 3 (pi agent loop): LLM 收到渲染 prompt → 写叙事正文
  * Phase 4 (agent_end): 创意层（可选，best-effort）
- *
- * Phase 3 不再走 pi agent loop。直接用 generateCompletion 裸 stream —
- * 物理上没有 tool definitions，LLM 无法跳过结算或调写工具。
- * pi agent loop 收到回显 prompt，只负责原样输出预生成的叙事文本。
  *
  * 设计参考: fate-sandbox two-pass-render, PHILOSOPHY §1.3
  */
@@ -228,8 +224,7 @@ export default function (pi: ExtensionAPI) {
 
     saveState();
 
-    // ── Phase 3: 裸 stream 生成叙事（零工具，结构性隔离）──
-    // pi agent loop 只负责回显。渲染 LLM 走 generateCompletion，物理上无工具列表。
+    // ── Phase 3: 组装渲染 prompt → 交给 pi agent loop ──
     const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");
 
     const renderCtx = {
@@ -243,94 +238,20 @@ export default function (pi: ExtensionAPI) {
     let gmPrompt = await buildRenderSystemPrompt(gameState, renderCtx);
 
     // 注入引擎通知
+    const notices: string[] = [];
     if (autoSettled) {
-      gmPrompt += `\n\n[引擎] 上轮 GM 未调用 settle_scene，引擎已自动完整结算（当前 turn ${gameState.turn}）。`;
+      notices.push(`[引擎] 上轮 GM 未调用 settle_scene，引擎已自动完整结算（当前 turn ${gameState.turn}）。`);
     }
     if (phase1.classified && phase1.toolsExecuted.length > 0) {
-      gmPrompt += `\n\n[引擎] Phase1 分类器执行: ${phase1.toolsExecuted.join(", ")}。`;
+      notices.push(`[引擎] Phase1 分类器执行: ${phase1.toolsExecuted.join(", ")}。工具已执行完毕，直接写叙事。`);
     } else if (!phase1.classified) {
-      gmPrompt += `\n\n[引擎] Phase1 分类失败，已回退引擎兜底结算。`;
+      notices.push(`[引擎] Phase1 分类失败，已回退引擎兜底结算。直接写叙事。`);
+    }
+    if (notices.length > 0) {
+      gmPrompt += "\n\n" + notices.join("\n");
     }
 
-    // ── 裸 stream（zero-tool structural isolation）──
-    let phase3Narrative = "";
-    try {
-      const { generateCompletion, setLastRenderedProse } = await import("./tools/helpers.ts");
-
-      // 模型选择：flag > rendering.json > env var
-      const fsNode = await import("node:fs");
-      const pathNode = await import("node:path");
-      let narrativeModel: string | undefined;
-      try {
-        const renderJsonPath = pathNode.resolve(process.cwd(), "data", "rendering.json");
-        if (fsNode.existsSync(renderJsonPath)) {
-          const config = JSON.parse(fsNode.readFileSync(renderJsonPath, "utf-8"));
-          narrativeModel = config.model_mappings?.narrative_render_model;
-        }
-      } catch {}
-      const flagModel = pi.getFlag?.("render-model") as string | undefined;
-      narrativeModel = flagModel || narrativeModel || process.env.PI_RENDER_MODEL || process.env.FATE_RENDER_MODEL || undefined;
-
-      const renderPrompt = gmPrompt + "\n\n现在输出纯叙事正文：";
-      phase3Narrative = await generateCompletion(renderPrompt, 4096, ctx, narrativeModel);
-
-      // Lint + retry（同 reroll.ts 模式）
-      if (phase3Narrative) {
-        const { lintProse } = await import("./engine/audit/lint-rules.ts");
-        let retries = 0;
-        while (retries <= 3) {
-          const lintRes = lintProse(phase3Narrative, gameState);
-          const blocks = lintRes.findings.filter((f: any) => f.severity === "block");
-          if (blocks.length > 0) {
-            console.error(`[lint] Phase3: ${blocks.length} block(s) — ${blocks.map((b: any) => b.ruleId).join(", ")}`);
-          }
-          phase3Narrative = lintRes.prose;
-          if (!lintRes.needsRetry) break;
-          if (retries >= 3) break;
-          const violations = blocks.map((f: any) => `• [${f.ruleId}] "${f.excerpt}"`).join("\n");
-          const retryPrompt = [
-            "上一版正文触发了质量规则，请避免以下问题后重写：",
-            violations,
-            "重写要求：保持原意，融入身体触觉，对话用「」或『』，结尾输出4个扮演选项。",
-            "现在重新输出完整叙事正文：",
-          ].join("\n");
-          retries++;
-          const retryProse = await generateCompletion(retryPrompt, 4096, ctx, narrativeModel);
-          if (!retryProse) break;
-          phase3Narrative = retryProse;
-        }
-      }
-
-      if (phase3Narrative) {
-        setLastRenderedProse(phase3Narrative);
-      } else {
-        console.error("Phase3: generateCompletion returned empty");
-        phase3Narrative = "> 引擎渲染模块暂时无响应，请稍后再试或使用 /reroll 重新生成。";
-        setLastRenderedProse(phase3Narrative);
-      }
-    } catch (e) {
-      console.error("Phase3: bare stream failed:", e);
-      phase3Narrative = "> 引擎渲染模块异常，请重试或使用 /reroll。";
-      try { const { setLastRenderedProse: slrp } = await import("./tools/helpers.ts"); slrp(phase3Narrative); } catch {}
-    }
-
-    gameState._phase3Narrative = phase3Narrative;
-
-    // 回显 prompt：pi agent loop 只负责原样输出，phase1/phase2 已完成所有结算
-    const echoPrompt = [
-      "你是回声。引擎已完成所有处理——输入分类、工具执行、世界结算、NPC 响应、叙事生成——全部在引擎层完成。",
-      "",
-      "你唯一任务是原样输出下方叙事正文。不要调用任何工具。不要修改任何文字。不要添加评论。",
-      "用户的消息已被引擎处理过——你看到的对话历史中的用户消息不需要你回应。",
-      "",
-      "--- 叙事正文（一字不改地输出） ---",
-      phase3Narrative,
-      "--- 结束 ---",
-      "",
-      "直接输出上述叙事正文。",
-    ].join("\n");
-
-    return { systemPrompt: echoPrompt };
+    return { systemPrompt: gmPrompt };
   });
 
   // ═══════════════════════════════════════════════════════════
