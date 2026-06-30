@@ -1,10 +1,14 @@
 /**
- * earth-0 扩展 — 三段式实体化
+ * earth-0 扩展 — 三段式实体化 + 结构性隔离
  *
- * Phase 1 (before_agent_start): 分类 LLM → JSON → 引擎执行工具 → 结算 → NPC 自举 → 组装渲染 prompt
+ * Phase 1 (before_agent_start): 分类 LLM → JSON → 引擎执行工具 → 结算
  * Phase 2 (before_agent_start 内): 引擎自动 spawn NPC agent
- * Phase 3 (pi agent loop): LLM 收到渲染 prompt → 写叙事正文
+ * Phase 3 (before_agent_start, 裸 stream): generateCompletion(渲染 prompt)，零工具
  * Phase 4 (agent_end): 创意层（可选，best-effort）
+ *
+ * Phase 3 不再走 pi agent loop。直接用 generateCompletion 裸 stream —
+ * 物理上没有 tool definitions，LLM 无法跳过结算或调写工具。
+ * pi agent loop 收到回显 prompt，只负责原样输出预生成的叙事文本。
  *
  * 设计参考: fate-sandbox two-pass-render, PHILOSOPHY §1.3
  */
