@@ -1,5 +1,12 @@
 /**
- * earth-0 扩展 — tools注册，LLM ↔ engine桥梁
+ * earth-0 扩展 — 三段式实体化
+ *
+ * Phase 1 (before_agent_start): 分类 LLM → JSON → 引擎执行工具 → 结算 → NPC 自举 → 组装渲染 prompt
+ * Phase 2 (before_agent_start 内): 引擎自动 spawn NPC agent
+ * Phase 3 (pi agent loop): LLM 收到渲染 prompt → 写叙事正文
+ * Phase 4 (agent_end): 创意层（可选，best-effort）
+ *
+ * 设计参考: fate-sandbox two-pass-render, PHILOSOPHY §1.3
  */
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { registerAll } from "./tools/registry.ts";
@@ -9,11 +16,13 @@ export default function (pi: ExtensionAPI) {
   // Register all modular tools and commands
   registerAll(pi);
 
-  // Register TUI lifecycle event handlers
-  pi.on("session_start", async (event, ctx) => {
+  // ═══════════════════════════════════════════════════════════
+  // 生命周期钩子
+  // ═══════════════════════════════════════════════════════════
+
+  pi.on("session_start", async (_event, ctx) => {
     const { gameState, loadState, saveState, resetState, buildStatePrompt } = await import("./engine/state.ts");
     if (loadState()) {
-      // 确保 NPC 懒初始化（恢复旧存档时补上）
       await buildStatePrompt();
       saveState();
       ctx.ui.notify(`earth-0 ${(await import("./engine/state.ts")).gameState.time.game_date}`, "info");
@@ -24,8 +33,7 @@ export default function (pi: ExtensionAPI) {
     updateChatHUD(ctx);
   });
 
-  // P3: 捕获用户输入到 gameState，供 before_agent_start 自动检测用
-  // （pi 框架的 before_agent_start 不传用户消息，只能通过 input hook 中转）
+  // 捕获用户输入到 gameState（pi 的 before_agent_start 不传用户消息）
   pi.on("input", async (event) => {
     const { gameState, saveState } = await import("./engine/state.ts");
     try {
@@ -39,7 +47,7 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  pi.on("turn_end", async (event, ctx) => {
+  pi.on("turn_end", async (_event, ctx) => {
     updateChatHUD(ctx);
   });
 
@@ -48,145 +56,88 @@ export default function (pi: ExtensionAPI) {
     saveState();
   });
 
-  // 每轮组装 GM 系统提示词（含 settle_scene 漏调兜底 + mode 自动切换 + sex 自动检测）
-  pi.on("before_agent_start", async (event, ctx) => {
-    const { buildStatePrompt, gameState, saveState } = await import("./engine/state.ts");
+  // ═══════════════════════════════════════════════════════════
+  // Phase 1 + Phase 2: before_agent_start
+  // ═══════════════════════════════════════════════════════════
+  pi.on("before_agent_start", async (_event, ctx) => {
+    const { gameState, saveState } = await import("./engine/state.ts");
+    const { runSettlement } = await import("./engine/settlement.ts");
+    const { runPhase1 } = await import("./engine/phase1-classifier.ts");
 
-    // ═══════════════════════════════════════════════════════════
-    // P0: settle_scene 漏调兜底 → 完整结算（PHILOSOPHY §1.3）
-    // ═══════════════════════════════════════════════════════════
+    // ── P0: settle_scene 漏调兜底 ──
     let autoSettled = false;
     const prevTurn = gameState._turnAtLastCheck;
     if (prevTurn !== undefined && gameState.turn > 0 && gameState.turn === prevTurn) {
-      const { runSettlement } = await import("./engine/settlement.ts");
-      await runSettlement({
-        elapsed_minutes: 5,
-        _autoSettled: true,
-        ctx,  // 传给 reviewTurn → 好感度兜底生效
-      });
+      await runSettlement({ elapsed_minutes: 5, _autoSettled: true, ctx });
       autoSettled = true;
     }
     gameState._turnAtLastCheck = gameState.turn;
 
-    // P3 前置：确保 sex 模式下 layer1 始终启用
+    // ── Phase 1: 分类 LLM → JSON → 引擎执行工具 ──
+    const playerInput = gameState._lastUserInput || "";
+    const phase1 = playerInput.trim()
+      ? await runPhase1(playerInput, ctx)
+      : await engineOnlyPhase1(ctx); // 空输入 → 直接结算
+
+    // 存储 Phase 1 结果供 Phase 4 使用
+    gameState._phase1Summary = phase1.summary;
+
+    // ── 强制结算（确保时间/回合/NPC日程推进） ──
+    // 仅在 Phase 1 未执行 settle_scene 时补调
+    if (!phase1.toolsExecuted.includes("settle_scene")) {
+      // 将 Phase 1 分类的 elapsed_minutes 传进来
+      const hasTravel = phase1.toolsExecuted.includes("travel");
+      await runSettlement({
+        elapsed_minutes: hasTravel ? 15 : 5,
+        _autoSettled: !autoSettled, // Phase 1 分类成功不代表漏调
+        ctx,
+      });
+    }
+
+    // 保存前值用于 Phase 4 检测
+    gameState._prevLocation = gameState.player?.location;
+    gameState._prevAffection = {};
+    if (gameState.player?.relationships) {
+      for (const [n, r] of Object.entries(gameState.player.relationships) as [string, any][]) {
+        gameState._prevAffection[n] = r.affection ?? 0;
+      }
+    }
+
+    // ── Phase 2: 引擎自举 — 自动 spawn 同场 NPC ──
+    let npcResponses = "";
+    try {
+      npcResponses = await autoSpawnNPCs(ctx);
+    } catch (e) {
+      console.error("Phase2: auto-spawn NPCs failed:", e);
+    }
+
+    // ── Sex 模式维护 ──
     if (gameState.mode === "sex") gameState.layer1Enabled = true;
+    await maintainSexMode(ctx);
 
-    // ═══════════════════════════════════════════════════════════
-    // P3: sex 模式引擎自动检测（在 mode 检查之前运行，结果影响 mode 恢复判断）
-    // ═══════════════════════════════════════════════════════════
-    let sexAutoTouchResult: string | null = null;
-    let sexAutoTouched = false;
-    const lastTools = gameState._lastTurnToolsCalled || [];
-    if (gameState.mode === "sex" && gameState.layer1Enabled) {
-      const hadIntimateTouch = lastTools.includes("intimate_touch");
-      if (!hadIntimateTouch) {
-        let userText = cleanUserInput(gameState._lastUserInput || "");
+    saveState();
 
-        const bodyKeywords = /触|摸|碰|揉|捏|舔|吻|吸|插|抽|进|出|顶|压|按|抓|握|抚|蹭|贴|抱|搂|亲|咬|含|吮|脱|伸|探/;
-        if (userText && bodyKeywords.test(userText)) {
-          try {
-            const { gameState: gs, saveState: sv, getOrCreateSexState, pushToolCall, getOrCreateNPC, isSameLocation } = await import("./engine/state.ts");
-            const { SEX_PROFILES, touchBodyPart, checkClimax, triggerClimax, settleAfterSex, formatSettlement } = await import("./engine/sex.ts");
+    // ── Phase 3: 组装渲染 prompt → 交给 pi agent loop ──
+    const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");
+    const statePrompt = await (await import("./engine/state.ts")).buildStatePrompt();
 
-            let targetName: string | null = (gs.player.sex?.profile as any)?.name || null;
-            if (!targetName || !SEX_PROFILES[targetName]) {
-              const candidates = Object.entries(SEX_PROFILES).filter(([name, _p]) => {
-                const npc = getOrCreateNPC(name);
-                return npc && npc.alive && isSameLocation(npc.currentRoom, gs.player.location);
-              });
-              if (candidates.length > 0) {
-                targetName = candidates[0][0];
-                const ss = await getOrCreateSexState(targetName);
-                if (ss) {
-                  gs.player.sex = ss;
-                  gs.player.sex.desire = Math.max(gs.player.sex.desire || 0, 50);
-                  console.error(`sex auto-detection: auto-aligned to ${targetName} (${candidates.length} candidates in scene)`);
-                }
-              }
-            }
+    const renderCtx = {
+      directorNote: phase1.directorNote,
+      npcResponses,
+      summary: phase1.summary,
+    };
 
-            if (targetName && SEX_PROFILES[targetName]) {
-              const p = SEX_PROFILES[targetName];
-              const { part, intensity } = inferTouchTarget(userText);
-              const r = touchBodyPart(p, gs.player.sex, part, intensity);
-
-              if (gs.player.sex.arousal == null) gs.player.sex.arousal = 0;
-              const newArousal = gs.player.sex.arousal + r.arousalChange;
-              gs.player.sex.arousal = isNaN(newArousal) ? 0 : Math.min(100, newArousal);
-
-              pushToolCall("intimate_touch");
-              gameState._lastTurnToolsCalled ??= [];
-              if (!gameState._lastTurnToolsCalled.includes("intimate_touch")) {
-                gameState._lastTurnToolsCalled.push("intimate_touch");
-              }
-              sv();
-              sexAutoTouched = true;
-
-              sexAutoTouchResult = `[自动检测] ${part}${intensity} → ${targetName}: ${r.reaction} (兴奋 ${gs.player.sex.arousal}/100)`;
-
-              if (checkClimax(gs.player.sex)) {
-                triggerClimax(gs.player.sex);
-                sexAutoTouchResult += `\n高潮！${targetName}达到了高潮！`;
-                const report = settleAfterSex(gs.player.sex, gs.time.game_date, 30, [], [], gs.player.name);
-                sexAutoTouchResult += formatSettlement(report, targetName);
-              }
-            } else {
-              console.error("sex auto-detection: no NPC with SEX_PROFILES in current scene. Cannot auto-bootstrap.");
-            }
-          } catch (e) {
-            console.error("sex auto-detection: intimate_touch execution failed", e);
-          }
-        }
-      }
-
-      // 欲望自然衰减：仅当本轮既无手动 touch 也无自动 touch
-      const anyTouchThisRound = lastTools.includes("intimate_touch") || sexAutoTouched;
-      if (!anyTouchThisRound) {
-        gameState._sexTurnsWithoutTouch = (gameState._sexTurnsWithoutTouch || 0) + 1;
-        if (gameState._sexTurnsWithoutTouch >= 3 && gameState.player.sex) {
-          const decay = Math.min(3, Math.floor(gameState._sexTurnsWithoutTouch / 2));
-          gameState.player.sex.arousal = Math.max(0, (gameState.player.sex.arousal || 0) - decay);
-          if (gameState._sexTurnsWithoutTouch === 3) {
-            sexAutoTouchResult = (sexAutoTouchResult || "") +
-              `\n[引擎] ⚠️ 已${gameState._sexTurnsWithoutTouch}轮无身体接触，NPC欲望自然下降（-${decay}/轮）。`;
-          }
-        }
-      } else {
-        gameState._sexTurnsWithoutTouch = 0;
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // Mode 自动切换（在 P3 之后运行——auto-touch 结果已写入 _lastTurnToolsCalled）
-    // ═══════════════════════════════════════════════════════════
-    const finalLastTools = gameState._lastTurnToolsCalled || [];
-    const sexTools = ["intimate_touch", "masturbate"];
-    const hadSex = finalLastTools.some((t: string) => sexTools.includes(t));
-    if (hadSex && gameState.mode !== "sex") {
-      gameState._prevMode = gameState.mode;
-      gameState.mode = "sex";
-      gameState.layer1Enabled = true;
-      saveState();
-    } else if (!hadSex && gameState.mode === "sex" && gameState._prevMode) {
-      gameState.mode = gameState._prevMode;
-      gameState.layer1Enabled = false;
-      gameState._prevMode = undefined;
-      saveState();
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // 组装系统提示词
-    // ═══════════════════════════════════════════════════════════
-    const statePrompt = await buildStatePrompt();
-    let gmPrompt = await buildSystemPrompt(gameState, statePrompt);
+    let gmPrompt = await buildRenderSystemPrompt(gameState, renderCtx);
 
     // 注入引擎通知
     const notices: string[] = [];
     if (autoSettled) {
-      notices.push(`[引擎] ⚠️ 上轮 GM 未调用 settle_scene，引擎已自动完整结算（+5分钟，当前 turn ${gameState.turn}）。`);
+      notices.push(`[引擎] 上轮 GM 未调用 settle_scene，引擎已自动完整结算（当前 turn ${gameState.turn}）。`);
     }
-    if (sexAutoTouchResult) {
-      notices.push(`[引擎·sex] ${sexAutoTouchResult}`);
+    if (phase1.classified && phase1.toolsExecuted.length > 0) {
+      notices.push(`[引擎] Phase1 分类器执行: ${phase1.toolsExecuted.join(", ")}。工具已执行完毕，直接写叙事。`);
+    } else if (!phase1.classified) {
+      notices.push(`[引擎] Phase1 分类失败，已回退引擎兜底结算。直接写叙事。`);
     }
     if (notices.length > 0) {
       gmPrompt += "\n\n" + notices.join("\n");
@@ -194,15 +145,174 @@ export default function (pi: ExtensionAPI) {
 
     return { systemPrompt: gmPrompt };
   });
+
+  // ═══════════════════════════════════════════════════════════
+  // Phase 4: agent_end（创意层，可选）
+  // ═══════════════════════════════════════════════════════════
+  pi.on("agent_end", async (_event, ctx) => {
+    // Phase 4: ctx in agent_end may be stale after session replacement.
+    // Silently skip — this layer is best-effort creative.
+    if (!ctx?.model || !ctx?.modelRegistry) return;
+    try {
+      const { runPhase4 } = await import("./engine/phase4-creative.ts");
+      const { gameState } = await import("./engine/state.ts");
+      const summary = gameState._phase1Summary || "";
+      await runPhase4(summary, ctx);
+    } catch (e) {
+      // Non-critical — next round will re-check creative triggers
+    }
+  });
 }
 
-// 顶层导出系统提示词组装逻辑，以便进行单元测试
+// ═══════════════════════════════════════════════════════════
+// 辅助函数
+// ═══════════════════════════════════════════════════════════
+
+/** Phase 1 兜底：空输入或分类失败时，只做引擎结算 */
+async function engineOnlyPhase1(ctx: any) {
+  const { gameState, saveState } = await import("./engine/state.ts");
+  const { runSettlement } = await import("./engine/settlement.ts");
+  await runSettlement({ elapsed_minutes: 5, _autoSettled: true, ctx });
+  saveState();
+  return {
+    directorNote: `<directors_note>
+  <player_action>无输入（引擎自动结算）</player_action>
+  <resolved_changes>时间推进5分钟，turn ${gameState.turn}</resolved_changes>
+  <scene_result>玩家在${gameState.player?.location || "未知"}</scene_result>
+</directors_note>`,
+    toolsExecuted: ["settle_scene"],
+    summary: "引擎自动结算",
+    classified: false,
+  };
+}
+
+/** Phase 2: 自动检测同场 NPC 并 spawn */
+async function autoSpawnNPCs(ctx: any): Promise<string> {
+  const { gameState } = await import("./engine/state.ts");
+
+  const loc = gameState.player?.location;
+  if (!loc || !gameState.npcs) return "";
+
+  const presentNPCs = Object.entries(gameState.npcs)
+    .filter(([_, npc]: [string, any]) =>
+      npc.currentRoom === loc && npc.alive !== false
+    )
+    .map(([name]) => name);
+
+  if (presentNPCs.length === 0) return "";
+
+  // 本轮已经 spawn 过的跳过
+  const lastTools = gameState._lastTurnToolsCalled || [];
+  if (lastTools.includes("spawn_npc_agent") || lastTools.includes("spawn_npc_agents")) return "";
+
+  // 选情感权重最高的 NPC（好感度 → 有关系标签 → 有 hook → 随机）
+  const scored = presentNPCs.map(name => {
+    let score = 0;
+    const rel = gameState.player?.relationships?.[name];
+    if (rel?.affection) score += rel.affection;
+    if (rel?.stage === "亲密" || rel?.stage === "好友") score += 20;
+    // 有活跃 hook 的加分
+    const hooks = gameState.active_hooks || [];
+    if (hooks.some((h: any) => h.target_npc === name || h.source_npc === name)) score += 30;
+    return { name, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+
+  // 只 spawn 1-2 个
+  const toSpawn = scored.slice(0, 2);
+  if (toSpawn.length === 0) return "";
+
+  try {
+    const { generateCompletion, getNpcAgentModel, recordNpcAgentAction } = await import("./tools/helpers.ts");
+    const { findCharacter, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
+    const charStages = await import("./data/character_stages.json", { with: { type: "json" } });
+
+    const results: string[] = [];
+    for (const { name } of toSpawn) {
+      try {
+        const src = findCharacter(name);
+        if (!src) continue;
+        const npc = getOrCreateNPC(name);
+        const rel = gameState.player?.relationships?.[name];
+        const affection = rel?.affection ?? 0;
+        const stage = rel?.stage ?? "陌生";
+        const curAge = getNpcCurrentAge(src.base_age || 16);
+        const app = getAppearanceForAge(src, curAge);
+        const outfit = getNPCOutfitDesc(name);
+        const cs = (charStages as any)[name];
+        const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
+        const personality = cs?.[stageKey] || "";
+        const memories = recallRelevantMemories(name, {
+          location: loc,
+          presentNPCs: toSpawn.filter(n => n.name !== name).map(n => n.name),
+        });
+
+        const prompt = [
+          `你是${name}。你现在正在${loc}。`,
+          `在场人物: 玩家${toSpawn.length > 1 ? "、" + toSpawn.filter(n => n.name !== name).map(n => n.name).join("、") : "（仅你一人）"}。`,
+          `性格: ${personality || "（暂无）"}`,
+          `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
+          `穿着: ${outfit}`,
+          `关系: ${stage}（好感${affection}）`,
+          memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
+          "",
+          "场景中有玩家在场。基于你的性格，自然地做出反应——可以是被动观察到玩家进入，也可以是主动打招呼。",
+          "不要写叙事，只输出你的内心独白和回应（参考角色轮格式）。",
+        ].filter(Boolean).join("\n");
+
+        const model = await getNpcAgentModel();
+        const response = await generateCompletion(prompt, 512, ctx, model);
+        if (response) {
+          results.push(`[${name}] ${response}`);
+          recordNpcAgentAction(name, response, outfit || "", loc).catch(() => {});
+        }
+      } catch (e) {
+        console.error(`Phase2: auto-spawn ${name} failed:`, e);
+      }
+    }
+    return results.join("\n");
+  } catch (e) {
+    console.error("Phase2: autoSpawnNPCs failed:", e);
+    return "";
+  }
+}
+
+/** Sex 模式维护：sex 模式下 layer1 启用 + 模式切换 */
+async function maintainSexMode(ctx: any) {
+  const { gameState, saveState } = await import("./engine/state.ts");
+
+  if (gameState.mode !== "sex") return;
+
+  // layer1 强制启用
+  gameState.layer1Enabled = true;
+
+  // 欲望自然衰减：检查本轮有无 intimate_touch
+  const lastTools = gameState._lastTurnToolsCalled || [];
+  const hadTouch = lastTools.includes("intimate_touch");
+  if (!hadTouch) {
+    gameState._sexTurnsWithoutTouch = (gameState._sexTurnsWithoutTouch || 0) + 1;
+    if (gameState._sexTurnsWithoutTouch >= 3 && gameState.player.sex) {
+      const decay = Math.min(3, Math.floor(gameState._sexTurnsWithoutTouch / 2));
+      gameState.player.sex.arousal = Math.max(0, (gameState.player.sex.arousal || 0) - decay);
+    }
+  } else {
+    gameState._sexTurnsWithoutTouch = 0;
+  }
+
+  saveState();
+}
+
+// ═══════════════════════════════════════════════════════════
+// 向后兼容：buildSystemPrompt（测试文件可能引用）
+// ═══════════════════════════════════════════════════════════
+
 export async function buildSystemPrompt(gameState: any, statePrompt: string): Promise<string> {
+  // 向后兼容：保留旧的 preset.json 动态组装逻辑
+  // 新版三段式使用的是 buildRenderSystemPrompt（phase3-render.ts）
   const fs = await import("node:fs");
   const path = await import("node:path");
   const agentsDir = path.resolve(process.cwd(), "agents");
 
-  let gmPrompt = "";
   const presetPath = path.join(agentsDir, "preset.json");
   if (fs.existsSync(presetPath)) {
     try {
@@ -212,7 +322,6 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
       const parts: string[] = [];
 
       for (const key of layers) {
-        // 开局流程只在第一回合需要。开局后跳过，省 ~1.5KB/回合。
         if (key === "start" && gameState.turn > 0) continue;
         const layerKey = key.replace("{mode}", gameState.mode).replace("{interactionMode}", gameState.interactionMode || "turn_based");
         const layerConfig = presetData.layers[layerKey];
@@ -231,85 +340,31 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
           }
         }
       }
-      gmPrompt = parts.filter(Boolean).join("\n\n---\n\n");
+      return parts.filter(Boolean).join("\n\n---\n\n");
     } catch (e) {
       console.error("Failed to parse preset.json, falling back to hardcoded default:", e);
-      const read = (name: string) => {
-        const p = path.join(agentsDir, name);
-        let content = fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
-        const personText = (gameState.mode === "gal" || gameState.mode === "sex") ? "第一人称「我」" : "第三人称「他」（镜头需钉在主角身边，采用第三人称限知视角）";
-        return content.replace(/\{\{person\}\}/g, personText);
-      };
-      const voiceFile = (gameState.interactionMode === "novel") ? "gm-voice-novel.md" : "gm-voice-turnbased.md";
-      const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
-        : gameState.mode === "rpg" ? "gm-mode-rpg.md"
-        : "gm-mode-gal.md";
-      gmPrompt = [
-        read("gm-pre.md"),
-        read("gm-rules.md"),
-        statePrompt,
-        read(voiceFile),
-        read(modeFile),
-        read("gm-contract.md"),
-      ].filter(Boolean).join("\n\n---\n\n");
     }
-  } else {
-    const read = (name: string) => {
-      const p = path.join(agentsDir, name);
-      let content = fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
-      const personText = (gameState.mode === "gal" || gameState.mode === "sex") ? "第一人称「我」" : "第三人称「他」（镜头需钉在主角身边，采用第三人称限知视角）";
-      return content.replace(/\{\{person\}\}/g, personText);
-    };
-    const voiceFile = (gameState.interactionMode === "novel") ? "gm-voice-novel.md" : "gm-voice-turnbased.md";
-    const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
-      : gameState.mode === "rpg" ? "gm-mode-rpg.md"
-      : "gm-mode-gal.md";
-    gmPrompt = [
-      read("gm-pre.md"),
-      read("gm-rules.md"),
-      statePrompt,
-      read(voiceFile),
-      read(modeFile),
-      read("gm-contract.md"),
-    ].filter(Boolean).join("\n\n---\n\n");
   }
 
-  return gmPrompt;
-}
+  // Hardcoded fallback
+  const read = (name: string) => {
+    const p = path.join(agentsDir, name);
+    let content = fs.existsSync(p) ? fs.readFileSync(p, "utf-8").trim() : "";
+    const personText = (gameState.mode === "gal" || gameState.mode === "sex") ? "第一人称「我」" : "第三人称「他」（镜头需钉在主角身边，采用第三人称限知视角）";
+    return content.replace(/\{\{person\}\}/g, personText);
+  };
 
-// ═══════════════════════════════════════════════════════════
-// P3 辅助函数
-// ═══════════════════════════════════════════════════════════
+  const voiceFile = (gameState.interactionMode === "novel") ? "gm-voice-novel.md" : "gm-voice-turnbased.md";
+  const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
+    : gameState.mode === "rpg" ? "gm-mode-rpg.md"
+    : "gm-mode-gal.md";
 
-/** 清洗 pi 框架 artifact（Windows 路径前缀、slash command 等） */
-function cleanUserInput(raw: string): string {
-  // 去掉 Windows 路径前缀: "C:/Program Files/Git/mode sex。然后推门..." → "然后推门..."
-  let text = raw.replace(/^[A-Z]:\/(?:\S+\/)*\S*\s*/i, "");
-  // 去掉 Unix 路径前缀: "/home/user/mode sex"
-  text = text.replace(/^\/\S+\/\S+\s*/, "");
-  // 去掉 slash command: "/mode sex" 或 "/mode rpg"
-  text = text.replace(/^\/mode\s+\S+\s*/, "");
-  return text.trim();
-}
-
-/** 从用户输入推断触碰部位和强度 */
-function inferTouchTarget(userText: string): { part: string; intensity: "轻" | "中" | "重" } {
-  const partMap: [RegExp, string][] = [
-    [/唇|嘴|口|舌/, "唇"],
-    [/脸|面|颊|额|耳/, "脸"],
-    [/颈|脖|喉/, "颈"],
-    [/胸|乳|奶|酥/, "胸"],
-    [/腰|腹|肚|脐/, "腰"],
-    [/腿|大|膝|足|脚|踝/, "腿"],
-    [/臀|屁|菊|肛|后/, "臀"],
-    [/手|指|掌|腕|臂/, "手"],
-    [/阴|秘|下|裆|穴|缝/, "秘部"],
-    [/肩|背|脊/, "肩"],
-  ];
-  for (const [re, part] of partMap) {
-    if (re.test(userText)) return { part, intensity: "中" };
-  }
-  // 有舔/吻/咬 → 强度提升
-  if (/舔|吻|咬|含|吮/.test(userText)) return { part: "唇", intensity: "重" };
-  return { part: "胸", intensity: "中" };
+  return [
+    read("gm-pre.md"),
+    read("gm-rules.md"),
+    statePrompt,
+    read(voiceFile),
+    read(modeFile),
+    read("gm-contract.md"),
+  ].filter(Boolean).join("\n\n---\n\n");
 }
