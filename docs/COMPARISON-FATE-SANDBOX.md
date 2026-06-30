@@ -18,7 +18,7 @@
 
 ### 3. 洁净室渲染（Clean-Room Rendering）
 *   **前作（fate）**：采用彻底的双模型物理隔离。逻辑引擎只产出结构化的 JSON Packet（Direction Packet），再单独传给叙事渲染模型。渲染模型物理上接触不到任何游戏内部状态，防泄密与防超游做到了极致。
-*   **本作（earth-0）**：采用的是单模型三段式约束（结算轮、角色轮、渲染轮使用同一个 LLM 但通过 Prompt Contract 进行行为隔离）。这允许渲染层能够读取 NPC 的文学性回应原文（内心独白等），但也增加了对模型行为纪律的依赖。
+*   **本作（earth-0）**：2026-06 月采用单模型三段式 Prompt Contract 约束。2026-07-01 升级为**裸 stream 结构性隔离**：Phase 3 渲染 LLM 走 `generateCompletion`（物理上无 tool definitions），NPC 台词由 Phase 2 独立 LLM 生成后原文引用不改写，渲染 LLM 作为"剪辑师"而非"主笔"。相比 fate 的 Packet 路径更松（允许渲染 LLM 看到完整的 NPC 回应文本和空间上下文），但比旧版 prompt 软约束更硬（物理隔离工具列表，不靠 prompt 请求 LLM "不要调工具"）。
 
 ---
 
