@@ -1,10 +1,14 @@
 /**
- * earth-0 扩展 — 三段式实体化
+ * earth-0 扩展 — 三段式实体化 + 结构性隔离
  *
- * Phase 1 (before_agent_start): 分类 LLM → JSON → 引擎执行工具 → 结算 → NPC 自举 → 组装渲染 prompt
+ * Phase 1 (before_agent_start): 分类 LLM → JSON → 引擎执行工具 → 结算
  * Phase 2 (before_agent_start 内): 引擎自动 spawn NPC agent
- * Phase 3 (pi agent loop): LLM 收到渲染 prompt → 写叙事正文
+ * Phase 3 (before_agent_start, 裸 stream): generateCompletion(渲染 prompt)，零工具
  * Phase 4 (agent_end): 创意层（可选，best-effort）
+ *
+ * Phase 3 不再走 pi agent loop。直接用 generateCompletion 裸 stream —
+ * 物理上没有 tool definitions，LLM 无法跳过结算或调写工具。
+ * pi agent loop 收到回显 prompt，只负责原样输出预生成的叙事文本。
  *
  * 设计参考: fate-sandbox two-pass-render, PHILOSOPHY §1.3
  */
@@ -117,38 +121,216 @@ export default function (pi: ExtensionAPI) {
       console.error("Phase2: auto-spawn NPCs failed:", e);
     }
 
-    // ── Sex 模式维护 ──
+    // ── 切镜/幕间消费（viewpoint.ts 的异步 promise → 追加到 NPC 回应后）──
+    let viewpointText = "";
+    try {
+      const { getPendingViewpointPromise, clearPendingViewpointPromise } = await import("./engine/viewpoint.ts");
+      const promise = getPendingViewpointPromise();
+      if (promise) {
+        viewpointText = (await promise) || "";
+        clearPendingViewpointPromise();
+      }
+      // 同时消费 _pending_viewpoint_text（兼容旧路径）
+      if (gameState._pending_viewpoint_text) {
+        if (gameState._pending_viewpoint_text.turn === gameState.turn) {
+          viewpointText = (viewpointText ? viewpointText + "\n" : "") + gameState._pending_viewpoint_text.text;
+        }
+        delete gameState._pending_viewpoint_text;
+      }
+    } catch (e) {
+      console.error("Phase2.5: viewpoint consumption failed:", e);
+    }
+
+    // ── 交互检测：用 NPC 回应更新 interactionMode ──
+    let activeNPCs: string[] = [];
+    if (npcResponses) {
+      try {
+        const presentNPCs = Object.entries(gameState.npcs || {})
+          .filter(([_, n]: [string, any]) => n.currentRoom === gameState.player?.location && n.alive !== false)
+          .map(([name]) => name);
+        const parsed = parseNpcResponses(npcResponses, presentNPCs);
+        const { analyzeNpcResponses, detectInteractionMode } = await import("./engine/detect-mode.ts");
+        activeNPCs = await analyzeNpcResponses(parsed, gameState.player?.name || "维", ctx);
+        const result = detectInteractionMode(gameState, presentNPCs.length, {
+          npcResponses: parsed,
+          activeNPCs,
+          skipCounterUpdate: true, // 计数器仍在 settlement 中更新
+        });
+        gameState.interactionMode = result.interactionMode;
+      } catch (e) {
+        console.error("Phase2: interaction detection failed:", e);
+      }
+    }
+    gameState._activeNPCs = activeNPCs;
+
+    // ── Mode 自动切换（检测 Phase 1 是否执行了性工具）──
+    const sexTools = ["intimate_touch", "masturbate"];
+    const hadSex = phase1.toolsExecuted.some((t: string) => sexTools.includes(t));
+
+    // ── GAL 模式场景边界管理 ──
+    const prevLocation = gameState._prevLocation;
+    const curLocation = gameState.player?.location;
+    const locationChanged = prevLocation && curLocation && prevLocation !== curLocation;
+
+    if (!hadSex) {
+      // 场景开始时检查 GAL 激活条件（地点变化 或 首次初始化）
+      if (locationChanged || gameState._galSceneActive === undefined) {
+        const galPresent = Object.entries(gameState.npcs || {})
+          .filter(([_, npc]: [string, any]) => npc.currentRoom === curLocation && npc.alive !== false)
+          .map(([name]) => name);
+
+        if (gameState.mode === "rpg" && galPresent.length === 1) {
+          const npcName = galPresent[0];
+          try {
+            const { findCharacter } = await import("./engine/state.ts");
+            const src = findCharacter(npcName);
+            const isFemale = src?.gender === "female";
+            const stage = gameState.player?.relationships?.[npcName]?.stage;
+            const hasSexHistory = (gameState.player as any)?._sex_partners?.includes?.(npcName);
+
+            if (isFemale && (stage === "亲密" || hasSexHistory)) {
+              gameState.mode = "gal";
+              gameState._galSceneActive = true;
+            }
+          } catch (e) {
+            console.error("GAL scene activation check failed:", e);
+          }
+        }
+      }
+
+      // 场景中检查 GAL 退出条件（非 sex 模式时）
+      if (gameState._galSceneActive && gameState.mode !== "sex") {
+        const galPresentNow = Object.entries(gameState.npcs || {})
+          .filter(([_, npc]: [string, any]) => npc.currentRoom === curLocation && npc.alive !== false);
+        if (locationChanged || galPresentNow.length === 0) {
+          gameState._galSceneActive = false;
+          gameState.mode = "rpg";
+        }
+      }
+    }
+
+    if (hadSex && gameState.mode !== "sex") {
+      gameState._prevMode = gameState.mode;
+      gameState.mode = "sex";
+      gameState.layer1Enabled = true;
+    } else if (!hadSex && gameState.mode === "sex") {
+      // 从 sex 恢复：优先回 GAL（场景内无缝），否则回 _prevMode
+      gameState.layer1Enabled = false;
+      if (gameState._galSceneActive) {
+        gameState.mode = "gal";
+      } else if (gameState._prevMode) {
+        gameState.mode = gameState._prevMode;
+      }
+      gameState._prevMode = undefined;
+    }
     if (gameState.mode === "sex") gameState.layer1Enabled = true;
     await maintainSexMode(ctx);
 
     saveState();
 
-    // ── Phase 3: 组装渲染 prompt → 交给 pi agent loop ──
+    // ── Phase 3: 裸 stream 生成叙事（零工具，结构性隔离）──
+    // pi agent loop 只负责回显。渲染 LLM 走 generateCompletion，物理上无工具列表。
     const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");
 
     const renderCtx = {
       directorNote: phase1.directorNote,
       npcResponses,
+      viewpointText,
       summary: phase1.summary,
+      activeNPCs,
     };
 
     let gmPrompt = await buildRenderSystemPrompt(gameState, renderCtx);
 
     // 注入引擎通知
-    const notices: string[] = [];
     if (autoSettled) {
-      notices.push(`[引擎] 上轮 GM 未调用 settle_scene，引擎已自动完整结算（当前 turn ${gameState.turn}）。`);
+      gmPrompt += `\n\n[引擎] 上轮 GM 未调用 settle_scene，引擎已自动完整结算（当前 turn ${gameState.turn}）。`;
     }
     if (phase1.classified && phase1.toolsExecuted.length > 0) {
-      notices.push(`[引擎] Phase1 分类器执行: ${phase1.toolsExecuted.join(", ")}。工具已执行完毕，直接写叙事。`);
+      gmPrompt += `\n\n[引擎] Phase1 分类器执行: ${phase1.toolsExecuted.join(", ")}。`;
     } else if (!phase1.classified) {
-      notices.push(`[引擎] Phase1 分类失败，已回退引擎兜底结算。直接写叙事。`);
-    }
-    if (notices.length > 0) {
-      gmPrompt += "\n\n" + notices.join("\n");
+      gmPrompt += `\n\n[引擎] Phase1 分类失败，已回退引擎兜底结算。`;
     }
 
-    return { systemPrompt: gmPrompt };
+    // ── 裸 stream（zero-tool structural isolation）──
+    let phase3Narrative = "";
+    try {
+      const { generateCompletion, setLastRenderedProse } = await import("./tools/helpers.ts");
+
+      // 模型选择：flag > rendering.json > env var
+      const fsNode = await import("node:fs");
+      const pathNode = await import("node:path");
+      let narrativeModel: string | undefined;
+      try {
+        const renderJsonPath = pathNode.resolve(process.cwd(), "data", "rendering.json");
+        if (fsNode.existsSync(renderJsonPath)) {
+          const config = JSON.parse(fsNode.readFileSync(renderJsonPath, "utf-8"));
+          narrativeModel = config.model_mappings?.narrative_render_model;
+        }
+      } catch {}
+      const flagModel = pi.getFlag?.("render-model") as string | undefined;
+      narrativeModel = flagModel || narrativeModel || process.env.PI_RENDER_MODEL || process.env.FATE_RENDER_MODEL || undefined;
+
+      const renderPrompt = gmPrompt + "\n\n现在输出纯叙事正文：";
+      phase3Narrative = await generateCompletion(renderPrompt, 4096, ctx, narrativeModel);
+
+      // Lint + retry（同 reroll.ts 模式）
+      if (phase3Narrative) {
+        const { lintProse } = await import("./engine/audit/lint-rules.ts");
+        let retries = 0;
+        while (retries <= 3) {
+          const lintRes = lintProse(phase3Narrative, gameState);
+          const blocks = lintRes.findings.filter((f: any) => f.severity === "block");
+          if (blocks.length > 0) {
+            console.error(`[lint] Phase3: ${blocks.length} block(s) — ${blocks.map((b: any) => b.ruleId).join(", ")}`);
+          }
+          phase3Narrative = lintRes.prose;
+          if (!lintRes.needsRetry) break;
+          if (retries >= 3) break;
+          const violations = blocks.map((f: any) => `• [${f.ruleId}] "${f.excerpt}"`).join("\n");
+          const retryPrompt = [
+            "上一版正文触发了质量规则，请避免以下问题后重写：",
+            violations,
+            "重写要求：保持原意，融入身体触觉，对话用「」或『』，结尾输出4个扮演选项。",
+            "现在重新输出完整叙事正文：",
+          ].join("\n");
+          retries++;
+          const retryProse = await generateCompletion(retryPrompt, 4096, ctx, narrativeModel);
+          if (!retryProse) break;
+          phase3Narrative = retryProse;
+        }
+      }
+
+      if (phase3Narrative) {
+        setLastRenderedProse(phase3Narrative);
+      } else {
+        console.error("Phase3: generateCompletion returned empty");
+        phase3Narrative = "> 引擎渲染模块暂时无响应，请稍后再试或使用 /reroll 重新生成。";
+        setLastRenderedProse(phase3Narrative);
+      }
+    } catch (e) {
+      console.error("Phase3: bare stream failed:", e);
+      phase3Narrative = "> 引擎渲染模块异常，请重试或使用 /reroll。";
+      try { const { setLastRenderedProse: slrp } = await import("./tools/helpers.ts"); slrp(phase3Narrative); } catch {}
+    }
+
+    gameState._phase3Narrative = phase3Narrative;
+
+    // 回显 prompt：pi agent loop 只负责原样输出，phase1/phase2 已完成所有结算
+    const echoPrompt = [
+      "你是回声。引擎已完成所有处理——输入分类、工具执行、世界结算、NPC 响应、叙事生成——全部在引擎层完成。",
+      "",
+      "你唯一任务是原样输出下方叙事正文。不要调用任何工具。不要修改任何文字。不要添加评论。",
+      "用户的消息已被引擎处理过——你看到的对话历史中的用户消息不需要你回应。",
+      "",
+      "--- 叙事正文（一字不改地输出） ---",
+      phase3Narrative,
+      "--- 结束 ---",
+      "",
+      "直接输出上述叙事正文。",
+    ].join("\n");
+
+    return { systemPrompt: echoPrompt };
   });
 
   // ═══════════════════════════════════════════════════════════
@@ -280,6 +462,53 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
     console.error("Phase2: autoSpawnNPCs failed:", e);
     return "";
   }
+}
+
+/** 解析 NPC 回应字符串为 Record<name, text> */
+function parseNpcResponses(raw: string, knownNPCs: string[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  if (!raw || knownNPCs.length === 0) return result;
+
+  // 用已知 NPC 名做锚点分割
+  // 输入: "[雪之下雪乃] *仍在看书...*\n[由比滨结衣] 「维！你觉得哪个颜色好看？」"
+  // 按最长的 NPC 名优先匹配，避免"雪之下"误匹配"雪之下雪乃"
+  const sorted = [...knownNPCs].sort((a, b) => b.length - a.length);
+  let remaining = raw;
+  let lastEnd = 0;
+
+  // 找到所有 [NPC名] 的位置
+  const anchors: { name: string; start: number }[] = [];
+  for (const name of sorted) {
+    const marker = `[${name}]`;
+    let idx = 0;
+    while (idx < remaining.length) {
+      const pos = remaining.indexOf(marker, idx);
+      if (pos === -1) break;
+      // 检查不是子串（如 "[雪之下雪乃]" 中的 "[雪之下]" 不匹配）
+      const beforeOk = pos === 0 || remaining[pos - 1] === "\n";
+      if (beforeOk || anchors.length > 0) {
+        anchors.push({ name, start: pos });
+      }
+      idx = pos + marker.length;
+    }
+  }
+
+  // 按位置排序
+  anchors.sort((a, b) => a.start - b.start);
+
+  // 提取每个 NPC 的文本段
+  for (let i = 0; i < anchors.length; i++) {
+    const { name, start } = anchors[i];
+    const marker = `[${name}]`;
+    const contentStart = start + marker.length;
+    const contentEnd = i + 1 < anchors.length ? anchors[i + 1].start : remaining.length;
+    let text = remaining.slice(contentStart, contentEnd).trim();
+    // 去掉尾部可能残留的下一段标记
+    // 只保留到最后一个完整句子
+    result[name] = text;
+  }
+
+  return result;
 }
 
 /** Sex 模式维护：sex 模式下 layer1 启用 + 模式切换 */

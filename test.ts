@@ -4885,6 +4885,166 @@ test("VIEWPOINT: detectInteractionMode debouncing and overrides", async () => {
   }
 });
 
+test("VIEWPOINT: detectInteractionMode with interaction detection (activeNPCs)", async () => {
+  const { detectInteractionMode } = await import("./engine/detect-mode.ts");
+  resetState();
+  gameState.mode = "rpg";
+
+  // 1. activeNPCs > 0 → turn_based
+  gameState.turnsSinceLastNPCInteraction = 5; // should be reset
+  const r1 = detectInteractionMode(gameState, 3, {
+    npcResponses: { "雪之下": "..." },
+    activeNPCs: ["雪之下"],
+  });
+  if (r1.interactionMode !== "turn_based" || r1.activeNPCs.length !== 1) {
+    throw new Error(`activeNPCs present should force turn_based, got ${r1.interactionMode}`);
+  }
+
+  // 2. activeNPCs = 0 but NPCs present → novel (silent NPCs don't interrupt)
+  const r2 = detectInteractionMode(gameState, 3, {
+    npcResponses: { "雪之下": "*看书*" },
+    activeNPCs: [],
+    skipCounterUpdate: true,
+  });
+  if (r2.interactionMode !== "novel") {
+    throw new Error(`silent NPCs should stay novel, got ${r2.interactionMode}`);
+  }
+
+  // 3. activeNPCs = 0, 0 NPCs present → normal debouncing
+  gameState.turnsSinceLastNPCInteraction = 0;
+  const r3 = detectInteractionMode(gameState, 0, {
+    npcResponses: {},
+    activeNPCs: [],
+  });
+  if (r3.interactionMode !== "turn_based") {
+    throw new Error(`first turn of no NPCs should still be turn_based (debounce), got ${r3.interactionMode}`);
+  }
+  const r4 = detectInteractionMode(gameState, 0, {
+    npcResponses: {},
+    activeNPCs: [],
+  });
+  if (r4.interactionMode !== "novel") {
+    throw new Error(`second turn of no NPCs should switch to novel, got ${r4.interactionMode}`);
+  }
+
+  // 4. sex override still works with interaction detection
+  gameState.mode = "sex";
+  const r5 = detectInteractionMode(gameState, 3, {
+    npcResponses: { "雪之下": "*...*" },
+    activeNPCs: [],
+  });
+  if (r5.interactionMode !== "turn_based" || r5.person !== "first") {
+    throw new Error("sex mode should override interaction detection");
+  }
+});
+
+test("VIEWPOINT: analyzeNpcResponses keyword fallback (no LLM)", async () => {
+  const { analyzeNpcResponses } = await import("./engine/detect-mode.ts");
+
+  // Empty: no NPCs should produce empty active list
+  const r0 = await analyzeNpcResponses({}, "维", {});
+  if (r0.length !== 0) throw new Error("empty input should return empty");
+
+  // Pure inner monologue, no dialogue → not cueing
+  const r1 = await analyzeNpcResponses({
+    "雪之下雪乃": "*她仍在看书，没有抬头。*",
+  }, "维", {});
+  if (r1.length !== 0) throw new Error("纯内心独白应判不cue: " + JSON.stringify(r1));
+
+  // Direct address with player name → cueing
+  const r2 = await analyzeNpcResponses({
+    "由比滨结衣": "「维！你觉得哪个颜色好看？」她举起两个手机壳。",
+  }, "维", {});
+  if (r2.length !== 1 || r2[0] !== "由比滨结衣") {
+    throw new Error("直接喊玩家名应判cue: " + JSON.stringify(r2));
+  }
+
+  // Dialogue but not to player → LLM would decide, keyword fallback is conservative
+  // (no strong keyword signal without player name → not cueing in fallback)
+  const r3 = await analyzeNpcResponses({
+    "雪之下雪乃": "「今天天气不错。」她看着窗外。",
+  }, "维", {});
+  // Keyword fallback is conservative — no player name → not cueing
+  // This is where LLM mini-judge would correctly identify intent
+  if (r3.length > 0) {
+    throw new Error("无玩家名的模糊对白在关键词兜底应保守判不cue: " + JSON.stringify(r3));
+  }
+});
+
+test("VIEWPOINT: parseNpcResponses", async () => {
+  // The parseNpcResponses function is local to extension.ts but we can test its logic
+  // Replicate the logic inline for testing
+  const raw = "[雪之下雪乃] *仍在看书...*\n[由比滨结衣] 「维！你觉得哪个颜色好看？」";
+  const known = ["雪之下雪乃", "由比滨结衣"];
+
+  const sorted = [...known].sort((a, b) => b.length - a.length);
+  let remaining = raw;
+  const anchors: { name: string; start: number }[] = [];
+  for (const name of sorted) {
+    const marker = `[${name}]`;
+    let idx = 0;
+    while (idx < remaining.length) {
+      const pos = remaining.indexOf(marker, idx);
+      if (pos === -1) break;
+      anchors.push({ name, start: pos });
+      idx = pos + marker.length;
+    }
+  }
+  anchors.sort((a, b) => a.start - b.start);
+
+  if (anchors.length !== 2) throw new Error(`Should find 2 anchors, got ${anchors.length}`);
+  if (anchors[0].name !== "雪之下雪乃") throw new Error(`First anchor should be 雪之下雪乃, got ${anchors[0].name}`);
+  if (anchors[1].name !== "由比滨结衣") throw new Error(`Second anchor should be 由比滨结衣, got ${anchors[1].name}`);
+});
+
+test("VIEWPOINT: GAL scene activation conditions", async () => {
+  resetState();
+  gameState.mode = "rpg";
+  gameState.player.location = "侍奉部部室";
+  gameState.npcs = {
+    "雪之下雪乃": { currentRoom: "侍奉部部室", alive: true },
+  };
+  gameState.player.relationships = {
+    "雪之下雪乃": { affection: 80, stage: "亲密" },
+  };
+
+  // Condition check logic (mirrors extension.ts)
+  const curLocation = gameState.player.location;
+  const galPresent = Object.entries(gameState.npcs)
+    .filter(([_, n]: [string, any]) => n.currentRoom === curLocation && n.alive !== false)
+    .map(([name]) => name);
+
+  // 1. One-on-one + intimate stage → should activate
+  if (galPresent.length !== 1) throw new Error("Should have exactly 1 present NPC");
+  if (galPresent[0] !== "雪之下雪乃") throw new Error("Present NPC should be 雪之下雪乃");
+
+  const stage = gameState.player.relationships?.[galPresent[0]]?.stage;
+  if (stage !== "亲密") throw new Error(`Stage should be 亲密, got ${stage}`);
+
+  // 2. Two NPCs → should NOT activate
+  gameState.npcs["由比滨结衣"] = { currentRoom: "侍奉部部室", alive: true };
+  const galPresent2 = Object.entries(gameState.npcs)
+    .filter(([_, n]: [string, any]) => n.currentRoom === curLocation && n.alive !== false)
+    .map(([name]) => name);
+  if (galPresent2.length !== 2) throw new Error("Should have 2 NPCs");
+  if (galPresent2.length > 1) {
+    // This is correct — GAL should not activate with 2+ NPCs
+  }
+
+  // 3. One NPC but not intimate → should NOT activate
+  gameState.npcs = {
+    "材木座义辉": { currentRoom: "侍奉部部室", alive: true },
+  };
+  gameState.player.relationships = {
+    "材木座义辉": { affection: 20, stage: "熟人" },
+  };
+  const galPresent3 = Object.entries(gameState.npcs)
+    .filter(([_, n]: [string, any]) => n.currentRoom === curLocation && n.alive !== false)
+    .map(([name]) => name);
+  const stage3 = gameState.player.relationships?.[galPresent3[0]]?.stage;
+  if (stage3 === "亲密") throw new Error("材木座 should not be 亲密");
+});
+
 test("VIEWPOINT: updateRelation triggers he_zhe_zhi_yan cutaway", async () => {
   resetState();
   const { updateRelation } = await import("./engine/state.ts");

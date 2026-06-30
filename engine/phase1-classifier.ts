@@ -60,6 +60,11 @@ const ACTION_WHITELIST = [
   "table_crud",
   "add_memory_tag",
   "add_calendar_event",
+  // 读取工具（Phase 1 也能调，用于预取描写信息给 Phase 3）
+  "lookup_region",
+  "lookup_character",
+  "dice_roll",
+  "lookup_lore",
 ];
 
 // ── 公开 API ──
@@ -127,7 +132,7 @@ export async function runPhase1(
 
 // ── 分类 prompt 组装 ──
 
-function buildClassificationPrompt(playerInput: string, gs: any): string {
+export function buildClassificationPrompt(playerInput: string, gs: any): string {
   const npcsHere = getPresentNPCNames(gs);
   const npcList = npcsHere.length > 0 ? npcsHere.join("、") : "（无人）";
 
@@ -138,47 +143,35 @@ function buildClassificationPrompt(playerInput: string, gs: any): string {
   const hasFurniture = roomData?.furniture && Object.keys(roomData.furniture).length > 0;
   const furnitureNames = hasFurniture ? Object.keys(roomData.furniture).join("、") : "";
 
-  return [
-    "你是意图分类器。将玩家输入映射为动作列表。只输出 JSON，不要解释。",
+  // 加载 Phase 1 分类器系统规则文件
+  let classifierRules = "";
+  try {
+    const fs2 = require("node:fs");
+    const path2 = require("node:path");
+    const agentsDir = path2.resolve(process.cwd(), "agents");
+    const p = path2.join(agentsDir, "gm-phase1-classifier.md");
+    if (fs2.existsSync(p)) {
+      classifierRules = fs2.readFileSync(p, "utf-8");
+    }
+  } catch {}
 
-    `玩家输入: "${playerInput}"`,
+  const sceneBlock = [
     `当前位置: ${location}`,
     `在场 NPC: ${npcList}`,
-    hasShop ? `注意: 此地点有商店，玩家可以买卖物品。` : "",
+    hasShop ? `注意: 此地点有商店，玩家可买卖物品。` : "",
     hasFurniture ? `可交互家具: ${furnitureNames}` : "",
+  ].filter(Boolean).join("\n");
 
-    "",
-    "可用动作:",
-    "- travel: 移动去另一个地点",
-    "- buy_item: 购买物品。需要 item(物品名) 和 quantity(数量)",
-    "- sell_item: 出售物品。需要 item(物品名) 和 quantity(数量)",
-    "- intimate_touch: 亲密接触（仅 sex 模式）。需要 part(身体部位) 和 intensity(轻/中/重)",
-    "- interact_furniture: 与家具交互。需要 furniture(家具名) 和 action(坐/躺/开/关/拿/放/用) 和 item?(可选的物品名)",
-    "- world_interact: 建造/放置/移除/破坏。需要 action(place/build/remove/destroy/repair/dig/search) 和 target(目标物)",
-    "- steal_item: 偷窃。需要 item(物品名) 和 target_npc(目标NPC名)",
-    "- combat_action: 战斗动作。需要 action(attack/defend/flee/use_skill) 和 target?(目标)",
-    "- use_item: 使用物品。需要 item(物品名)",
-    "- equip_item: 装备物品。需要 item(物品名) 和 slot(槽位)",
-    "- adjust_relation: 调整关系。需要 npc(目标NPC名) 和 delta(变化数值)",
-    "- transfer_item: 转移物品。需要 item(物品名) 和 from/to",
-    "",
+  return [
+    classifierRules || "你是意图分类器。将玩家输入映射为动作列表。只输出 JSON，不要解释。",
 
-    "规则:",
-    "1. 理解玩家真实意图，不要机械匹配关键词",
-    '2. "想去但放弃了的事" → 不做（例："想去便利店但太远了算了" → actions为空）',
-    "3. 不确定时 confidence < 0.7 → 不要输出该动作",
-    "4. 没有任何需要做的 → actions 为空数组",
-    "5. 如果玩家说模糊方向如'去散步''到处转转'，不要调 travel",
-    "6. 如果玩家说'看看周围''观察环境'，不需要任何动作",
+    sceneBlock,
+
+    `玩家输入: "${playerInput}"`,
+
     "",
     "输出纯 JSON（不要 markdown 代码块，不要其他文字）:",
-    '{',
-    '  "actions": [',
-    '    {"tool": "动作名", "params": {...}, "confidence": 0.0~1.0}',
-    "  ],",
-    '  "summary": "玩家意图的一句话概括",',
-    '  "ambiguous": false',
-    "}",
+    '{"actions": [{"tool": "...", "params": {...}, "confidence": 0.9}], "summary": "玩家意图的一句话"}',
   ].filter(Boolean).join("\n");
 }
 
@@ -284,6 +277,11 @@ async function loadTool(toolName: string): Promise<any | null> {
     table_crud: "../tools/action/table_crud.ts",
     add_memory_tag: "../tools/state/add_memory_tag.ts",
     add_calendar_event: "../tools/action/add_calendar_event.ts",
+    // 读取工具
+    lookup_region: "../tools/lookup/lookup_region.ts",
+    lookup_character: "../tools/state/lookup_character.ts",
+    dice_roll: "../tools/lookup/dice_roll.ts",
+    lookup_lore: "../tools/lookup/lookup_lore.ts",
   };
 
   const relPath = toolPaths[toolName];
@@ -325,7 +323,7 @@ function buildDirectorNote(
 
 // ── 关键词回落 ──
 
-async function keywordFallback(playerInput: string, ctx: any): Promise<Phase1Outcome> {
+export async function keywordFallback(playerInput: string, ctx: any): Promise<Phase1Outcome> {
   const { gameState, saveState } = await import("./state.ts");
   const { runSettlement } = await import("./settlement.ts");
 
@@ -336,9 +334,11 @@ async function keywordFallback(playerInput: string, ctx: any): Promise<Phase1Out
   const isNegated = (keyword: string): boolean => {
     const idx = text.indexOf(keyword);
     if (idx === -1) return true; // 没找到就算否定
-    // 前 10 个字有否定词 → 跳过
-    const before = text.slice(Math.max(0, idx - 10), idx);
-    return /不|没|算了|太远|放弃了|不去了/.test(before);
+    // 检查关键词前后 15 字范围内有无否定/放弃词
+    const before = text.slice(Math.max(0, idx - 15), idx);
+    const endIdx = idx + keyword.length;
+    const after = text.slice(endIdx, Math.min(text.length, endIdx + 15));
+    return /不|没|算了|太远|放弃了|不去了|还是算|下次|改天/.test(before + after);
   };
 
   // 移动检测 — 支持多目的地（不用 break）
@@ -355,7 +355,8 @@ async function keywordFallback(playerInput: string, ctx: any): Promise<Phase1Out
       [/教室/, "2年F班"],
     ];
     for (const [re, loc] of locKeywords) {
-      if (re.test(text) && !isNegated(loc)) {
+      const matched = text.match(re);
+      if (matched && !isNegated(matched[0])) {
         actions.push({ tool: "travel", params: { destination: loc }, confidence: 0.85 });
       }
     }
@@ -365,7 +366,7 @@ async function keywordFallback(playerInput: string, ctx: any): Promise<Phase1Out
   if (/买|购买|付钱/.test(text) && !isNegated("买") && !isNegated("购买")) {
     const itemMatch = text.match(/买[一|两|三|几]?(?:瓶|盒|份|个|本)?(.{1,6})/);
     const item = itemMatch?.[1]?.trim() || "饮料";
-    actions.push({ tool: "buy_item", params: { item, quantity: 1 }, confidence: 0.75 });
+    actions.push({ tool: "buy_item", params: { item, price: 100 }, confidence: 0.75 });
   }
 
   await runSettlement({ elapsed_minutes: 5, ctx });
