@@ -17,80 +17,15 @@ export default {
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, backupBeforeTurn, updateNPCSchedules, refreshWeather, addMemoryTag, stampRoom, cleanupTempNPCs, drainToolCalls, isSameLocation } = await import("../../engine/state.ts");
-      // 1. 计算结算前的同场 NPC 数量
-      const previousRoundNPCs = Object.values(gameState.npcs).filter((n: any) => n.alive && isSameLocation(n.currentRoom, gameState.player.location)).length;
-
-      // 暂存本轮工具，开始新一轮追踪
-      gameState._lastTurnToolsCalled = drainToolCalls();
-      const { advanceMinutes } = await import("../../engine/time.ts");
-      const cleanupMsgs = cleanupTempNPCs("场景结算");
-      const mins = params.elapsed_minutes;
-      if (mins > 0) backupBeforeTurn();
-      if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
-      const result = advanceMinutes(gameState.time, mins);
-      gameState.player.age = gameState.time.player_age;
-      gameState.turn++;
-      if (gameState.turn % 4 === 0) refreshWeather();
-      const events = await updateNPCSchedules();
-      const { runWorldTick } = await import("../../engine/tick.ts");
-      await runWorldTick();
-      // 疲劳累积（受气温疲劳乘数影响）
-      const { getFatigueMultiplier } = await import("../../engine/weather.ts");
-      const kFatigue = getFatigueMultiplier(gameState.weather?.temp ?? 16);
-      gameState.player.fatigue = Math.min(100, (gameState.player.fatigue ?? 0) + Math.round((mins / 12) * kFatigue));
-
-      // 房产契约结算（仅在跨天时触发）
-      if (result.daysAdvanced > 0) {
-        const { settleHousingContracts } = await import("../../engine/housing.ts");
-        settleHousingContracts(gameState);
-      }
-
-      // 2. 计算结算后的同场 NPC 数量，并检测更新视角模式
-      const currentRoundNPCs = Object.values(gameState.npcs).filter((n: any) => n.alive && isSameLocation(n.currentRoom, gameState.player.location)).length;
-      const { detectInteractionMode } = await import("../../engine/detect-mode.ts");
-      const modeResult = detectInteractionMode(gameState, currentRoundNPCs);
-      gameState.interactionMode = modeResult.interactionMode;
-
-      // 3. 处理切镜与幕间触发及异步生成
-      const { processViewpointTriggers } = await import("../../engine/viewpoint.ts");
-      await processViewpointTriggers(gameState, previousRoundNPCs, currentRoundNPCs, _ctx);
-
-      if (params.memory_tags && params.memory_tags.length > 0) {
-        const { appendShortTermBuffer } = await import("../../engine/state.ts");
-        for (const m of params.memory_tags) {
-          addMemoryTag(
-            m.target,
-            m.tag,
-            365,
-            (m as any).tone,
-            (m as any).priority,
-            (m as any).emotional_valence,
-            (m as any).related_npcs,
-            (m as any).category
-          );
-          try {
-            appendShortTermBuffer(m.target, undefined, `场景结算事件: ${m.tag}`);
-          } catch (e) { console.error("settle_scene appendShortTermBuffer error:", e); }
-        }
-      }
-
-      stampRoom();
-
-      try {
-        const { reviewTurn } = await import("../../engine/audit/review-agent.ts");
-        await reviewTurn(_ctx);
-      } catch (e) {
-        console.error("[Review Agent Error] 复盘执行发生未捕获异常/超时:", e);
-      }
-
-      saveState();
-
-      const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
-      const cleanupText = cleanupMsgs.length > 0 ? cleanupMsgs.join("\n") + "\n" : "";
-      const textResult = cleanupText + `场景结束推进了 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。\n` +
-        `日程更新: ${events.length > 0 ? events.join("; ") : "无特殊事件"}\n` +
-        `写入记忆: ${params.memory_tags && params.memory_tags.length > 0 ? params.memory_tags.map(m => `${m.target}(${m.tag})`).join(", ") : "无"}`;
-      return { content: [{ type: "text", text: textResult }], details: { time: gameState.time, events, memory_tags: params.memory_tags } };
+      const { runSettlement } = await import("../../engine/settlement.ts");
+      const { resultText, events } = await runSettlement({
+        elapsed_minutes: params.elapsed_minutes,
+        memory_tags: params.memory_tags,
+        ctx: _ctx,
+      });
+      return {
+        content: [{ type: "text", text: resultText }],
+        details: { time: (await import("../../engine/state.ts")).gameState.time, events, memory_tags: params.memory_tags },
+      };
     },
   };

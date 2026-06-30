@@ -3576,12 +3576,33 @@ export async function updateNPCSchedules(): Promise<string[]> {
       }
     }
     
+    if (targetRoom === "不在日本") {
+      npc.currentRoom = "";
+      npc.gridPos = null;
+      events.push(`${name}: 离境（不在日本），暂时退出当前世界线`);
+      continue;
+    }
     if (!targetRoom || targetRoom === "自由") continue;
-    
-    // 匹配房间名
-    const matchedRoom = getRoomKey(targetRoom);
-    if (!matchedRoom) continue;
-    
+
+    // 先决议世界级位置关键词，再走 getRoomKey（否则 getRoomKey("自宅") 会模糊匹配到别人的房间）
+    let resolvedTarget = targetRoom;
+    if (targetRoom === "自宅" || targetRoom === "下校") {
+      const src = (characters as any[]).find((c: any) => c.name === name);
+      resolvedTarget = (src as any)?.default_location || npc.currentRoom || "";
+    }
+
+    let matchedRoom = getRoomKey(resolvedTarget);
+    if (!matchedRoom) {
+      // 不在网格中 → 世界级位置，直接移动
+      if (resolvedTarget && resolvedTarget !== npc.currentRoom) {
+        const old = npc.currentRoom;
+        npc.currentRoom = resolvedTarget;
+        npc.gridPos = null;
+        events.push(`${name}: ${old} → ${resolvedTarget}`);
+      }
+      continue;
+    }
+
     // 检查容量并分流
     let finalRoom = matchedRoom;
     const cap = getRoomCapacity(finalRoom);

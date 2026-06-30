@@ -956,9 +956,9 @@ export async function recordNpcAgentAction(
   } catch (err) { console.error("recordNpcAgentAction: addMemoryTag error", err); }
 }
 
-/** 自动切换 mode：sex_touch/masturbate 调用时切 sex，战斗时切 rpg */
+/** 自动切换 mode：intimate_touch/masturbate 调用时切 sex，战斗时切 rpg */
 export function autoSwitchMode(toolName: string): void {
-  const sexTools = ["sex_touch", "masturbate"];
+  const sexTools = ["intimate_touch", "masturbate"];
   const combatTools = ["combat_action"];
   if (sexTools.includes(toolName) && gameState.mode !== "sex") {
     gameState._prevMode = gameState.mode;

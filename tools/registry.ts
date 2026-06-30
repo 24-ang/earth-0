@@ -47,6 +47,7 @@ import sellItemTool from "./action/sell_item.ts";
 import monthlyGrowthTool from "./action/monthly_growth.ts";
 import workJobTool from "./action/work_job.ts";
 import completeTravelTool from "./lookup/complete_travel.ts";
+import travelTool from "./lookup/travel.ts";
 import goToLocationTool from "./lookup/go_to_location.ts";
 import spawnItemTool from "./action/spawn_item.ts";
 import inflictDamageTool from "./action/inflict_damage.ts";
@@ -163,6 +164,7 @@ export function registerAll(pi: ExtensionAPI) {
     managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
     useAbilityTool,
     debugSexHeatTool,
+    travelTool, // P2: 统一旅行（合并 go_to_location + travel_intercity + complete_travel）
     // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
     moveTool, moveToTool, boardTrainTool, completeTravelTool, goToLocationTool,
     sendSmsTool, postSnsTool, makeCallTool, travelIntercityTool,
