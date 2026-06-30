@@ -89,48 +89,29 @@
 
 ### 3.3 控制流：检测 → 注入 → 渲染
 
+> [实现: 2026-07-01] 此节描述的是旧架构。实际控制流已变为：
+> 1. `extension.ts` `before_agent_start` Phase 1（分类+执行）→ 强制结算（`settlement.ts` 内调一次 `detectInteractionMode` 走旧共位逻辑）
+> 2. Phase 2（NPC spawn）→ **Phase 2.5**：`extension.ts` 调 `analyzeNpcResponses` + `detectInteractionMode` 第二次（传 `npcResponses` + `activeNPCs`，`skipCounterUpdate=true`）→ 覆写 `interactionMode`
+> 3. Phase 3 走 `phase3-render.ts` 的 `buildRenderSystemPrompt`（不是旧 `buildSystemPrompt`），不用 `preset.json`
+> 4. 渲染不走 `render_scene` 工具——Phase 3 直接用 `generateCompletion` 裸 stream
+
 ```
+（旧控制流，已被替换）
 玩家输入
   └─► GM 结算轮 settle_scene.execute()           [tools/action/settle_scene.ts]
-        ├─ drainToolCalls()
-        ├─ 数在场 NPC：
-        │    nearbyNPCs = npcs 中 alive 且 isSameLocation(n.currentRoom, player.location) 的个数
-        ├─ interactionMode = detectInteractionMode(gameState, nearbyNPCs)
-        │    [engine/detect-mode.ts 纯函数]
-        ├─ 更新 gameState.interactionMode
-        ├─ 更新防抖计数 turnsSinceLastNPCInteraction
-        ├─ advanceMinutes() ... saveState()
-        │  (中间不碰切镜——切镜在当前回合结束后单独处理)
-        ▼
-下一回合 buildSystemPrompt()                      [extension.ts]
-  └─ 读 gameState.interactionMode
-     → layer key 替换 "{interactionMode}" → 加载 gm-voice-{novel/turnbased}.md
-     → 注入系统提示词
-
-渲染轮 render_scene                               [tools/action/render_scene.ts]
-  └─ 导演单加 <interaction_mode>novel|turn_based</interaction_mode>
+        ├─ ...
 ```
 
 ### 3.4 detectInteractionMode 纯函数
 
+> [实现: 2026-07-01] 入口函数已大幅扩展。`detectInteractionMode` 现在接受可选的 `npcResponses`/`activeNPCs`/`skipCounterUpdate`，
+> 返回值增加了 `activeNPCs: string[]`。新增 `analyzeNpcResponses()` 做 LLM mini-judge + 关键词兜底。
+> 旧共位逻辑保留作为无 NPC 回应数据时的向后兼容路径。详见 `engine/detect-mode.ts`。
+
 ```typescript
+// 旧设计（MVP 共位近似，现在仅作为无 NPC 回应数据的回退路径）
 // engine/detect-mode.ts (~60行)
-
-// 输入: gameState, nearbyNPCs (number)
-// 输出: { interactionMode: "novel" | "turn_based", person: "first" | "third" }
-
-// 逻辑:
-//   if (gameState.mode === "sex")    → { turn_based, first }
-//   if (gameState.mode === "combat") → { turn_based, third }
-// 
-//   if (nearbyNPCs > 0)
-//     → turnsSinceLastNPCInteraction = 0
-//     → { turn_based, person由mode定 }
-// 
-//   if (nearbyNPCs === 0)
-//     → turnsSinceLastNPCInteraction++
-//     → if turnsSinceLastNPCInteraction >= 2  → { novel, person由mode定 }
-//     → else → { turn_based, person由mode定 }  // 防抖：临时走开不算
+// ...
 ```
 
 **为什么是 2 回合防抖**：NPC 临时走开（去厕所、去走廊拿东西）不应造成模板抖动。连续 2 回合 0 NPC = 确认独处。
@@ -139,7 +120,11 @@
 
 ### 3.5 模板注入：替换而非追加
 
-走 `preset.json` assembly 的 layer 机制，新增 voice 层排在 mode 层之前：
+> [实现: 2026-07-01] 不再走 `preset.json`。Phase 3 prompt 由 `phase3-render.ts` 的 `buildRenderSystemPrompt` 直接组装，
+> 顺序：`gm-pre` → `sceneBrief` → `renderStateCtx`（空间/区域/装备/状态）→ `npcAppearances` →
+> `directorNote` → `npcResponses` → voice → mode → `buildRenderContract`。
+
+走 `preset.json` assembly 的 layer 机制（旧方案，已被替换）：
 
 ```
 最终系统提示词顺序：
@@ -449,6 +434,10 @@ LLM 自己判断当前场景是否与某个过去事件有情感共鸣。如果 
 
 ### 4.2 交互检测精度
 
+> [实现: 2026-07-01] 此限制已被突破。MVP 的共位近似已替换为 **LLM mini-judge + 关键词兜底**：
+> Phase 2 后引擎分析每个 NPC 的回应文本，LLM 判断 `{"cueing": true/false}`，JSON parse 失败时回退关键词。
+> "3 个 NPC 在场但都在发呆"现在正确判为 novel，不再误入 turn_based。详见 `engine/detect-mode.ts` 的 `analyzeNpcResponses()`。
+
 当前用 `isSameLocation` 数 NPC 人数作主信号——0 NPC = 独处 = novel。但存在"玩家在教室里有 3 个 NPC 在场，但 NPC 在闲聊、没人 cue 你"——引擎会判定 turn_based（因为在场 > 0）。这是可接受的近似——"有人在场 → 可能需要回应"是安全的默认。后续加 GM 结算轮设 `_npc_cueing_player` flag 作辅助信号。
 
 ### 4.3 切镜队列落盘 vs 内存
@@ -466,6 +455,11 @@ LLM 自己判断当前场景是否与某个过去事件有情感共鸣。如果 
 ---
 
 ## 5. 验收标准
+
+> [实现: 2026-07-01] 全部验收条件已满足，且超出：
+> - 测试：244 单元 + 45 e2e（远超 230+）
+> - 交互检测精度已达（LLM mini-judge，不是共位近似）
+> - 新增 GAL 场景边界锁测试、cue 检测测试、prompt 瘦身测试
 
 - **回归**：`npx tsx test.ts` → 230+ passed, 0 failed。
 - **零硬编码**：`detect-mode.ts`、`viewpoint.ts` 不含角色名/地名/作品名。NPC 计数走 `isSameLocation`。`grep -rE '总武|侍奉部|比企谷|雪之下' engine/detect-mode.ts engine/viewpoint.ts` 为空。

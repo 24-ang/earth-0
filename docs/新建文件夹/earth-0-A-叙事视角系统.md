@@ -43,7 +43,11 @@
 
 ### 3.1 三种叙事尺度的终极区隔
 
-本项目将叙事结构划分为以下三个正交轨道，在人称、字数和生成管道上实行物理隔离：
+> [实现: 2026-07-01] 表内多条已更新。触发机制从"在场 NPC 数"升为"activeNPCs（LLM mini-judge 检测）"。
+> 生成方式上，turn_based/novel 的 NPC Agent spawn 不变，但 GM 缝合已改为 Phase 3 裸 stream `generateCompletion`。
+> 群像模式（第三轨）因交互检测精度足够而不再需要独立实现。
+
+本项目将叙事结构划分为以下三个正交轨道（设计时的初始划分）：
 
 | 维度 | turn_based (回合制) | novel (小说制) | 幕间 (Intermission) |
 |---|---|---|---|
@@ -60,31 +64,18 @@
 
 ### 3.2 模式切换与防抖检测（detectInteractionMode）
 
-新增 `engine/detect-mode.ts` 提供纯函数检测逻辑：
+> [实现: 2026-07-01] `detectInteractionMode` 已从纯共位函数扩展为**交互检测**：
+> - 入参新增 `npcResponses`/`activeNPCs`/`skipCounterUpdate`
+> - 返回值新增 `activeNPCs: string[]`
+> - 新增 `analyzeNpcResponses()`：LLM mini-judge + 关键词兜底，判断每个 NPC 是否 cue 玩家
+> - 旧共位逻辑保留作为无 NPC 回应数据时的向后兼容路径
+> - 详见 `engine/detect-mode.ts`
+
+新增 `engine/detect-mode.ts` 提供纯函数检测逻辑（MVP 设计，已扩展）：
 
 ```typescript
-export function detectInteractionMode(
-  gameState: GameState, 
-  nearbyNPCsCount: number
-): { interactionMode: "novel" | "turn_based"; person: "first" | "third" } {
-  // 锁死特定场景
-  if (gameState.mode === "sex") return { interactionMode: "turn_based", person: "first" };
-  if (gameState.mode === "combat") return { interactionMode: "turn_based", person: "third" };
-
-  // 共位检测
-  if (nearbyNPCsCount > 0) {
-    gameState.turnsSinceLastNPCInteraction = 0;
-    return { interactionMode: "turn_based", person: gameState.mode === "gal" ? "first" : "third" };
-  } else {
-    gameState.turnsSinceLastNPCInteraction++;
-    // 连续 2 回合 0 NPC 判定为独处，防抖切换到 novel 模式
-    if (gameState.turnsSinceLastNPCInteraction >= 2) {
-      return { interactionMode: "novel", person: gameState.mode === "gal" ? "first" : "third" };
-    }
-    return { interactionMode: "turn_based", person: gameState.mode === "gal" ? "first" : "third" };
-  }
-}
-```
+// 旧 MVP 设计 — 现在仅作为无 NPC 回应数据时的回退路径
+export function detectInteractionMode( ...
 
 ---
 
@@ -161,6 +152,8 @@ interface GameState {
 ---
 
 ## 5. 验收标准
+
+> [实现: 2026-07-01] 全部验收条件已满足。测试从 230+ 扩到 244 单元 + 45 e2e。新增 cue 检测/GAL 场景边界测试。
 
 - **测试套件**：运行 `npx tsx test.ts` → ≥230 passed, 0 failed。
 - **零题材硬编码**：`detect-mode.ts` 和 `viewpoint.ts` 源码中不包含任何具体角色名、地名或作品名称。
