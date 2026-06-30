@@ -103,6 +103,12 @@ export default function (pi: ExtensionAPI) {
       }
     }
 
+    // ── 先创建 NPC（buildStatePrompt → lookupRegion → getOrCreateNPC）──
+    const statePrompt = await (await import("./engine/state.ts")).buildStatePrompt();
+    // NPC 刚创建时 currentRoom 是 default_location（可能不匹配当前地点）
+    // 按当前时间段移动 NPC 到正确位置
+    await (await import("./engine/state.ts")).updateNPCSchedules();
+
     // ── Phase 2: 引擎自举 — 自动 spawn 同场 NPC ──
     let npcResponses = "";
     try {
@@ -119,7 +125,6 @@ export default function (pi: ExtensionAPI) {
 
     // ── Phase 3: 组装渲染 prompt → 交给 pi agent loop ──
     const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");
-    const statePrompt = await (await import("./engine/state.ts")).buildStatePrompt();
 
     const renderCtx = {
       directorNote: phase1.directorNote,
