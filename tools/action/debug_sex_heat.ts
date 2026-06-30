@@ -20,7 +20,7 @@ export default {
       const { tickSexStates } = await import("../../engine/state.ts");
       const { autoSwitchMode } = await import("../helpers.ts");
 
-      autoSwitchMode("sex_touch"); // 自动切 sex 模式
+      autoSwitchMode("intimate_touch"); // 自动切 sex 模式
 
       const d = params.desire ?? 90;
       const a = params.arousal ?? 0;

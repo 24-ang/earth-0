@@ -13,7 +13,7 @@
     "weekday_lunch": "自由",
     "weekday_afternoon": "自由",
     "weekday_evening": "自宅",
-    "weekend": "自宅"
+    "weekend": "自宅 / 商店街 / 公园 / 游戏中心"
   },
   "高校生": {
     "reputation_group": "学生",
@@ -21,7 +21,7 @@
     "weekday_lunch": "2年J班 / 2年F班 / 中庭 / 1F南走廊",
     "weekday_afternoon": "2年J班 / 2年F班 / 侍奉部 / 社团楼1F走廊",
     "weekday_evening": "自宅",
-    "weekend": "自宅"
+    "weekend": "自宅 / 商店街 / 卡拉OK / 游戏中心 / 千叶站前 / 稻毛海岸"
   },
   "总武高学生": {
     "reputation_group": "学生",
@@ -29,7 +29,7 @@
     "weekday_lunch": "2年J班 / 2年F班 / 中庭 / 1F南走廊 / 2F南走廊-F班前",
     "weekday_afternoon": "2年J班 / 2年F班 / 侍奉部 / 社团楼1F走廊",
     "weekday_evening": "自宅",
-    "weekend": "自由"
+    "weekend": "自宅 / 商店街 / 卡拉OK / 千叶站前 / 图书馆 / 稻毛海岸"
   },
   "总武高教师": {
     "reputation_group": "教师",
@@ -37,14 +37,14 @@
     "weekday_lunch": "中庭 / 1F南走廊 / 2F南走廊-F班前",
     "weekday_afternoon": "2年J班 / 2年F班 / 侍奉部",
     "weekday_evening": "自宅",
-    "weekend": "自宅"
+    "weekend": "自宅 / 商店街 / 千叶站前 / 书店"
   },
   "运动部员": {
     "weekday_morning": "2年J班 / 2年F班",
     "weekday_lunch": "2年J班 / 2年F班 / 中庭",
     "weekday_afternoon": "操场 / 体育馆",
     "weekday_evening": "自宅",
-    "weekend": "操场 / 自由",
+    "weekend": "操场 / 商店街 / 游戏中心",
     "reputation_group": "学生"
   },
   "自由人": {
@@ -52,7 +52,7 @@
     "weekday_lunch": "自由",
     "weekday_afternoon": "自由",
     "weekday_evening": "自由",
-    "weekend": "自由",
+    "weekend": "自由 / 商店街 / 公园",
     "reputation_group": "路人"
   },
   "不良": {
@@ -61,7 +61,7 @@
     "weekday_lunch": "1F南走廊 / 2F南走廊-F班前 / 中庭",
     "weekday_afternoon": "自由",
     "weekday_evening": "自宅",
-    "weekend": "自由"
+    "weekend": "游戏中心 / 商店街 / 卡拉OK"
   },
   "店员": {
     "reputation_group": "路人",
