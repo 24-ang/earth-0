@@ -1,5 +1,13 @@
 # 叙事视角系统 — 设计计划
 
+> **当前状态（2026-07-01）**：本文档是 2026-06 月的原始设计稿。全部设计已落地并超出原始范围：
+> - `detectInteractionMode`：已从"共位近似"升级为 **LLM mini-judge cue 检测**（交互检测精度远超 §4.2 的预期）
+> - 切镜系统：全部三条触发线 + 队列/优先级/冷却已在 `engine/viewpoint.ts` 实现
+> - voice 模板：`gm-voice-novel.md` / `gm-voice-turnbased.md` 已生效
+> - GAL 模式自动触发：**超过原始设计**——场景边界锁，对标视觉小说
+> - Phase 3 裸 stream 结构隔离：**超过原始设计**——渲染 LLM 零工具，物理硬隔离
+> - 最新代码参考：`engine/detect-mode.ts` / `engine/viewpoint.ts` / `engine/phase3-render.ts` / `extension.ts` / `docs/decisions.md` #16
+>
 > 来源：参考计划 `0-groovy-shannon.md` §十七。优先级 🟡 本月。本模块是 5 个待开发模块中最复杂的。
 
 ## 1. 要解决什么问题
