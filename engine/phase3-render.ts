@@ -7,6 +7,7 @@
  * - 不含工具提示
  * - 新增 director_note（Phase 1 产出）和 NPC 回应（Phase 2 产出）
  * - 指令改为"直接写叙事，不要调工具"
+ * - 信息密度对齐旧版 buildStatePrompt：含空间网格/区域设定/玩家装备/身体状态/疲劳
  *
  * 参考文献：PHILOSOPHY §1.3, fate-sandbox two-pass-render
  */
@@ -16,7 +17,10 @@
 export interface RenderContext {
   directorNote: string;
   npcResponses: string;
+  viewpointText?: string;
   summary: string;
+  /** 正在 cue 玩家的 NPC 名列表（Part 1 交互检测产出） */
+  activeNPCs?: string[];
 }
 
 /** 组装渲染轮的系统提示词 */
@@ -51,23 +55,28 @@ export async function buildRenderSystemPrompt(
   const interactionMode = gameState.interactionMode || "turn_based";
   const wordBudget = interactionMode === "novel" ? "400-800" : "200-400";
 
-  // 在场 NPC 的外观描述（渲染需要但不需要全量状态）
-  const npcAppearances = await buildNpcAppearanceBlock(gameState);
-
-  // 场景状态简报（精简版，只含渲染需要的信息）
+  // 场景渲染上下文（空间网格/区域设定/房间氛围/玩家装备/身体状态——对齐旧版 buildStatePrompt）
   const sceneBrief = buildSceneBrief(gameState);
+  const renderStateCtx = await buildRenderStateContext(gameState);
+
+  // 在场 NPC 的外观描述
+  const npcAppearances = await buildNpcAppearanceBlock(gameState);
 
   const parts = [
     read("gm-pre.md"),
 
     sceneBrief,
+    renderStateCtx,
 
     npcAppearances,
 
     // 导演单 + NPC 回应
     renderCtx.directorNote,
     renderCtx.npcResponses
-      ? `\n[NPC 独立回应 — 将这些回应织入你的叙事，让每个NPC用自己的语气说话]\n${renderCtx.npcResponses}\n`
+      ? `\n[NPC 独立回应 — 以下台词由NPC独立生成，必须原文引用，不得改写、提炼或替换措辞]\n${renderCtx.npcResponses}\n`
+      : "",
+    renderCtx.viewpointText
+      ? `\n[切镜/幕间 — 以下为引擎自动生成的侧面描写，直接追加到正文末尾、「[/切镜]」或「[/幕间]」标记之后不要加任何内容]\n${renderCtx.viewpointText}\n`
       : "",
 
     // Voice + Mode
@@ -81,7 +90,7 @@ export async function buildRenderSystemPrompt(
   return parts.filter(Boolean).join("\n\n---\n\n");
 }
 
-// ── 场景简报（精简版） ──
+// ── 场景简报（基础时间/地点/天气） ──
 
 function buildSceneBrief(gs: any): string {
   const lines: string[] = [];
@@ -92,23 +101,142 @@ function buildSceneBrief(gs: any): string {
   lines.push(`地点: ${gs.player?.location || "未知"}`);
   lines.push(`天气: ${gs.weather?.type || "晴"} ${gs.weather?.temp ?? "?"}°C`);
 
+  // 模式行：结合 activeNPCs 提供更精确的描述
+  const activeNPCs = gs._activeNPCs;
   if (gs.interactionMode === "novel") {
-    lines.push(`模式: 小说式记叙（无在场NPC，聚焦环境与内心）`);
+    lines.push(`模式: 小说式记叙`);
   } else {
-    lines.push(`模式: 回合制对话`);
-  }
-
-  // 空间信息
-  const room = gs.rooms?.[gs.player?.location];
-  if (room) {
-    if (room.description) lines.push(`空间: ${room.description}`);
-    if (room.grid_width && room.grid_height) {
-      const pos = gs.player?.position;
-      lines.push(`网格: ${room.grid_width}x${room.grid_height}${pos ? `，玩家在(${pos.x},${pos.y})` : ""}`);
+    if (activeNPCs && activeNPCs.length > 0) {
+      lines.push(`模式: 回合制对话（${activeNPCs.join("、")}正在与你互动）`);
+    } else {
+      lines.push(`模式: 回合制对话`);
     }
   }
 
+  // 空间基础信息（详细网格/家具/墙壁由 buildRenderStateContext 注入）
+  const room = gs.rooms?.[gs.player?.location];
+  if (room?.description) {
+    lines.push(`空间概况: ${room.description}`);
+  }
+
   return lines.join("\n");
+}
+
+// ── 渲染状态上下文（对齐旧版 buildStatePrompt 的信息密度） ──
+// 包含：空间网格/区域设定/房间氛围/玩家装备/身体状态/疲劳/在场NPC动作
+// 不含：工具提示/剧情钩子/任务机制（Phase 3 不需要）
+
+async function buildRenderStateContext(gs: any): Promise<string> {
+  const { getGridContext, getRegionContext, getRoomAgingLine, getPlayerStatusNarrative, hasEquipmentEffect, isSameLocation } = await import("./state.ts");
+  const parts: string[] = [];
+
+  // ── 空间网格上下文（墙/家具/门窗/出口/四周） ──
+  const gridCtx = getGridContext();
+  if (gridCtx) parts.push(gridCtx);
+
+  // ── 区域设定（地方色彩/社交规范） ──
+  const regionCtx = getRegionContext(gs.player?.location);
+  if (regionCtx) parts.push(`[区域设定] ${regionCtx}`);
+
+  // ── 房间氛围（首次进入注入一次） ──
+  gs.roomTimestamps ??= {};
+  const { getRoomKey } = await import("./state.ts");
+  const roomKey = getRoomKey(gs.player?.location) || gs.player?.location;
+  const room = gs.rooms?.[gs.player?.location];
+  if (!gs.roomTimestamps[roomKey] && room?.atmosphere) {
+    parts.push(`[环境初感] ${room.atmosphere}`);
+  }
+
+  // ── 房间时间痕迹（脏污/灰尘） ──
+  const agingLine = getRoomAgingLine(gs.player?.location);
+  if (agingLine) parts.push(`[场景氛围] ${agingLine}`);
+
+  // ── 玩家装备 ──
+  const p = gs.player;
+  if (p) {
+    const SLOT_LABELS: Record<string, string> = {
+      top: "外套", shirt: "内搭", inner_top: "胸衣", bottom: "下装", inner_bot: "内裤",
+      legs: "袜", feet: "鞋", head: "头饰", acc: "配饰",
+      left_hand: "左手", right_hand: "右手", back: "背"
+    };
+    const wornParts: string[] = [];
+    const emptySlots: string[] = [];
+    let mountItem: string | null = null;
+    for (const [slot, item] of Object.entries(p.equipment || {})) {
+      if (!item) {
+        if (slot !== "mount" && SLOT_LABELS[slot]) emptySlots.push(SLOT_LABELS[slot]);
+        continue;
+      }
+      if (slot === "mount") { mountItem = (item as any).name; continue; }
+      const label = SLOT_LABELS[slot] || slot;
+      if ((slot === "inner_top" || slot === "inner_bot") && !gs.layer1Enabled) {
+        wornParts.push(`${label}:有`);
+      } else {
+        wornParts.push(`${label}:${(item as any).name}`);
+      }
+    }
+    const eqSummary = wornParts.length > 0 ? wornParts.join(" | ") : "（全裸）";
+    parts.push(`[玩家装备] ${eqSummary}`);
+    if (emptySlots.length > 0 && emptySlots.length <= 6) {
+      parts.push(`[装备空槽] ${emptySlots.join("、")}`);
+    }
+    if (mountItem) {
+      const speedStr = p.vehicle ? ` ×${p.vehicle.speedMul}` : "";
+      parts.push(`[载具] ${mountItem}${speedStr}`);
+    }
+
+    // ── 玩家身体状态 ──
+    parts.push(getPlayerStatusNarrative(p));
+
+    // ── 疲劳状态 ──
+    const f = p.fatigue ?? 0;
+    if (f >= 80) parts.push(`[状态] 你已经筋疲力尽，急需休息或提神饮品。`);
+    else if (f >= 50) parts.push(`[状态] 你感到明显的疲劳，动作开始变慢。`);
+    else if (f >= 25) parts.push(`[状态] 你有一丝倦意。`);
+
+    // ── 寒冷天气装备提示 ──
+    if (gs.weather?.temp < 5 && hasEquipmentEffect(p.equipment, "cold_resist")) {
+      parts.push(`[装备效果] 厚实的衣物抵御着寒风——你并不觉得冷。`);
+    }
+
+    // ── 身份伪装提示 ──
+    const { getDisguiseIdentity } = await import("./state.ts");
+    const disguise = getDisguiseIdentity(p);
+    if (disguise) {
+      parts.push(`[身份认知] 你被认知为: ${disguise}`);
+    } else if (p.public_identity) {
+      parts.push(`[身份认知] 公开身份: ${p.public_identity}`);
+    }
+
+    // ── 称号 ──
+    if (p.titles && p.titles.length > 0) {
+      parts.push(`[称号] ${p.titles.join(" | ")}`);
+    }
+  }
+
+  // ── 在场 NPC（含当前动作） ──
+  const loc = gs.player?.location;
+  if (loc && gs.npcs) {
+    const inRoom = Object.entries(gs.npcs)
+      .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, loc))
+      .map(([name, n]: [string, any]) => `${name}${(n as any).action ? "(" + (n as any).action + ")" : ""}`);
+    if (inRoom.length > 0) {
+      parts.push(`[在场NPC] ${inRoom.join("、")}`);
+    }
+  }
+
+  // ── 导演提示：沉默 NPC 不插话（仅当有 NPC 在场但无人 cue 玩家时） ──
+  if (gs._activeNPCs && gs._activeNPCs.length === 0 && gs.npcs) {
+    const loc2 = gs.player?.location;
+    const presentNames = Object.entries(gs.npcs)
+      .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, loc2))
+      .map(([name]) => name);
+    if (presentNames.length > 0) {
+      parts.push(`[导演提示] 当前在场的 NPC（${presentNames.join("、")}）并未主动与你互动，请不要让他们突然插入对话。如果他们应该注意到玩家，通过环境细节暗示（如视线移动、动作停顿）而非直接对话。`);
+    }
+  }
+
+  return parts.filter(Boolean).join("\n");
 }
 
 // ── NPC 外观块 ──
@@ -126,6 +254,7 @@ async function buildNpcAppearanceBlock(gs: any): Promise<string> {
   const { findCharacter, getAppearanceForAge, getNpcCurrentAge, getNPCOutfitDesc } =
     await import("./state.ts");
 
+  const isGAL = gs.mode === "gal";
   const lines: string[] = ["[在场人物]"];
   for (const name of present) {
     try {
@@ -133,13 +262,22 @@ async function buildNpcAppearanceBlock(gs: any): Promise<string> {
       if (!src) { lines.push(`${name}: 未知`); continue; }
       const age = getNpcCurrentAge(src.base_age || 16);
       const app = getAppearanceForAge(src, age);
-      const outfit = getNPCOutfitDesc(name);
+
+      // getNPCOutfitDesc 返回完整描述（含内外层/材质/配件），GAL场景下用作身体描写的精确素材
+      const outfitDetail = getNPCOutfitDesc(name) || "";
+
+      const rel = gs.player?.relationships?.[name];
+      const relNote = rel ? ` [关系:${rel.stage || "陌生"} 好感:${rel.affection ?? 0}]` : "";
+
+      // 性格素材（防止渲染 LLM 写 NPC 时 OOC）
+      const personality = src.personality_brief ? ` [性格:${src.personality_brief}]` : "";
+
       const brief = [
         app?.hair_color, app?.hair_style,
         app?.eye_color ? `${app.eye_color}眼睛` : "",
-        outfit ? `穿着${outfit}` : "",
-      ].filter(Boolean).join("，");
-      lines.push(`${name}: ${brief || "外貌未知"}`);
+        outfitDetail ? `穿着${outfitDetail}` : "",
+      ].filter(Boolean).join("；");
+      lines.push(`${name}${relNote}${personality}: ${brief || "外貌未知"}`);
     } catch {
       lines.push(`${name}: 数据加载失败`);
     }
@@ -153,10 +291,18 @@ function buildRenderContract(wordBudget: string, interactionMode: string): strin
   return [
     "## 渲染输出合约",
 
-    "你是渲染主笔。引擎已完成所有结算和工具操作。你唯一任务是写出面向玩家的叙事正文。",
+    "你是剪辑师，不是主笔。引擎已完成所有结算，NPC 已独立生成自己的台词。你的工作不是创造——是把已经准备好的素材剪成一个连贯的画面。",
+
+    "### 素材来源（必须区分对待）",
+    "- NPC 对话/内心独白：来自 [NPC 独立回应] 段，原文引用，不得改写",
+    "- 环境描写：来自 [空间]/[区域设定]/[场景状态] 段，必须与网格坐标一致",
+    "- 玩家身体描写：来自 [玩家装备]/[玩家状态] 段，不得编造装备或状态",
+    "- 切镜/幕间文本：来自 [切镜/幕间] 段，直接追加到正文末尾，不要改动",
 
     "### 禁止",
     "- 禁止调用任何工具（引擎已替你完成）",
+    "- 禁止改写、提炼、或替换 NPC 的对话措辞——原文引用，只决定它在叙事中的时机和顺序",
+    "- 禁止在 [空间] 段没有标记的地点描写活动（网格里没有窗户就不写窗外风景）",
     "- 禁止输出 <tag> 格式、JSON Patch 等 ST 遗留格式",
     "- 禁止在叙述中出现属性值、技能等级、好感度数值",
     "- 禁止分析角色心理（只写可眼见耳听的物理表现）",

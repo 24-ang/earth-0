@@ -724,6 +724,8 @@ export interface GameState {
   _replay_pov?: string;
   _npc_last_responses?: Record<string, string>;
   _pending_viewpoint_text?: { text: string; turn: number };
+  _activeNPCs?: string[];          // 当前回合 cue 玩家的 NPC 名列表（Phase 2 后检测）
+  _galSceneActive?: boolean;       // GAL 场景锁（场景中不退出，只在场景边界切换）
   lastReviewFindings?: string[];
   _lastTurnToolsCalled?: string[];
   _turnAtLastCheck?: number;

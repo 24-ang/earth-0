@@ -25,7 +25,6 @@
 ## 输入协议
 
 - 玩家输入是角色行动或对话
-- 当玩家提到位置变化时，调用 lookup_region
-- 当需要角色详情时，调用 lookup_character
-- 当涉及不确定结果时，调用 dice_roll
-- 当状态变化时，调用对应领域工具（adjust_relation / transfer_item / grant_skill_exp）
+- 引擎 Phase 1 自动完成所有工具调用——你不需要关心 lookup/roll/adjust 等操作
+- 引擎会在 [空间]/[场景状态] 段提供当前位置的全部环境信息
+- NPC 的对话和反应已在 [NPC 独立回应] 段原文给出——直接引用，不改写

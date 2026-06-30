@@ -133,6 +133,12 @@ export async function generateCompletion(promptText: string, maxTokens: number, 
   const baseUrl = process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/anthropic/v1/messages";
   const modelName = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
 
+  const fallbackMsgs: any[] = [];
+  if (systemPrompt) {
+    fallbackMsgs.push({ role: "system", content: systemPrompt });
+  }
+  fallbackMsgs.push({ role: "user", content: promptText });
+
   const res = await fetch(baseUrl, {
     method: "POST",
     headers: {
@@ -143,7 +149,7 @@ export async function generateCompletion(promptText: string, maxTokens: number, 
     body: JSON.stringify({
       model: modelName,
       max_tokens: maxTokens,
-      messages: [{ role: "user", content: promptText }]
+      messages: fallbackMsgs,
     }),
   });
   if (!res.ok) {

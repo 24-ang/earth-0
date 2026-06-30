@@ -163,6 +163,8 @@ function createInitialState(): GameState {
     _cutaway_queue: [],
     _cutaway_cooldown: 0,
     _npc_last_responses: {},
+    _activeNPCs: [],
+    _galSceneActive: false,
   };
 }
 
@@ -467,6 +469,8 @@ export function loadState(filepath?: string): boolean {
   gameState._cutaway_queue ??= [];
   gameState._cutaway_cooldown ??= 0;
   gameState._npc_last_responses ??= {};
+  gameState._activeNPCs ??= [];
+  gameState._galSceneActive ??= false;
 
   // 写回最新版本号
   gameState.schemaVersion = currentSchemaVersion;
