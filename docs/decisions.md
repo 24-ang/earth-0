@@ -296,4 +296,36 @@
 
 ---
 
-> 最后更新：2026-06-29。新决策随时追加。
+## 16. 三段式实体化：从 prompt 合约到代码强制执行
+
+**是什么**：将三段式工作流（结算→角色→渲染）从 gm-contract.md 的 prompt 合约改为代码强制执行的三个独立阶段：
+1. **Phase 1 — 分类 LLM**：输出 JSON 而非 tool_use blocks。引擎解析 JSON 后直接调工具。JSON parse 失败 → 回退引擎兜底（settle_scene + NPC spawn）
+2. **Phase 2 — NPC Agent**：引擎检测同场 NPC 自动 spawn（和 sex 自举相同模式）
+3. **Phase 3 — 渲染**：pi agent loop 收到渲染专用 prompt（voice/mode + director_note + NPC 回应，不含 gm-rules/gm-contract/工具提示）
+4. **Phase 4 — 创意层**（可选，best-effort）：触发条件满足时调一次 LLM 做剧情判断
+
+**为什么**：
+- DS Chat 在"写作本能"和"操作纪律"之间永远选前者。prompt 改三版、加检查清单、加处罚条款——全没用（PHILOSOPHY §1.3："只补一句 prompt 骂模型等于没有修"）
+- Phase 1 分类 LLM 输出 JSON → 引擎执行。LLM 物理上不能写叙事（输出被 parse，失败就扔）
+- Phase 3 渲染 prompt 不含 gm-contract / gm-rules / 工具提示 → LLM 没有"应该先调工具再写叙事"的认知负担
+- 引擎自举 NPC spawn 和 sex 自举相同模式——LLM 不调也跑
+
+**放弃了什么**：
+- 放弃了同一 LLM 在一次调用中完成三段式的架构（PHILOSOPHY §2.1 和决策 2 的前提——"渲染模型需要看 NPC agent 全文"——仍然成立；Phase 3 渲染 prompt 包含 NPC agent 文学文本，只是不再包含工具调用能力）
+- 放弃了 gm-contract.md 作为行为约束（引擎代码替代）
+- Phase 1 多了一次 generateCompletion 调用（但 prompt 很小 ~3KB，且 JSON parse 失败时直接回退引擎兜底）
+
+**不要做**：
+- ❌ 把 Phase 1 分类改为关键词匹配（关键词误判的代价比分类失败更大——引擎猜错 = 玩家退出）
+- ❌ 删掉 render_scene 工具（/reroll 命令依赖它）
+- ❌ 在 Phase 3 渲染 prompt 里重新加回 gm-rules / gm-contract
+
+**相关代码**：
+- `engine/phase1-classifier.ts`（分类 LLM + JSON 解析 + 工具执行 + 回退兜底）
+- `engine/phase3-render.ts`（渲染 prompt 组装，替代旧的 gm-contract 层）
+- `engine/phase4-creative.ts`（触发条件检测 + 创意 LLM 调用）
+- `extension.ts`（重写 before_agent_start + 新增 agent_end 钩子）
+
+---
+
+> 最后更新：2026-06-30。新决策随时追加。

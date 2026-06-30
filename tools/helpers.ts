@@ -88,7 +88,7 @@ export function wrapLine(text: string, maxW: number): string[] {
   return res;
 }
 
-export async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string): Promise<string> {
+export async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string, systemPrompt?: string): Promise<string> {
   try {
     const { streamSimple } = await import("@earendil-works/pi-ai");
     let model = ctx.model ? ctx.modelRegistry.find(ctx.model.provider, ctx.model.id) : undefined;
@@ -105,9 +105,12 @@ export async function generateCompletion(promptText: string, maxTokens: number, 
     if (model) {
       const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
       if (auth.ok) {
-        const context = {
-          messages: [{ role: "user" as const, content: promptText, timestamp: Date.now() }]
-        };
+        const msgs: any[] = [];
+        if (systemPrompt) {
+          msgs.push({ role: "system" as const, content: systemPrompt, timestamp: Date.now() });
+        }
+        msgs.push({ role: "user" as const, content: promptText, timestamp: Date.now() });
+        const context = { messages: msgs };
         const stream = streamSimple(model, context, {
           apiKey: auth.apiKey,
           headers: auth.headers,
