@@ -141,8 +141,9 @@ export default function (pi: ExtensionAPI) {
     let activeNPCs: string[] = [];
     if (npcResponses) {
       try {
+        const { isSameLocation } = await import("./engine/state.ts");
         const presentNPCs = Object.entries(gameState.npcs || {})
-          .filter(([_, n]: [string, any]) => n.currentRoom === gameState.player?.location && n.alive !== false)
+          .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, gameState.player?.location) && n.alive !== false)
           .map(([name]) => name);
         const parsed = parseNpcResponses(npcResponses, presentNPCs);
         const { analyzeNpcResponses, detectInteractionMode } = await import("./engine/detect-mode.ts");
@@ -171,8 +172,9 @@ export default function (pi: ExtensionAPI) {
     if (!hadSex) {
       // 场景开始时检查 GAL 激活条件（地点变化 或 首次初始化）
       if (locationChanged || gameState._galSceneActive === undefined) {
+        const { isSameLocation: galIsSame } = await import("./engine/state.ts");
         const galPresent = Object.entries(gameState.npcs || {})
-          .filter(([_, npc]: [string, any]) => npc.currentRoom === curLocation && npc.alive !== false)
+          .filter(([_, npc]: [string, any]) => galIsSame(npc.currentRoom, curLocation) && npc.alive !== false)
           .map(([name]) => name);
 
         if (gameState.mode === "rpg" && galPresent.length === 1) {
@@ -196,8 +198,9 @@ export default function (pi: ExtensionAPI) {
 
       // 场景中检查 GAL 退出条件（非 sex 模式时）
       if (gameState._galSceneActive && gameState.mode !== "sex") {
+        const { isSameLocation: galExitIsSame } = await import("./engine/state.ts");
         const galPresentNow = Object.entries(gameState.npcs || {})
-          .filter(([_, npc]: [string, any]) => npc.currentRoom === curLocation && npc.alive !== false);
+          .filter(([_, npc]: [string, any]) => galExitIsSame(npc.currentRoom, curLocation) && npc.alive !== false);
         if (locationChanged || galPresentNow.length === 0) {
           gameState._galSceneActive = false;
           gameState.mode = "rpg";
@@ -296,14 +299,14 @@ async function engineOnlyPhase1(ctx: any) {
 
 /** Phase 2: 自动检测同场 NPC 并 spawn */
 async function autoSpawnNPCs(ctx: any): Promise<string> {
-  const { gameState } = await import("./engine/state.ts");
+  const { gameState, isSameLocation } = await import("./engine/state.ts");
 
   const loc = gameState.player?.location;
   if (!loc || !gameState.npcs) return "";
 
   const presentNPCs = Object.entries(gameState.npcs)
     .filter(([_, npc]: [string, any]) =>
-      npc.currentRoom === loc && npc.alive !== false
+      isSameLocation(npc.currentRoom, loc) && npc.alive !== false
     )
     .map(([name]) => name);
 

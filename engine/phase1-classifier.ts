@@ -423,7 +423,12 @@ function getPresentNPCNames(gs: any): string[] {
   if (!gs.npcs) return [];
   const loc = gs.player?.location;
   if (!loc) return [];
+  // 简单字符串匹配：Phase 1 分类器的 NPC 在场提示不需要精确到子房间
   return Object.entries(gs.npcs)
-    .filter(([_, npc]: [string, any]) => npc.currentRoom === loc && npc.alive !== false)
+    .filter(([_, npc]: [string, any]) => {
+      if (npc.alive === false) return false;
+      // isSameLocation 语义：支持层级位置匹配
+      return npc.currentRoom === loc || npc.currentRoom?.startsWith(loc + ",") || loc.startsWith(npc.currentRoom + ",");
+    })
     .map(([name]) => name);
 }

@@ -245,8 +245,9 @@ async function buildNpcAppearanceBlock(gs: any): Promise<string> {
   const loc = gs.player?.location;
   if (!loc || !gs.npcs) return "";
 
+  const { isSameLocation: npcIsSame } = await import("./state.ts");
   const present = Object.entries(gs.npcs)
-    .filter(([_, npc]: [string, any]) => npc.currentRoom === loc && npc.alive !== false)
+    .filter(([_, npc]: [string, any]) => npcIsSame(npc.currentRoom, loc) && npc.alive !== false)
     .map(([name]) => name);
 
   if (present.length === 0) return "";
