@@ -1,5 +1,20 @@
 # state.ts 渐进拆分 — 设计计划
 
+> **执行状态（2026-07-01）**：
+> | 阶段 | 状态 | 行数 | 说明 |
+> |------|------|------|------|
+> | 1a location | ✅ 完成 | 346 | `state-location.ts` — 地点层级导航/动态创建/车站 |
+> | 1b grid | ✅ 完成 | 427 | `state-grid.ts` — 空间棋盘格/房间/移动/家具/门窗 |
+> | 1c economy | ❌ 跳过 | — | `economyConfig` 循环依赖（子模块 import 父模块时变量未初始化），仅 152 行不值得绕 |
+> | 2a memory | ❌ 跳过 | — | 内联在 `updateNPCSchedules` 350 行函数中，硬切会拆散逻辑 |
+> | 2b npc | ❌ 跳过 | — | `getOrCreateNPC`/`findCharacter` 被 `timeline.ts` 静态 import，拆后需 barrel 转发，风险大于收益 |
+> | 2c schedule | ❌ 跳过 | — | 与 memory 紧耦合，且内部调了 grid/npc/economy 的子函数，切不动 |
+> | 2d persistence | ❌ 跳过 | — | `saveState`/`loadState` 引用全模块变量，拆出后每个子模块都要动态 import 回来 |
+>
+> **结果**：state.ts 4367→3440 行（-21%），抽出的 location/grid 是两个真正独立的领域。
+> 1c-2d 总合约 1500 行，但因为全部通过 gameState 单例互相引用，ESM 循环依赖导致切不动。
+> 计划的 barrel 模式本身可行，但受限于子模块对根模块变量的初始化时序。
+>
 > 来源：参考计划 `0-groovy-shannon.md` §七。优先级 🟡 本月，每模块 30 分钟–1 小时，分 4–5 轮。
 
 ## 1. 要解决什么问题
