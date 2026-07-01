@@ -2,15 +2,19 @@
   {
     "name": "火遁·豪火球之术",
     "rank": "C",
+    "type": "technique",
+    "derives_from": "火遁忍術",
     "description": "从口中喷出巨大火球。可被水遁克制。",
     "resourceCost": { "chakra": 15 },
     "cooldown": 1,
     "damage": { "dice": "2d8", "type": "火焰", "area": "cone_3m" },
-    "requires": { "skills": { "忍术": 2 } }
+    "requires": { "skills": { "忍术": 2 }, "abilities": { "火遁忍術": 1 } }
   },
   {
     "name": "影分身之术",
     "rank": "B",
+    "type": "technique",
+    "derives_from": "忍術",
     "description": "制造实体分身。分身受击即消失，消失时经验传回本体。",
     "resourceCost": { "chakra": 20 },
     "cooldown": 3,
@@ -19,30 +23,122 @@
   {
     "name": "千鸟",
     "rank": "A",
+    "type": "technique",
+    "derives_from": "雷遁忍術",
     "description": "将雷遁查克拉集中于手掌，形成高速穿刺攻击。",
     "resourceCost": { "chakra": 30 },
     "cooldown": 2,
     "damage": { "dice": "4d8", "type": "雷电穿刺" },
-    "requires": { "skills": { "忍术": 5 }, "abilities": { "写轮眼": 1 } }
+    "requires": { "skills": { "忍术": 5 }, "abilities": { "写轮眼": 1, "雷遁忍術": 1 } }
   },
   {
     "name": "八卦掌·回天",
     "rank": "B",
+    "type": "technique",
+    "derives_from": "日向流体术",
     "description": "从全身穴位释放查克拉高速旋转，形成绝对防御。",
     "resourceCost": { "chakra": 25 },
     "cooldown": 2,
-    "requires": { "skills": { "体术": 4 }, "abilities": { "白眼": 1 } }
+    "requires": { "skills": { "体术": 4 }, "abilities": { "白眼": 1, "日向流体术": 1 } }
   },
   {
     "name": "写轮眼",
     "rank": "S",
+    "type": "style",
     "description": "宇智波一族的血继限界。看穿对手动作、复制忍术、施加幻术。被动生效。",
     "narrativeOnly": true
   },
   {
     "name": "白眼",
     "rank": "A",
+    "type": "style",
     "description": "日向一族的血继限界。360°透视视野，看穿经络系统。被动生效。",
     "narrativeOnly": true
+  },
+
+  {
+    "name": "忍術",
+    "rank": "B",
+    "type": "style",
+    "description": "基础忍術体系。结印+查克拉控制→释放忍术。所有属性遁术的前置。",
+    "narrativeOnly": true
+  },
+  {
+    "name": "火遁忍術",
+    "rank": "B",
+    "type": "style",
+    "description": "火属性查克拉的性质变化。以高温和范围燃烧为特征。",
+    "narrativeOnly": true,
+    "requires": { "abilities": { "忍術": 2 } }
+  },
+  {
+    "name": "雷遁忍術",
+    "rank": "A",
+    "type": "style",
+    "description": "雷属性查克拉的性质变化。以速度和贯穿力为特征。",
+    "narrativeOnly": true,
+    "requires": { "abilities": { "忍術": 3 } }
+  },
+  {
+    "name": "日向流体术",
+    "rank": "B",
+    "type": "style",
+    "description": "日向一族轻柔拳法。结合白眼攻击经络系统。",
+    "narrativeOnly": true,
+    "requires": { "abilities": { "白眼": 1 } }
+  },
+  {
+    "name": "不知火流忍術",
+    "rank": "S",
+    "type": "style",
+    "description": "不知火一族传承的古老忍術。以火焰和体术为核心。",
+    "narrativeOnly": true
+  },
+  {
+    "name": "花蝶扇",
+    "rank": "B",
+    "type": "technique",
+    "derives_from": "不知火流忍術",
+    "description": "掷出火焰扇攻击敌人。扇子在空中划出弧线回收。",
+    "resourceCost": { "ki": 10 },
+    "cooldown": 1,
+    "damage": { "dice": "2d6", "type": "火焰", "area": "line_8m" },
+    "requires": { "abilities": { "不知火流忍術": 1 } }
+  },
+  {
+    "name": "超必殺忍蜂",
+    "rank": "A",
+    "type": "technique",
+    "derives_from": "不知火流忍術",
+    "description": "将火焰查克拉缠绕全身，化为火蜂冲撞敌人。",
+    "resourceCost": { "ki": 30 },
+    "cooldown": 3,
+    "damage": { "dice": "5d8", "type": "火焰贯穿" },
+    "requires": { "abilities": { "不知火流忍術": 3, "花蝶扇": 2 } }
+  },
+
+  {
+    "name": "心理战·読み合い",
+    "rank": "B",
+    "type": "social",
+    "description": "通过语调、停顿、措辞推断对方隐藏的意图。不是读心——是读完没说出口的东西。",
+    "requires": { "attributes": { "智力": 14, "感知": 12 } },
+    "narrativeOnly": true,
+    "social_effect": {
+      "type": "intention_read",
+      "target": "对话对象",
+      "limitation": "只能读取当前话题的情绪倾向——'他在隐瞒什么'，不是'他隐瞒了X'"
+    }
+  },
+  {
+    "name": "黄金体验",
+    "rank": "S",
+    "type": "stand",
+    "description": "为无生命物体注入生命能量，变成小动物或植物。铁门变成的乌龟壳仍是铁。变化的生物受攻击则伤害反弹给攻击者。",
+    "narrativeOnly": true,
+    "resourceCost": { "stand_power": 15 },
+    "cooldown": 2,
+    "rules": "为无生命物体注入生命能量，将其变成小动物或植物。铁门变成的乌龟壳仍是铁——保留原物体部分属性。变化的生物受攻击则伤害反弹给攻击者。",
+    "limitations": "必须直接用手触碰。一次只能维持一个变化。战斗3回合/日常30分钟后解除。失去意识则变化解除。"
   }
 ]

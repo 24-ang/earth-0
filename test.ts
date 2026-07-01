@@ -5671,6 +5671,50 @@ test("META: 所有 action 工具都在 trackedTools 中（saveState 包裹保护
   // 不强制 fail — 只警告，因为可能有条件导入的工具
 });
 
+// ═══════════════════════════════════════════════════════════
+// ABILITY: 技能树 + 规则系 + 社交技能 (v2)
+// ═══════════════════════════════════════════════════════════
+
+test("ABILITY: buildSkillTree 返回 style→techniques 映射", () => {
+  const { loadAbilities, buildSkillTree, getTechniquesForStyle } = require("./engine/abilities.ts");
+  loadAbilities();
+  const tree = buildSkillTree();
+  if (!tree["忍術"] || tree["忍術"].length === 0) throw new Error("忍術 style 应有至少1个派生technique");
+  if (!tree["不知火流忍術"] || tree["不知火流忍術"].length < 2) throw new Error("不知火流忍術 应有≥2个technique（花蝶扇、超必殺忍蜂）");
+  const shiranuiMoves = getTechniquesForStyle("不知火流忍術");
+  if (!shiranuiMoves.includes("花蝶扇")) throw new Error("不知火流 应有花蝶扇");
+  if (!shiranuiMoves.includes("超必殺忍蜂")) throw new Error("不知火流 应有超必殺忍蜂");
+});
+
+test("ABILITY: 规则系能力注入 rules+limitations", () => {
+  const { useAbility } = require("./engine/abilities.ts");
+  const user = {
+    name: "测试角色",
+    resourcePools: { stand_power: { current: 50, max: 50 } },
+    abilities: { "黄金体验": { name: "黄金体验", level: 1, exp: 0, nextLevel: 10, cooldownRemaining: 0 } },
+    skills: {},
+    attributes: {},
+  };
+  const result = useAbility(user, "黄金体验");
+  if (!result.ok) throw new Error(`黄金体验应成功: ${result.errors.join("; ")}`);
+  if (!result.narrative.includes("[规则]")) throw new Error("规则系应注入[规则]文本");
+  if (!result.narrative.includes("[限制]")) throw new Error("规则系应注入[限制]文本");
+});
+
+test("ABILITY: 社交技能返回 social_effect 提示", () => {
+  const { useAbility } = require("./engine/abilities.ts");
+  const user = {
+    name: "测试角色",
+    resourcePools: { mp: { current: 50, max: 50 } },
+    abilities: { "心理战·読み合い": { name: "心理战·読み合い", level: 1, exp: 0, nextLevel: 10, cooldownRemaining: 0 } },
+    skills: {},
+    attributes: { 智力: 16, 感知: 14 },
+  };
+  const result = useAbility(user, "心理战·読み合い", "雪之下雪乃");
+  if (!result.ok) throw new Error(`社交技能应成功: ${result.errors.join("; ")}`);
+  if (!result.narrative.includes("[社交效果]")) throw new Error("社交技能应注入[社交效果]文本");
+});
+
 (async () => {
   for (const t of testQueue) {
     try {

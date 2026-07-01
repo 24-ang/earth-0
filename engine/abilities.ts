@@ -19,6 +19,8 @@ export interface AbilityDef {
   name: string;
   description: string;        // LLM 可理解的效果描述（≤50字）
   rank?: string;              // 可选等级标记（如 "C" "A" "S"）
+  type?: string;              // style|technique|social|stand|meta（新增，v2 技能树）
+  derives_from?: string;      // technique→style 的父子关系（新增，v2）
   resourceCost?: Record<string, number>;  // { chakra: 15, stamina: 5 }
   cooldown?: number;          // 冷却回合数（0=无冷却）
   damage?: {
@@ -32,6 +34,14 @@ export interface AbilityDef {
     abilities?: Record<string, number>;   // { "写轮眼": 1 }
   };
   narrativeOnly?: boolean;    // true=纯叙事，引擎只验证最低条件
+  rules?: string;             // 规则系能力的完整规则文本（新增，v2: stand/meta）
+  limitations?: string;       // 规则系能力的限制条件
+  social_effect?: {           // 社交技能效果（新增，v2）
+    type: string;             // "intention_read" | "persuasion" | "deception"
+    target: string;           // "对话对象" | "在场NPC"
+    limitation: string;
+  };
+  meta_type?: string;         // 元能力类型: "world"|"others"|"self"
 }
 
 // ── 数据加载 ──
@@ -72,6 +82,36 @@ export function getAbilityDef(name: string): AbilityDef | null {
 
 export function getAllAbilities(): AbilityDef[] {
   return Object.values(loadAbilities(gameState?.activeWorld));
+}
+
+// ── 技能树（v2）──
+
+let _skillTree: Record<string, string[]> | null = null; // style → [technique names]
+
+export function buildSkillTree(): Record<string, string[]> {
+  if (_skillTree) return _skillTree;
+  _skillTree = {};
+  const all = getAllAbilities();
+  for (const def of all) {
+    if (def.type === "style") {
+      _skillTree[def.name] = _skillTree[def.name] || [];
+    }
+    if (def.derives_from && def.type === "technique") {
+      if (!_skillTree[def.derives_from]) _skillTree[def.derives_from] = [];
+      _skillTree[def.derives_from].push(def.name);
+    }
+  }
+  return _skillTree;
+}
+
+export function getTechniquesForStyle(style: string): string[] {
+  const tree = buildSkillTree();
+  return tree[style] || [];
+}
+
+export function getStyleForTechnique(technique: string): string | null {
+  const def = getAbilityDef(technique);
+  return def?.derives_from || null;
 }
 
 // ── 能力 EXP ──
@@ -240,12 +280,19 @@ export function useAbility(
     return { ok: false, narrative: "", resourceChanges, cooldownSet: 0, errors };
   }
 
-  // 5. 纯叙事能力
+  // 5. 纯叙事能力 / 规则系能力 / 社交技能
   if (def.narrativeOnly) {
-    // 设置冷却
     if (state && def.cooldown) state.cooldownRemaining = def.cooldown;
-    const resText = `${user.name}使用了${abilityName}。${def.description}`;
-    return { ok: true, narrative: resText, resourceChanges, cooldownSet: def.cooldown || 0, errors: [] };
+    const parts: string[] = [];
+    parts.push(`${user.name}使用了${abilityName}。${def.description}`);
+    if (def.rules) {
+      parts.push(`\n[规则] ${def.rules}`);
+      if (def.limitations) parts.push(`\n[限制] ${def.limitations}`);
+    }
+    if (def.social_effect) {
+      parts.push(`\n[社交效果] 类型:${def.social_effect.type} 目标:${def.social_effect.target} 限制:${def.social_effect.limitation}`);
+    }
+    return { ok: true, narrative: parts.join(" "), resourceChanges, cooldownSet: def.cooldown || 0, errors: [] };
   }
 
   // 6. 伤害结算
