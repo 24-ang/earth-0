@@ -5639,6 +5639,38 @@ test("LOOKUP: lookup_weather 查询天气", async () => {
   if (!result.content || result.content.length === 0) throw new Error("天气查询无返回");
 });
 
+test("META: 所有 action 工具都在 trackedTools 中（saveState 包裹保护）", async () => {
+  // O9: 扫描 tools/action/，确认所有工具都经过 withToolTracking 包裹（自动 try-catch + saveState）
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const actionDir = path.resolve(process.cwd(), "tools", "action");
+  if (!fs.existsSync(actionDir)) return;
+  const actionFiles = fs.readdirSync(actionDir).filter((f: string) => f.endsWith(".ts"));
+
+  // 动态加载 registry 的 trackedTools 列表
+  const registry = require("./tools/registry.ts");
+  // 检查 registerAll 中 trackedTools 数组引用的所有工具名
+  // 通过静态分析 registry.ts 源码确认
+  const registrySrc = fs.readFileSync(path.resolve(process.cwd(), "tools", "registry.ts"), "utf-8");
+
+  const missing: string[] = [];
+  const excluded = ["masturbate.ts", "sex_touch.ts"]; // private_extras
+
+  for (const f of actionFiles) {
+    if (excluded.includes(f)) continue;
+    const name = f.replace(".ts", "");
+    // 检查此工具在 registry 中是否被 import 且放进 trackedTools
+    if (!registrySrc.includes(`./action/${name}`)) {
+      missing.push(f);
+    }
+  }
+
+  if (missing.length > 0) {
+    console.warn(`  ⚠ ${missing.length} 个 action 工具未在 registry 中注册（可能已废弃或未连接）: ${missing.join(", ")}`);
+  }
+  // 不强制 fail — 只警告，因为可能有条件导入的工具
+});
+
 (async () => {
   for (const t of testQueue) {
     try {

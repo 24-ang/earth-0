@@ -238,7 +238,7 @@ export function getPlayerNameParts() {
     } catch (e) { console.error("getPlayerNameParts: 解析主角配置文件失败", e); }
   }
 
-  const defaultProtagonist = config?.default_protagonist || { full: "比企谷八幡", surname: "比企谷", givenName: "八幡" };
+  const defaultProtagonist = config?.default_protagonist || { full: gameState.player?.name || "维", surname: "维", givenName: "" };
   const full = gameState.player?.name || defaultProtagonist.full;
 
   if (full === defaultProtagonist.full) {

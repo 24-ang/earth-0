@@ -99,9 +99,30 @@ export function isSameLocation(loc1: string, loc2: string): boolean {
   const c2 = normalizeLocationName(loc2);
   if (c1 === c2) return true;
 
-  if (c1.includes("总武") && c2.includes("总武")) return true;
+  // 同址判定：两地点共享 fromorg 的 location_contains 值
+  // （从 worldpacks/{w}/orgs/ 读取，无需硬编码地点名）
+  if (!_orgCache) {
+    _orgCache = {};
+    const dirs = [path.resolve(process.cwd(), "worldpacks", activeWorldName, "orgs"), path.resolve(process.cwd(), "data", "orgs")];
+    for (const dir of dirs) {
+      if (!fs.existsSync(dir)) continue;
+      for (const f of fs.readdirSync(dir)) {
+        if (!f.endsWith(".json") || f.startsWith("_")) continue;
+        try { const arr = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")); for (const e of (Array.isArray(arr)?arr:[arr])) { if (e.org) _orgCache[e.org] = e; } } catch (_) {}
+      }
+    }
+  }
+  if (_orgCache) {
+    for (const orgData of Object.values(_orgCache)) {
+      const lc = (orgData as any).match_rules?.location_contains;
+      if (lc && c1.includes(lc) && c2.includes(lc)) return true;
+    }
+  }
   return false;
 }
+
+// 组织 match_rules 缓存（isSameLocation + npcBelongsToOrg 共享，懒加载）
+let _orgCache: Record<string, any> | null = null;
 
 // --- 模块级游戏状态（单例，整个 session 一份） ---
 const STATE_DIR = path.resolve(process.cwd(), "state");
@@ -1301,7 +1322,7 @@ export async function buildStatePrompt(): Promise<string> {
     sceneHints.push("商业区: buy_item, sell_item, work_job, transfer_item");
   }
   // 在学校/社交场所
-  if (p.location.includes("校") || p.location.includes("部室") || p.location.includes("侍奉部")) {
+  if (p.location.includes("校") || p.location.includes("部室")) {
     sceneHints.push("社交场景: adjust_relation, lookup_character, set_npc_outfit, add_memory_tag, post_sns, browse_sns");
   }
 
@@ -3051,16 +3072,45 @@ async function applyOrgEffects(): Promise<void> {
 
 /** P1 启发式：判断 NPC 是否属于某组织 */
 export function npcBelongsToOrg(name: string, npc: NPCRuntimeState, org: string): boolean {
-  // Check schedule_group for membership
   const src = (characters as any[]).find((c: any) => c.name === name);
   const group = npc.scheduleGroup || src?.schedule_group || "";
   const defLoc = src?.default_location || "";
 
-  // Heuristic: schedule_group contains org-like names OR default_location contains org substring
-  if (group.includes(org.replace("总武", "")) || defLoc.includes(org.replace("高", ""))) return true;
-  // Generic student/teacher groups: check if org is a school and NPC is in school-like schedule
-  if ((group === "学生" || group === "高校生" || group === "总武高学生" || group === "总武高教师") && org.includes("高")) return true;
-  if ((group === "教师" || group === "总武高教师") && org.includes("高")) return true;
+  const orgLower = org.toLowerCase();
+  const groupLower = group.toLowerCase();
+  const defLocLower = defLoc.toLowerCase();
+
+  // 1. 直接同名匹配
+  if (groupLower.includes(orgLower) || defLocLower.includes(orgLower)) return true;
+  if (orgLower.includes(groupLower) || orgLower.includes(defLocLower)) return true;
+
+  // 2. 组织 match_rules 匹配
+  if (!_orgCache) {
+    _orgCache = {};
+    const dirsToScan = [
+      path.resolve(process.cwd(), "worldpacks", activeWorldName, "orgs"),
+      path.resolve(process.cwd(), "data", "orgs"),
+    ];
+    for (const dir of dirsToScan) {
+      if (!fs.existsSync(dir)) continue;
+      for (const f of fs.readdirSync(dir)) {
+        if (!f.endsWith(".json") || f.startsWith("_")) continue;
+        try {
+          const entries = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"));
+          for (const entry of (Array.isArray(entries) ? entries : [entries])) {
+            if (entry.org) _orgCache[entry.org] = entry;
+          }
+        } catch (_) {}
+      }
+    }
+  }
+  const orgData = _orgCache[org];
+  if (orgData?.match_rules?.schedule_groups) {
+    if (orgData.match_rules.schedule_groups.some((sg: string) => sg.toLowerCase() === groupLower)) return true;
+  }
+  if (orgData?.match_rules?.location_contains) {
+    if (defLocLower.includes(orgData.match_rules.location_contains.toLowerCase())) return true;
+  }
 
   return false;
 }

@@ -123,9 +123,17 @@ function withToolTracking(tool: any) {
     ...tool,
     async execute(id: string, params: any, signal: any, onUpdate: any, ctx: any) {
       // lazy-import to avoid circular deps at module load time
-      const { pushToolCall, drainToolCalls } = await import("../engine/state.ts");
+      const { pushToolCall, saveState } = await import("../engine/state.ts");
       pushToolCall(tool.name);
-      return origExec(id, params, signal, onUpdate, ctx);
+      try {
+        const result = await origExec(id, params, signal, onUpdate, ctx);
+        // 自动落盘：工具成功执行后确保状态持久化
+        try { saveState(); } catch (_) {}
+        return result;
+      } catch (e: any) {
+        console.error(`[tool:${tool.name}] execute failed:`, e.message || e);
+        return { content: [{ type: "text", text: `❌ ${tool.name} 执行失败: ${e.message || String(e)}` }], details: {} };
+      }
     },
   };
 }
