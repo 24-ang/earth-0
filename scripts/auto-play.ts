@@ -343,13 +343,18 @@ async function main() {
     const directorsNote = [
       "以下是引擎本回合的结算结果。把它转成叙事。不要添加引擎没有产生的内容。",
       "",
-      `玩家做了: ${playerAction}`,
-      movedNote,
+      `【世界状态】`,
+      `日期: ${gameState.time.game_date} | 时段: ${timeLabel} | 天气: ${weather}`,
+      `主角: ${gameState.player.name}（${gameState.player.age}岁 ${gameState.player.gender}）`,
       `当前位置: ${gameState.player.location}`,
       `在场人物: ${nearbyNames.length > 0 ? nearbyNames.join("、") : "无"}`,
+      "",
+      `【本回合事件】`,
+      `玩家做了: ${playerAction}`,
+      movedNote,
       npcNote,
       "",
-      "第三人称，100-200字。对话用「」。不写心理。不写比喻。",
+      `第三人称，100-200字。对话用「」。不写心理。不写比喻。主角名必须是"${gameState.player.name}"。`,
     ].filter(Boolean).join("\n");
 
     const renderPrompt = directorsNote;
