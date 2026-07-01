@@ -111,29 +111,54 @@ const SAVES_DIR = path.join(STATE_DIR, "saves");
 const MAX_BACKUPS = 5;
 const AGENTS_DIR = path.resolve(process.cwd(), "agents");
 
+/** 加载 worldpack 目录中的 JSON 文件（每个文件一个 entry），合并为 Record。无目录则回退读平面文件 */
+function loadWorldpackDirRecursive(dirName: string, flatFileName: string): Record<string, any> {
+  const result: Record<string, any> = {};
+  // 1. 优先扫 worldpacks/{world}/{dirName}/ 目录
+  const wpDir = path.resolve(process.cwd(), "worldpacks", activeWorldName, dirName);
+  let loaded = false;
+  if (fs.existsSync(wpDir)) {
+    for (const f of fs.readdirSync(wpDir)) {
+      if (!f.endsWith(".json") || f.startsWith("_")) continue;
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(wpDir, f), "utf-8"));
+        Object.assign(result, data);
+        loaded = true;
+      } catch (e) { console.error(`loadWorldpackDirRecursive: 解析 ${dirName}/${f} 失败`, e); }
+    }
+  }
+  if (loaded) return result;
+  // 2. 回退：读 worldpacks/{world}/{flatFileName}
+  const wpFlat = path.resolve(process.cwd(), "worldpacks", activeWorldName, flatFileName);
+  if (fs.existsSync(wpFlat)) {
+    try { return JSON.parse(fs.readFileSync(wpFlat, "utf-8")); }
+    catch (e) { console.error(`loadWorldpackDirRecursive: 解析 worldpack ${flatFileName} 失败`, e); }
+  }
+  // 3. 最终兜底：data/{flatFileName}
+  const dataFlat = path.resolve(process.cwd(), "data", flatFileName);
+  if (fs.existsSync(dataFlat)) {
+    try { return JSON.parse(fs.readFileSync(dataFlat, "utf-8")); }
+    catch (e) { console.error(`loadWorldpackDirRecursive: 解析 data/${flatFileName} 失败`, e); }
+  }
+  return result;
+}
+
 export let gameState: GameState = createInitialState();
 
 function createInitialState(): GameState {
-  // 加载世界级秘密，worldpack 优先
-  const worldSecretsWorldpackPath = path.resolve(process.cwd(), "worldpacks", activeWorldName, "world_secrets.json");
-  const worldSecretsDataPath = path.resolve(process.cwd(), "data", "world_secrets.json");
-  const worldSecretsPath = fs.existsSync(worldSecretsWorldpackPath) ? worldSecretsWorldpackPath : worldSecretsDataPath;
+  // 加载世界级秘密 — 优先扫 worldpacks/{w}/secrets/ 目录，回退平面文件
   let initRevealLog: RevealEntry[] = [];
-  if (fs.existsSync(worldSecretsPath)) {
-    try {
-      const ws = JSON.parse(fs.readFileSync(worldSecretsPath, "utf-8"));
-      for (const [_, sec] of Object.entries(ws)) {
-        const s = sec as any;
-        initRevealLog.push({
-          id: s.id,
-          content: s.content,
-          fromLevel: s.fromLevel || "hidden",
-          toLevel: s.toLevel || "protagonist_known",
-          revealedAt: INITIAL_TIME_STATE.game_date,
-          turn: 0
-        });
-      }
-    } catch (e) { console.error("createInitialState: 解析 world_secrets.json 失败", e); }
+  const ws = loadWorldpackDirRecursive("secrets", "world_secrets.json");
+  for (const [_, sec] of Object.entries(ws)) {
+    const s = sec as any;
+    initRevealLog.push({
+      id: s.id,
+      content: s.content,
+      fromLevel: s.fromLevel || "hidden",
+      toLevel: s.toLevel || "protagonist_known",
+      revealedAt: INITIAL_TIME_STATE.game_date,
+      turn: 0
+    });
   }
 
   return {
@@ -3071,18 +3096,9 @@ export function clearRegionContextCache(): void {
 
 /** 根据玩家位置匹配 region_contexts.json 中的区域设定，自动注入到 prompt */
 export function getRegionContext(location: string): string {
-  // 懒加载，worldpack 优先
+  // 懒加载 — 优先扫 worldpacks/{w}/locations/ 目录，回退平面文件
   if (!_regionContexts) {
-    // 优先读 worldpacks/{activeWorld}/region_contexts.json
-    const worldpackPath = path.resolve(process.cwd(), "worldpacks", activeWorldName, "region_contexts.json");
-    const dataPath = path.resolve(process.cwd(), "data", "region_contexts.json");
-    const rcPath = fs.existsSync(worldpackPath) ? worldpackPath : dataPath;
-    if (fs.existsSync(rcPath)) {
-      try { _regionContexts = JSON.parse(fs.readFileSync(rcPath, "utf-8")); }
-      catch (e) { console.error("getRegionContext: 解析 region_contexts.json 失败", e); _regionContexts = {}; }
-    } else {
-      _regionContexts = {};
-    }
+    _regionContexts = loadWorldpackDirRecursive("locations", "region_contexts.json");
   }
 
   const matched: string[] = [];
