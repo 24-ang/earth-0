@@ -1,0 +1,102 @@
+{
+  "id": "yukino_sports_clubroom",
+  "title": "体育祭·部室",
+  "source": "同人IF·纯爱",
+  "trigger": {
+    "min_day": 310,
+    "location": "侍奉部",
+    "time_of_day": ["evening"],
+    "flags": {
+      "yukino_library_intimate": true,
+      "sports_prep_helped": true,
+      "sports_festival_complete": true
+    },
+    "affection": {
+      "雪之下雪乃": 65
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 2,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "体育祭结束后，整个校园重归寂静。{{player.surname}}路过特别大楼时，发现侍奉部的灯还亮着——雪乃正独自坐在长椅上揉捏小腿，身上的白色体操服还没换下，发型略显散乱。看见{{player.surname}}推门进来，她没有停下动作，只是微微向旁边靠了靠，挪出了一段空位。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "sports_encounter",
+      "label": "社办的落日",
+      "prompt": "雪乃一边揉捏着有些发酸的小腿肌肉，一边询问{{player.surname}}累不累。夕阳把社办教室里照得一片橘红。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "坐到她身边，把她发酸的小腿架在自己的膝盖上，伸手帮她按摩",
+          "effects": {
+            "flags": {
+              "sports_massage_started": true
+            }
+          },
+          "next_beat": "sports_gym_sex"
+        },
+        {
+          "pick": "关切地叮嘱她早点休息，帮她收拾好随身物品后一起锁门回家",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 5
+            },
+            "flags": {
+              "sports_massage_declined": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "sports_gym_sex",
+      "label": "体操服的温度",
+      "prompt": "随着按摩动作一路上滑，手指滑入了她深蓝色的运动短裤边缘。雪乃的呼吸明显变得急促。她忽然直起身，直视着{{player.surname}}，自己动手脱掉了白色的体操服上衣，露出沾染着汗水的运动内衣。接着，她有些粗鲁地推倒{{player.surname}}，跨坐上来自己缓缓引导老二吞了进去。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "搂住她纤细的腰肢，随她的动作向上顶入，享受温暖的骑乘",
+          "effects": {},
+          "next_beat": "sports_gym_finish"
+        }
+      ]
+    },
+    {
+      "id": "sports_gym_finish",
+      "label": "汗水与余温",
+      "prompt": "在长椅的激烈摇晃中，雪乃紧咬嘴唇趴在{{player.surname}}胸口迎来了高潮抽搐，耳语微喘：‘……这间教室，现在闻起来不一样了。’随后{{player.surname}}翻身换作正常位，尽数射精在她的深处。完事后，两人拥挤在窄小的长椅上温存。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "抱着她休息一会儿，随后帮她冲洗并换好校服",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 15
+            },
+            "flags": {
+              "yukino_sports_intimate": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部", "乳", "唇"],
+              "thoughts": ["在体育祭后的侍奉部里，抱着穿着体操服的她激烈交合，看她完全依偎在怀中倾听心跳..."],
+              "duration": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "侍奉部的灯最终熄灭了。雪乃独自走在漆黑的走廊里，锁好了门。操场上被风吹得猎猎作响的布幔显得格外冷清。她最后望了一眼社办挂牌，默默离去。",
+    "effects": {
+      "flags": {
+        "yukino_sports_missed": true
+      }
+    }
+  }
+}

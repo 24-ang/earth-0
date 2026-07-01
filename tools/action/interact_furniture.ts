@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "interact_furniture", label: "家具交互",
-    description: "与场景中的家具互动。furniture:家具名。action:坐/躺/睡/查看/使用...。不在目录的家具也可交互(泛用效果)。不限制LLM叙事。",
+    description: "家具互动。action: 坐|躺|睡|查看|使用。不限制LLM叙事。",
     parameters: Type.Object({
       furniture: Type.String({ description: "家具名称，如'床'、'椅子'" }),
       action: Type.String({ description: "动作，如'睡觉'、'坐下'。不填则列出可选动作。" }),

@@ -1,0 +1,82 @@
+{
+  "id": "yukino_brainwash_public",
+  "title": "洗脑·公开风险",
+  "source": "同人IF·洗脑",
+  "trigger": {
+    "min_day": 150,
+    "location": "图书馆",
+    "time_of_day": ["afternoon"],
+    "flags": {
+      "yukino_brainwash_duty": true
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 3,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "图书馆最深处的书架间。雪乃正踩在椅子上找参考书，看到{{player.surname}}走近，便将书塞了回去：‘这里虽然僻静，但随时可能有人经过。如果现在需要进行侍奉，我可以尽量保持无声。’她说着，已经拉开了领结的缎带。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "public_encounter",
+      "label": "书架间的提议",
+      "prompt": "雪乃双手撑着书架，面色依旧清冷，仿佛在讨论学术问题。但在改写的常识驱使下，她毫无顾忌地准备在公共场所献上身体。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "拉着她退入书架最深处，将她的百褶裙掀起，从后方推入",
+          "effects": {
+            "flags": {
+              "public_action_started": true
+            }
+          },
+          "next_beat": "public_sex_action"
+        },
+        {
+          "pick": "上前帮她把领结重新系好，轻声告诉她在这里太不安全，下次再说",
+          "effects": {
+            "flags": {
+              "public_action_declined": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "public_sex_action",
+      "label": "无声的磨练",
+      "prompt": "在偶有脚步声自隔壁通道掠过的刺激下，雪乃死死咬住制服袖口，将所有娇吟咽下喉咙。有学生走近在隔壁找书，雪乃随手抽了一本参考书翻开，身体承受着{{player.surname}}在裙底深处缓慢的抽送，假装若无其事地阅读。路人离去后，她放回书本回头轻声说：‘刚才那本不合胃口，请继续。’在极致的抽送和剧烈的收缩后，精液尽数注入了内部。她淡定地整理好衣角。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "看她若无其事地在底层垃圾桶处理完纸巾，平静地和她道别离开",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 0
+            },
+            "flags": {
+              "yukino_brainwash_public": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部"],
+              "thoughts": ["在有极大曝光风险的图书馆书架深处接受了她的无声性侍奉，她的认知里义务完全高于了羞耻感..."],
+              "duration": 20
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "雪乃在图书馆借走了那本参考书，登记卡上的还书日期是两周后。靠窗的位置只留下一缕淡淡的香气。",
+    "effects": {
+      "flags": {
+        "yukino_brainwash_public_missed": true
+      }
+    }
+  }
+}

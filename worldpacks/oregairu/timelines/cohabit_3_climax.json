@@ -1,0 +1,138 @@
+{
+  "id": "if_yukino_cohabit_climax",
+  "title": "同居终局与小町怀孕",
+  "source": "同人IF·同居",
+  "trigger": {
+    "min_day": 370,
+    "max_day": 376,
+    "location": "家_玩家房间",
+    "flags": {
+      "cohabit_fever_occurred": true
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 5,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "在雪乃搬回自己公寓的前一晚。晚饭桌上，小町突然红着脸宣布她怀上了隔壁班男生的骨肉，比企谷一家陷入尴尬沉寂。比企谷猿畠决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "cohabit_climax_dinner",
+      "label": "家庭的重磅宣告",
+      "prompt": "小町的怀孕宣告让餐桌一片沉寂。比企谷猿畠想出以聘请雪乃永久留宿担任家庭教师兼小町保姆的理由，借此把雪乃永远留在比企谷家作为自己的情妇。看着局促的雪乃，决定：",
+      "outcomes": [
+        {
+          "pick": "[比企谷猿畠的建议] 正式提出这个提议，并在与雪乃复杂的目光对视中，默默达成默契让其永久留宿",
+          "effects": {
+            "flags": {
+              "cohabit_climax_completed": true
+            },
+            "affection": {
+              "雪之下雪乃": 15,
+              "比企谷小町": 10
+            }
+          },
+          "next_beat": "cohabit_climax_kawasaki"
+        },
+        {
+          "pick": "[比企谷八幡的反对] 激烈反驳父亲，指责这会剥夺雪之下的个人空间与自由，当场拉起雪乃的手离开餐桌",
+          "effects": {
+            "flags": {
+              "cohabit_climax_blocked": true
+            },
+            "affection": {
+              "雪之下雪乃": 20
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[雪之下雪乃的谢绝] 雪乃以极其冷静的语气婉言谢绝，坚持自己由于学业繁重不便胜任家教，并决定按时搬走",
+          "effects": {
+            "flags": {
+              "cohabit_climax_declined": true
+            },
+            "affection": {
+              "雪之下雪乃": 5
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "cohabit_climax_kawasaki",
+      "label": "材木座的强索毕业",
+      "prompt": "饭后深夜，比企谷猿畠在千叶街角偶遇材木座用伪造的签名要挟川崎沙希，并强行将其带入情趣旅馆。决定：",
+      "outcomes": [
+        {
+          "pick": "[比企谷猿畠的旁观] 默默在门缝看着不可一世的川崎沙希被胖子材木座肆意揉捏并被夺走初夜",
+          "effects": {
+            "flags": {
+              "kawasaki_corrupted": true
+            },
+            "sex": {
+              "npc": "川崎沙希",
+              "partner": "材木座义辉",
+              "touched_parts": ["胸", "秘部"],
+              "thoughts": ["被材木座那个死胖子以弟弟的书面签名要挟，在充满屈辱的抽泣声中被他顶破了处女之壁，沦为了他的玩物……"],
+              "duration": 40
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷猿畠的截胡] 推门进屋吓跑胆小的材木座，并以签名收条为要挟，自己爬上床夺走了沙希的初夜",
+          "effects": {
+            "flags": {
+              "kawasaki_corrupted": true,
+              "kawasaki_lost_to_saruhata": true
+            },
+            "affection": {
+              "川崎沙希": -25
+            },
+            "sex": {
+              "npc": "川崎沙希",
+              "partner": "比企谷猿畠",
+              "touched_parts": ["胸", "秘部", "臀"],
+              "thoughts": ["为了弟弟的签名，竟然被那个胖材木座的主角父亲捡了便宜，被他用粗大肮脏的阴茎反复贯穿，交出了宝贵的第一次……呜呜……"],
+              "duration": 45
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "[比企谷八幡的拼命] 八幡夜归碰见材木座拉扯川崎沙希，抄起路边垃圾桶与材木座拼命，拼死救下了川崎沙希！",
+          "effects": {
+            "flags": {
+              "kawasaki_saved_by_hachiman": true
+            },
+            "affection": {
+              "川崎沙希": 30
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "同居最终结束，小町怀了骨肉，而雪乃被比企谷父子留在比企谷家；川崎沙希也在后台被材木座以假签名逼迫完成了“童贞毕业”……",
+    "effects": {
+      "flags": {
+        "cohabit_climax_completed": true,
+        "kawasaki_corrupted": true
+      },
+      "sex": {
+        "npc": "川崎沙希",
+        "partner": "材木座义辉",
+        "touched_parts": ["秘部"],
+        "thoughts": ["在旅馆被材木座逼迫交出了初次，被材木座那个胖子疯狂地蹂躏了……"],
+        "duration": 40
+      }
+    }
+  }
+}

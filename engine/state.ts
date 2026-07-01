@@ -304,28 +304,41 @@ function createDefaultPlayer(): PlayerState {
 }
 
 // --- 持久化 ---
+/** 原子写入：先写 .tmp，再 rename（M1 fix） */
+function atomicWrite(filepath: string, data: string): void {
+  const tmp = filepath + ".tmp";
+  fs.writeFileSync(tmp, data);
+  try {
+    fs.renameSync(tmp, filepath);
+  } catch (_) {
+    // rename 跨卷可能失败 → copy+delete 兜底
+    fs.copyFileSync(tmp, filepath);
+    try { fs.unlinkSync(tmp); } catch (_) {}
+  }
+}
+
 export function saveState(filepath?: string): void {
   const fp = filepath ?? STATE_FILE;
   const targetDir = path.dirname(fp);
   fs.mkdirSync(targetDir, { recursive: true });
-  
+
   // 房间修改也持久化，保存到 session 目录下的 rooms_delta.json，而不覆写 data/rooms.json
   const roomsDeltaPath = path.join(targetDir, "rooms_delta.json");
-  fs.writeFileSync(roomsDeltaPath, JSON.stringify(ROOMS, null, 2));
-  
+  atomicWrite(roomsDeltaPath, JSON.stringify(ROOMS, null, 2));
+
   // 动态角色持久化
   const dcPath = path.join(targetDir, "dynamic_characters.json");
-  fs.writeFileSync(dcPath, JSON.stringify(DYNAMIC_CHARACTERS, null, 2));
+  atomicWrite(dcPath, JSON.stringify(DYNAMIC_CHARACTERS, null, 2));
 
   // 动态地点持久化
   const deltaPath = path.join(targetDir, "locations_delta.json");
-  fs.writeFileSync(deltaPath, JSON.stringify(LOCATIONS_DELTA, null, 2));
+  atomicWrite(deltaPath, JSON.stringify(LOCATIONS_DELTA, null, 2));
 
-  // 家具容器持久化（抽屉/柜子里的东西）
+  // 家具容器持久化
   const fcPath = path.join(targetDir, "furniture_containers.json");
-  fs.writeFileSync(fcPath, JSON.stringify(_furnitureContainerStore, null, 2));
+  atomicWrite(fcPath, JSON.stringify(_furnitureContainerStore, null, 2));
 
-  fs.writeFileSync(fp, JSON.stringify(gameState, null, 2));
+  atomicWrite(fp, JSON.stringify(gameState, null, 2));
 }
 
 export function loadState(filepath?: string): boolean {
@@ -526,20 +539,29 @@ export function listSaves(): { name: string; date: string; turn: number; locatio
 /** 备份当前存档（commit_turn 前自动调用），滚动保留最近 N 个 */
 export function backupBeforeTurn(): void {
   fs.mkdirSync(TURN_BACKUP_DIR, { recursive: true });
+  // M2 fix: 每个 turn 用子目录存全部 5 个文件（session.json + 4 delta）
   for (let i = MAX_BACKUPS - 1; i >= 1; i--) {
-    const older = path.join(TURN_BACKUP_DIR, `turn_${i}.json`);
-    const newer = path.join(TURN_BACKUP_DIR, `turn_${i + 1}.json`);
+    const older = path.join(TURN_BACKUP_DIR, `turn_${i}`);
+    const newer = path.join(TURN_BACKUP_DIR, `turn_${i + 1}`);
     if (fs.existsSync(older)) {
-      try { fs.renameSync(older, newer); } catch (_) { try { fs.copyFileSync(older, newer); fs.unlinkSync(older); } catch (_) {} }
+      try {
+        if (fs.existsSync(newer)) { fs.rmSync(newer, { recursive: true, force: true }); }
+        fs.renameSync(older, newer);
+      } catch (_) {
+        try {
+          fs.cpSync(older, newer, { recursive: true });
+          fs.rmSync(older, { recursive: true, force: true });
+        } catch (_) {}
+      }
     }
   }
-  saveState(path.join(TURN_BACKUP_DIR, "turn_1.json"));
+  saveState(path.join(TURN_BACKUP_DIR, "turn_1", "session.json"));
 }
 
 /** 还原到倒数第 N 回合的存档（1=上一回合） */
 export function restoreLastTurn(n: number = 1): boolean {
   const safeN = Math.max(1, Math.min(n, MAX_BACKUPS));
-  const fp = path.join(TURN_BACKUP_DIR, `turn_${safeN}.json`);
+  const fp = path.join(TURN_BACKUP_DIR, `turn_${safeN}`, "session.json");
   if (!fs.existsSync(fp)) return false;
   return loadState(fp);
 }
@@ -548,7 +570,7 @@ export function restoreLastTurn(n: number = 1): boolean {
 export function listBackups(): number[] {
   const result: number[] = [];
   for (let i = 1; i <= MAX_BACKUPS; i++) {
-    if (fs.existsSync(path.join(TURN_BACKUP_DIR, `turn_${i}.json`))) result.push(i);
+    if (fs.existsSync(path.join(TURN_BACKUP_DIR, `turn_${i}`, "session.json"))) result.push(i);
   }
   return result;
 }

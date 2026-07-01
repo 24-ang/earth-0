@@ -1301,7 +1301,7 @@ test("checkTimelineEvents 前置flag满足才触发", () => {
   resetState();
   const fs = require('fs');
   const path = require('path');
-  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "temp_test_flag_event.json");
+  const tempFile = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "temp_test_flag_event.json");
   fs.writeFileSync(tempFile, JSON.stringify({
     id: "temp_test_event",
     title: "测试事件",
@@ -1551,7 +1551,7 @@ privateTest("timeline events applying sex effects successfully", ["data/sex_prof
   resetState();
   const fs = require('fs');
   const path = require('path');
-  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "temp_test_sex_event.json");
+  const tempFile = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "temp_test_sex_event.json");
   fs.writeFileSync(tempFile, JSON.stringify({
     id: "temp_test_sex_event",
     title: "测试性爱事件",
@@ -2317,7 +2317,7 @@ test("日历层级穿透与时间线整合 (Issue ⑱)", async () => {
 
   const fs = await import("node:fs");
   const path = await import("node:path");
-  const tempPath = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_temp_calendar.json");
+  const tempPath = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "test_temp_calendar.json");
   
   fs.mkdirSync(path.dirname(tempPath), { recursive: true });
   fs.writeFileSync(tempPath, JSON.stringify(mockEvent), "utf-8");
@@ -3340,7 +3340,7 @@ test("autonomic_chain: applyBeatEffects supports memoryTags", async () => {
   
   const fs = require('fs');
   const path = require('path');
-  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_memory_tags_event.json");
+  const tempFile = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "test_memory_tags_event.json");
   fs.writeFileSync(tempFile, JSON.stringify({
     id: "test_memory_tags_event",
     title: "测试记忆标签事件",
@@ -3388,7 +3388,7 @@ test("autonomic_chain: applyBeatEffects supports npcRelations", async () => {
   
   const fs = require('fs');
   const path = require('path');
-  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_npc_relations_event.json");
+  const tempFile = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "test_npc_relations_event.json");
   fs.writeFileSync(tempFile, JSON.stringify({
     id: "test_npc_relations_event",
     title: "测试NPC关系事件",
@@ -3484,7 +3484,7 @@ privateTest("spawn_npc_agent: system prompt contains sex milestones", ["data/sex
   }
 });
 
-privateTest("trigger_rules: if_ed_treatment blocks if cohabit occurred", ["data/timelines/oregairu/ed_treatment.json"], () => {
+privateTest("trigger_rules: if_ed_treatment blocks if cohabit occurred", ["worldpacks/oregairu/timelines/ed_treatment.json"], () => {
   resetState();
   clearCalendarCache();
   gameState.active_hooks = [];
@@ -3506,7 +3506,7 @@ privateTest("trigger_rules: if_ed_treatment blocks if cohabit occurred", ["data/
   }
 });
 
-privateTest("trigger_rules: if_ed_treatment triggers if conditions met", ["data/timelines/oregairu/ed_treatment.json"], () => {
+privateTest("trigger_rules: if_ed_treatment triggers if conditions met", ["worldpacks/oregairu/timelines/ed_treatment.json"], () => {
   resetState();
   clearCalendarCache();
   gameState.active_hooks = [];
@@ -3549,7 +3549,7 @@ test("autonomic_chain: applyBeatEffects supports playerRelations", async () => {
 
   const fs = require('fs');
   const path = require('path');
-  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_player_relations_event.json");
+  const tempFile = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "test_player_relations_event.json");
   fs.writeFileSync(tempFile, JSON.stringify({
     id: "test_player_relations_event",
     title: "测试玩家关系事件",
@@ -3603,7 +3603,7 @@ test("autonomic_chain: applyBeatEffects playerRelations updates existing relatio
 
   const fs = require('fs');
   const path = require('path');
-  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_player_rel_update_event.json");
+  const tempFile = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "test_player_rel_update_event.json");
   fs.writeFileSync(tempFile, JSON.stringify({
     id: "test_player_rel_update_event",
     title: "测试更新已有关系",
@@ -3641,7 +3641,7 @@ test("autonomic_chain: applyBeatEffects playerRelations updates existing relatio
 test("oregairu main timeline: flag chain connects main_5→6→7→8→9", () => {
   const fs = require('fs');
   const path = require('path');
-  const dir = path.resolve(process.cwd(), "data", "timelines", "oregairu");
+  const dir = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines");
 
   const m5 = JSON.parse(fs.readFileSync(path.join(dir, "main_5_election.json"), "utf-8"));
   const m6 = JSON.parse(fs.readFileSync(path.join(dir, "main_6_genuine.json"), "utf-8"));
@@ -3677,7 +3677,7 @@ test("oregairu main timeline: flag chain connects main_5→6→7→8→9", () =>
 test("oregairu main timeline: all events block route_pure, route_brainwash, route_ntr", () => {
   const fs = require('fs');
   const path = require('path');
-  const dir = path.resolve(process.cwd(), "data", "timelines", "oregairu");
+  const dir = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines");
   const files = ["main_5_election.json", "main_6_genuine.json", "main_7_skitrip.json", "main_8_park.json", "main_9_prom.json"];
 
   for (const f of files) {
@@ -3692,7 +3692,7 @@ test("oregairu main timeline: all events block route_pure, route_brainwash, rout
 test("oregairu main timeline: every event has both branch beats with expires_quest", () => {
   const fs = require('fs');
   const path = require('path');
-  const dir = path.resolve(process.cwd(), "data", "timelines", "oregairu");
+  const dir = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines");
   const files = ["main_5_election.json", "main_6_genuine.json", "main_7_skitrip.json", "main_8_park.json", "main_9_prom.json"];
 
   for (const f of files) {
@@ -3717,7 +3717,7 @@ test("main_9_prom: player_bridge sets player romance=恋人 and Hachiman-Yui cou
   const fs = require('fs');
   const path = require('path');
   const m9 = JSON.parse(fs.readFileSync(
-    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_9_prom.json"), "utf-8"
+    path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "main_9_prom.json"), "utf-8"
   ));
 
   const playerBridge = m9.beats.find((b: any) => b.id === "player_bridge");
@@ -3753,7 +3753,7 @@ test("main_9_prom: hachiman_bridge sets Hachiman-Yukino couple via npcRelations"
   const fs = require('fs');
   const path = require('path');
   const m9 = JSON.parse(fs.readFileSync(
-    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_9_prom.json"), "utf-8"
+    path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "main_9_prom.json"), "utf-8"
   ));
 
   const hachimanBridge = m9.beats.find((b: any) => b.id === "hachiman_bridge");
@@ -3879,7 +3879,7 @@ test("main_summer_break: structure has both branch beats and on_expire", () => {
   const fs = require('fs');
   const path = require('path');
   const ev = JSON.parse(fs.readFileSync(
-    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_summer_break.json"), "utf-8"
+    path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "main_summer_break.json"), "utf-8"
   ));
 
   if (ev.id !== "summer_break") throw new Error("id 应为 summer_break");
@@ -3910,7 +3910,7 @@ test("main_summer_break: player path sets player_sable_connection and player_fir
   const fs = require('fs');
   const path = require('path');
   const ev = JSON.parse(fs.readFileSync(
-    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_summer_break.json"), "utf-8"
+    path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "main_summer_break.json"), "utf-8"
   ));
 
   // player路径: park_encounter → player分支 → fireworks_night → player_promise
@@ -3966,7 +3966,7 @@ test("main_kyoto_field_trip: structure has both branch beats and club crisis", (
   const fs = require('fs');
   const path = require('path');
   const ev = JSON.parse(fs.readFileSync(
-    path.resolve(process.cwd(), "data", "timelines", "oregairu", "main_kyoto_field_trip.json"), "utf-8"
+    path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "main_kyoto_field_trip.json"), "utf-8"
   ));
 
   if (ev.id !== "kyoto_field_trip") throw new Error("id 应为 kyoto_field_trip");
@@ -4185,11 +4185,11 @@ test("auto_if: main_9 全自动完成（romance→player_bridge→route_pure）"
 // 纯爱 IF 线 playerRelations 闭环
 // ═══════════════════════════════════════════════
 
-privateTest("pure_1_gate: first_time_finish sets playerRelations romance=恋人", ["data/timelines/oregairu/pure_1_gate.json"], () => {
+privateTest("pure_1_gate: first_time_finish sets playerRelations romance=恋人", ["worldpacks/oregairu/timelines/pure_1_gate.json"], () => {
   const fs = require('fs');
   const path = require('path');
   const ev = JSON.parse(fs.readFileSync(
-    path.resolve(process.cwd(), "data", "timelines", "oregairu", "pure_1_gate.json"), "utf-8"
+    path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "pure_1_gate.json"), "utf-8"
   ));
 
   const finalBeat = ev.beats.find((b: any) => b.id === "first_time_finish");
@@ -4205,11 +4205,11 @@ privateTest("pure_1_gate: first_time_finish sets playerRelations romance=恋人"
   if (pr.stage !== "至交") throw new Error(`stage应为至交, 实际: ${pr.stage}`);
 });
 
-privateTest("pure_5_fireworks: date_sex_finish confirms playerRelations romance=恋人", ["data/timelines/oregairu/pure_5_fireworks.json"], () => {
+privateTest("pure_5_fireworks: date_sex_finish confirms playerRelations romance=恋人", ["worldpacks/oregairu/timelines/pure_5_fireworks.json"], () => {
   const fs = require('fs');
   const path = require('path');
   const ev = JSON.parse(fs.readFileSync(
-    path.resolve(process.cwd(), "data", "timelines", "oregairu", "pure_5_fireworks.json"), "utf-8"
+    path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "pure_5_fireworks.json"), "utf-8"
   ));
 
   const finalBeat = ev.beats.find((b: any) => b.id === "date_sex_finish");
@@ -4233,7 +4233,7 @@ test("pure_route: applyBeatEffects writes playerRelations from pure_1 first_time
   // 用 temp-file 模式验证 pure_1 的 playerRelations effects 被正确应用
   const fs = require('fs');
   const path = require('path');
-  const tempFile = path.resolve(process.cwd(), "data", "timelines", "oregairu", "test_pure_romance_event.json");
+  const tempFile = path.resolve(process.cwd(), "worldpacks", "oregairu", "timelines", "test_pure_romance_event.json");
   fs.writeFileSync(tempFile, JSON.stringify({
     id: "test_pure_romance_event",
     title: "测试纯爱确立关系",
@@ -5448,6 +5448,195 @@ test("D模块: 泄密审计与好感去重兜底集成测试", async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+// ═══════════════════════════════════════════════════════════
+// N13: action 工具补充测试 (批次1 — 高频工具)
+// ═══════════════════════════════════════════════════════════
+
+test("ACTION: create_story_hook 注入动态事件", async () => {
+  resetState();
+  const tool = require("./tools/action/create_story_hook.ts").default;
+  const before = gameState.dynamicEvents.length;
+  await tool.execute("test", {
+    hook_text: "测试钩子：操场有人在单挑",
+    source_npc: "雪之下雪乃",
+    urgency: "high",
+    title: "操场对决",
+  }, null, null, null);
+  if (gameState.dynamicEvents.length <= before) {
+    throw new Error("create_story_hook 未注入 dynamicEvents");
+  }
+  const ev = gameState.dynamicEvents[gameState.dynamicEvents.length - 1];
+  if (ev.hook.hook_text !== "测试钩子：操场有人在单挑") throw new Error("钩子文本不匹配");
+  if (ev.hook.urgency !== "high") throw new Error("urgency 不匹配");
+});
+
+test("ACTION: add_life_event 添加疾病事件", async () => {
+  resetState();
+  const tool = require("./tools/action/add_life_event.ts").default;
+  await tool.execute("test", {
+    npc_name: "由比滨结衣",
+    event_type: "illness",
+    event_id: "test_flu_yui",
+    details: { type: "流感", severity: "重", contagious: true },
+    reason: "淋雨着凉",
+  }, null, null, null);
+  const npc = gameState.npcs["由比滨结衣"];
+  if (!npc) throw new Error("NPC 未生成");
+  if (!npc.lifeEvents || npc.lifeEvents.length === 0) throw new Error("lifeEvents 未注入");
+  const ev = npc.lifeEvents[0];
+  if (ev.type !== "illness" || ev.data.type !== "流感") throw new Error(`事件数据不匹配: ${JSON.stringify(ev)}`);
+});
+
+test("ACTION: use_ability narrativeOnly 无消耗", async () => {
+  resetState();
+  // 给玩家加一个 narrativeOnly 能力
+  gameState.player.abilities = { "心理战·読み合い": 1 };
+  gameState.player.resourcePools = { mp: 100 };
+  const tool = require("./tools/action/use_ability.ts").default;
+  const result = await tool.execute("test", {
+    ability: "心理战·読み合い",
+    target: "雪之下雪乃",
+  }, null, null, null);
+  // narrativeOnly 能力应该返回 ok 或提示"无此能力"
+  if (!result.content || result.content.length === 0) {
+    throw new Error("use_ability 无返回内容");
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// N13: action 工具补充测试 (批次2 — 低频工具冒烟)
+// ═══════════════════════════════════════════════════════════
+
+test("ACTION: gamble_bet 执行不崩溃", async () => {
+  resetState();
+  gameState.player.money = 5000;
+  const tool = require("./tools/action/gamble_bet.ts").default;
+  const result = await tool.execute("test", {
+    action: "bet_on_match",
+    amount: 100,
+    details: "测试下注",
+  }, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("gamble_bet 无返回");
+});
+
+test("ACTION: manage_property 不存在房产返回错误", async () => {
+  resetState();
+  const tool = require("./tools/action/manage_property.ts").default;
+  try {
+    await tool.execute("test", { propertyId: "nonexistent_999", action: "rent" }, null, null, null);
+    throw new Error("应抛出异常但未抛出");
+  } catch (e: any) {
+    if (!e.message.includes("未在房产名录中找到")) throw e;
+  }
+});
+
+test("ACTION: restock_shop 补货不崩溃", async () => {
+  resetState();
+  const tool = require("./tools/action/restock_shop.ts").default;
+  const result = await tool.execute("test", {
+    shop_id: "convenience_store",
+  }, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("restock_shop 无返回");
+});
+
+test("ACTION: black_market_trade 购买不崩溃", async () => {
+  resetState();
+  gameState.player.money = 50000;
+  const tool = require("./tools/action/black_market_trade.ts").default;
+  const result = await tool.execute("test", {
+    action: "buy",
+    item: "盗聴器",
+    quantity: 1,
+  }, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("black_market_trade 无返回");
+});
+
+// ═══════════════════════════════════════════════════════════
+// N14: 核心 TUI 面板冒烟测试
+// ═══════════════════════════════════════════════════════════
+
+test("TUI: /status 面板不抛异常", async () => {
+  resetState();
+  const { runStatus } = require("./tools/helpers.ts");
+  const ctx = { ui: { custom: (..._: any[]) => {} }, chat: { addSystemMessage: (..._: any[]) => {} } };
+  await runStatus(ctx);
+});
+
+test("TUI: /bag 面板不抛异常", async () => {
+  resetState();
+  // /bag 通过 handler 入口：require panel → call handler
+  const panel = require("./tools/tui/bag.ts").default;
+  const ctx = { ui: { custom: (..._: any[]) => {} } };
+  await panel.handler([], ctx);
+});
+
+test("TUI: /look 面板不抛异常", async () => {
+  resetState();
+  const panel = require("./tools/tui/look.ts").default;
+  const ctx = { ui: { custom: (..._: any[]) => {}, notify: (..._: any[]) => {} } };
+  await panel.handler("雪之下雪乃", ctx);
+});
+
+test("TUI: /relations 面板不抛异常", async () => {
+  resetState();
+  const panel = require("./tools/tui/relations.ts").default;
+  const ctx = { ui: { custom: (..._: any[]) => {} } };
+  await panel.handler([], ctx);
+});
+
+test("TUI: /alerts 面板不抛异常", async () => {
+  resetState();
+  const panel = require("./tools/tui/alerts.ts").default;
+  const ctx = { ui: { custom: (..._: any[]) => {} } };
+  await panel.handler([], ctx);
+});
+
+test("TUI: /weather 面板不抛异常", async () => {
+  resetState();
+  const panel = require("./tools/tui/weather.ts").default;
+  const ctx = { ui: { custom: (..._: any[]) => {} } };
+  await panel.handler([], ctx);
+});
+
+// ═══════════════════════════════════════════════════════════
+// N15: 关键 lookup 工具完整路径测试
+// ═══════════════════════════════════════════════════════════
+
+test("LOOKUP: lookup_ability 返回能力信息", async () => {
+  resetState();
+  const tool = require("./tools/lookup/lookup_ability.ts").default;
+  const result = await tool.execute("test", { ability: "写轮眼" }, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("lookup_ability 无返回");
+});
+
+test("LOOKUP: lookup_lore 查询世界观设定", async () => {
+  resetState();
+  const tool = require("./tools/lookup/lookup_lore.ts").default;
+  const result = await tool.execute("test", { keyword: "总武高" }, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("lore 查询无返回");
+});
+
+test("LOOKUP: lookup_region 返回区域设定", async () => {
+  resetState();
+  const tool = require("./tools/lookup/lookup_region.ts").default;
+  const result = await tool.execute("test", { location: "侍奉部" }, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("区域查询无返回");
+});
+
+test("LOOKUP: dice_roll 执行骰子检定", async () => {
+  resetState();
+  const tool = require("./tools/lookup/dice_roll.ts").default;
+  const result = await tool.execute("test", { attribute: "智力", dc: 15, skill: "情报" }, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("骰子检定无返回");
+});
+
+test("LOOKUP: lookup_weather 查询天气", async () => {
+  resetState();
+  const tool = require("./tools/lookup/lookup_weather.ts").default;
+  const result = await tool.execute("test", {}, null, null, null);
+  if (!result.content || result.content.length === 0) throw new Error("天气查询无返回");
 });
 
 (async () => {

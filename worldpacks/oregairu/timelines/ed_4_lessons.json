@@ -1,0 +1,79 @@
+{
+  "id": "if_ed_treatment_ch4",
+  "title": "隐秘治疗 ch4：拉门背后与调教 (IF)",
+  "source": "春物",
+  "trigger": {
+    "player_stage": "大学/社会",
+    "flags": {
+      "ed_treatment_ch3_completed": true
+    },
+    "min_day": 115,
+    "time_of_day": ["night"]
+  },
+  "expires_days": 10,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "比企谷八幡",
+    "hook_text": "深夜，八幡与雪乃同居的公寓里。八幡神色兴奋又紧张地把{{player.surname}}拉进卧室，提出让你在隔壁的和室睡雪乃，而他将留在隔着纸拉门的房间里窥探。雪乃脸色羞红地顺从躺下。{{player.surname}}决定：",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "sliding_door_choice",
+      "label": "拉门分歧",
+      "prompt": "你躺在雪乃身旁，能清晰地通过拉门的缝隙看到隔壁八幡正紧盯着这里的眼睛。雪乃低声叫你不要看隔壁。此时{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "拉门留下一条缝隙，和雪乃进行69式双向口交，故意让门缝对面的八幡看个清楚",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 15
+            },
+            "flags": {
+              "achievement_yukino_69": true,
+              "achievement_yukino_conditioning_start": true,
+              "ed_treatment_ch4_completed": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["唇", "秘部"],
+              "thoughts": ["在拉门缝隙对面和维互相口交，耻辱与快感突破天际..."],
+              "duration": 40
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "当着八幡的面猛烈地后入抽插雪乃，将她的臀部抬高，让娇喘声在纸门两边毫无阻隔地回荡",
+          "effects": {
+            "affection": {
+              "雪之下雪乃": 20
+            },
+            "flags": {
+              "achievement_yukino_night_ntr": true,
+              "achievement_yukino_behind_door": true,
+              "achievement_yukino_shaped_like_hayama": true,
+              "ed_treatment_ch4_completed": true
+            },
+            "sex": {
+              "npc": "雪之下雪乃",
+              "partner": "维",
+              "touched_parts": ["秘部"],
+              "thoughts": ["隔着一扇纸门当着八幡的面被占有，身体已经被调教成他的形状了..."],
+              "duration": 50
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "effects": {
+      "flags": {
+        "ed_treatment_ch4_missed": true
+      }
+    }
+  }
+}

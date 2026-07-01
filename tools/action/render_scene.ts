@@ -3,7 +3,7 @@ import { generateCompletion, setLastRenderParams, setLastRenderedProse, pi } fro
 
 export default {
     name: "render_scene", label: "渲染场景",
-    description: "结算后渲染叙事正文。调叙事模型产出正文，调用后禁调其他工具。",
+    description: "结算后渲染叙事正文。调用后禁调其他工具。",
     parameters: Type.Object({
       playerAction: Type.String({ description: "玩家实际做了什么" }),
       resolvedChanges: Type.String({ description: "本轮工具落地的变化，无则写'无'" }),

@@ -20,7 +20,7 @@
 - `sell_item`: 出售物品。item(物品名), price(日元)。
 
 ### 回合推进（重要）
-- `commit_turn`: 时间推进。minutes(分钟数)。下课/放学/过夜/等待时调用。不调则 NPC 不移动、天气不变化。
+- `settle_scene`: 回合结算。推进时间+NPC日程+记忆+疲劳+住宅维护。每回合必须调用。旧工具 commit_turn 已废弃。
 
 ### 交互
 - `interact_furniture`: 与家具交互。furniture(家具名), action(坐/躺/开/关/拿/放/藏人/解锁/躲藏/学习/制作/加工)。
