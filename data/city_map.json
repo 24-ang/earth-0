@@ -109,6 +109,10 @@
       ]
     }
   },
+  "travel": {
+    "walk_speed": 80,
+    "description": "步行80m/分钟。跨区需坐电车。末班车约23:30"
+  },
   "connections": {
     "sobu_line": {
       "name": "JR总武线快车",
