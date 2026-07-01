@@ -1,5 +1,21 @@
 # earth-0 项目规则（每次会话自动加载）
 
+## 当前架构速览（2026-07-01）
+
+**四阶段流水线**（`extension.ts`）：
+1. **Phase 1** — 分类 LLM（`phase1-classifier.ts`）→ JSON → 引擎执行工具
+2. **Phase 2** — 引擎自动 spawn NPC agent（独立 LLM，每人自己的记忆/关系）
+3. **交互检测** — LLM mini-judge 判断 NPC 是否 cue 玩家（`detect-mode.ts`）+ GAL 场景边界锁
+4. **Phase 3** — `generateCompletion` 裸 stream 渲染，**物理零工具**。pi agent loop 只 echo
+5. **Phase 4** — 创意层（可选，best-effort）
+
+**新增文件**（本次迭代）：`detect-mode.ts`, `phase3-render.ts`, `phase1-classifier.ts`, `state-location.ts`, `state-grid.ts`, `gm-phase1-classifier.md`, `e2e-test.ts`
+
+**测试铁律**：`npx tsx test.ts`（244 passed）+ `npx tsx e2e-test.ts`（45 passed），改完必跑。
+
+**参考文档**：`docs/decisions.md` #16（三段式演变）、`docs/新建文件夹/earth-0-E-state拆分.md`（拆分进度）。
+`0-groovy-shannon.md` 仅作历史参考——很多条目已过时。做了的事翻 git log 确认文件存在。
+
 ## 必须先读
 
 做任何改动前，先读 **`docs/PHILOSOPHY.md`**——这份文档回答了"为什么 earth-0 是现在这个样子"。具体决策的细节在 `docs/decisions.md`。加新模块参考 `docs/module-template.md`。
