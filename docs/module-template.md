@@ -83,10 +83,12 @@ if (gameState.xxxCondition) {
 
 | 数据类型 | 位置 | 格式 |
 |---------|------|------|
-| 静态配置 | `data/模块名.json` | JSON 对象或数组 |
-| 剧情时间线 | `data/timelines/作品名/弧名.json` | 单条 TimelineEvent |
-| 日历事件 | `data/calendar/作品名.json` | CalendarEntry 数组 |
-| 世界观设定 | `data/lore/作品名_world.json` | { "条目名": { "tags": [...], "text": "..." } } |
+| 静态配置 | `data/模块名.json`（跨世界）或 `worldpacks/{世界}/模块名.json`（世界专属） | JSON 对象或数组 |
+| 剧情时间线 | `worldpacks/{世界}/timelines/弧名.json`（优先）；`data/timelines/` 仅兜底模板 | 单条 TimelineEvent |
+| 日历事件 | `worldpacks/{世界}/calendar.json`（优先）；`data/calendar/` 仅兜底模板 | CalendarEntry 数组 |
+| 区域设定 | `worldpacks/{世界}/locations/区域名.json`（优先）；`data/region_contexts.json` 仅兜底 | 单条目 {keys, context, social_norms?} |
+| 世界秘密 | `worldpacks/{世界}/secrets/秘密名.json`（优先）；`data/world_secrets.json` 仅兜底 | 单条目 {id, content, fromLevel, toLevel} |
+| 组织常识 | `worldpacks/{世界}/orgs/组织名.json`（优先）；`data/orgs/` 仅兜底模板 | 数组，每元素含 org + match_rules + entries |
 | 引擎代码 | `engine/模块名.ts` | TypeScript，export 纯函数 |
 
 ---
@@ -95,7 +97,7 @@ if (gameState.xxxCondition) {
 
 ```bash
 # 每加一个新模块，测试数只增不减
-npx tsx test.ts  # 当前基准：230+ passed, 0 failed
+npx tsx test.ts  # 当前基准：266 passed, 0 failed（+ npx tsx e2e-test.ts 45 passed）
 
 # 新模块至少 2 个测试：
 # - 正常路径
@@ -175,6 +177,6 @@ gamble: ["place_bet", "dice_roll"],
 - [ ] 所有参数有 description
 - [ ] 引擎函数在 `engine/` + 数据在 `data/`
 - [ ] 场景映射已添加
-- [ ] `npx tsx test.ts` 测试数 ≥ 230（在原有基准上只增不减）
+- [ ] `npx tsx test.ts` 测试数 ≥ 266（+ e2e-test.ts 45 passed，在原有基准上只增不减）
 - [ ] 不包含任何硬编码的题材特定内容（人物名、地名、作品名）
-- [ ] 如有世界设定，放入 `data/lore/`
+- [ ] 如有世界设定，放入 `worldpacks/{世界}/` 对应子目录（timelines/calendar/orgs/locations/secrets 等），`data/` 仅兜底
