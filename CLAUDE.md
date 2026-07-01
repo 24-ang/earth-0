@@ -9,7 +9,7 @@
 4. **Phase 3** — `generateCompletion` 裸 stream 渲染，**物理零工具**。pi agent loop 只 echo
 5. **Phase 4** — 创意层（可选，best-effort）
 
-**测试**：`npx tsx test.ts`（244）+ `npx tsx e2e-test.ts`（45），改完必跑，必须全绿。
+**测试**：`npx tsx test.ts`（266）+ `npx tsx e2e-test.ts`（45），改完必跑，必须全绿。
 
 **参考文档**：`docs/decisions.md` #16（三段式演变）、`docs/新建文件夹/earth-0-E-state拆分.md`（拆分进度）。
 `0-groovy-shannon.md` 仅作历史参考——很多条目已过时。做了的事翻 git log 确认文件存在。
@@ -53,12 +53,32 @@
 ## 项目结构速查
 
 ```
-engine/          — 通用算法（types, state, settlement, detect-mode, phase1/3/4-classifier/render/creative, viewpoint, timeline, ...）
-  state-location.ts / state-grid.ts — 拆分自 state.ts 的子模块
-tools/           — LLM 工具 + TUI（action/ lookup/ state/ tui/ registry.ts helpers.ts）
-agents/          — LLM prompt（gm-phase1-classifier 新，gm-contract/rules/start Phase3不加载）
-worldpacks/      — 可切换世界数据包（oregairu 活跃）
-docs/            — PHILOSOPHY.md / decisions.md / AUDIT / COMPARISON / 新建文件夹（设计稿）
-extension.ts     — 四阶段编排入口
-test.ts (244) + e2e-test.ts (45)
+engine/          — 通用算法
+  types.ts           — GameState 类型定义
+  state.ts           — 状态引擎（init/load/save/buildStatePrompt；O6 _orgCache 去硬编码）
+  settlement.ts      — 回合结算（M1+M2 原子写+备份补全）
+  detect-mode.ts     — 交互检测（LLM mini-judge cue 检测 + 关键词兜底）
+  phase1-classifier.ts — Phase 1 分类 LLM + 工具执行 + 回退兜底
+  phase3-render.ts   — Phase 3 渲染 prompt 组装
+  phase4-creative.ts — Phase 4 创意层（可选）
+  viewpoint.ts       — 切镜队列 + 幕间触发
+  timeline.ts        — 双轨制剧情时间线（轻量强化：must_cover/recommended_lore/iconic_lines）
+  state-location.ts / state-grid.ts — 拆分自 state.ts（1a+1b）
+  abilities.ts       — 能力系统 v2（技能树 + 规则系 + 社交技能）
+  sex.ts, combat.ts, dice.ts, phone.ts, weather.ts, lore.ts, housing.ts, ...
+tools/           — LLM 工具 + TUI 命令
+  action/     — 世界修改工具（O8 withToolTracking 自动 try-catch + saveState）
+  lookup/     — 只读查询工具
+  state/      — 状态管理工具
+  tui/        — 终端 UI 面板
+  registry.ts — 工具注册中心 + withToolTracking wrapper（O8）
+agents/          — LLM 系统提示词
+  gm-phase1-classifier.md — Phase 1 分类器规则
+  gm-pre/mode-rpg/gal/sex/voice-novel/turnbased.md — 叙事规则（Phase 3 不加载 gm-contract/rules/start）
+worldpacks/      — 可切换的世界数据包（oregairu/）
+  timelines/(48) locations/(3) orgs/(1) secrets/(1) — 子目录结构（§十四重组）
+data/            — 跨世界通用数据（abilities v2: 18 能力含技能树/规则系/社交）
+docs/            — PHILOSOPHY.md / decisions.md / AUDIT / COMPARISON
+extension.ts     — pi 框架扩展入口（四阶段编排，pi 退化为传输层）
+e2e-test.ts (45) + test.ts (266) — 测试套件
 ```

@@ -338,3 +338,77 @@
 ---
 
 > 最后更新：2026-07-01。新决策随时追加。
+
+---
+
+## 17. 存档原子写 + 子目录备份（M1+M2）
+
+**是什么**：
+1. `saveState()` 改用 `atomicWrite()` — 先写 `.tmp`，再 `fs.renameSync()`（原子操作）。写一半崩溃不损坏主文件。
+2. `backupBeforeTurn()` 改为子目录结构 — 每个 turn 的 5 个文件（session + rooms_delta + dynamic_characters + locations_delta + furniture_containers）全进 `turn_backups/turn_N/` 子目录。`restoreLastTurn()` 从子目录恢复全部 5 个文件。
+
+**为什么**：
+- M1: `fs.writeFileSync` 非原子，写一半崩溃=存档损坏。temp+rename 是 POSIX 的标准做法
+- M2: 旧备份只写 `turn_N.json` 进 `TURN_BACKUP_DIR/`，4 个 delta 文件读的是 `STATE_DIR/` 当前版本→回退只能回主档、delta 回不去
+- 子目录方案：一个子目录 = 一份完整快照，数据和代码分离清晰
+
+**放弃了什么**：原子写的 try-catch 兜底路径（rename 跨卷失败→copyFile+unlink）。
+
+**不要做**：❌ 回退到旧平面文件名备份。
+
+**相关代码**：`engine/state.ts:307-328` (saveState + atomicWrite), `engine/state.ts:540-576` (backupBeforeTurn + restoreLastTurn)
+
+---
+
+## 18. 引擎零硬编码（O6）+ wrapTool 自动保护（O8）
+
+**是什么**：
+1. O6: `isSameLocation()` 不再硬编码 `"总武"` — 改为从 `worldpacks/{w}/orgs/` 读 `match_rules.location_contains`。`npcBelongsToOrg()` 使用 org 的 `match_rules.schedule_groups` 通用匹配。`timeline.ts` 默认主角名改为 `gameState.player.name`。
+2. O8: `withToolTracking()` 包装器增强 — 自动 `try-catch`（报错不崩）+ 自动 `saveState()`（工具成功执行后确保状态落盘）。
+
+**为什么**：
+- 引擎零题材硬编码是核心铁律。旧代码里的 `"总武"` `"总武高学生"` `"侍奉部"` `"比企谷八幡"` 违反该原则
+- 40+ action 工具的 execute 无 try-catch，新增工具易忘 saveState。wrapper 集中保护根治 N7
+
+**放弃了什么**：O2（state.ts↔timeline.ts 循环依赖打破）— 当前 ESM 模式合法无环，118 处引用全改风险>收益。
+
+**不要做**：❌ 在 engine/ 里填回新的硬编码。❌ 绕过 withToolTracking 注册工具。
+
+**相关代码**：`engine/state.ts:100-122` (_orgCache + isSameLocation), `engine/state.ts:3085-3107` (npcBelongsToOrg), `tools/registry.ts:121-133` (withToolTracking with try-catch+saveState)
+
+---
+
+## 19. 设定文件扁平→目录结构（§十四）
+
+**是什么**：5 类世界数据从 `data/` 搬到 `worldpacks/oregairu/`，其中 `region_contexts.json` 和 `world_secrets.json` 从平面文件拆为独立目录：
+- `locations/` — soubu_high / shiranui_dojo / japan（3 文件）
+- `secrets/` — japan_entertainment_underworld（1 文件）
+- `orgs/` — soubu_high（1 文件）
+- `timelines/` — 48 文件
+- `calendar.json` — 单文件
+
+引擎新增 `loadWorldpackDirRecursive(dirName, flatFileName)` — 优先扫目录→回退平面文件→兜底 data/。`getRegionContext()` 和 `createInitialState()` 统一走此接口。
+
+**为什么**：新增区域设定或秘密只需往对应目录扔一个 JSON 文件，不必编辑巨型平面文件。
+
+**不要做**：❌ 删掉 `data/` 下的世界专属文件（TS 静态导入需要兜底模板）。
+
+**相关代码**：`engine/state.ts:116-139` (loadWorldpackDirRecursive), `engine/state.ts:3098` (getRegionContext), `engine/state.ts:150` (createInitialState)
+
+---
+
+## 20. 能力系统 v2 — 技能树 + 规则系 + 社交
+
+**是什么**：`AbilityDef` 扩展 7 个可选字段（type/derives_from/rules/limitations/social_effect/meta_type）。能力从 6 个扁平条目扩展到 18 个带技能树结构：
+- 6 styles → 7 techniques (derives_from 链)
+- 1 stand（规则系：黄金体验 rules + limitations）
+- 1 social（社交技能：心理战·読み合い social_effect）
+- 旧 6 条目完全向后兼容
+
+`buildSkillTree()` → `getTechniquesForStyle()` / `getStyleForTechnique()`。`useAbility()` 注入 rules/limitations/social_effect 到叙事输出。
+
+**为什么**：原扁平数组不支持流派→招式的父子关系，也不支持规则系能力（替身、结界）和社交技能（心理战）。
+
+**不要做**：❌ 把现有 6 个能力的 name 改掉（测试依赖）。
+
+**相关代码**：`engine/abilities.ts:18-36` (AbilityDef), `engine/abilities.ts:79-103` (skill tree), `data/abilities/abilities.json`
