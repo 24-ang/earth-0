@@ -1,0 +1,162 @@
+{
+  "千叶市高中生": {
+    "label": "千叶市立总武高等学校学生",
+    "description": "总武高中在读学生，身穿校服，携带手机和书包，每月有少量零花钱",
+    "funds": 500,
+    "equipment": {
+      "top": {
+        "name": "总武高男生制服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "volume": 0.5
+      },
+      "bottom": {
+        "name": "总武高制服裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "volume": 0.3
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "right_hand",
+        "weight": 0.2,
+        "volume": 0.2
+      },
+      {
+        "name": "书包",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.3,
+        "volume": 0.5
+      }
+    ],
+    "flags": {
+      "student": true,
+      "soubu_high_enrolled": true
+    }
+  },
+  "千叶市上班族": {
+    "label": "千叶市通勤上班族",
+    "description": "千叶市内某会社的普通社员，每天通勤，有一定经济基础",
+    "funds": 5000,
+    "equipment": {
+      "top": {
+        "name": "商务衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.3,
+        "volume": 0.3
+      },
+      "bottom": {
+        "name": "商务西裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "volume": 0.3
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "right_hand",
+        "weight": 0.2,
+        "volume": 0.2
+      },
+      {
+        "name": "公文包",
+        "type": "tool",
+        "slot": "back",
+        "weight": 1.0,
+        "volume": 2.0
+      }
+    ],
+    "flags": {
+      "employed": true,
+      "commuter": true
+    }
+  },
+  "日本首相": {
+    "label": "日本国内阁总理大臣",
+    "description": "日本国第101代内阁总理大臣，掌握最高行政权力",
+    "funds": 50000,
+    "titles": ["日本国内阁总理大臣"],
+    "public_identity": "日本国内阁总理大臣",
+    "equipment": {
+      "top": {
+        "name": "高定西装外套",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.8,
+        "volume": 1.0
+      },
+      "bottom": {
+        "name": "高定西装裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.5,
+        "volume": 0.6
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "right_hand",
+        "weight": 0.2,
+        "volume": 0.2
+      },
+      {
+        "name": "公文包",
+        "type": "tool",
+        "slot": "back",
+        "weight": 1.5,
+        "volume": 3.0
+      }
+    ],
+    "flags": {
+      "employed": true,
+      "government_official": true,
+      "prime_minister": true
+    }
+  },
+  "替身使者": {
+    "label": "替身使者",
+    "description": "被箭选中觉醒替身能力之人，拥有超自然的战斗伙伴",
+    "abilities": {
+      "黄金体验": 1
+    },
+    "resourcePools": {
+      "stand_power": {
+        "current": 50,
+        "max": 50
+      }
+    }
+  },
+  "武道见习": {
+    "label": "武道见习生",
+    "description": "刚入门的武道修行者，掌握基础格斗和闪避技巧，用于示范 skills 字段用法",
+    "funds": 300,
+    "equipment": {
+      "top": {
+        "name": "武道着",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.4,
+        "volume": 0.5
+      }
+    },
+    "skills": {
+      "格斗": 2,
+      "闪避": 1
+    },
+    "flags": {
+      "martial_trainee": true
+    }
+  }
+}

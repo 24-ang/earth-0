@@ -8,6 +8,7 @@ import transferItemTool from "./action/transfer_item.ts";
 import adjustRelationTool from "./state/adjust_relation.ts";
 import grantSkillExpTool from "./state/grant_skill_exp.ts";
 import initGameTool from "./state/init_game.ts";
+import initProfileTool from "./state/init_profile.ts";
 import setFlagsTool from "./state/set_flags.ts";
 import toggleLayer1Tool from "./state/toggle_layer1.ts";
 import toggleAumodeTool from "./state/toggle_aumode.ts";
@@ -49,6 +50,7 @@ import completeTravelTool from "./lookup/complete_travel.ts";
 import travelTool from "./lookup/travel.ts";
 import goToLocationTool from "./lookup/go_to_location.ts";
 import spawnItemTool from "./action/spawn_item.ts";
+import instantiateResidenceTool from "./action/instantiate_residence.ts";
 import inflictDamageTool from "./action/inflict_damage.ts";
 import lookupBodyTool from "./state/lookup_body.ts";
 import lookupLoreTool from "./lookup/lookup_lore.ts";
@@ -131,8 +133,9 @@ function withToolTracking(tool: any) {
         try { saveState(); } catch (_) {}
         return result;
       } catch (e: any) {
-        console.error(`[tool:${tool.name}] execute failed:`, e.message || e);
-        return { content: [{ type: "text", text: `❌ ${tool.name} 执行失败: ${e.message || String(e)}` }], details: {} };
+        const loc = e.stack?.split("\n")?.[1]?.trim() || "";
+        console.error(`[tool:${tool.name}] execute failed:`, e.message || e, loc);
+        return { content: [{ type: "text", text: `❌ ${tool.name} 执行失败: ${e.message || String(e)}${loc ? " (" + loc + ")" : ""}` }], details: {} };
       }
     },
   };
@@ -157,13 +160,14 @@ export function registerAll(pi: ExtensionAPI) {
   // Action + State tools: track for turn log (modify game state)
   const trackedTools = [
     lookupCharacterTool, getStatusTool, transferItemTool, adjustRelationTool,
-    grantSkillExpTool, initGameTool, setFlagsTool, toggleLayer1Tool,
+    grantSkillExpTool, initGameTool, initProfileTool, setFlagsTool, toggleLayer1Tool,
     toggleAumodeTool, _sexTouchTool, _masturbateTool, combatActionTool, stealItemTool,
     equipItemTool, useItemTool, worldInteractTool, settleSceneTool, recordTurnLogTool,
     revealSecretTool, renderSceneTool, spawnNpcAgentTool, spawnNpcAgentsTool,
     createRoomTool, updateReputationTool, scheduleOverrideTool, createCharacterTool,
     setNpcOutfitTool, mountVehicleTool, dismountVehicleTool, buyItemTool,
     identityCheckTool, sellItemTool, monthlyGrowthTool, workJobTool, spawnItemTool,
+    instantiateResidenceTool,
     inflictDamageTool, lookupBodyTool, addMemoryTagTool, setNpcDrivesTool,
     setNpcRelationTool, tableCrudTool, openQuestTool, advanceQuestTool,
     abandonQuestTool, partyManagementTool, addCalendarEventTool, createStoryHookTool, instantiateNpcTool,

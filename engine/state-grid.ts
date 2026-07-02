@@ -10,6 +10,7 @@ import {
   saveState, damageItem, getEquipmentBonus, hasEquipmentEffect,
   cleanupTempNPCs,
   LOCATIONS_DELTA,
+  roomTemplates, residenceTemplates,
 } from "./state.ts";
 import { lookupRegion } from "./router.ts";
 import { attrMod } from "./dice.ts";
@@ -215,31 +216,202 @@ export function movePlayer(direction: string, running: boolean = false): import(
 
 // ── 房间创建 ──
 
-export async function createRoom(roomName: string, width: number, height: number, floor: number): Promise<{ success: boolean; reason: string }> {
-  const cleanName = normalizeLocationName(roomName);
-  if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
-  if (width < 1 || height < 1) return { success: false, reason: "房间尺寸无效" };
-  if (width * height > 10000) return { success: false, reason: `房间面积过大（${width*height}m²，上限10000m²）` };
+/** 内部：创建房间网格（不收费、不耗时）。extend 加墙壁边界、自动出口、氛围/家具。 */
+function createRoomGrid(
+  roomName: string, width: number, height: number, floor: number,
+  opts?: { atmosphere?: string; directions?: Record<string, string>; furniture?: string[]; exitTo?: string }
+): void {
   const cells: any[][] = [];
   for (let y = 0; y < height; y++) {
     const row: any[] = [];
-    for (let x = 0; x < width; x++) row.push({ type: "floor", block: false, furniture: null, label: "  " });
+    for (let x = 0; x < width; x++) {
+      const isBorder = x === 0 || x === width - 1 || y === 0 || y === height - 1;
+      if (isBorder) {
+        // 如果有 exitTo 且这是第一条边的第一格 → 放出口
+        if (opts?.exitTo && x === Math.floor(width / 2) && (y === 0 || y === height - 1)) {
+          row.push({ type: "exit", block: false, exitTo: opts.exitTo, label: "DR" });
+        } else {
+          row.push({ type: "wall", block: true, label: "WL" });
+        }
+      } else {
+        const cell: any = { type: "floor", block: false, label: "  " };
+        if (opts?.furniture && opts.furniture.length > 0) {
+          // 均匀分布家具到内部格子
+          const innerIdx = (y - 1) * (width - 2) + (x - 1);
+          const fi = innerIdx % opts.furniture.length;
+          if (innerIdx < opts.furniture.length) {
+            cell.furniture = opts.furniture[fi];
+            cell.block = true;
+          }
+        }
+        row.push(cell);
+      }
+    }
     cells.push(row);
   }
-  ROOMS[roomName] = { width, height, cellSize: 1, floor, origin: [Math.floor(width/2), Math.floor(height/2)], cells, capacity: undefined };
+  ROOMS[roomName] = {
+    width, height, cellSize: 1, floor,
+    origin: [Math.floor(width / 2), Math.floor(height / 2)],
+    cells,
+    capacity: undefined,
+    ...(opts?.atmosphere ? { atmosphere: opts.atmosphere } : {}),
+    ...(opts?.directions ? { directions: opts.directions } : {}),
+  };
+}
+
+/** 在两个已存在的房间之间建立双向 exit 连接 */
+function connectRooms(roomA: string, roomB: string): void {
+  const ra = ROOMS[roomA];
+  const rb = ROOMS[roomB];
+  if (!ra || !rb) return;
+  // 在 A 的某个墙壁格上放出口到 B
+  const placedA = placeExitOnBorder(ra, roomB);
+  const placedB = placeExitOnBorder(rb, roomA);
+  if (placedA && placedB) return;
+  // fallback：如果 border 没空位（比如房间太小），在内部找个位置
+  if (!placedA) placeExitAnywhere(ra, roomB);
+  if (!placedB) placeExitAnywhere(rb, roomA);
+}
+
+function placeExitOnBorder(room: any, exitTo: string): boolean {
+  const w = room.width, h = room.height;
+  // 优先在长边的中间位置找 wall 格
+  const candidates: [number, number][] = [];
+  for (let x = 0; x < w; x++) { candidates.push([x, 0]); candidates.push([x, h - 1]); }
+  for (let y = 0; y < h; y++) { candidates.push([0, y]); candidates.push([w - 1, y]); }
+  for (const [x, y] of candidates) {
+    const cell = room.cells[y]?.[x];
+    if (cell && cell.type === "wall") {
+      room.cells[y][x] = { type: "exit", block: false, exitTo, label: "DR" };
+      return true;
+    }
+  }
+  return false;
+}
+
+function placeExitAnywhere(room: any, exitTo: string): void {
+  for (let y = 0; y < room.height; y++) {
+    for (let x = 0; x < room.width; x++) {
+      if (room.cells[y][x].type === "floor" && !room.cells[y][x].furniture) {
+        room.cells[y][x] = { type: "exit", block: false, exitTo, label: "DR" };
+        return;
+      }
+    }
+  }
+}
+
+/** 创建房间（玩家施工路径，收费+耗时）。支持 template/exitFrom/atmosphere 可选参数。 */
+export async function createRoom(
+  roomName: string, width: number, height: number, floor: number,
+  opts?: { templateId?: string; exitFrom?: string; atmosphere?: string }
+): Promise<{ success: boolean; reason: string }> {
+  const cleanName = normalizeLocationName(roomName);
+  if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
+
+  // 如果有 template，从 room_templates 读尺寸
+  let w = width, h = height;
+  if (opts?.templateId) {
+    const tmpl = findTemplate(roomTemplates, opts.templateId);
+    if (tmpl) { w = tmpl.width || w; h = tmpl.height || h; }
+  }
+
+  if (w < 1 || h < 1) return { success: false, reason: "房间尺寸无效" };
+  if (w * h > 10000) return { success: false, reason: `房间面积过大（${w * h}m²，上限10000m²）` };
+
   const multiplier = getConstructionMultiplier();
   const currencySymbol = getCurrency();
-  const constructionMinutes = width * height * 5;
-  const constructionCost = width * height * multiplier;
+  const constructionMinutes = w * h * 5;
+  const constructionCost = w * h * multiplier;
   if (gameState.player.funds < constructionCost) {
-    return { success: false, reason: `资金不足。建造${width}×${height}房间需要${currencySymbol}${constructionCost}，当前余额${currencySymbol}${gameState.player.funds}` };
+    return { success: false, reason: `资金不足。建造${w}×${h}房间需要${currencySymbol}${constructionCost}，当前余额${currencySymbol}${gameState.player.funds}` };
   }
+
+  // 创建网格（带可选的氛围和出口）
+  const gridOpts: any = {};
+  if (opts?.atmosphere) gridOpts.atmosphere = opts.atmosphere;
+  if (opts?.exitFrom) gridOpts.exitTo = opts.exitFrom;
+  createRoomGrid(roomName, w, h, floor, gridOpts);
+
+  // 如果有 exitFrom，双向连接
+  if (opts?.exitFrom && ROOMS[opts.exitFrom]) {
+    connectRooms(roomName, opts.exitFrom);
+  }
+
   gameState.player.funds -= constructionCost;
   const { advanceMinutes } = await import("./time.ts");
   if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
   advanceMinutes(gameState.time, constructionMinutes);
   saveState();
-  return { success: true, reason: `创建了新房间 ${roomName} (${width}x${height})，花费${currencySymbol}${constructionCost}，施工耗时${constructionMinutes}分钟。` };
+  const tmplNote = opts?.templateId ? `（模板: ${opts.templateId}）` : "";
+  return { success: true, reason: `创建了新房间 ${roomName} (${w}x${h})${tmplNote}，花费${currencySymbol}${constructionCost}，施工耗时${constructionMinutes}分钟。` };
+}
+
+/** 在嵌套模板对象中递归查找 key */
+function findTemplate(templates: any, id: string): any | null {
+  for (const cat of Object.values(templates)) {
+    if (typeof cat !== "object" || !cat) continue;
+    if ((cat as any)[id]) return (cat as any)[id];
+    // 递归查找子分类
+    for (const sub of Object.values(cat as object)) {
+      if (typeof sub === "object" && sub && (sub as any)[id]) return (sub as any)[id];
+    }
+  }
+  return null;
+}
+
+/** GM 免费用住宅实例化：从 residence_templates 读取蓝图，创建一组互连房间。幂等——已存在的房间跳过。 */
+export function instantiateResidence(
+  templateId: string, residenceName: string
+): { success: boolean; reason: string; rooms: string[] } {
+  const tmpl = residenceTemplates[templateId];
+  if (!tmpl) return { success: false, reason: `住宅模板 ${templateId} 不存在`, rooms: [] };
+
+  const prefix = residenceName;
+  const created: string[] = [];
+  const skipped: string[] = [];
+  const keyToFullName: Record<string, string> = {};
+
+  // 第一遍：创建所有房间
+  for (const roomDef of tmpl.rooms) {
+    const fullName = roomDef.name.replace("{prefix}", prefix);
+    keyToFullName[roomDef.key] = fullName;
+    if (ROOMS[fullName]) { skipped.push(fullName); continue; }
+
+    const gridOpts: any = {};
+    if (roomDef.atmosphere) gridOpts.atmosphere = roomDef.atmosphere;
+    if (roomDef.directions) gridOpts.directions = roomDef.directions;
+    if (roomDef.furniture) gridOpts.furniture = roomDef.furniture;
+    if (roomDef.exitTo) gridOpts.exitTo = roomDef.exitTo;
+
+    createRoomGrid(fullName, roomDef.w, roomDef.h, roomDef.floor, gridOpts);
+    created.push(fullName);
+  }
+
+  // 第二遍：建立连接
+  if (tmpl.connections) {
+    for (const [aKey, bKey] of tmpl.connections) {
+      const nameA = keyToFullName[aKey];
+      const nameB = keyToFullName[bKey];
+      if (nameA && nameB && ROOMS[nameA] && ROOMS[nameB]) {
+        connectRooms(nameA, nameB);
+      }
+    }
+  }
+
+  saveState();
+
+  const parts: string[] = [];
+  if (created.length > 0) parts.push(`创建了 ${created.length} 个房间: ${created.join(", ")}`);
+  if (skipped.length > 0) parts.push(`跳过了 ${skipped.length} 个已存在房间`);
+  if (tmpl.player_room && keyToFullName[tmpl.player_room]) {
+    parts.push(`玩家房间: ${keyToFullName[tmpl.player_room]}`);
+  }
+
+  return {
+    success: created.length > 0 || skipped.length > 0,
+    reason: parts.join("。") || "未创建任何房间",
+    rooms: [...created, ...skipped],
+  };
 }
 
 // ── 单元操作 ──

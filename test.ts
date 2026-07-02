@@ -5522,6 +5522,86 @@ test("ACTION: use_ability narrativeOnly 无消耗", async () => {
   }
 });
 
+test("INIT: init_game 只创建引擎骨架，不写叙事装配", async () => {
+  const tool = require("./tools/state/init_game.ts").default;
+  await tool.execute("test", { name: "岸田文雄", gender: "男", age: 67, year: 2018 }, null, null, null);
+  if (gameState.player.name !== "岸田文雄") throw new Error("玩家姓名未初始化");
+  if (gameState.player.age !== 67) throw new Error("玩家年龄未初始化");
+  if (gameState.player.funds !== 0) throw new Error(`init_game 不应给初始资金，实际: ${gameState.player.funds}`);
+  if (Object.keys(gameState.player.equipment || {}).length !== 0) throw new Error("init_game 不应装备制服/西装等叙事物品");
+  if ((gameState.player.inventory || []).length !== 0) throw new Error("init_game 不应放入手机/钱包/钥匙等叙事物品");
+  if (Object.keys(gameState.player.abilities || {}).length !== 0) throw new Error("init_game 不应授予能力");
+  if (gameState.player.resourcePools !== undefined) throw new Error("init_game 不应设置资源池");
+  const stateText = JSON.stringify({
+    equipment: gameState.player.equipment,
+    inventory: gameState.player.inventory,
+    location: gameState.player.location,
+  });
+  if (stateText.includes("总武高") || stateText.includes("比企谷家")) {
+    throw new Error("init_game 不应写入题材硬编码");
+  }
+});
+
+test("INIT: init_profile 千叶市高中生应用装备、背包、资金和flag", async () => {
+  const initGame = require("./tools/state/init_game.ts").default;
+  const initProfile = require("./tools/state/init_profile.ts").default;
+  await initGame.execute("test", { name: "八幡", gender: "男", age: 16, year: 2018 }, null, null, null);
+  const res = await initProfile.execute("test", { profileId: "千叶市高中生" }, null, null, null);
+  if (!res.content?.[0]?.text?.includes("千叶市高中生")) throw new Error("init_profile 应返回已应用模板说明");
+  if (gameState.player.funds !== 500) throw new Error(`高中生资金应为500，实际: ${gameState.player.funds}`);
+  if (gameState.player.equipment.top?.name !== "总武高男生制服") throw new Error("制服应直接穿在 top 装备槽");
+  if (!gameState.player.inventory.some((i: any) => i.name === "手机")) throw new Error("背包应包含手机");
+  if (!gameState.player.inventory.some((i: any) => i.name === "书包")) throw new Error("背包应包含书包");
+  if (gameState.flags.student !== true || gameState.flags.soubu_high_enrolled !== true) throw new Error("高中生 flags 未设置");
+});
+
+test("INIT: init_profile 替身使者授予能力和资源池，可直接 use_ability", async () => {
+  const initGame = require("./tools/state/init_game.ts").default;
+  const initProfile = require("./tools/state/init_profile.ts").default;
+  const useAbility = require("./tools/action/use_ability.ts").default;
+  await initGame.execute("test", { name: "乔鲁诺", gender: "男", age: 15, year: 2001 }, null, null, null);
+  await initProfile.execute("test", { profileId: "替身使者" }, null, null, null);
+  const ability = gameState.player.abilities["黄金体验"] as any;
+  if (!ability || ability.level !== 1) throw new Error("黄金体验应以Lv1授予");
+  const standPower = gameState.player.resourcePools?.stand_power;
+  if (!standPower || standPower.current !== 50 || standPower.max !== 50) throw new Error("stand_power 资源池应为50/50");
+  const res = await useAbility.execute("test", { ability: "黄金体验" }, null, null, null);
+  const text = res.content?.[0]?.text || "";
+  if (text.includes("资源不足") || text.includes("前置条件不满足") || text.includes("未知能力")) {
+    throw new Error(`替身使者 profile 后 use_ability 不应被初始化缺失卡住: ${text}`);
+  }
+});
+
+test("INIT: init_profile 缺失模板返回错误且不半写状态", async () => {
+  const initGame = require("./tools/state/init_game.ts").default;
+  const initProfile = require("./tools/state/init_profile.ts").default;
+  await initGame.execute("test", { name: "无模板", gender: "男", age: 20, year: 2018 }, null, null, null);
+  const before = JSON.stringify(gameState.player);
+  const res = await initProfile.execute("test", { profileId: "不存在的模板" }, null, null, null);
+  const text = res.content?.[0]?.text || "";
+  if (!text.includes("未找到身份模板")) throw new Error(`应返回缺失模板错误，实际: ${text}`);
+  if (JSON.stringify(gameState.player) !== before) throw new Error("缺失模板不应修改玩家状态");
+});
+
+test("INIT: init_profile 武道见习授予技能，skills 以 {level,exp,nextLevel} 结构写入", async () => {
+  const initGame = require("./tools/state/init_game.ts").default;
+  const initProfile = require("./tools/state/init_profile.ts").default;
+  await initGame.execute("test", { name: "武道初学者", gender: "男", age: 16, year: 2018 }, null, null, null);
+  await initProfile.execute("test", { profileId: "武道见习" }, null, null, null);
+  const g = gameState.player.skills as any;
+  if (!g["格斗"] || g["格斗"].level !== 2 || g["格斗"].exp !== 0 || g["格斗"].nextLevel !== 20) {
+    throw new Error("格斗应为 Lv2, exp=0, nextLevel=20");
+  }
+  if (!g["闪避"] || g["闪避"].level !== 1 || g["闪避"].nextLevel !== 10) {
+    throw new Error("闪避应为 Lv1, nextLevel=10");
+  }
+  if (gameState.player.funds !== 300) throw new Error("资金应为300");
+  const top = gameState.player.equipment.top as any;
+  if (!top || top.name !== "武道着") throw new Error("应装备武道着");
+  if (!gameState.flags["martial_trainee"]) throw new Error("flag martial_trainee 应为 true");
+});
+
+
 // ═══════════════════════════════════════════════════════════
 // N13: action 工具补充测试 (批次2 — 低频工具冒烟)
 // ═══════════════════════════════════════════════════════════

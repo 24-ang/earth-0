@@ -153,7 +153,7 @@ export interface SexProfile {
     clitoris: "隐藏"|"小"|"普通"|"敏感突出";
   };
   male?: {
-    penis: { length_cm: number; girth_cm: number; shape: "直"|"上翘"|"左弯"|"右弯"; head_size: "普通"|"大"; circumcised: boolean; color: "淡"|"普通"|"深" };
+    penis: { length_cm: number; girth_cm: number; erect_length_cm: number; erect_girth_cm: number; shape: "直"|"上翘"|"左弯"|"右弯"; head_size: "普通"|"大"; circumcised: boolean; color: "淡"|"普通"|"深" };
     testicles: { size: "小"|"普通"|"大" };
     pubic_hair: { amount: "无"|"稀疏"|"普通"|"浓密"; color: "黑色"|"褐色"; style: "自然"|"修剪"|"剃除" };
   };

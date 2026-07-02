@@ -40,6 +40,7 @@ import positionsCatalogStatic from "../data/positions.json" with { type: "json" 
 import regionsStatic from "../data/regions.json" with { type: "json" };
 import scheduleTemplatesStatic from "../data/schedule_templates.json" with { type: "json" };
 import roomTemplatesStatic from "../data/room_templates.json" with { type: "json" };
+import residenceTemplatesStatic from "../data/residence_templates.json" with { type: "json" };
 
 export let shops = shopsCatalogStatic as any;
 export let shopsCatalog = shopsCatalogStatic as any;
@@ -51,6 +52,7 @@ export let positionsCatalog = positionsCatalogStatic as any;
 export let regions = regionsStatic as any;
 export let scheduleTemplates = scheduleTemplatesStatic as any;
 export let roomTemplates = roomTemplatesStatic as any;
+export let residenceTemplates = residenceTemplatesStatic as any;
 export let activeWorldName = "oregairu";
 
 
@@ -1365,7 +1367,7 @@ export function calcMaxHP(体质: number, age: number): number {
 export function calcAC(敏捷: number, equipment: EquipmentSlots): number {
   let ac = 10 + attrMod(敏捷);
   for (const item of Object.values(equipment)) {
-    if (!item) continue;
+    if (!item?.effects) continue;
     for (const eff of item.effects) {
       if (eff.type === "ac_bonus") ac += Number(eff.value);
     }
@@ -1493,7 +1495,7 @@ export interface VolumeCheckResult {
 export function calcPocketVolume(equipment: EquipmentSlots): number {
   let total = 0;
   for (const item of Object.values(equipment)) {
-    if (!item) continue;
+    if (!item?.effects) continue;
     for (const eff of item.effects) {
       if (eff.type === "pocket") total += Number(eff.value);
     }
@@ -2298,7 +2300,7 @@ export async function getOrCreateSexState(npcName: string): Promise<SexState | n
         };
       } else {
         profile.male = {
-          penis: { length_cm: 14, girth_cm: 10, shape: "直" as any, head_size: "普通" as any, circumcised: false, color: "普通" as any },
+          penis: { length_cm: 14, girth_cm: 10, erect_length_cm: 17, erect_girth_cm: 12, shape: "直" as any, head_size: "普通" as any, circumcised: false, color: "普通" as any },
           testicles: { size: "普通" as any },
           pubic_hair: { amount: "普通" as any, color: "黑色" as any, style: "自然" as any },
         };
@@ -2559,7 +2561,7 @@ export function updateReputation(group: string, delta: number): number {
 export function calcReputationBonus(group: string): number {
   let bonus = 0;
   for (const item of Object.values(gameState.player.equipment)) {
-    if (!item) continue;
+    if (!item?.effects) continue;
     for (const eff of item.effects) {
       if (eff.type === "reputation_bonus" && eff.group === group) {
         bonus += Number(eff.value);
@@ -3102,6 +3104,8 @@ async function applyOrgEffects(): Promise<void> {
             .replace("{role}", role)
             .replace("{role_action}", roleAction);
 
+          // 已有手动override时不被日历事件覆盖
+          if (npc.pendingOverride) continue;
           npc.pendingOverride = {
             location: effect.override_location,
             action,
@@ -3315,6 +3319,7 @@ export function damageItem(item: Item): Item {
   } else {
     item.state = "damaged";
     // 效果减半
+    if (!item.effects) { item.effects = []; return item; }
     for (const eff of item.effects) {
       if (typeof eff.value === "number") eff.value = Math.floor(eff.value / 2);
     }
@@ -3483,6 +3488,7 @@ export function loadActiveWorld(worldName?: string): void {
     phoneApps = phoneAppsCatalog;
     scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
     roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
+    residenceTemplates = loadJSON("residence_templates.json", residenceTemplatesStatic);
     sexProfilesData = loadJSON("sex_profiles.json", null);
 
     // ── 脑裂检测：data/ 比 worldpack 内容多 → 警告 ──
@@ -3506,6 +3512,7 @@ export function loadActiveWorld(worldName?: string): void {
         { label: "phone_apps.json",      dataVar: phoneAppsCatalogStatic,worldVar: phoneAppsCatalog,     measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
         { label: "positions.json",       dataVar: positionsCatalogStatic,worldVar: positionsCatalog,     measure: v => Array.isArray(v) ? v.length : Object.keys(v).length },
         { label: "room_templates.json",  dataVar: roomTemplatesStatic,   worldVar: roomTemplates,        measure: v => Object.keys(v).length },
+        { label: "residence_templates.json", dataVar: residenceTemplatesStatic, worldVar: residenceTemplates, measure: v => Object.keys(v).length },
       ];
       const warnings: string[] = [];
       for (const c of checks) {
