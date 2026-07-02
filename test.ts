@@ -5063,6 +5063,23 @@ test("VIEWPOINT: updateRelation triggers he_zhe_zhi_yan cutaway", async () => {
   }
 });
 
+test("VIEWPOINT: updateReputation triggers sheng_wang_shang_sheng cutaway", async () => {
+  resetState();
+  const { updateReputation } = await import("./engine/state.ts");
+  
+  // Try crossing threshold (0 -> 1)
+  updateReputation("学生", 1);
+  
+  const queue = gameState._cutaway_queue || [];
+  const triggerItem = queue.find(q => q.type === "上升");
+  if (!triggerItem) {
+    throw new Error("updateReputation did not trigger '上升' cutaway!");
+  }
+  if (triggerItem.weight !== 50) {
+    throw new Error("Reputation breakthrough cutaway should have weight 50");
+  }
+});
+
 test("VIEWPOINT: processViewpointTriggers aftermath", async () => {
   resetState();
   const { processViewpointTriggers } = await import("./engine/viewpoint.ts");

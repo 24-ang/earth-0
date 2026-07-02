@@ -50,13 +50,73 @@ export default {
           height_cm: 115, weight_kg: 20, build: "纤细", leg_type: "纤细",
           skin: { base_tone: "普通", tan: 0, texture: "细腻" },
         };
+
+        // 幼童初始装备
+        gs.player.equipment = {
+          top: { name: "儿童短袖T恤", type: "clothing", slot: "top", weight: 0.2, state: "intact", volume: 0.3 },
+          bottom: { name: "运动短裤", type: "clothing", slot: "bottom", weight: 0.2, state: "intact", volume: 0.3 },
+          feet: { name: "儿童运动鞋", type: "clothing", slot: "feet", weight: 0.3, state: "intact", volume: 0.4 },
+          inner_bot: { name: "儿童内裤", type: "clothing", slot: "inner_bot", weight: 0.02, state: "intact", volume: 0.1 }
+        };
       } else {
         gs.player.attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 12, 感知: 10, 魅力: 10 };
         gs.player.body = {
           height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
           skin: { base_tone: "普通", tan: 0, texture: "普通" },
         };
+
+        // 学生初始装备
+        if (params.gender === "女") {
+          gs.player.equipment = {
+            top: {
+              name: "总武高女生制服",
+              type: "clothing",
+              slot: "top",
+              weight: 0.5,
+              effects: [
+                { type: "social_bonus", value: 1, condition: "school_area" },
+                { type: "reputation_bonus", value: 1, group: "学生" }
+              ],
+              state: "intact",
+              volume: 0.5
+            },
+            bottom: { name: "黑白百褶裙", type: "clothing", slot: "bottom", weight: 0.2, state: "intact", volume: 0.5 },
+            legs: { name: "黑色过膝袜", type: "clothing", slot: "legs", weight: 0.1, state: "intact", volume: 0.2 },
+            feet: { name: "皮鞋", type: "clothing", slot: "feet", weight: 0.5, state: "intact", volume: 0.5 },
+            inner_top: { name: "白色棉质胸罩", type: "clothing", slot: "inner_top", weight: 0.05, state: "intact", volume: 0.1 },
+            inner_bot: { name: "白色棉内裤", type: "clothing", slot: "inner_bot", weight: 0.03, state: "intact", volume: 0.1 },
+            back: { name: "书包", type: "tool", slot: "back", weight: 0.3, effects: [{ type: "pocket", value: 10 }], state: "intact", volume: 0.5 }
+          };
+        } else {
+          gs.player.equipment = {
+            top: {
+              name: "总武高男生制服",
+              type: "clothing",
+              slot: "top",
+              weight: 0.5,
+              effects: [
+                { type: "social_bonus", value: 1, condition: "school_area" },
+                { type: "reputation_bonus", value: 1, group: "学生" }
+              ],
+              state: "intact",
+              volume: 0.5
+            },
+            bottom: { name: "制服长裤", type: "clothing", slot: "bottom", weight: 0.5, state: "intact", volume: 0.5 },
+            feet: { name: "皮鞋", type: "clothing", slot: "feet", weight: 0.5, state: "intact", volume: 0.5 },
+            inner_top: { name: "棉质汗衫", type: "clothing", slot: "inner_top", weight: 0.05, state: "intact", volume: 0.1 },
+            inner_bot: { name: "平角裤", type: "clothing", slot: "inner_bot", weight: 0.03, state: "intact", volume: 0.1 },
+            back: { name: "书包", type: "tool", slot: "back", weight: 0.3, effects: [{ type: "pocket", value: 10 }], state: "intact", volume: 0.5 }
+          };
+        }
       }
+
+      // 初始道具放入背包
+      gs.player.inventory = [
+        { name: "手机", type: "tool", slot: "back", weight: 0.2, effects: [{ type: "communication", value: "通话/短信/网络" }], state: "intact", volume: 0.5 },
+        { name: "钱包", type: "tool", slot: "back", weight: 0.1, effects: [{ type: "pocket", value: 5 }], state: "intact", volume: 0.5 },
+        { name: "钥匙", type: "tool", slot: "back", weight: 0.05, effects: [{ type: "unlock", value: "自家" }], state: "intact", flavor: "自家钥匙。", volume: 0.5 }
+      ];
+
 
       // 自动校正 time.player_age 和 timeline_origin
       gs.time.player_age = params.age;

@@ -97,7 +97,14 @@ function buildSceneBrief(gs: any): string {
 
   lines.push(`[场景状态]`);
   lines.push(`日期: ${gs.time?.game_date || "未知"} ${gs.time?.day_of_week || ""}`);
-  lines.push(`时间: ${gs.time?.game_time || "未知"}`);
+  
+  let timeStr = gs.time?.game_time;
+  if (!timeStr && gs.time?.minute_of_day !== undefined) {
+    const hour = Math.floor(gs.time.minute_of_day / 60);
+    const minute = gs.time.minute_of_day % 60;
+    timeStr = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  }
+  lines.push(`时间: ${timeStr || "未知"}`);
   lines.push(`地点: ${gs.player?.location || "未知"}`);
   lines.push(`天气: ${gs.weather?.type || "晴"} ${gs.weather?.temp ?? "?"}°C`);
 
@@ -222,7 +229,11 @@ async function buildRenderStateContext(gs: any): Promise<string> {
       .map(([name, n]: [string, any]) => `${name}${(n as any).action ? "(" + (n as any).action + ")" : ""}`);
     if (inRoom.length > 0) {
       parts.push(`[在场NPC] ${inRoom.join("、")}`);
+    } else {
+      parts.push(`[在场NPC] 无`);
     }
+  } else {
+    parts.push(`[在场NPC] 无`);
   }
 
   // ── 导演提示：沉默 NPC 不插话（仅当有 NPC 在场但无人 cue 玩家时） ──
@@ -243,14 +254,14 @@ async function buildRenderStateContext(gs: any): Promise<string> {
 
 async function buildNpcAppearanceBlock(gs: any): Promise<string> {
   const loc = gs.player?.location;
-  if (!loc || !gs.npcs) return "";
+  if (!loc || !gs.npcs) return "[在场人物] 无";
 
   const { isSameLocation: npcIsSame } = await import("./state.ts");
   const present = Object.entries(gs.npcs)
     .filter(([_, npc]: [string, any]) => npcIsSame(npc.currentRoom, loc) && npc.alive !== false)
     .map(([name]) => name);
 
-  if (present.length === 0) return "";
+  if (present.length === 0) return "[在场人物] 无";
 
   const { findCharacter, getAppearanceForAge, getNpcCurrentAge, getNPCOutfitDesc } =
     await import("./state.ts");
@@ -290,9 +301,17 @@ async function buildNpcAppearanceBlock(gs: any): Promise<string> {
 
 function buildRenderContract(wordBudget: string, interactionMode: string): string {
   return [
-    "## 渲染输出合约",
+    "## 叙事旁白编译器契约（渲染输出合约）",
 
-    "你是剪辑师，不是主笔。引擎已完成所有结算，NPC 已独立生成自己的台词。你的工作不是创造——是把已经准备好的素材剪成一个连贯的画面。",
+    "你不是掌控世界和剧情走向的 Game Master (GM)。真正的 GM（游戏物理引擎）已经完成了本回合的逻辑结算，NPC们也已经独立生成了他们的台词。你当前的唯一身份是：**【游戏旁白编译器 / 场景剪辑师】**。",
+
+    "你的唯一职责是：像一部架在现场的智能摄像机，将引擎结算输出的 [场景状态]、[导演单 (Director Note)] 以及 [NPC独立回应] 段的原始物理数据，严格编译、重组为符合文学美感、可供眼见耳听的物理画面。你没有决定游戏规则、改变时空或创造事实的权力。",
+
+    "### 编译器红线限制（绝对禁止，否则系统将报错中断）：",
+    "1. **时空强一致性**：叙事中的日期、天气、具体时间或昼夜状态必须严格遵守 [场景状态] 段列出的 `时间` 和 `日期`。如果 `时间` 是早晨 (morning)，绝对禁止描写傍晚、暮色、夕阳、下午或任何非清晨的细节。禁止描述任何未经引擎结算的时间大跨度流逝。",
+    "2. **在场角色强一致性**：只能描写出现在 [在场NPC]、[在场人物] 或 [NPC 独立回应] 段中列出的角色。如果在场人物为空，表示玩家独自一人，绝不能描写任何人物与玩家同行、碰面、对视或说话。",
+    "3. **身体与衣物强一致性**：必须严格遵循 [玩家装备] 指示。如果描述为 `（全裸）`，则必须描写其赤身裸体；如果装备里有衣服和鞋子，绝不能描写其赤脚或全裸，也绝不能描写衣服被“夺走/取下”（除非 directors_note 中明确写了衣物转移）。",
+    "4. **禁止编造因果或剧情秘密**：绝对禁止编造未经引擎 toolsExecuted 或 directors_note 结算产生的物理变化（如：禁止凭空说“某人拿走了她的外套”，除非这是本轮引擎 toolsExecuted 发生的动作）。",
 
     "### 素材来源（必须区分对待）",
     "- NPC 对话/内心独白：来自 [NPC 独立回应] 段，原文引用，不得改写",
@@ -302,7 +321,7 @@ function buildRenderContract(wordBudget: string, interactionMode: string): strin
 
     "### 禁止",
     "- 禁止调用任何工具（引擎已替你完成）",
-    "- 禁止改写、提炼、或替换 NPC 的对话措辞——原文引用，只决定它在叙事中的时机和顺序",
+    "- 禁止改写、提炼、或替换 NPC 的对话措辞——原文引用，只决定它在叙事中的时机 and 顺序",
     "- 禁止在 [空间] 段没有标记的地点描写活动（网格里没有窗户就不写窗外风景）",
     "- 禁止输出 <tag> 格式、JSON Patch 等 ST 遗留格式",
     "- 禁止在叙述中出现属性值、技能等级、好感度数值",

@@ -2249,9 +2249,9 @@ export function getNPCOutfitDesc(npcName: string): string {
   };
   for (const [slot, item] of Object.entries(outfit)) {
     if (slot === 'desc' || slot === 'hair' || slot === 'acc' || slot === 'head') continue;
-    // 检查装备槽：如果对应槽位为空，该物品已被偷/移除 → 不显示
+    // 检查装备槽：如果对应槽位为空 (undefined) 表示未被交互过，默认穿着；如果显式为 null 表示被剥除
     const equipSlot = npc?.equipment?.[slot as any];
-    const isMissing = equipSlot === null || equipSlot === undefined;
+    const isMissing = equipSlot === null;
     const flavor = getFlavor(item);
     const label = isMissing ? `${flavor}（已被拿走）` : flavor;
     if (slot.startsWith("inner_")) inner.push(label);
@@ -2506,9 +2506,53 @@ export function appendShortTermBuffer(
 // --- 多维声望 ---
 export function updateReputation(group: string, delta: number): number {
   if (!gameState.player.reputation[group]) gameState.player.reputation[group] = 0;
-  gameState.player.reputation[group] = Math.max(-3, Math.min(5, gameState.player.reputation[group] + delta));
+  const oldVal = gameState.player.reputation[group];
+  const newVal = Math.max(-3, Math.min(5, oldVal + delta));
+  gameState.player.reputation[group] = newVal;
+
+  // 检测跨越 ±1, ±2, ±3 阈值
+  const thresholdCrossed = (val1: number, val2: number) => {
+    for (const t of [-3, -2, -1, 1, 2, 3]) {
+      if ((val1 < t && val2 >= t) || (val1 > t && val2 <= t)) return true;
+    }
+    return false;
+  };
+
+  if (thresholdCrossed(oldVal, newVal)) {
+    // 寻找最相关的 NPC 演这场戏
+    let bestNpc = "旁白";
+    let maxAffection = -1;
+    for (const [npcName, npc] of Object.entries(gameState.npcs) as [string, any][]) {
+      const rel = gameState.player.relationships[npcName];
+      const aff = rel?.affection ?? 0;
+      
+      const isStudentGroup = group === "学生" || group === "学校" || group === "总武高";
+      const isNpcStudent = npcName === "由比滨结衣" || npcName === "雪之下雪乃" || npcName === "比企谷八幡" || npcName === "比企谷小町" || npcName === "户塚彩加" || npcName === "绫濑沙季";
+      
+      const isUnderworldGroup = group === "underworld" || group === "地下";
+      const isNpcUnderworld = npcName === "雪之下阳乃" || npcName === "平冢静";
+
+      let belongs = false;
+      if (isStudentGroup && isNpcStudent) belongs = true;
+      if (isUnderworldGroup && isNpcUnderworld) belongs = true;
+      
+      if (belongs && aff > maxAffection) {
+        maxAffection = aff;
+        bestNpc = npcName;
+      }
+    }
+
+    gameState._cutaway_queue ??= [];
+    gameState._cutaway_queue.push({
+      type: "上升",
+      npc: bestNpc,
+      weight: 50,
+      trigger: `玩家的${group}声望从${oldVal}变为了${newVal}，在相关圈子内引发了悄悄的关注和讨论`
+    });
+  }
+
   saveState();
-  return gameState.player.reputation[group];
+  return newVal;
 }
 
 /** 服装声望加成：扫描当前装备中的reputation_bonus */
