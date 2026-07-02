@@ -448,7 +448,7 @@ export function editCellType(x: number, y: number, type: "floor" | "wall" | "doo
 
 export function placeFurniture(x: number, y: number, itemName: string, furnitureActions?: Record<string, any>): { success: boolean; reason: string } {
   if (!gameState.player.gridPos) return { success: false, reason: "当前位置不可建造" };
-  const room = ROOMS[gameState.player.location];
+  const room = getRoom(gameState.player.location);
   if (!room) return { success: false, reason: "当前位置没有地图" };
   if (x < 0 || x >= room.width || y < 0 || y >= room.height) return { success: false, reason: "坐标超出房间范围" };
   const cell = room.cells[y][x];

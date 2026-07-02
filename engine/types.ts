@@ -69,7 +69,7 @@ export interface ResourcePools {
 
 // --- 物品 ---
 export type ItemType = "weapon" | "clothing" | "armor" | "tool" | "consumable";
-export type SlotType = "inner_top" | "inner_bot" | "shirt" | "top" | "bottom" | "legs" | "feet" | "head" | "acc" | "left_hand" | "right_hand" | "back" | "mount";
+export type SlotType = "inner_top" | "inner_bot" | "shirt" | "top" | "bottom" | "legs" | "feet" | "head" | "acc" | "acc2" | "acc3" | "left_hand" | "right_hand" | "back" | "mount";
 export type ItemState = "intact" | "damaged" | "ruined";
 
 export interface ItemEffect {

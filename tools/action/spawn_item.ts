@@ -7,7 +7,8 @@ export default {
       target: Type.String({ description: "接收者：'玩家' 或 NPC 名" }),
       item: Type.Object({
         name: Type.String(),
-        type: Type.String({ description: "weapon / clothing / armor / tool / consumable" }),
+        type: Type.String({ description: "weapon / clothing / armor / tool / consumable / furniture" }),
+        is_furniture: Type.Optional(Type.Boolean({ description: "是否家具（放入背包但标记为家具，需用 world_interact place 部署）" })),
         slot: Type.String({ description: "装备槽位" }),
         weight: Type.Number(),
         volume: Type.Number({ description: "体积（升）" }),
@@ -63,6 +64,9 @@ export default {
       };
       if (params.item.damage) {
         itemObj.damage = params.item.damage;
+      }
+      if (params.item.is_furniture) {
+        itemObj.is_furniture = true;
       }
 
       targetChar.inventory.push(itemObj);

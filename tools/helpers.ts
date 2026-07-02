@@ -18,6 +18,8 @@ export const SLOT_NAMES: Record<string, string> = {
   feet: "脚部鞋子",
   head: "头部/发饰",
   acc: "配饰/挂件",
+  acc2: "配饰②",
+  acc3: "配饰③",
   left_hand: "副手/左手",
   right_hand: "主手/右手",
   back: "背部/背包"
@@ -26,7 +28,7 @@ export const SLOT_NAMES: Record<string, string> = {
 /** TUI 面板用短标签（节省屏幕空间） */
 export const SLOT_NAMES_SHORT: Record<string, string> = {
   top: "外套", shirt: "内搭", inner_top: "胸罩", bottom: "下装", inner_bot: "内裤",
-  legs: "袜", feet: "鞋", head: "头饰", acc: "配饰", left_hand: "副手", right_hand: "主手", back: "背"
+  legs: "袜", feet: "鞋", head: "头饰", acc: "配饰", acc2: "配饰②", acc3: "配饰③", left_hand: "副手", right_hand: "主手", back: "背"
 };
 
 export interface MenuItem { label: string; detail?: string; action?: (done: () => void) => void | Promise<void>; }

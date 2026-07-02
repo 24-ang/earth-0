@@ -154,6 +154,16 @@ export default {
         const r = instantiateResidence(profile.residenceTemplate, profile.residenceName);
         if (!r.success) throw new Error(r.reason);
         hasResidence = true;
+        // 注册住宅房间到导航系统
+        if (!gameState.player.known_locations) gameState.player.known_locations = [];
+        for (const roomName of r.rooms) {
+          if (!gameState.player.known_locations.includes(roomName)) {
+            gameState.player.known_locations.push(roomName);
+          }
+        }
+        if (!gameState.player.known_locations.includes(profile.residenceName)) {
+          gameState.player.known_locations.push(profile.residenceName);
+        }
         if (profile.playerRoomInResidence) {
           setPlayerLocation(`${profile.residenceName}${profile.playerRoomInResidence}`);
         }
