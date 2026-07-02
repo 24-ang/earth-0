@@ -19,12 +19,14 @@ function loadProfiles(activeWorld: string): ProfileMap {
 
 function normalizeItem(raw: any, where: string): any {
   if (!raw || typeof raw !== "object") throw new Error(`${where} 必须是物品对象`);
+  const missing: string[] = [];
   for (const key of ["name", "type", "slot"]) {
-    if (!raw[key] || typeof raw[key] !== "string") throw new Error(`${where} 缺少字段 ${key}`);
+    if (!raw[key] || typeof raw[key] !== "string") missing.push(key);
   }
   for (const key of ["weight", "volume"]) {
-    if (typeof raw[key] !== "number" || raw[key] < 0) throw new Error(`${where} 缺少合法字段 ${key}`);
+    if (typeof raw[key] !== "number" || raw[key] < 0) missing.push(key);
   }
+  if (missing.length > 0) throw new Error(`${where} 缺少必填字段: ${missing.join(", ")}`);
   return {
     ...raw,
     effects: Array.isArray(raw.effects) ? raw.effects : [],
@@ -146,15 +148,18 @@ export default {
       const resourcePools = normalizeResourcePools(profile.resourcePools);
       if (resourcePools) gameState.player.resourcePools = resourcePools as any;
 
+      let hasResidence = false;
       if (profile.residenceTemplate && profile.residenceName) {
         const { instantiateResidence } = await import("../../engine/state-grid.ts");
         const r = instantiateResidence(profile.residenceTemplate, profile.residenceName);
         if (!r.success) throw new Error(r.reason);
+        hasResidence = true;
         if (profile.playerRoomInResidence) {
           setPlayerLocation(`${profile.residenceName}${profile.playerRoomInResidence}`);
         }
       }
-      if (profile.location) setPlayerLocation(profile.location);
+      // location 只在没有住宅时生效，避免覆盖 instantiateResidence 设定的房间位置
+      if (!hasResidence && profile.location) setPlayerLocation(profile.location);
       initPlayerGrid();
       saveState();
 

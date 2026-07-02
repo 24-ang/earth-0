@@ -25,7 +25,8 @@
         "type": "tool",
         "slot": "right_hand",
         "weight": 0.2,
-        "volume": 0.2
+        "volume": 0.2,
+        "effects": [{"type": "communication"}]
       },
       {
         "name": "书包",
@@ -38,7 +39,10 @@
     "flags": {
       "student": true,
       "soubu_high_enrolled": true
-    }
+    },
+    "residenceTemplate": "公寓_3F_单身",
+    "residenceName": "学生公寓",
+    "playerRoomInResidence": "居室"
   },
   "千叶市上班族": {
     "label": "千叶市通勤上班族",
@@ -66,7 +70,8 @@
         "type": "tool",
         "slot": "right_hand",
         "weight": 0.2,
-        "volume": 0.2
+        "volume": 0.2,
+        "effects": [{"type": "communication"}]
       },
       {
         "name": "公文包",
@@ -109,7 +114,8 @@
         "type": "tool",
         "slot": "right_hand",
         "weight": 0.2,
-        "volume": 0.2
+        "volume": 0.2,
+        "effects": [{"type": "communication"}]
       },
       {
         "name": "公文包",

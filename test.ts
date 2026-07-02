@@ -5521,6 +5521,9 @@ test("ACTION: use_ability narrativeOnly 无消耗", async () => {
     throw new Error("use_ability 无返回内容");
   }
 });
+loadActiveWorld("oregairu");
+// ensure worldpack data is loaded (residenceTemplates etc), resetState does not load data
+
 
 test("INIT: init_game 只创建引擎骨架，不写叙事装配", async () => {
   const tool = require("./tools/state/init_game.ts").default;
