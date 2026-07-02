@@ -60,7 +60,7 @@ export default {
         volume: params.item.volume,
         state: "intact",
         flavor: params.item.flavor ? `${params.item.flavor}\n${flavorSuffix}` : flavorSuffix,
-        effects: params.item.effects || [],
+        effects: params.item.effects && params.item.effects.length > 0 ? params.item.effects : [{ type: "narrative", value: "纯叙事物品——无预设机械效果，效果由GM自由演绎" }],
       };
       if (params.item.damage) {
         itemObj.damage = params.item.damage;

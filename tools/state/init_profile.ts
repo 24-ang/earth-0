@@ -154,7 +154,7 @@ export default {
         const r = instantiateResidence(profile.residenceTemplate, profile.residenceName);
         if (!r.success) throw new Error(r.reason);
         hasResidence = true;
-        // 注册住宅房间到导航系统
+        // 注册导航
         if (!gameState.player.known_locations) gameState.player.known_locations = [];
         for (const roomName of r.rooms) {
           if (!gameState.player.known_locations.includes(roomName)) {
@@ -164,6 +164,17 @@ export default {
         if (!gameState.player.known_locations.includes(profile.residenceName)) {
           gameState.player.known_locations.push(profile.residenceName);
         }
+        // 注册房产
+        const { residenceTemplates } = await import("../../engine/state.ts");
+        const tmpl = residenceTemplates[profile.residenceTemplate];
+        gameState.player.properties[profile.residenceName] = {
+          propertyId: profile.residenceName,
+          name: profile.residenceName,
+          regionId: tmpl?.region || gameState.player.location,
+          type: "own",
+          arrears_days: 0,
+          storage: [],
+        };
         if (profile.playerRoomInResidence) {
           setPlayerLocation(`${profile.residenceName}${profile.playerRoomInResidence}`);
         }

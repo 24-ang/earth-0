@@ -42,7 +42,25 @@
     },
     "residenceTemplate": "公寓_3F_单身",
     "residenceName": "学生公寓",
-    "playerRoomInResidence": "居室"
+    "playerRoomInResidence": "居室",
+    "contacts": [
+      { "name": "平冢静", "number": "090-1111-2222", "relation": "班导" },
+      { "name": "材木座义辉", "number": "090-3333-4444", "relation": "同班同学" },
+      { "name": "户冢彩加", "number": "090-5555-6666", "relation": "网球部好友" }
+    ],
+    "relationships": {
+      "平冢静": { "stage": "acquaintance", "affection": 15, "romance": "none", "notes": "负责2年F班的国语教师兼生活指导。看似懒散实则关心学生。" },
+      "材木座义辉": { "stage": "acquaintance", "affection": 10, "romance": "none", "notes": "中二病全开的同班同学。自称剑豪将军，实际是个好人。" },
+      "户冢彩加": { "stage": "acquaintance", "affection": 20, "romance": "none", "notes": "网球部的可爱后辈。像女孩子一样纤细但很努力。" }
+    },
+    "reputation": {
+      "学生": 0,
+      "教职员": 0
+    },
+    "memories": [
+      { "npc": "千叶市高中生", "tag": "昨天数学考了58分", "tone": "愧疚", "category": "fact" },
+      { "npc": "千叶市高中生", "tag": "下周是社团招新", "tone": "期待", "category": "milestone" }
+    ]
   },
   "千叶市上班族": {
     "label": "千叶市通勤上班族",

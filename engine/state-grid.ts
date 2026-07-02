@@ -74,6 +74,10 @@ export function getRoom(roomName: string): import("./types.ts").RoomGrid | null 
     }
   }
   if (roomName && !key) {
+    // 先做 fuzzy match 防止 fallback 覆盖已有房间
+    for (const [rk, rg] of Object.entries(ROOMS)) {
+      if (isSameLocation(rk, roomName)) return rg;
+    }
     const inKnown = gameState.player?.known_locations?.some((k: string) => isSameLocation(k, roomName));
     const isDynamic = Object.values(LOCATIONS_DELTA).some((arr: string[]) => arr.includes(roomName));
     if (inKnown || isDynamic) {
@@ -126,7 +130,11 @@ export function getNearbyNPCs(roomName: string, gridPos: [number, number], maxRa
 export function initPlayerGrid(): void {
   const roomName = gameState.player.location;
   const grid = getRoom(roomName);
-  if (!grid) { gameState.player.gridPos = null; return; }
+  if (!grid) {
+    console.warn(`[initPlayerGrid] 位置 "${roomName}" 不在已知房间中，gridPos 设为 null。ROOMS keys: ${Object.keys(ROOMS).join(", ").slice(0, 200)}`);
+    gameState.player.gridPos = null;
+    return;
+  }
   for (const priority of ["exit", "door", "floor"]) {
     for (let y = 0; y < grid.height; y++) {
       for (let x = 0; x < grid.width; x++) {
@@ -137,7 +145,20 @@ export function initPlayerGrid(): void {
       }
     }
   }
-  gameState.player.gridPos = [...grid.origin];
+  // 没有 exit/door/floor 户型（全部 wall 或家具挡满），用 origin 但有家具的格子跳过
+  const [ox, oy] = grid.origin;
+  if (grid.cells[oy]?.[ox]?.type === "floor" && !grid.cells[oy]?.[ox]?.furniture) {
+    gameState.player.gridPos = [ox, oy];
+  } else {
+    // 扫描找一个 floor 格子
+    for (let yy = 0; yy < grid.height; yy++)
+      for (let xx = 0; xx < grid.width; xx++)
+        if (grid.cells[yy][xx].type === "floor" && !grid.cells[yy][xx].furniture) {
+          gameState.player.gridPos = [xx, yy];
+          return;
+        }
+    gameState.player.gridPos = [0, 0];
+  }
 }
 
 // ── 钥匙匹配 ──

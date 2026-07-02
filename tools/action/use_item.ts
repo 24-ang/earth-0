@@ -17,8 +17,13 @@ export default {
       }
 
       const item = p.inventory[idx];
+
+      // 无 effects 或纯叙事物品 → 不消耗，返回描述让 LLM 自行演绎
       if (!item.effects || item.effects.length === 0) {
-        return { content: [{ type: "text", text: `${params.item}没有可用效果` }], details: {} };
+        return {
+          content: [{ type: "text", text: `${params.item}：${item.flavor || "无特殊效果"}。此物品无预设机械效果，叙事效果由GM自由演绎（不消耗物品）。` }],
+          details: { item: item.name, narrativeOnly: true }
+        };
       }
 
       const results: string[] = [];
