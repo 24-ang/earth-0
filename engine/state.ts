@@ -2150,6 +2150,15 @@ export function getNPCCharacterImpressions(npcName: string, otherNames: string[]
 }
 
 export function getOrCreateNPC(name: string): NPCRuntimeState {
+  // 拒绝为玩家名创建 NPC 运行时状态（防数据污染 #3）
+  if (name === gameState.player.name) {
+    console.error(`getOrCreateNPC: 拒绝为玩家 "${name}" 创建 NPC 状态——玩家不应出现在 npcs 表`);
+    // 若已污染则返回并清理
+    if (gameState.npcs[name]) delete gameState.npcs[name];
+    // 返回一个不可写入的占位对象防止调用方崩溃
+    const dummy: any = { currentRoom: "", alive: true, current_goal: "", memoryTags: [], scheduleGroup: "自由人" };
+    return dummy;
+  }
   if (!gameState.npcs[name]) {
     const src = findCharacter(name);
     const defaultAttrs: Attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };

@@ -59,7 +59,7 @@ export default {
 
       const charData: any = {
         name: params.name,
-        gender: params.gender || "female",
+        gender: params.gender || "女",
         base_age: params.base_age || 16,
         source: params.source || "原创",
         tags: params.tags || ["dynamic"],
@@ -93,9 +93,10 @@ export default {
       if (params.skills) charData.skills = params.skills;
 
       const r = registerDynamicCharacter(params.name, charData);
-      // 立即创建运行时 NPC 状态（使 NPC 在同位置时自动出现在 [在场NPC]）
+      // 立即创建运行时 NPC 状态并同步位置
       const { getOrCreateNPC } = await import("../../engine/state.ts");
-      getOrCreateNPC(params.name);
+      const npcState = getOrCreateNPC(params.name);
+      npcState.currentRoom = gameState.player.location;
       saveState();
 
       // 汇总创建的字段列表
