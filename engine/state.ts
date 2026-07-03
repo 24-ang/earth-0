@@ -715,11 +715,8 @@ export function setPlayerLocation(loc: string): void {
   if (oldLoc !== key && gameState.tempNPCs?.length > 0) {
     cleanupTempNPCs("玩家移动");
   }
-  // 移动后自动初始化网格坐标（单点权威——消除调用方碎片化的 initPlayerGrid）
-  try {
-    const { initPlayerGrid } = require("./state-grid.ts");
-    initPlayerGrid();
-  } catch {}
+  // 移动后自动初始化网格坐标（initPlayerGrid 已在文件顶部从 state-grid.ts 导入）
+  initPlayerGrid();
 }
 
 export function getPlayerStatusNarrative(p: PlayerState): string {
@@ -751,9 +748,9 @@ export function checkAndGrantTitles(): void {
     const cond = rule.condition;
     let match = false;
     if (cond.type === "reputation") {
-      match = (p.reputation[cond.group] ?? 0) >= cond.min;
+      match = p.reputation[cond.group] !== undefined && (p.reputation[cond.group] ?? 0) >= cond.min;
     } else if (cond.type === "reputation_max") {
-      match = (p.reputation[cond.group] ?? 0) <= cond.max;
+      match = p.reputation[cond.group] !== undefined && (p.reputation[cond.group] ?? 0) <= cond.max;
     } else if (cond.type === "attribute") {
       match = ((p.attributes as any)[cond.attr] ?? 0) >= cond.min;
     } else if (cond.type === "funds") {

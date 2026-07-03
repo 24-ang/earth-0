@@ -4759,7 +4759,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶站前",
+          "exitTo": "千叶站",
           "label": "EX"
         },
         {

@@ -85,7 +85,7 @@ export default {
               };
               saveState();
               ctx.ui.notify(`🚃 从 ${s.stationName} 出发，前往 ${dest}。${getCurrency()}${fare}`, "info");
-              ctx.chat.addSystemMessage(`玩家乘坐电车从 ${s.stationName} 前往 ${dest}，约${mins}分钟。描述车窗外的风景，到达前调用 complete_travel。`);
+              if (ctx.chat) ctx.chat.addSystemMessage(`玩家乘坐电车从 ${s.stationName} 前往 ${dest}，约${mins}分钟。描述车窗外的风景，到达前调用 complete_travel。`);
               updateChatHUD(ctx);
               destDone();
               stationDone();

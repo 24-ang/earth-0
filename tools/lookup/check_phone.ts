@@ -5,9 +5,19 @@ export default {
     description: "查看手机未读通知+通讯录。自动同步好感联系人。",
     parameters: Type.Object({}),
     async execute(_id, _params, _s, _o, _ctx) {
-      const { getPlayerPhoneData, syncContactsFromRelationships, getUnreadSummary } =
+      const { getPlayerPhone, getPlayerPhoneData, createDefaultPhoneData, syncContactsFromRelationships, getUnreadSummary } =
         await import("../../engine/phone.ts");
-      const pd = getPlayerPhoneData();
+      let pd = getPlayerPhoneData();
+      // 兜底：如果 getPlayerPhone 没找到手机，手动扫描背包强制初始化
+      if (!pd) {
+        const phone = getPlayerPhone();
+        if (phone) {
+          const { gameState, saveState } = await import("../../engine/state.ts");
+          phone.phoneData = createDefaultPhoneData(gameState.player.name);
+          saveState();
+          pd = phone.phoneData;
+        }
+      }
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机或手机数据未初始化。" }], details: {} };
       }
