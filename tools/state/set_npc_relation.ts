@@ -15,7 +15,17 @@ export default {
       const npc = getOrCreateNPC(params.from);
       npc.npcRelationships ??= {};
       npc.npcRelationships[params.to] = { stage: params.stage, tone: params.tone, notes: params.notes || "" };
+      // 自动镜像：对方对发起方的关系也写入（若尚无则创建默认镜像）
+      const target = getOrCreateNPC(params.to);
+      target.npcRelationships ??= {};
+      if (!target.npcRelationships[params.from]) {
+        target.npcRelationships[params.from] = {
+          stage: params.stage,
+          tone: params.tone,
+          notes: `[自动镜像] ${params.from}对${params.to}的态度: ${params.stage}·${params.tone}`,
+        };
+      }
       saveState();
-      return { content: [{ type: "text", text: `${params.from} → ${params.to}: ${params.stage}·${params.tone}${params.notes ? " (" + params.notes + ")" : ""}` }], details: {} };
+      return { content: [{ type: "text", text: `${params.from} → ${params.to}: ${params.stage}·${params.tone}${params.notes ? " (" + params.notes + ")" : ""}\n(已自动镜像: ${params.to} → ${params.from})` }], details: {} };
     },
   };

@@ -93,6 +93,9 @@ export default {
       if (params.skills) charData.skills = params.skills;
 
       const r = registerDynamicCharacter(params.name, charData);
+      // 立即创建运行时 NPC 状态（使 NPC 在同位置时自动出现在 [在场NPC]）
+      const { getOrCreateNPC } = await import("../../engine/state.ts");
+      getOrCreateNPC(params.name);
       saveState();
 
       // 汇总创建的字段列表
