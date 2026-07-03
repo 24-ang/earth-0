@@ -11,7 +11,10 @@ export type Difficulty = "简单" | "普通" | "困难" | "极难" | "不可能"
 export type Advantage = "优势" | "劣势" | "平";
 export type CoverType = "无掩体" | "半掩体" | "全掩体";
 
-const DC: Record<Difficulty, number> = { "简单": 8, "普通": 12, "困难": 16, "极难": 20, "不可能": 25 };
+const DC: Record<string, number> = {
+  "简单": 8, "普通": 12, "困难": 16, "极难": 20, "不可能": 25,
+  "trivial": 8, "easy": 8, "moderate": 12, "hard": 16, "very_hard": 20, "nearly_impossible": 25,
+};
 
 function d20(): number { return Math.floor(Math.random() * 20) + 1; }
 
