@@ -5468,21 +5468,35 @@ test("D模块: 泄密审计与好感去重兜底集成测试", async () => {
 });
 
 
-test("INIT: init_world 千叶市高中生写入通讯录、关系、声望、记忆", async () => {
+test("INIT: init_world 按 scheduleGroup 自动匹配角色生成通讯录/关系/声望", async () => {
   const initGame = require("./tools/state/init_game.ts").default;
   const initProfile = require("./tools/state/init_profile.ts").default;
   const initWorld = require("./tools/state/init_world.ts").default;
   await initGame.execute("test", { name: "测试学生", gender: "男", age: 16, year: 2018 }, null, null, null);
   await initProfile.execute("test", { profileId: "千叶市高中生" }, null, null, null);
   await initWorld.execute("test", { profileId: "千叶市高中生" }, null, null, null);
-  // 通讯录
-  if (gameState.player.relationships["平冢静"]?.affection !== 15) throw new Error("平冢静好感应为15");
-  if (gameState.player.relationships["户冢彩加"]?.affection !== 20) throw new Error("户冢彩加好感应为20");
-  if (!gameState.player.reputation["学生"] && gameState.player.reputation["学生"] !== 0) throw new Error("应有学生声望");
-  if (!gameState.npcs["平冢静"]) throw new Error("平冢静 NPC 应已创建");
+  // scheduleGroup="高校生" 应自动匹配 characters.json 中同组角色（共18人）
+  const relCount = Object.keys(gameState.player.relationships).length;
+  if (relCount < 10) throw new Error(`高校生应匹配到≥10个角色，实际 ${relCount}`);
+  // 自动推导声望组
+  if (!gameState.player.reputation["学生"] && gameState.player.reputation["学生"] !== 0) throw new Error("应自动生成学生声望");
+  // 匹配到的角色应已创建 NPC
+  const npcCount = Object.keys(gameState.npcs).length;
+  if (npcCount < 10) throw new Error(`应至少创建10个NPC，实际 ${npcCount}`);
   // 房产
   const prop = gameState.player.properties["学生公寓"];
   if (!prop || prop.type !== "own") throw new Error("学生公寓应注册为 own 类型房产");
+});
+
+test("INIT: init_world 日本首相无匹配角色返回友好提示", async () => {
+  const initGame = require("./tools/state/init_game.ts").default;
+  const initProfile = require("./tools/state/init_profile.ts").default;
+  const initWorld = require("./tools/state/init_world.ts").default;
+  await initGame.execute("test", { name: "岸田文雄", gender: "男", age: 67, year: 2018 }, null, null, null);
+  await initProfile.execute("test", { profileId: "日本首相" }, null, null, null);
+  const res = await initWorld.execute("test", { profileId: "日本首相" }, null, null, null);
+  const text = res.content?.[0]?.text || "";
+  if (!text.includes("无")) throw new Error(`政治家在oregairu中应无匹配角色，实际: ${text}`);
 });
 
 // ═══════════════════════════════════════════════════════════
