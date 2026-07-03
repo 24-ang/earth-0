@@ -8,7 +8,23 @@ export default {
       const { findCharacter, getBodyForAge, getNpcCurrentAge, gameState } = await import("../../engine/state.ts");
       const { itemsCatalog } = await import("../../engine/state.ts");
       const c = findCharacter(params.name);
-      if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
+      // 查不到静态角色但可能是玩家自身
+      if (!c) {
+        if (params.name === gameState.player.name) {
+          const p = gameState.player;
+          const body = p.body || getBodyForAge({ base_age: p.age, gender: p.gender, body: p.body }, p.age);
+          return { content: [{ type: "text", text: JSON.stringify({
+            name: p.name, gender: p.gender, age: p.age,
+            body, attributes: p.attributes, skills: p.skills,
+            abilities: p.abilities, equipment: p.equipment,
+            inventory: p.inventory.map((i: any) => i.name),
+            hp: p.hp, ac: p.ac, funds: p.funds,
+            titles: p.titles, flags: p.flags,
+            note: "此为你自己的角色信息（非 NPC）"
+          }, null, 2) }], details: {} };
+        }
+        return { content: [{ type: "text", text: "无此角色" }], details: {} };
+      }
       const age = getNpcCurrentAge(c.base_age || 16);
       const aged = { ...c, body: getBodyForAge(c, age) };
 

@@ -31,6 +31,21 @@ export default {
         ? gameState.player
         : getOrCreateNPC(params.target);
 
+      // 同名物品去重
+      const existing = targetChar.inventory.find((i: any) => i.name === params.item.name);
+      if (existing) {
+        // 合并 effects — 同名物品叠加效果
+        if (params.item.effects && params.item.effects.length > 0) {
+          existing.effects = [...(existing.effects || []), ...params.item.effects];
+        }
+        if (params.item.flavor) existing.flavor = [existing.flavor, params.item.flavor].filter(Boolean).join("\n");
+        saveState();
+        return {
+          content: [{ type: "text", text: `${params.target}已有${params.item.name}，已合并新效果/描述（未创建重复物品）。原因: ${params.reason}` }],
+          details: { item: existing.name, merged: true }
+        };
+      }
+
       // Validate damage for weapon
       if (params.item.type === "weapon" && !params.item.damage) {
         return { content: [{ type: "text", text: "错误: weapon 类型的物品必须指定 damage 参数" }], details: {} };

@@ -48,10 +48,8 @@ export async function buildRenderSystemPrompt(
     ? "gm-voice-novel.md"
     : "gm-voice-turnbased.md";
 
-  // 小说模式禁止 RPG 话剧式规则——两套叙事规则矛盾，强制 gal
-  const effectiveMode = gameState.interactionMode === "novel" ? "gal" : gameState.mode;
-  const modeFile = effectiveMode === "sex" ? "gm-mode-sex.md"
-    : effectiveMode === "rpg" ? "gm-mode-rpg.md"
+  const modeFile = gameState.mode === "sex" ? "gm-mode-sex.md"
+    : gameState.mode === "rpg" ? "gm-mode-rpg.md"
     : "gm-mode-gal.md";
 
   const interactionMode = gameState.interactionMode || "turn_based";
