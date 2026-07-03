@@ -107,7 +107,7 @@ function buildSceneBrief(gs: any): string {
   lines.push(`时间: ${timeStr || "未知"}`);
   // 季节推导：硬约束防止 LLM 自由发挥
   const m = parseInt((gs.time?.game_date || "2018-04").split("-")[1]) || 4;
-  const seasons = ["冬", "春", "春", "夏", "夏", "夏", "秋", "秋", "秋", "冬", "冬", "冬"];
+  const seasons = ["冬", "冬", "春", "春", "春", "夏", "夏", "夏", "秋", "秋", "秋", "冬"];
   const season = seasons[m - 1] || "春";
   lines.push(`季节: ${season}（硬约束——当前是${m}月，禁止描写其他季节的气候/景物/节日）`);
   lines.push(`地点: ${gs.player?.location || "未知"}`);
