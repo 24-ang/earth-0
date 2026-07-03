@@ -265,24 +265,13 @@ export default {
         }
       }
 
-      // ── 通讯录 ──
-      if (profile.contacts && Array.isArray(profile.contacts)) {
-        try {
-          const { getPlayerPhoneData, addContact } = await import("../../engine/phone.ts");
-          const pd = getPlayerPhoneData();
-          if (pd) {
-            for (const contactName of profile.contacts) {
-              if (typeof contactName === "string") {
-                const existing = pd.contacts.find((c: any) => c.name === contactName);
-                if (!existing) {
-                  addContact(pd, contactName, "", "初始联系人");
-                }
-              }
-            }
-          }
-        } catch (e: any) {
-          console.error("init_profile: 通讯录初始化失败", e.message || String(e));
-        }
+      // ── 通讯录 ──（从已建立的关系自动同步，不盲灌 profile 名单）
+      try {
+        const { getPlayerPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
+        const pd = getPlayerPhoneData();
+        if (pd) syncContactsFromRelationships(pd, 0);
+      } catch (e: any) {
+        console.error("init_profile: 通讯录初始化失败", e.message || String(e));
       }
 
       // ── 记忆 ──

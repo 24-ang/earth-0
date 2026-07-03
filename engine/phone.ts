@@ -58,10 +58,10 @@ export function addContact(pd: PhoneData, name: string, number: string, relation
 }
 
 /** 根据好感度自动同步通讯录：好感>=20可见，>=40可主动联系 */
-export function syncContactsFromRelationships(pd: PhoneData): Contact[] {
+export function syncContactsFromRelationships(pd: PhoneData, minAffection = 20): Contact[] {
   const added: Contact[] = [];
   for (const [npcName, rel] of Object.entries(gameState.player.relationships)) {
-    if (rel.affection >= 20 && !pd.contacts.some(c => c.name === npcName)) {
+    if (rel.affection >= minAffection && !pd.contacts.some(c => c.name === npcName)) {
       added.push(addContact(pd, npcName, generatePhoneNumber(npcName), "关系联系人"));
     }
   }
