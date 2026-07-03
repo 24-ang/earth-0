@@ -11,7 +11,17 @@ export default {
     async execute(_id, params, _s, _o, _ctx) {
       const { getPlayerPhoneData, initiateCall, endCall, canContact } = await import("../../engine/phone.ts");
       const { saveState } = await import("../../engine/state.ts");
-      const pd = getPlayerPhoneData();
+      let pd = getPlayerPhoneData();
+      if (!pd) {
+        const { getPlayerPhone, createDefaultPhoneData } = await import("../../engine/phone.ts");
+        const phone = getPlayerPhone();
+        if (phone) {
+          const { gameState, saveState: sv } = await import("../../engine/state.ts");
+          phone.phoneData = createDefaultPhoneData(gameState.player.name);
+          sv();
+          pd = phone.phoneData;
+        }
+      }
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。无法进行通话操作。" }], details: {} };
       }

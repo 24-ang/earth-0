@@ -3,7 +3,5 @@
   "subagents": {
     "disableBuiltins": true
   },
-  "lastChangelogVersion": "0.74.2",
-  "defaultThinkingLevel": "xhigh",
-  "defaultTemperature": 1
+  "lastChangelogVersion": "0.74.2"
 }

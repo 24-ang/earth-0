@@ -23,6 +23,22 @@
       30000
     ]
   },
+  "gambling": {
+    "games": {
+      "dice_2d6": {
+        "label": "双骰",
+        "payout_multiplier": 2.0,
+        "primary_attribute": "敏捷",
+        "difficulty_class": 7
+      },
+      "blackjack": {
+        "label": "21点",
+        "payout_multiplier": 2.0,
+        "primary_attribute": "智力",
+        "difficulty_class": 11
+      }
+    }
+  },
   "job_rates": {
     "便利店": 900,
     "送报纸": 500,

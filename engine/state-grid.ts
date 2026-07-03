@@ -182,7 +182,11 @@ function matchKeyForDoor(equipment: import("./types.ts").EquipmentSlots, roomNam
 export function movePlayer(direction: string, running: boolean = false): import("./types.ts").MoveResult {
   const delta = DIRS[direction];
   if (!delta) return { success: false, newX: -1, newY: -1, blocked: true, reason: `无效方向：${direction}`, distance: 0, seconds: 0 };
-  if (!gameState.player.gridPos) return { success: false, newX: -1, newY: -1, blocked: true, reason: "当前位置不可步行移动", distance: 0, seconds: 0 };
+  if (!gameState.player.gridPos) {
+    // 自动恢复：gridPos 为 null 时尝试初始化
+    initPlayerGrid();
+    if (!gameState.player.gridPos) return { success: false, newX: -1, newY: -1, blocked: true, reason: "当前位置不可步行移动（gridPos 初始化失败）", distance: 0, seconds: 0 };
+  }
   const curRoom = getRoom(gameState.player.location);
   if (!curRoom) return { success: false, newX: -1, newY: -1, blocked: true, reason: "当前位置没有地图数据" };
   const [cx, cy] = gameState.player.gridPos;

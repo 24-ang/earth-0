@@ -158,7 +158,7 @@ export function buildClassificationPrompt(playerInput: string, gs: any): string 
     "- steal_item: 偷窃。param: item(物品名), target_npc(目标NPC)",
     "- combat_action: 战斗。param: action(attack/defend/flee), target(目标)",
     "- use_item: 使用背包物品。param: item(物品名)",
-    "- equip_item: 装备物品。param: item(物品名), slot(槽位)",
+    "- equip_item: 装备/卸下物品。有slot=装备到该槽位；无slot=卸下该物品放入背包。param: item(物品名), slot(可选)",
     "- adjust_relation: 好感增减。param: npc(NPC名), delta(数值)",
     "",
 

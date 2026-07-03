@@ -23,8 +23,11 @@ export default {
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getRoom, placeFurniture, removeFurniture, editCellType, toggleDoor } = await import("../../engine/state.ts");
+      const { gameState, getRoom, placeFurniture, removeFurniture, editCellType, toggleDoor, initPlayerGrid } = await import("../../engine/state.ts");
       const p = gameState.player;
+      if (!p.gridPos) {
+        initPlayerGrid();
+      }
       if (!p.gridPos) {
         return { content: [{ type: "text", text: "当前玩家没有网格坐标，无法进行网格交互" }], details: {} };
       }
@@ -141,7 +144,34 @@ export default {
         return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y}): ${r.reason}${wantedWarning}` }], details: r };
 
       } else if (params.action === "remove") {
-        matched = targets.find(t => t.cell.furniture);
+        // 优先匹配指定物品名
+        if (params.item) {
+          matched = targets.find(t => t.cell.furniture === params.item);
+          if (!matched) {
+            for (let yy = 0; yy < room.height; yy++) {
+              for (let xx = 0; xx < room.width; xx++) {
+                if (room.cells[yy][xx].furniture === params.item) {
+                  matched = { x: xx, y: yy, cell: room.cells[yy][xx], dir: "房间" };
+                  break;
+                }
+              }
+              if (matched) break;
+            }
+          }
+        }
+        if (!matched) matched = targets.find(t => t.cell.furniture);
+        if (!matched) {
+          // 相邻四格没有 → 扫描全房间找家具
+          for (let yy = 0; yy < room.height; yy++) {
+            for (let xx = 0; xx < room.width; xx++) {
+              if (room.cells[yy][xx].furniture) {
+                matched = { x: xx, y: yy, cell: room.cells[yy][xx], dir: "房间" };
+                break;
+              }
+            }
+            if (matched) break;
+          }
+        }
         if (!matched) {
           return { content: [{ type: "text", text: "附近没有可以拆除的家具" }], details: {} };
         }
@@ -149,9 +179,36 @@ export default {
         return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y}): ${r.reason}` }], details: r };
 
       } else if (params.action === "pick_up") {
-        matched = targets.find(t => t.cell.furniture);
+        // 优先匹配指定物品名（如有），否则取最近家具
+        if (params.item) {
+          matched = targets.find(t => t.cell.furniture === params.item);
+          if (!matched) {
+            for (let yy = 0; yy < room.height; yy++) {
+              for (let xx = 0; xx < room.width; xx++) {
+                if (room.cells[yy][xx].furniture === params.item) {
+                  matched = { x: xx, y: yy, cell: room.cells[yy][xx], dir: "房间" };
+                  break;
+                }
+              }
+              if (matched) break;
+            }
+          }
+        }
+        if (!matched) matched = targets.find(t => t.cell.furniture);
         if (!matched) {
-          return { content: [{ type: "text", text: "附近没有可以拾取的家具" }], details: {} };
+          // 相邻四格没有 → 扫描全房间找可拾取物品
+          for (let yy = 0; yy < room.height; yy++) {
+            for (let xx = 0; xx < room.width; xx++) {
+              if (room.cells[yy][xx].furniture) {
+                matched = { x: xx, y: yy, cell: room.cells[yy][xx], dir: "房间" };
+                break;
+              }
+            }
+            if (matched) break;
+          }
+        }
+        if (!matched) {
+          return { content: [{ type: "text", text: "附近没有可以拾取的物品" }], details: {} };
         }
         const furnitureName = matched.cell.furniture!;
         // 优先用 cell 上保留的原始重量（place 时写入），其次查物品模板
@@ -177,6 +234,14 @@ export default {
         const template = getItemTemplate(furnitureName);
         template.weight = itemWeight;  // 覆盖为 cell 上保留的原始重量
 
+        // 检查背包中是否已有同名物品（防止重复）
+        const existingIdx = gameState.player.inventory.findIndex((i: any) => i.name === furnitureName);
+        if (existingIdx >= 0) {
+          console.warn(`pick_up: 背包中已有 "${furnitureName}"，跳过重复拾取`);
+          removeFurniture(matched.x, matched.y);
+          return { content: [{ type: "text", text: `在${matched.dir}边(${matched.x},${matched.y}): ${furnitureName}已被拾取（背包中已有同名物品）` }], details: { success: true, reason: `跳过重复` } };
+        }
+
         if (itemWeight > str * 1.5) {
           // 中等重量：双手搬运
           template.holding_in_hands = true;
@@ -200,6 +265,18 @@ export default {
         }
         matched = targets.find(t => t.cell.type === "floor" && !t.cell.furniture);
         if (!matched) {
+          // 相邻四格无空地 → 扫描全房间找可用 floor 格
+          for (let yy = 0; yy < room.height; yy++) {
+            for (let xx = 0; xx < room.width; xx++) {
+              if (room.cells[yy][xx].type === "floor" && !room.cells[yy][xx].furniture) {
+                matched = { x: xx, y: yy, cell: room.cells[yy][xx], dir: "房间" };
+                break;
+              }
+            }
+            if (matched) break;
+          }
+        }
+        if (!matched) {
           return { content: [{ type: "text", text: "附近没有空地可以放置" }], details: {} };
         }
         const dropped = p.inventory.splice(invIdx, 1)[0];
@@ -211,6 +288,7 @@ export default {
         matched.cell.furniture = (dropped as any).name;
         matched.cell.label = (dropped as any).name.slice(0, 4);
         matched.cell.block = true;
+        (matched.cell as any).furnitureWeight = (dropped as any).weight || 1.0;
         const { saveState } = await import("../../engine/state.ts");
         saveState();
         const extraMsg = wasHolding ? "，双手解放" : "";

@@ -2561,11 +2561,11 @@ test("⑳ Gambling: executeGamble & getBlackMarketPrice", async () => {
     if (!e.message.includes("余额不足")) throw e;
   }
 
-  // 2. 模拟 Nat 1 自然大失败
+  // 2. D20 游戏 Nat 1 自然大失败
   gameState.player.funds = 100;
   const originalRandom = Math.random;
-  Math.random = () => 0.0; // 导致 roll = 1
-  const res1 = executeGamble("dice_2d6", 50, "cheat", gameState);
+  Math.random = () => 0.0; // D20: roll = 1
+  const res1 = executeGamble("blackjack", 50, "cheat", gameState);
   Math.random = originalRandom;
 
   if (res1.success || res1.critical !== "fail") {
@@ -2578,17 +2578,17 @@ test("⑳ Gambling: executeGamble & getBlackMarketPrice", async () => {
     throw new Error(`Nat 1 应扣除本金且无奖金，余额应为 50，实际：${gameState.player.funds}`);
   }
 
-  // 3. 模拟 Nat 20 自然大成功
+  // 3. 2d6 游戏满骰 (12) 自然大成功
   gameState.player.funds = 100;
-  Math.random = () => 0.99; // 导致 roll = 20
+  Math.random = () => 0.99; // 2d6: 6+6 = 12, 满骰
   const res2 = executeGamble("dice_2d6", 50, "cheat", gameState);
   Math.random = originalRandom;
 
   if (!res2.success || res2.critical !== "success") {
-    throw new Error("Math.random 为 0.99 时应触发 Nat 20 成功");
+    throw new Error("Math.random 为 0.99 时应触发 2d6 满骰(12) 成功");
   }
   if (gameState.player.funds !== 250) {
-    throw new Error(`Nat 20 应赚取双倍赔率奖金，余额应为 250，实际：${gameState.player.funds}`);
+    throw new Error(`2d6 满骰应赚取双倍赔率奖金，余额应为 250，实际：${gameState.player.funds}`);
   }
 
   // 4. 黑市定价规则测试

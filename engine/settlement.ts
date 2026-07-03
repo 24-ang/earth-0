@@ -74,10 +74,16 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
   const { runWorldTick } = await import("./tick.ts");
   await runWorldTick();
 
-  // --- 9. 疲劳累积（先加后扣睡眠恢复） ---
+  // --- 9. 疲劳累积（长时间→休息恢复，短时间→活动累积） ---
   const { getFatigueMultiplier } = await import("./weather.ts");
   const kFatigue = getFatigueMultiplier(gameState.weather?.temp ?? 16);
-  let rawFatigue = (gameState.player.fatigue ?? 0) + Math.round((mins / 12) * kFatigue);
+  let rawFatigue: number;
+  if (mins >= 240) {
+    // 4小时以上视为休息/睡眠，疲劳递减而非递增
+    rawFatigue = Math.max(0, (gameState.player.fatigue ?? 0) - Math.round(mins / 12));
+  } else {
+    rawFatigue = (gameState.player.fatigue ?? 0) + Math.round((mins / 12) * kFatigue);
+  }
   // --- 10. 跨天结算：住房合同 + 每日睡眠恢复40疲劳 ---
   if (result.daysAdvanced > 0) {
     const { settleHousingContracts } = await import("./housing.ts");

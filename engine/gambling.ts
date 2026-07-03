@@ -45,11 +45,23 @@ export function executeGamble(
   // 3. 扣除下注本金
   gameState.player.funds -= amount;
 
-  // 4. 投掷 D20
-  const roll = Math.floor(Math.random() * 20) + 1;
+  // 4. 投骰——dice_2d6 用 2d6，其余默认 D20
+  const use2d6 = gameKey === "dice_2d6";
+  const diceSides = use2d6 ? 6 : 20;
+  const diceCount = use2d6 ? 2 : 1;
+  let roll = 0;
+  const rollParts: number[] = [];
+  for (let i = 0; i < diceCount; i++) {
+    const r = Math.floor(Math.random() * diceSides) + 1;
+    roll += r;
+    rollParts.push(r);
+  }
+  const rollLabel = use2d6 ? `2d6=[${rollParts.join(",")}]→${roll}` : `D20=${roll}`;
+  const isNat1 = !use2d6 && roll === 1;
+  const isNatMax = use2d6 ? roll === 12 : roll === 20;
 
   // 5. 判定自然大成功/大失败
-  if (roll === 1) {
+  if (isNat1) {
     // 强制失败且被抓包
     gameState.flags.exposed = true;
     gameState.flags.wanted = true;
@@ -65,18 +77,18 @@ export function executeGamble(
     };
   }
 
-  if (roll === 20) {
+  if (isNatMax) {
     const doublePayout = Math.floor(amount * payoutMultiplier * 2);
     gameState.player.funds += doublePayout;
     return {
       success: true,
       roll,
       modifier: 0,
-      total: 20,
+      total: roll,
       dc,
       payout: doublePayout,
       critical: "success",
-      message: `你掷出了自然大成功 (Nat 20)！你以惊人的好运碾压全场，赢得双倍暴击奖金共计 ${doublePayout} 资金！`,
+      message: `你掷出了 ${use2d6 ? `2d6=12 (满骰)` : `自然大成功 (Nat 20)`}！你以${use2d6 ? "极佳运气" : "惊人的好运"}赢得双倍暴击奖金共计 ${doublePayout} 资金！`,
     };
   }
 

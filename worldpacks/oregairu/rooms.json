@@ -1966,9 +1966,10 @@
           "label": "WL"
         },
         {
-          "type": "wall",
-          "block": true,
-          "label": "WL"
+          "type": "exit",
+          "block": false,
+          "exitTo": "校门",
+          "label": "DR"
         },
         {
           "type": "wall",
@@ -3144,7 +3145,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "操场",
+          "exitTo": "1F南走廊",
           "label": "DR"
         },
         {
@@ -3160,16 +3161,14 @@
           "label": "WL"
         },
         {
-          "type": "exit",
+          "type": "floor",
           "block": false,
-          "exitTo": "千叶_住宅区",
-          "label": "DR"
+          "label": "  "
         },
         {
-          "type": "exit",
+          "type": "floor",
           "block": false,
-          "exitTo": "千叶_住宅区",
-          "label": "DR"
+          "label": "  "
         },
         {
           "type": "wall",

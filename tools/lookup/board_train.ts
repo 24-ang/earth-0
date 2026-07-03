@@ -8,9 +8,16 @@ export default {
       to: Type.String({ description: "目的站名" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      // 查时刻表
-      const cityMap = await import("../../data/city_map.json", { with: { type: "json" } });
-      const regions = (cityMap as any).default?.regions || {};
+      // 查时刻表——读 worldpacks 而非 data
+      const fs = await import("node:fs");
+      const path = await import("node:path");
+      const { gameState, saveState } = await import("../../engine/state.ts");
+      const activeWorld = gameState.activeWorld || "oregairu";
+      const wPath = path.resolve(process.cwd(), "worldpacks", activeWorld, "city_map.json");
+      const defaultPath = path.resolve(process.cwd(), "data", "city_map.json");
+      const raw = fs.existsSync(wPath) ? fs.readFileSync(wPath, "utf-8") : fs.readFileSync(defaultPath, "utf-8");
+      const cityMapConfig = JSON.parse(raw);
+      const regions = cityMapConfig.regions || {};
       let mins = 0;
       for (const reg of Object.values(regions) as any[]) {
         if (!reg.stations) continue;
@@ -23,10 +30,18 @@ export default {
           }
         }
       }
-      if (mins <= 0) return { content: [{ type: "text", text: `找不到 ${params.from} → ${params.to} 的电车路线` }], details: {} };
+      if (mins <= 0) {
+        // 收集所有可用车站名，帮助 LLM 选择正确的站名
+        const allStations: string[] = [];
+        for (const reg of Object.values(regions) as any[]) {
+          if (!reg.stations) continue;
+          for (const sn of Object.keys(reg.stations)) allStations.push(sn);
+        }
+        const stationHints = allStations.length > 0 ? `可用车站: ${allStations.join(", ")}。城际旅行请用 travel_intercity。` : "";
+        return { content: [{ type: "text", text: `找不到 ${params.from} → ${params.to} 的电车路线。${stationHints}` }], details: {} };
+      }
 
       // 触发旅行模式
-      const { gameState, saveState } = await import("../../engine/state.ts");
       gameState.pendingTravel = {
         from: params.from,
         to: params.to,

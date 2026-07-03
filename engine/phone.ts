@@ -14,13 +14,18 @@ const MAX_PHOTOS = 100;
 
 // ── 手机定位 ──
 
-/** 扫描玩家装备+背包，找到手机 Item */
+/** 扫描玩家装备+背包，找到手机 Item（按通讯效果 + 名字兜底） */
 export function getPlayerPhone(): Item | null {
   const p = gameState.player;
   for (const item of Object.values(p.equipment)) {
     if (item?.effects?.some(e => e.type === "communication")) return item;
+    if (item?.name?.includes("手机")) return item;
   }
-  return p.inventory.find(i => i.effects?.some(e => e.type === "communication")) ?? null;
+  for (const item of p.inventory) {
+    if (item?.effects?.some(e => e.type === "communication")) return item;
+    if (item?.name?.includes("手机")) return item;
+  }
+  return null;
 }
 
 /** 获取/懒初始化玩家手机的 phoneData */

@@ -85,6 +85,8 @@ export default function (pi: ExtensionAPI) {
 
     // 存储 Phase 1 结果供 Phase 4 使用
     gameState._phase1Summary = phase1.summary;
+    gameState._phase1ToolsExecuted = phase1.toolsExecuted;
+    gameState._phase1DirectorNote = (phase1 as any).directorNote || "";
 
     // ── 强制结算（确保时间/回合/NPC日程推进） ──
     // 仅在 Phase 1 未执行 settle_scene 时补调
@@ -259,7 +261,12 @@ export default function (pi: ExtensionAPI) {
       notices.push(`[引擎] 上轮 GM 未调用 settle_scene，引擎已自动完整结算（当前 turn ${gameState.turn}）。`);
     }
     if (phase1.classified && phase1.toolsExecuted.length > 0) {
-      notices.push(`[引擎] Phase1 分类器执行: ${phase1.toolsExecuted.join(", ")}。工具已执行完毕，直接写叙事。`);
+      // 从 directorNote 提取 resolved_changes，让 LLM 知道每个工具的真实执行结果
+      const dn = (phase1 as any).directorNote || "";
+      const rcMatch = dn.match(/<resolved_changes>([\s\S]*?)<\/resolved_changes>/);
+      const details = rcMatch ? rcMatch[1].trim() : "";
+      const detailHint = details && details !== "无" ? ` | 结果: ${details}` : "";
+      notices.push(`[引擎] Phase1 分类器执行: ${phase1.toolsExecuted.join(", ")}${detailHint}。直接写叙事。`);
     } else if (!phase1.classified) {
       notices.push(`[引擎] Phase1 分类失败，已回退引擎兜底结算。直接写叙事。`);
     }

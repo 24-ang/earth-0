@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { GameState } from "./types.ts";
 import { lookupRegion } from "./router.ts";
-import { itemsCatalog } from "./state.ts";
+import { itemsCatalog, normalizeLocationName } from "./state.ts";
 
 function getRestoredItem(name: string, fallbackWeight: number, fallbackVolume?: number): any {
   let itemData: any = null;
@@ -152,8 +152,11 @@ export function transferHousingStorage(
 
   // 校验物理位置：玩家必须在房产的 region 范围内
   const matched = lookupRegion(gameState.player.location).matched_regions;
-  const inRegion = matched.some(r => r.name === property.regionId);
-  if (!inRegion && gameState.player.location !== property.regionId) {
+  const inRegion = matched.some(r =>
+    normalizeLocationName(r.name) === normalizeLocationName(property.regionId) ||
+    normalizeLocationName(gameState.player.location).includes(normalizeLocationName(property.regionId))
+  );
+  if (!inRegion && normalizeLocationName(gameState.player.location) !== normalizeLocationName(property.regionId)) {
     throw new Error(`你当前不在此房产安全屋内（房产位于 [${property.regionId}]，你位于 [${gameState.player.location}]）`);
   }
 

@@ -228,15 +228,30 @@ export async function interactFurniture(
     return { message: `不能这样操作${furnitureName}。可以：${available}`, narrative: "", effects: [] };
   }
 
-  // 距离校验
-  if (playerGridPos && roomCells) {
+  // 距离校验：先 3×3 邻域，再全房间扫描
+  if (playerGridPos && roomCells && roomCells.length > 0) {
     const [px, py] = playerGridPos;
     let found = false;
-    for (let y = Math.max(0, py - 1); y <= Math.min(roomCells.length - 1, py + 1); y++) {
-      for (let x = Math.max(0, px - 1); x <= Math.min((roomCells[y]?.length || 0) - 1, px + 1); x++) {
-        if (roomCells[y]?.[x]?.furniture === furnitureName) { found = true; break; }
+    const maxY = roomCells.length - 1;
+    for (let y = Math.max(0, py - 1); y <= Math.min(maxY, py + 1); y++) {
+      const row = roomCells[y];
+      if (!row) continue;
+      const maxX = row.length - 1;
+      for (let x = Math.max(0, px - 1); x <= Math.min(maxX, px + 1); x++) {
+        if (row[x]?.furniture === furnitureName) { found = true; break; }
       }
       if (found) break;
+    }
+    if (!found) {
+      // 全房间扫描 fallback
+      for (let y = 0; y <= maxY; y++) {
+        const row = roomCells[y];
+        if (!row) continue;
+        for (let x = 0; x < row.length; x++) {
+          if (row[x]?.furniture === furnitureName) { found = true; break; }
+        }
+        if (found) break;
+      }
     }
     if (!found) {
       return { message: `你离${furnitureName}太远了，走近一点再操作。`, narrative: "", effects: [] };

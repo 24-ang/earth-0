@@ -18,6 +18,9 @@ mkdir -p ./sessions
 
 # state/ 是 session-backed 状态的 debug export / legacy fallback，真实存档在 pi session 快照中。
 # 生成项目时应把 state/ 写进 .gitignore；发布包不要包含 state/。
+# 每次启动自动清旧存档，避免跨 session 状态污染。
+rm -rf ./state/* 2>/dev/null || true
+echo "✓ 已清理旧存档 (state/)"
 
 # ---- 项目隔离 ----
 # PI_CODING_AGENT_DIR 将 pi 的配置目录从 ~/.pi/agent/ 切换到 .pi/agent/，

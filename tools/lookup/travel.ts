@@ -67,13 +67,49 @@ export default {
         }
       }
 
-      // 4. 同城移动（目的地在本城 landmarks 中 或 known_locations 中）
-      const isKnown = destIsLandmark || (gameState.player.known_locations || []).includes(dest);
-      if (isKnown) {
-        // 判断交通方式
+      // 4. 同城移动（目的地在本城 landmarks 中 或 known_locations 中 或 rooms/school_map 中）
+      let destIsKnown = destIsLandmark || (gameState.player.known_locations || []).some((k: string) => isSameLocation(k, dest));
+      if (!destIsKnown) {
+        // 查 rooms.json 和 school_map.json（内景房间）
+        const { getRoom } = await import("../../engine/state.ts");
+        destIsKnown = !!getRoom(dest);
+        if (!destIsKnown) {
+          try {
+            const sPath = path.resolve(process.cwd(), "worldpacks", activeWorld, "school_map.json");
+            const sDefaultPath = path.resolve(process.cwd(), "data", "school_map.json");
+            if (fs.existsSync(sPath) || fs.existsSync(sDefaultPath)) {
+              const sm = JSON.parse(fs.readFileSync(fs.existsSync(sPath) ? sPath : sDefaultPath, "utf-8"));
+              if (sm.buildings) {
+                for (const bdata of Object.values(sm.buildings)) {
+                  const b = bdata as any;
+                  if (b.rooms) {
+                    for (const rooms of Object.values(b.rooms)) {
+                      if ((rooms as string[]).some((r: string) => isSameLocation(r, dest))) {
+                        destIsKnown = true; break;
+                      }
+                    }
+                  }
+                  if (destIsKnown) break;
+                }
+              }
+            }
+          } catch {}
+        }
+        if (destIsKnown) {
+          gameState.player.known_locations.push(dest);
+        }
+      }
+
+      if (destIsKnown) {
+        // 判断交通方式：同建筑内房间→秒级
+        const { getRoom } = await import("../../engine/state.ts");
+        const isRoomToRoom = getRoom(currentLoc) && getRoom(dest);
         let route: string;
         let minutes: number;
-        if (method === "auto") {
+        if (isRoomToRoom) {
+          route = "步行";
+          minutes = 0.5; // 30秒，房间间走几步
+        } else if (method === "auto") {
           if (currentRegion && destRegion && currentRegion === destRegion) {
             route = "步行";
             minutes = 15;

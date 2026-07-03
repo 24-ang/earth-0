@@ -38,8 +38,38 @@ export default {
         }
       }
       // 兜底：也检查 known_locations
-      if (!foundRegion && !(gameState.player.known_locations || []).includes(dest)) {
-        return { content: [{ type: "text", text: `未找到地点 "${dest}"。请确认名称正确，或用 travel_intercity 跨城。` }], details: {} };
+      if (!foundRegion && !(gameState.player.known_locations || []).some((k: string) => isSameLocation(k, dest))) {
+        // 再查 rooms.json —— 学校教室/走廊等内景房间
+        const { getRoom } = await import("../../engine/state.ts");
+        let foundViaRoom = !!getRoom(dest);
+        // 还查 school_map.json —— 建筑内部的课程教室等
+        if (!foundViaRoom) {
+          try {
+            const sPath = path.resolve(process.cwd(), "worldpacks", activeWorld, "school_map.json");
+            const sDefaultPath = path.resolve(process.cwd(), "data", "school_map.json");
+            if (fs.existsSync(sPath) || fs.existsSync(sDefaultPath)) {
+              const sm = JSON.parse(fs.readFileSync(fs.existsSync(sPath) ? sPath : sDefaultPath, "utf-8"));
+              if (sm.buildings) {
+                for (const bdata of Object.values(sm.buildings)) {
+                  const b = bdata as any;
+                  if (b.rooms) {
+                    for (const rooms of Object.values(b.rooms)) {
+                      if ((rooms as string[]).some((r: string) => isSameLocation(r, dest))) {
+                        foundViaRoom = true; break;
+                      }
+                    }
+                  }
+                  if (foundViaRoom) break;
+                }
+              }
+            }
+          } catch {}
+        }
+        if (!foundViaRoom) {
+          return { content: [{ type: "text", text: `未找到地点 "${dest}"。请确认名称正确，或用 travel_intercity 跨城。` }], details: {} };
+        }
+        // 找到了 → 自动注册到 known_locations，下次不需要再搜索
+        gameState.player.known_locations.push(dest);
       }
 
       // 估算时间
@@ -55,8 +85,8 @@ export default {
         }
       }
       // 同建筑内房间移动：秒级（非城市级旅行）
-      const ROOMS = (await import("../../engine/state.ts")).ROOMS;
-      if (ROOMS[currentLoc] && ROOMS[dest]) {
+      const { getRoom } = await import("../../engine/state.ts");
+      if (getRoom(currentLoc) && getRoom(dest)) {
         minutes = 0.5; // 30秒，房间间走几步的距离
       } else if (currentRegion && foundRegion && currentRegion === foundRegion) {
         minutes = route === "电车" ? 8 : route === "公交" ? 15 : 15; // 同区更短

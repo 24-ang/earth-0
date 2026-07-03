@@ -56,8 +56,9 @@ export default {
 
       // 负重校验（仅玩家）
       if (params.target === "玩家" || params.target === gameState.player.name) {
-        const currentWt = gameState.player.inventory.reduce((s: number, i: any) => s + (i.weight || 0), 0);
-        const maxCarry = (gameState.player.attributes.力量 || 10) * 6.8;
+        const { calcCurrentWeight, calcMaxCarry } = await import("../../engine/state.ts");
+        const currentWt = calcCurrentWeight(gameState.player.inventory, gameState.player.equipment);
+        const maxCarry = calcMaxCarry(gameState.player.attributes.力量 || 10);
         if (currentWt + (params.item.weight || 0) > maxCarry) {
           return {
             content: [{ type: "text", text: `负重超限：当前 ${currentWt.toFixed(1)}kg + ${params.item.name}(${params.item.weight}kg) 超过最大负重 ${maxCarry.toFixed(1)}kg。请丢弃部分物品后再试。` }],

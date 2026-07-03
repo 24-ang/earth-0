@@ -7,8 +7,17 @@ export default {
       platform: Type.Optional(Type.String({ description: "'mixi' 或 'twitter'，不传则返回全部" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { getPlayerPhoneData } = await import("../../engine/phone.ts");
-      const pd = getPlayerPhoneData();
+      const { getPlayerPhone, getPlayerPhoneData, createDefaultPhoneData } = await import("../../engine/phone.ts");
+      let pd = getPlayerPhoneData();
+      if (!pd) {
+        const phone = getPlayerPhone();
+        if (phone) {
+          const { gameState, saveState } = await import("../../engine/state.ts");
+          phone.phoneData = createDefaultPhoneData(gameState.player.name);
+          saveState();
+          pd = phone.phoneData;
+        }
+      }
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。" }], details: {} };
       }

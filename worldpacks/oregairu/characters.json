@@ -1162,8 +1162,8 @@
     "hair_color": "银色",
     "hair_style": "短发",
     "body": {
-      "height_cm": 115,
-      "weight_kg": 20,
+      "height_cm": 155,
+      "weight_kg": 45,
       "build": "纤细",
       "leg_type": "纤细",
       "skin": {
@@ -1175,9 +1175,9 @@
       "exercise": "规律运动"
     },
     "attributes": {
-      "力量": 2,
-      "敏捷": 6,
-      "体质": 4,
+      "力量": 5,
+      "敏捷": 8,
+      "体质": 6,
       "智力": 6,
       "感知": 8,
       "魅力": 14
@@ -1191,7 +1191,7 @@
     },
     "equipment": {
       "top": {
-        "name": "小学校服",
+        "name": "总武高制服",
         "type": "clothing",
         "slot": "top",
         "weight": 0.4,

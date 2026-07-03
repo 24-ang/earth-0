@@ -20,7 +20,7 @@ export default {
         saveState();
         return { content: [{ type: "text", text: `装备了${params.item} → ${params.slot}` }], details: {} };
       } else {
-        // 卸下：从装备槽找到物品 → 放回背包
+        // 无 slot：先查是否已装备（卸下逻辑）
         for (const [s, it] of Object.entries(p.equipment)) {
           if (it && it.name === params.item) {
             p.inventory.push(it);
@@ -29,7 +29,19 @@ export default {
             return { content: [{ type: "text", text: `卸下了${params.item}` }], details: {} };
           }
         }
-        return { content: [{ type: "text", text: `没有装备${params.item}` }], details: {} };
+        // 不在装备槽 → 在背包里，想装备但没指定 slot → 用物品自带 slot 推断
+        const invIdx = p.inventory.findIndex((i: any) => i.name === params.item);
+        if (invIdx < 0) return { content: [{ type: "text", text: `没有装备也没有这个物品: ${params.item}` }], details: {} };
+        const item = p.inventory[invIdx];
+        if (item.slot) {
+          const slot = item.slot as any;
+          if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
+          p.equipment[slot] = item;
+          p.inventory.splice(invIdx, 1);
+          saveState();
+          return { content: [{ type: "text", text: `装备了${params.item} → ${slot}（自动检测槽位）` }], details: {} };
+        }
+        return { content: [{ type: "text", text: `${params.item} 在背包中但无槽位信息，请显式传 slot 参数。` }], details: {} };
       }
     },
   };

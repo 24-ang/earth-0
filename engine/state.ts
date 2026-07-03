@@ -1440,8 +1440,17 @@ export function mountVehicle(itemName: string): string {
   const p = gameState.player;
   if (p.equipment.mount) return `已经骑着 ${p.equipment.mount.name}，请先下车`;
 
-  // 从背包找
-  const idx = p.inventory.findIndex(i => i.effects?.some(e => e.type === "vehicle") && i.name === itemName);
+  // 从背包找——先按 vehicle effect 匹配，再按名字兜底
+  let idx = p.inventory.findIndex(i => i.effects?.some(e => e.type === "vehicle") && i.name === itemName);
+  if (idx < 0) {
+    // 兜底：名字匹配（spawn_item 可能没加 vehicle effect）
+    idx = p.inventory.findIndex(i => i.name === itemName);
+    if (idx >= 0 && !p.inventory[idx].effects?.some(e => e.type === "vehicle")) {
+      // 补充 vehicle effect
+      if (!p.inventory[idx].effects) p.inventory[idx].effects = [];
+      p.inventory[idx].effects.push({ type: "vehicle", value: "bicycle" });
+    }
+  }
   if (idx < 0) return `背包里没有 ${itemName}`;
 
   const found = p.inventory.splice(idx, 1)[0];
@@ -3468,7 +3477,12 @@ export function switchActiveWorld(targetWorld: string): void {
     gameState.npcs = structuredClone(snapshot.npcs);
     ROOMS = structuredClone(snapshot.room_deltas);
     LOCATIONS_DELTA = structuredClone(snapshot.dynamic_locations);
-    gameState.player.known_locations = structuredClone(snapshot.known_locations?.length ? snapshot.known_locations : gameState.player.known_locations);
+    // 合并快照的地点 + 玩家当前已知地点（避免快照覆盖新探索的地点）
+    const merged = new Set(gameState.player.known_locations || []);
+    for (const loc of (snapshot.known_locations || [])) {
+      merged.add(loc);
+    }
+    gameState.player.known_locations = [...merged];
 
     const phone = findPlayerPhone();
     if (phone && phone.phoneData) {
