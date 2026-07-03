@@ -345,7 +345,6 @@ export async function keywordFallback(playerInput: string, ctx: any): Promise<Ph
       [/便利|711|罗森/, "便利店"],
       [/车站|駅/, "千叶站"],
       [/海|公园/, "稻毛海滨公园"],
-      [/回家|回去/, "家_玩家房间"],
       [/商店街/, "千叶中央商店街"],
       [/教室/, "2年F班"],
     ];
