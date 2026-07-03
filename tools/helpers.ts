@@ -182,9 +182,8 @@ export function updateChatHUD(ctx: any) {
 }
 
 export async function moveTo(loc: string, ctx: any, gs: any, save: any) {
-  gs.player.location = loc;
-  if (!gs.player.known_locations) gs.player.known_locations = ["千叶_住宅区"];
-  if (!gs.player.known_locations.includes(loc)) gs.player.known_locations.push(loc);
+  const { setPlayerLocation } = await import("../engine/state.ts");
+  setPlayerLocation(loc);
   const { stampRoom } = await import("../engine/state.ts");
   stampRoom(loc);
   save(); ctx.ui.notify("📍 " + loc, "info");

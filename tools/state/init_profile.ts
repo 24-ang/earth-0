@@ -225,11 +225,14 @@ export default {
         gameState.player.ac = calcAC(gameState.player.attributes.敏捷, gameState.player.equipment);
       }
 
-      // ── 背包 ──
+      // ── 背包 ──（叠加不覆盖——保留 init_game 的兜底物品如手机）
       if (profile.inventory) {
-        gameState.player.inventory = profile.inventory.map((item: any, idx: number) =>
-          normalizeItem(item, `inventory[${idx}]`)
-        );
+        const existingNames = new Set(gameState.player.inventory.map((i: any) => i.name));
+        for (const [idx, item] of (profile.inventory as any[]).entries()) {
+          if (!existingNames.has(item.name)) {
+            gameState.player.inventory.push(normalizeItem(item, `inventory[${idx}]`));
+          }
+        }
       }
 
       // ── 技能 ──
