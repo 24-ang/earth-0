@@ -9,7 +9,6 @@ import adjustRelationTool from "./state/adjust_relation.ts";
 import grantSkillExpTool from "./state/grant_skill_exp.ts";
 import initGameTool from "./state/init_game.ts";
 import initProfileTool from "./state/init_profile.ts";
-import initWorldTool from "./state/init_world.ts";
 import setFlagsTool from "./state/set_flags.ts";
 import toggleLayer1Tool from "./state/toggle_layer1.ts";
 import toggleAumodeTool from "./state/toggle_aumode.ts";
@@ -161,7 +160,7 @@ export function registerAll(pi: ExtensionAPI) {
   // Action + State tools: track for turn log (modify game state)
   const trackedTools = [
     lookupCharacterTool, getStatusTool, transferItemTool, adjustRelationTool,
-    grantSkillExpTool, initGameTool, initProfileTool, initWorldTool, setFlagsTool, toggleLayer1Tool,
+    grantSkillExpTool, initGameTool, initProfileTool, setFlagsTool, toggleLayer1Tool,
     toggleAumodeTool, _sexTouchTool, _masturbateTool, combatActionTool, stealItemTool,
     equipItemTool, useItemTool, worldInteractTool, settleSceneTool, recordTurnLogTool,
     revealSecretTool, renderSceneTool, spawnNpcAgentTool, spawnNpcAgentsTool,

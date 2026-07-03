@@ -189,7 +189,11 @@ export default {
         `装备${Object.keys(gameState.player.equipment || {}).length}件`,
         `背包${gameState.player.inventory.length}件`,
         `flags${Object.keys(profile.flags || {}).length}个`,
-      ].join("，");
+        ``,
+        `GM提示: 玩家当前通讯录为空、关系为空、记忆为空——这些是叙事内容，需由GM根据身份描述构建。`,
+        `可用工具: create_character(创建角色), lookup_character(查阅已有角色), spawn_npc_agent(激活NPC), adjust_relation(建立关系), add_memory_tag(添加记忆)。`,
+        `世界包中已有角色无需重建——不存在于数据库的角色可以自由创建。`,
+      ].join("\n");
       return { content: [{ type: "text", text: summary }], details: { profileId: params.profileId } };
     } catch (e: any) {
       gameState.player = playerSnapshot;

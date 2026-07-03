@@ -2,7 +2,6 @@
   "千叶市高中生": {
     "label": "千叶市立总武高等学校学生",
     "description": "总武高中在读学生，身穿校服，携带手机和书包，每月有少量零花钱",
-    "scheduleGroup": "高校生",
     "funds": 500,
     "equipment": {
       "top": {
@@ -48,7 +47,6 @@
   "千叶市上班族": {
     "label": "千叶市通勤上班族",
     "description": "千叶市内某会社的普通社员，每天通勤，有一定经济基础",
-    "scheduleGroup": "上班族",
     "funds": 5000,
     "equipment": {
       "top": {
@@ -91,7 +89,6 @@
   "日本首相": {
     "label": "日本国内阁总理大臣",
     "description": "日本国第101代内阁总理大臣，掌握最高行政权力",
-    "scheduleGroup": "政治家",
     "funds": 50000,
     "titles": ["日本国内阁总理大臣"],
     "public_identity": "日本国内阁总理大臣",
@@ -137,7 +134,6 @@
   "替身使者": {
     "label": "替身使者",
     "description": "被箭选中觉醒替身能力之人，拥有超自然的战斗伙伴",
-    "scheduleGroup": "自由人",
     "abilities": {
       "黄金体验": 1
     },
@@ -151,7 +147,6 @@
   "武道见习": {
     "label": "武道见习生",
     "description": "刚入门的武道修行者，掌握基础格斗和闪避技巧，用于示范 skills 字段用法",
-    "scheduleGroup": "格斗家",
     "funds": 300,
     "equipment": {
       "top": {
