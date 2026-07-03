@@ -324,7 +324,7 @@ function createDefaultPlayer(): PlayerState {
     name: "维",
     gender: "男",
     age: 16,
-    location: "家_玩家房间",
+    location: "千叶_住宅区",
     body: {
       height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
       skin: { base_tone: "普通", tan: 0, texture: "普通" },
@@ -345,7 +345,7 @@ function createDefaultPlayer(): PlayerState {
     party: [],
     gridPos: null,
     reputation: {},
-    known_locations: ["家_玩家房间"],
+    known_locations: ["千叶_住宅区"],
     titles: [],
     properties: {},
   };
