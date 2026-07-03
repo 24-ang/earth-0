@@ -2408,6 +2408,22 @@ export function addMemoryTag(
   related_npcs?: string[],
   category?: "fact" | "emotion" | "milestone" | "general"
 ): void {
+  // 玩家记忆走 npcs[玩家名] 但不经 getOrCreateNPC（防 NPC 表污染）
+  if (npcName === gameState.player.name) {
+    gameState.npcs[npcName] ??= { currentRoom: "", alive: true, current_goal: "", memoryTags: [], scheduleGroup: "自由人" } as any;
+    gameState.npcs[npcName].memoryTags ??= [];
+    gameState.npcs[npcName].memoryTags.push({
+      tag,
+      since: gameState.time.game_date,
+      expires: expiresDays,
+      tone: tone as any,
+      priority: priority ?? 1,
+      emotional_valence: emotional_valence ?? "neutral",
+      related_npcs: related_npcs ?? [],
+      category: category ?? "general"
+    });
+    return;
+  }
   const npc = getOrCreateNPC(npcName);
   npc.memoryTags ??= [];
   npc.memoryTags.push({

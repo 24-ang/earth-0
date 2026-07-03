@@ -8,6 +8,7 @@ export default {
       const { updateReputation } = await import("../../engine/state.ts");
       const g = params.group, d = params.delta;
       const newRep = updateReputation(g, d);
-      return { content: [{ type: "text", text: `${g}声望 ${d >= 0 ? "+" : ""}${d} → ${newRep}` }], details: {} };
+      const oldRep = newRep - d;
+      return { content: [{ type: "text", text: `${g}声望: ${oldRep} → ${newRep} (${d >= 0 ? "+" : ""}${d})` }], details: {} };
     },
   };
