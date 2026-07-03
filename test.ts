@@ -418,27 +418,28 @@ test("loadState 修复旧 bug 存档 timeline_origin.age===0", () => {
 });
 
 test("getNpcCurrentAge 在时间推进后 NPC 年龄跟随增长", () => {
-  // 重置到正常状态
   gameState.time.player_age = 16;
   gameState.time.timeline_origin = { year: 2018, age: 16 };
   gameState.player.age = 16;
+  gameState.time.game_date = "2018-04-07";
 
   const npcBaseAge = 17;
-  // 初始：玩家 16，NPC 基龄 17，年龄差 = 0 → NPC 仍是 17
   let npcAge = getNpcCurrentAge(npcBaseAge);
   if (npcAge !== 17) throw new Error(`初始 NPC 年龄应为 17，得 ${npcAge}`);
 
-  // 推进 2 年：玩家 18
+  // 推进 2 年
   gameState.player.age = 18;
   gameState.time.player_age = 18;
+  gameState.time.game_date = "2020-04-07";
   npcAge = getNpcCurrentAge(npcBaseAge);
   if (npcAge !== 19) throw new Error(`2年后 NPC 年龄应为 19，得 ${npcAge}`);
 
-  // 推进 10 年：玩家 28
+  // 推进 10 年
   gameState.player.age = 28;
   gameState.time.player_age = 28;
+  gameState.time.game_date = "2028-04-07";
   npcAge = getNpcCurrentAge(npcBaseAge);
-  if (npcAge !== 29) throw new Error(`10年后 NPC 年龄应为 29，得 ${npcAge}`);
+  if (npcAge !== 27) throw new Error(`10年后 NPC 年龄应为 27，得 ${npcAge}`);
 });
 
 // ── buildStatePrompt ──

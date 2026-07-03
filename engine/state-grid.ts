@@ -358,13 +358,8 @@ export async function createRoom(
   if (w < 3 || h < 3) return { success: false, reason: `房间尺寸至少 3×3（${w}×${h}太小，内部无可行走空间）` };
   if (w * h > 10000) return { success: false, reason: `房间面积过大（${w * h}m²，上限10000m²）` };
 
-  const multiplier = getConstructionMultiplier();
-  const currencySymbol = getCurrency();
+  // create_room 是 GM 工具，免费
   const constructionMinutes = w * h * 5;
-  const constructionCost = w * h * multiplier;
-  if (gameState.player.funds < constructionCost) {
-    return { success: false, reason: `资金不足。建造${w}×${h}房间需要${currencySymbol}${constructionCost}，当前余额${currencySymbol}${gameState.player.funds}` };
-  }
 
   // 创建网格（带可选的氛围和出口）
   const gridOpts: any = {};
@@ -377,18 +372,19 @@ export async function createRoom(
     connectRooms(roomName, opts.exitFrom);
   }
 
-  gameState.player.funds -= constructionCost;
+  // 不扣费
+
   const { advanceMinutes } = await import("./time.ts");
   if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
   advanceMinutes(gameState.time, constructionMinutes);
-  // 注册导航：玩家自建房间也要能被 go_to_location/travel 找到
+  // 注册导航
   if (!gameState.player.known_locations) gameState.player.known_locations = [];
   if (!gameState.player.known_locations.includes(roomName)) {
     gameState.player.known_locations.push(roomName);
   }
   saveState();
   const tmplNote = opts?.templateId ? `（模板: ${opts.templateId}）` : "";
-  return { success: true, reason: `创建了新房间 ${roomName} (${w}x${h})${tmplNote}，花费${currencySymbol}${constructionCost}，施工耗时${constructionMinutes}分钟。` };
+  return { success: true, reason: `创建了新房间 ${roomName} (${w}x${h})${tmplNote}，施工耗时${constructionMinutes}分钟（不收费）。` };
 }
 
 /** 在嵌套模板对象中递归查找 key */

@@ -699,8 +699,10 @@ export function getAppearanceForAge(char: StaticCharacter | any, targetAge: numb
 
 /** 计算 NPC 当前年龄（base_age + 游戏时间流逝） */
 export function getNpcCurrentAge(npcBaseAge: number): number {
-  const ageDelta = gameState.player.age - (gameState.time?.timeline_origin?.age ?? 16);
-  return Math.max(0, npcBaseAge + ageDelta);
+  // NPC base_age 以 2018 年为基准。用年份差计算实际年龄。
+  const gameYear = parseInt((gameState.time?.game_date || "2018").split("-")[0]) || 2018;
+  const npcBirthYear = 2018 - npcBaseAge;
+  return Math.max(1, gameYear - npcBirthYear);
 }
 
 /** 根据 NPC 当前年龄从 schedule_group_by_age 解析正确的日程组 */

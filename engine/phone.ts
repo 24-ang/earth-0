@@ -17,13 +17,24 @@ const MAX_PHOTOS = 100;
 /** 扫描玩家装备+背包，找到手机 Item（按通讯效果 + 名字兜底） */
 export function getPlayerPhone(): Item | null {
   const p = gameState.player;
+  // 装备
   for (const item of Object.values(p.equipment)) {
-    if (item?.effects?.some(e => e.type === "communication")) return item;
-    if (item?.name?.includes("手机")) return item;
+    if (!item) continue;
+    if (item.effects?.some((e: any) => e.type === "communication")) return item;
+    if (item.name?.includes("手机")) return item;
+  }
+  // 背包
+  for (const item of p.inventory) {
+    if (!item) continue;
+    if (item.effects?.some((e: any) => e.type === "communication")) return item;
+    if (item.name?.includes("手机")) return item;
+  }
+  // 兜底：扫描所有装备+背包中 type="tool" 且带通讯关键字的物品
+  for (const item of Object.values(p.equipment)) {
+    if (item?.type === "tool" && (item.name?.includes("手机") || item.name?.includes("phone") || item.name?.includes("通讯"))) return item;
   }
   for (const item of p.inventory) {
-    if (item?.effects?.some(e => e.type === "communication")) return item;
-    if (item?.name?.includes("手机")) return item;
+    if (item?.type === "tool" && (item.name?.includes("手机") || item.name?.includes("phone") || item.name?.includes("通讯"))) return item;
   }
   return null;
 }
