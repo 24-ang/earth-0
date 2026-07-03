@@ -310,7 +310,7 @@ export default {
           if (Array.isArray(profile.contacts)) {
             for (const cname of profile.contacts) {
               if (!pd.contacts.some(c => c.name === cname)) {
-                pd.contacts.push({ name: cname, relation: "同学", number: `090-${1000 + Math.floor(Math.random() * 9000)}-${1000 + Math.floor(Math.random() * 9000)}` });
+                pd.contacts.push({ name: cname, relation: "同学", number: `090-${1000 + Math.floor(Math.random() * 9000)}-${1000 + Math.floor(Math.random() * 9000)}`, addedAt: gameState.time.game_date });
               }
             }
           }

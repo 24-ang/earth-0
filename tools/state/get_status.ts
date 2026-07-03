@@ -11,7 +11,14 @@ export default {
       }
       const { findCharacter } = await import("../../engine/state.ts");
       const c = findCharacter(params.name);
-      if (!c) return { content: [{ type: "text", text: "无此角色" }], details: {} };
+      // 兜底：运行时 NPC（临时 NPC / 懒实例化但未在 characters.json 中）
+      if (!c) {
+        const npc = gameState.npcs[params.name];
+        if (npc && npc.alive) {
+          return { content: [{ type: "text", text: JSON.stringify({ name: params.name, location: npc.currentRoom || "未知", attributes: npc.attributes, hp: npc.hp, scheduleGroup: npc.scheduleGroup }, null, 2) }], details: {} };
+        }
+        return { content: [{ type: "text", text: "无此角色" }], details: {} };
+      }
       const age = getNpcCurrentAge(c.base_age || 16);
       const body = getBodyForAge(c, age);
       return { content: [{ type: "text", text: JSON.stringify({ name: c.name, location: c.default_location, attributes: c.attributes, skills: c.skills, hp: c.hp, body: body ? `${body.height_cm}cm ${body.cup||""}` : "" }, null, 2) }], details: {} };
