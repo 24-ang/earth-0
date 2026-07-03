@@ -55,7 +55,7 @@ export default {
       reason: Type.String({ description: "创建原因，如'在便利店遇到的打工学生'" }),
     }),
     async execute(_id: any, params: any, _s: any, _o: any, _ctx: any) {
-      const { registerDynamicCharacter, findCharacter, saveState } = await import("../../engine/state.ts");
+      const { gameState, registerDynamicCharacter, findCharacter, saveState } = await import("../../engine/state.ts");
 
       const charData: any = {
         name: params.name,
