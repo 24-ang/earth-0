@@ -2266,8 +2266,25 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
 /** NPC 场景服装切换。返回当前 outfit 描述 */
 export function setNPCOutfit(npcName: string, outfitKey: string): string {
   const src = findCharacter(npcName);
-  if (!src?.outfits?.[outfitKey]) return `${npcName}没有 ${outfitKey} 服装卡`;
   const npc = getOrCreateNPC(npcName);
+  // 兜底：动态角色无预设 outfits → 自动生成基础服装卡
+  if (!src?.outfits?.[outfitKey]) {
+    const defaults: Record<string, Record<string, string>> = {
+      school: { top: "校服", bottom: "校服裤", feet: "学生鞋" },
+      casual: { top: "便服上衣", bottom: "休闲裤", feet: "运动鞋" },
+      pe: { top: "体操服", bottom: "运动短裤", feet: "运动鞋" },
+      swim: { top: "泳衣", bottom: "泳裤" },
+      sleep: { top: "家居服" },
+    };
+    const def = defaults[outfitKey];
+    if (!def) return `${npcName}没有 ${outfitKey} 服装卡`; // 非标准 key 才拒绝
+    // 写入 outfits 使其持久
+    if (!(src as any).outfits) (src as any).outfits = {};
+    (src as any).outfits[outfitKey] = { ...def };
+    npc.currentOutfit = outfitKey as any;
+    const desc = Object.values(def).join("、");
+    return `${npcName} → ${outfitKey}（自动生成）: ${desc}`;
+  }
   npc.currentOutfit = outfitKey as any;
   const items = src.outfits[outfitKey];
   const desc = Object.values(items).join("、");
@@ -2358,7 +2375,45 @@ export async function getOrCreateSexState(npcName: string): Promise<SexState | n
         };
       }
     } else if (!profile) {
-      return null; // NPC 且不在 SEX_PROFILES → 确实不存在
+      // 动态创建角色 / 临时 NPC → 按性别自动生成默认 sex profile
+      const char = findCharacter(npcName);
+      const charGender = (char as any)?.gender || "女";
+      if (char || gameState.npcs[npcName]) {
+        profile = {
+          attitude: "普通",
+          experience: "未开发",
+          likes: [],
+          dislikes: [],
+          baselineDesire: 20,
+          cycleDay: 0,
+          climaxThreshold: 60,
+          bodyParts: {
+            "秘部": { sensitivity: 2, development: 0, preference: "喜欢" as const },
+            "唇": { sensitivity: 1, development: 0, preference: "喜欢" as const },
+            "颈": { sensitivity: 1, development: 0, preference: "喜欢" as const },
+            "胸": { sensitivity: 2, development: 0, preference: "喜欢" as const },
+            "腰": { sensitivity: 1, development: 0, preference: "喜欢" as const },
+            "腿": { sensitivity: 1, development: 0, preference: "喜欢" as const },
+            "肛": { sensitivity: 1, development: 0, preference: "排斥" as const },
+          },
+        } as any;
+        if (charGender === "女" || charGender === "female") {
+          profile.female = {
+            breast: { cup: "B", shape: "半球" as any, nipple_size: "普通" as any, nipple_color: "粉色" as any, areola_size: "普通" as any, feel: "柔软" as any },
+            vagina: { type: "闭合" as any, labia_size: "普通" as any, depth_cm: 10, tightness: "普通" as any, inner_color: "淡粉" as any, feel: "普通" as any },
+            pubic_hair: { amount: "普通" as any, color: "黑色" as any, style: "自然" as any },
+            clitoris: "普通" as any,
+          };
+        } else {
+          profile.male = {
+            penis: { length_cm: 14, girth_cm: 10, erect_length_cm: 17, erect_girth_cm: 12, shape: "直" as any, head_size: "普通" as any, circumcised: false, color: "普通" as any },
+            testicles: { size: "普通" as any },
+            pubic_hair: { amount: "普通" as any, color: "黑色" as any, style: "自然" as any },
+          };
+        }
+      } else {
+        return null; // 真的不存在
+      }
     }
     gameState.sexStates[npcName] = createSexState(npcName, profile);
   }
