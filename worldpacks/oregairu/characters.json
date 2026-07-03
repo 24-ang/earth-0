@@ -284,7 +284,7 @@
       3,
       5
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -328,12 +328,24 @@
       "不合逻辑的行为"
     ],
     "public_facts": [
-      { "text": "雪之下家的二女儿，偏差值学年第一。独居，坐JR总武线从幕张通学，单程约30分钟。", "level": "common" },
-      { "text": "父亲是雪之下建设的社长，但雪乃刻意脱离家族影响——不坐私家车，不参加家族社交。", "level": "familiar" }
+      {
+        "text": "雪之下家的二女儿，偏差值学年第一。独居，坐JR总武线从幕张通学，单程约30分钟。",
+        "level": "common"
+      },
+      {
+        "text": "父亲是雪之下建设的社长，但雪乃刻意脱离家族影响——不坐私家车，不参加家族社交。",
+        "level": "familiar"
+      }
     ],
     "private_facts": [
-      { "text": "被姐姐阳乃的完美阴影压得喘不过气，但从不表现出来。", "level": "close" },
-      { "text": "小学时全班以她太优秀为由孤立她——从此不信任集体。", "level": "close" }
+      {
+        "text": "被姐姐阳乃的完美阴影压得喘不过气，但从不表现出来。",
+        "level": "close"
+      },
+      {
+        "text": "小学时全班以她太优秀为由孤立她——从此不信任集体。",
+        "level": "close"
+      }
     ]
   },
   {
@@ -515,7 +527,7 @@
       5,
       3
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_overrides": {},
     "schedule_group_by_age": {
       "6": "小学生",
@@ -550,8 +562,14 @@
       "复杂的国语问题"
     ],
     "public_facts": [
-      { "text": "2年F班学生，性格开朗，和谁都聊得来。成绩中等偏下，数学尤其苦手。", "level": "common" },
-      { "text": "家里养了一只叫萨布雷的萨摩耶。经常去KTV和朋友唱歌。", "level": "familiar" }
+      {
+        "text": "2年F班学生，性格开朗，和谁都聊得来。成绩中等偏下，数学尤其苦手。",
+        "level": "common"
+      },
+      {
+        "text": "家里养了一只叫萨布雷的萨摩耶。经常去KTV和朋友唱歌。",
+        "level": "familiar"
+      }
     ]
   },
   {
@@ -655,7 +673,7 @@
       1,
       6
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_overrides": {},
     "schedule_group_by_age": {
       "6": "小学生",
@@ -665,8 +683,14 @@
     },
     "funds": 1200,
     "public_facts": [
-      { "text": "2年F班学生，性格孤僻，被全班视为'那个阴暗的家伙'。国文成绩意外地好。", "level": "common" },
-      { "text": "注册了侍奉部，被平冢静以'矫正孤僻性格'为由强制入部。", "level": "familiar" }
+      {
+        "text": "2年F班学生，性格孤僻，被全班视为'那个阴暗的家伙'。国文成绩意外地好。",
+        "level": "common"
+      },
+      {
+        "text": "注册了侍奉部，被平冢静以'矫正孤僻性格'为由强制入部。",
+        "level": "familiar"
+      }
     ]
   },
   {
@@ -808,7 +832,7 @@
       3,
       3
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -1140,7 +1164,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "中学生",
     "grid_pos": null,
     "anchors": {
       "private": "八幡的妹妹。嘴甜但偶尔毒舌，跟哥哥一样看人很准。经常吐槽哥哥是废物。"
@@ -1217,7 +1241,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
       "private": "网球部王牌。八幡看到他也会心跳加速。性格温柔，不擅长拒绝。"
@@ -1393,7 +1417,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "7": "小学生",
       "12": "中学生",
@@ -1480,7 +1504,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
       "private": "如月家的二哥，真绫的亲弟弟。重度阿宅，爱打飞机。和弟弟（玩家）关系微妙——既亲近又有距离感。在学校也隐藏姐弟关系。"
@@ -1846,7 +1870,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "千叶_雪之下邸",
-    "schedule_group": "小学生",
+    "schedule_group": "大学生",
     "schedule_group_by_age": {
       "8": "小学生",
       "12": "中学生",
@@ -1905,7 +1929,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "千叶_雪之下邸",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_overrides": {},
     "anchors": {
       "private": "雪之下家的私生子弟弟。据说是绫乃流落在外的儿子，5年前被带回雪之下家。性格任性猥琐好色。魔改模式专属角色。"
@@ -2141,7 +2165,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_世田谷_橘家",
-    "schedule_group": "小学生",
+    "schedule_group": "大学生",
     "schedule_group_by_age": {
       "10": "小学生",
       "12": "中学生",
@@ -2291,7 +2315,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_世田谷_橘家",
-    "schedule_group": "小学生",
+    "schedule_group": "大学生",
     "schedule_group_by_age": {
       "10": "小学生",
       "12": "中学生",
@@ -2437,7 +2461,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_圣迹樱丘",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -2598,7 +2622,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_圣迹樱丘",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -4257,8 +4281,15 @@
       "运动": 8,
       "手工": 6
     },
-    "hp": { "current": 24, "max": 24 },
-    "tags": ["忍者", "格斗家", "不知火流"],
+    "hp": {
+      "current": 24,
+      "max": 24
+    },
+    "tags": [
+      "忍者",
+      "格斗家",
+      "不知火流"
+    ],
     "personality_brief": "不知火流忍術的正统继承人。扇子在她手里是武器也是态度——华丽、精准、不给对手反应的间隙。性格热烈直接，不掩饰自己的想法和欲望。穿着大胆是因为忍术不需要盔甲，不是取悦谁。战斗时眼神像换了个人。继承祖父的道场，独自维持着这个古老流派的传承。",
     "personality_stages": {
       "6": "开始在祖父不知火半藏门下学习忍术。最初的训练是在瀑布下站稳——腿上绑着石头，一站就是半天。",
@@ -4291,9 +4322,18 @@
     },
     "schedule_group": "格斗家",
     "public_facts": [
-      { "text": "千叶深山里有个不知火道场，据说传了好几代人。附近村民偶尔能听到瀑布那边传来奇怪的声响，像是有人在打斗，但节奏太快不像是普通人。", "level": "common" },
-      { "text": "不知火流是真实存在的古流忍术。现任继承者是个年轻女性，这件事只有格斗圈内的人知道。普通人听到「不知火」最多想到的是历史上的忍者传说。", "level": "familiar" },
-      { "text": "在地下格斗圈，不知火舞是不需要报名字的对手。花蝶扇出手之前，胜负已经定了。平时下山逛便利店、采购日用品。", "level": "industry" }
+      {
+        "text": "千叶深山里有个不知火道场，据说传了好几代人。附近村民偶尔能听到瀑布那边传来奇怪的声响，像是有人在打斗，但节奏太快不像是普通人。",
+        "level": "common"
+      },
+      {
+        "text": "不知火流是真实存在的古流忍术。现任继承者是个年轻女性，这件事只有格斗圈内的人知道。普通人听到「不知火」最多想到的是历史上的忍者传说。",
+        "level": "familiar"
+      },
+      {
+        "text": "在地下格斗圈，不知火舞是不需要报名字的对手。花蝶扇出手之前，胜负已经定了。平时下山逛便利店、采购日用品。",
+        "level": "industry"
+      }
     ],
     "funds": 10000,
     "sex_profile": "不知火舞"
@@ -4306,28 +4346,100 @@
     "appearance_brief": "戴圆框眼镜、偏胖体型、黑色短发。自称「剑豪将军」的中二病宅男。",
     "hair_color": "黑色",
     "hair_style": "短发",
-    "tags": ["中二病", "剑豪将军", "轻小说作家", "游戏部", "宅男"],
+    "tags": [
+      "中二病",
+      "剑豪将军",
+      "轻小说作家",
+      "游戏部",
+      "宅男"
+    ],
     "body": {
       "height_cm": 170,
       "weight_kg": 82,
       "build": "偏胖",
       "leg_type": "结实",
-      "skin": { "base_tone": "普通", "tan": 5, "texture": "普通" },
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
       "diet": "垃圾食品",
       "exercise": "久坐"
     },
-    "attributes": { "力量": 6, "敏捷": 3, "体质": 5, "智力": 9, "感知": 5, "魅力": 3 },
-    "skills": { "写作": 5, "国語": 3, "游戏": 3 },
-    "hp": { "current": 11, "max": 11 },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 3,
+      "体质": 5,
+      "智力": 9,
+      "感知": 5,
+      "魅力": 3
+    },
+    "skills": {
+      "写作": 5,
+      "国語": 3,
+      "游戏": 3
+    },
+    "hp": {
+      "current": 11,
+      "max": 11
+    },
     "equipment": {
-      "top": { "name": "总武高制服", "type": "clothing", "slot": "top", "weight": 0.5, "effects": [], "state": "intact" },
-      "bottom": { "name": "校服裤子", "type": "clothing", "slot": "bottom", "weight": 0.4, "effects": [], "state": "intact" },
-      "feet": { "name": "学生皮鞋", "type": "clothing", "slot": "feet", "weight": 0.3, "volume": 0.3, "effects": [], "state": "intact" },
-      "acc": { "name": "圆框眼镜", "type": "clothing", "slot": "acc", "weight": 0.05, "volume": 0.05, "effects": [], "state": "intact" }
+      "top": {
+        "name": "总武高制服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "校服裤子",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.4,
+        "effects": [],
+        "state": "intact"
+      },
+      "feet": {
+        "name": "学生皮鞋",
+        "type": "clothing",
+        "slot": "feet",
+        "weight": 0.3,
+        "volume": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "acc": {
+        "name": "圆框眼镜",
+        "type": "clothing",
+        "slot": "acc",
+        "weight": 0.05,
+        "volume": 0.05,
+        "effects": [],
+        "state": "intact"
+      }
     },
     "inventory": [
-      { "name": "手机", "type": "tool", "slot": "right_hand", "weight": 0.2, "effects": [{ "type": "communication" }], "state": "intact" },
-      { "name": "轻小说原稿", "type": "tool", "slot": "back", "weight": 0.3, "effects": [], "state": "intact" }
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "right_hand",
+        "weight": 0.2,
+        "effects": [
+          {
+            "type": "communication"
+          }
+        ],
+        "state": "intact"
+      },
+      {
+        "name": "轻小说原稿",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
     ],
     "default_location": "千叶_住宅区",
     "schedule": {
@@ -4337,19 +4449,45 @@
       "weekend": "在家写轻小说 / 找八幡看稿"
     },
     "schedule_group": "高校生",
-    "schedule_group_by_age": { "6": "小学生", "12": "中学生", "15": "高校生", "18": "大学生" },
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生"
+    },
     "funds": 500,
     "anchors": {
       "emotional": "自称「剑豪将军」的中二病全开宅男。模仿战国武将言行举止，沉浸在自己的幻想世界。把轻小说原稿递给八幡时——那是他唯一信任的人。嘴上说「这是给你的荣幸」但眼神躲闪。害怕被嘲笑所以先摆出高高在上的姿态——这是他唯一的防御机制。",
       "private": "轻度肥胖、戴眼镜、整天写没人看的轻小说。唯一的朋友是比企谷八幡——虽然八幡从来不承认。在游戏部挂名，多半时间躲在角落里写稿。知道自己的小说写得不好但停不下来——因为除了写作什么都做不好。",
       "intimate": "面对女生的好感，第一反应是「这是不是八幡的恶作剧」。会脸红结巴，用更大的中二病台词掩饰慌乱。一旦信任建立会非常忠诚——从小到大他是「被淘汰」的人，真心对他的每一个人都不会忘记。"
     },
-    "likes": ["轻小说", "战国武将", "高达", "游戏", "MAX COFFEE", "写小说"],
-    "dislikes": ["被人嘲笑", "运动", "社交场合", "拒绝"],
+    "likes": [
+      "轻小说",
+      "战国武将",
+      "高达",
+      "游戏",
+      "MAX COFFEE",
+      "写小说"
+    ],
+    "dislikes": [
+      "被人嘲笑",
+      "运动",
+      "社交场合",
+      "拒绝"
+    ],
     "public_facts": [
-      { "text": "2年C班有个自称剑豪将军的胖子，整天在笔记本上写东西。同班同学都习惯了，偶尔有人找他帮忙写点东西——虽然写得浮夸但意外的能用。", "level": "common" },
-      { "text": "材木座在网上连载轻小说《剑豪将军异世界转生》——收藏不到50。八幡偶尔会给他留评论——全是吐槽但是唯一的评论。", "level": "familiar" },
-      { "text": "材木座关于写作是认真的。浮夸的中二病台词和战国武将架势是他面对真实世界时的铠甲。摘下眼镜坐在电脑前时只是个害怕失败的高中生。", "level": "industry" }
+      {
+        "text": "2年C班有个自称剑豪将军的胖子，整天在笔记本上写东西。同班同学都习惯了，偶尔有人找他帮忙写点东西——虽然写得浮夸但意外的能用。",
+        "level": "common"
+      },
+      {
+        "text": "材木座在网上连载轻小说《剑豪将军异世界转生》——收藏不到50。八幡偶尔会给他留评论——全是吐槽但是唯一的评论。",
+        "level": "familiar"
+      },
+      {
+        "text": "材木座关于写作是认真的。浮夸的中二病台词和战国武将架势是他面对真实世界时的铠甲。摘下眼镜坐在电脑前时只是个害怕失败的高中生。",
+        "level": "industry"
+      }
     ]
   }
 ]

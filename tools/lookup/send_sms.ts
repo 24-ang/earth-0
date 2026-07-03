@@ -8,10 +8,18 @@ export default {
       text: Type.String({ description: "短信内容" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { getPlayerPhoneData, canContact, deliverMessage } =
+      const { getPlayerPhoneData, getPlayerPhone, createDefaultPhoneData, canContact, deliverMessage } =
         await import("../../engine/phone.ts");
       const { gameState, saveState } = await import("../../engine/state.ts");
-      const pd = getPlayerPhoneData();
+      let pd = getPlayerPhoneData();
+      if (!pd) {
+        const phone = getPlayerPhone();
+        if (phone) {
+          (phone as any).phoneData = createDefaultPhoneData(gameState.player.name);
+          saveState();
+          pd = (phone as any).phoneData;
+        }
+      }
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。" }], details: {} };
       }

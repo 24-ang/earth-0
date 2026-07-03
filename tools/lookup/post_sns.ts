@@ -10,9 +10,17 @@ export default {
       likes: Type.Optional(Type.Number({ description: "初始赞数，默认0" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { getPlayerPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
+      const { getPlayerPhoneData, getPlayerPhone, createDefaultPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
       const { gameState, saveState } = await import("../../engine/state.ts");
-      const pd = getPlayerPhoneData();
+      let pd = getPlayerPhoneData();
+      if (!pd) {
+        const phone = getPlayerPhone();
+        if (phone) {
+          (phone as any).phoneData = createDefaultPhoneData(gameState.player.name);
+          saveState();
+          pd = (phone as any).phoneData;
+        }
+      }
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。无法发布SNS帖。" }], details: {} };
       }

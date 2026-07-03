@@ -92,6 +92,16 @@ export default {
       if (params.drives_by_age) charData.drives_by_age = params.drives_by_age;
       if (params.skills) charData.skills = params.skills;
 
+      // 兜底：无 body 数据时按年龄自动生成
+      if (!charData.body && !charData.body_by_age) {
+        const age = charData.base_age;
+        const g = charData.gender;
+        if (age <= 6) charData.body = { height_cm: 115, weight_kg: 20, build: "纤细" };
+        else if (age <= 12) charData.body = { height_cm: g === "女" ? 148 : 150, weight_kg: g === "女" ? 38 : 40, build: "纤细" };
+        else if (age <= 15) charData.body = { height_cm: g === "女" ? 157 : 165, weight_kg: g === "女" ? 47 : 52, build: "标准" };
+        else charData.body = { height_cm: g === "女" ? 158 : 170, weight_kg: g === "女" ? 50 : 58, build: "标准" };
+      }
+
       const r = registerDynamicCharacter(params.name, charData);
       // 立即创建运行时 NPC 状态并同步位置
       const { getOrCreateNPC } = await import("../../engine/state.ts");

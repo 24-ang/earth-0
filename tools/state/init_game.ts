@@ -4,49 +4,42 @@ function baseStats(age: number, gender: string) {
   if (age <= 6) {
     return {
       attributes: { 力量: 3, 敏捷: 4, 体质: 3, 智力: 3, 感知: 3, 魅力: 4 },
-      body: {
-        height_cm: 115, weight_kg: 20, build: "纤细", leg_type: "纤细",
-        skin: { base_tone: "普通", tan: 0, texture: "细腻" },
-      },
+      body: { height_cm: 115, weight_kg: 20, build: "纤细", leg_type: "纤细", skin: { base_tone: "普通", tan: 0, texture: "细腻" } },
+    };
+  }
+  if (age <= 12) {
+    return {
+      attributes: { 力量: 5, 敏捷: 7, 体质: 6, 智力: 9, 感知: 8, 魅力: 8 },
+      body: { height_cm: gender === "女" ? 148 : 150, weight_kg: gender === "女" ? 38 : 40, build: "纤细", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
+    };
+  }
+  if (age <= 15) {
+    return {
+      attributes: { 力量: 7, 敏捷: 9, 体质: 8, 智力: 11, 感知: 9, 魅力: 9 },
+      body: { height_cm: gender === "女" ? 157 : 165, weight_kg: gender === "女" ? 47 : 52, build: "标准", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
     };
   }
   if (age <= 19) {
     return {
       attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 12, 感知: 10, 魅力: 10 },
-      body: {
-        height_cm: gender === "女" ? 158 : 170, weight_kg: gender === "女" ? 50 : 58,
-        build: "标准", leg_type: "修长",
-        skin: { base_tone: "普通", tan: 0, texture: "普通" },
-      },
+      body: { height_cm: gender === "女" ? 158 : 170, weight_kg: gender === "女" ? 50 : 58, build: "标准", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
     };
   }
   if (age >= 40) {
     return {
       attributes: { 力量: 10, 敏捷: 8, 体质: 9, 智力: 13, 感知: 12, 魅力: 11 },
-      body: {
-        height_cm: gender === "女" ? 162 : 173, weight_kg: gender === "女" ? 55 : 72,
-        build: "结实", leg_type: "结实",
-        skin: { base_tone: "普通", tan: 1, texture: "普通" },
-      },
+      body: { height_cm: gender === "女" ? 162 : 173, weight_kg: gender === "女" ? 55 : 72, build: "结实", leg_type: "结实", skin: { base_tone: "普通", tan: 1, texture: "普通" } },
     };
   }
   if (age >= 30) {
     return {
       attributes: { 力量: 10, 敏捷: 9, 体质: 10, 智力: 13, 感知: 11, 魅力: 11 },
-      body: {
-        height_cm: gender === "女" ? 162 : 175, weight_kg: gender === "女" ? 53 : 70,
-        build: "标准", leg_type: "修长",
-        skin: { base_tone: "普通", tan: 0, texture: "普通" },
-      },
+      body: { height_cm: gender === "女" ? 162 : 175, weight_kg: gender === "女" ? 53 : 70, build: "标准", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
     };
   }
   return {
     attributes: { 力量: 9, 敏捷: 10, 体质: 10, 智力: 12, 感知: 10, 魅力: 11 },
-    body: {
-      height_cm: gender === "女" ? 162 : 173, weight_kg: gender === "女" ? 52 : 65,
-      build: "标准", leg_type: "修长",
-      skin: { base_tone: "普通", tan: 0, texture: "普通" },
-    },
+    body: { height_cm: gender === "女" ? 162 : 173, weight_kg: gender === "女" ? 52 : 65, build: "标准", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
   };
 }
 

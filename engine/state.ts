@@ -706,16 +706,67 @@ export function getNpcCurrentAge(npcBaseAge: number): number {
 /** 根据 NPC 当前年龄从 schedule_group_by_age 解析正确的日程组 */
 function resolveScheduleGroup(src: any, currentAge: number): string {
   const byAge: Record<string, string> | undefined = src?.schedule_group_by_age;
-  if (byAge) {
+  if (byAge && Object.keys(byAge).length > 0) {
     const keys = Object.keys(byAge).map(Number).sort((a, b) => a - b);
-    let best = src.schedule_group || "自由人";
+    let best = byAge[String(keys[0]!)]!;
     for (const k of keys) {
       if (k <= currentAge) best = byAge[String(k)]!;
       else break;
     }
     return best;
   }
-  return src?.schedule_group || "自由人";
+  // 无 by_age 映射表 → 按当前年龄推断（修复"小学生"标签钉死 bug）
+  if (currentAge <= 6) return "幼儿";
+  if (currentAge <= 12) return "小学生";
+  if (currentAge <= 15) return "中学生";
+  if (currentAge <= 18) return "高校生";
+  if (currentAge <= 22) return "大学生";
+  return src?.schedule_group || "社会人";
+}
+
+/** 按年龄缩放属性（6岁=~50%, 12岁=~80%, 16岁=100%） */
+function scaleAttributesForAge(src: any, age: number): Record<string, number> {
+  const base = (src?.attributes as Record<string, number>) || { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
+  const ratio = age <= 6 ? 0.5 : age <= 12 ? 0.8 : age <= 15 ? 0.9 : 1.0;
+  if (ratio >= 1.0) return { ...base };
+  const scaled: Record<string, number> = {};
+  for (const [k, v] of Object.entries(base)) {
+    scaled[k] = Math.max(1, Math.round(v * ratio));
+  }
+  return scaled;
+}
+
+/** 按年龄选 personality_stages 文本 */
+function resolvePersonality(src: any, age: number): string {
+  const stages = src?.personality_stages;
+  if (!stages) return src?.personality_brief || "";
+  const keys = Object.keys(stages).map(Number).sort((a, b) => a - b);
+  let best = stages[String(keys[0]!)];
+  for (const k of keys) {
+    if (k <= age) best = stages[String(k)];
+    else break;
+  }
+  return String(best || "");
+}
+
+/**
+ * NPC 状态水合管线：输入角色静态数据 + 实际年龄 → 输出完整一致运行时数据
+ * 这是所有 NPC 年龄分层数据（body/appearance/schedule/personality/attributes）的单一入口
+ */
+function hydrateNPCState(src: any, effectiveAge: number): {
+  body: any;
+  appearance: any;
+  scheduleGroup: string;
+  personality: string;
+  attributes: Record<string, number>;
+} {
+  return {
+    body: getBodyForAge(src, effectiveAge),
+    appearance: getAppearanceForAge(src, effectiveAge),
+    scheduleGroup: resolveScheduleGroup(src, effectiveAge),
+    personality: resolvePersonality(src, effectiveAge),
+    attributes: scaleAttributesForAge(src, effectiveAge),
+  };
 }
 
 /** 设置玩家位置并自动发现新地点 */
@@ -2200,10 +2251,9 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
   }
   if (!gameState.npcs[name]) {
     const src = findCharacter(name);
-    const defaultAttrs: Attributes = { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
-    const runtimeAttrs = src?.attributes ? { ...defaultAttrs, ...src.attributes } : defaultAttrs;
-
     const npcAge = src ? getNpcCurrentAge(src.base_age || 16) : 16;
+    const hydrated = src ? hydrateNPCState(src, npcAge) : null;
+    const runtimeAttrs = hydrated?.attributes || { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
     const maxHP = src?.hp?.max ?? calcMaxHP(runtimeAttrs.体质, npcAge);
     const currentHP = src?.hp?.current ?? maxHP;
 
@@ -2218,13 +2268,19 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
       }
     }
 
+    // 缓存水合数据（不污染 worldpacks 文件，供后续 buildStatePrompt 使用）
+    if (src && hydrated) {
+      if (!(src as any)._hydratedCache) (src as any)._hydratedCache = {};
+      (src as any)._hydratedCache[npcAge] = hydrated;
+    }
+
     gameState.npcs[name] = {
       inventory: src ? structuredClone(src.inventory ?? []) : [],
       equipment: src ? fillEffectsFromCatalog(src.equipment ?? {}) : {},
       currentRoom: src?.default_location || "",
       gridPos: src?.grid_pos || null,
       action: "",
-      scheduleGroup: resolveScheduleGroup(src, npcAge),
+      scheduleGroup: hydrated?.scheduleGroup || resolveScheduleGroup(src, npcAge),
       scheduleOverrides: src?.schedule_overrides,
       currentOutfit: "school",
       funds: src?.funds !== undefined ? src.funds : 1000,

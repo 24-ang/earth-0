@@ -355,7 +355,7 @@ export async function createRoom(
     if (tmpl) { w = tmpl.width || w; h = tmpl.height || h; }
   }
 
-  if (w < 1 || h < 1) return { success: false, reason: "房间尺寸无效" };
+  if (w < 3 || h < 3) return { success: false, reason: `房间尺寸至少 3×3（${w}×${h}太小，内部无可行走空间）` };
   if (w * h > 10000) return { success: false, reason: `房间面积过大（${w * h}m²，上限10000m²）` };
 
   const multiplier = getConstructionMultiplier();
@@ -532,7 +532,7 @@ export function instantiateResidenceAndIntegrate(
 // ── 单元操作 ──
 
 export function editCellType(x: number, y: number, type: "floor" | "wall" | "door" | "exit" | "stairs", exitTo?: string, material?: string): { success: boolean; reason: string } {
-  const room = ROOMS[gameState.player.location];
+  const room = getRoom(gameState.player.location);
   if (!room) return { success: false, reason: "当前位置没有地图" };
   if (x < 0 || x >= room.width || y < 0 || y >= room.height) return { success: false, reason: "坐标超出房间范围" };
   const cell = room.cells[y][x];
@@ -601,7 +601,7 @@ export function getItemTemplate(itemName: string): import("./types.ts").Item {
 }
 
 export function removeFurniture(x: number, y: number): { success: boolean; reason: string; item?: string } {
-  const room = ROOMS[gameState.player.location];
+  const room = getRoom(gameState.player.location);
   if (!room) return { success: false, reason: "当前位置没有地图" };
   if (x < 0 || x >= room.width || y < 0 || y >= room.height) return { success: false, reason: "坐标超出房间范围" };
   const cell = room.cells[y][x];
@@ -615,7 +615,7 @@ export function removeFurniture(x: number, y: number): { success: boolean; reaso
 }
 
 export function toggleDoor(x: number, y: number): { success: boolean; reason: string; isOpen: boolean } {
-  const room = ROOMS[gameState.player.location];
+  const room = getRoom(gameState.player.location);
   if (!room) return { success: false, reason: "当前位置没有地图", isOpen: false };
   const cell = room.cells[y][x];
   if (cell.type !== "door" && cell.type !== "exit") return { success: false, reason: "这不是门窗", isOpen: false };
