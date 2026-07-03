@@ -86,16 +86,98 @@ function validateProfile(profileId: string, profile: any) {
   normalizeResourcePools(profile.resourcePools);
 }
 
+/** 生成结构化缺口报告 */
+function buildGapReport(gs: any, activeWorld: string, appliedProfileId?: string, charCorrected?: boolean): string {
+  const lines: string[] = [];
+
+  // ✅ 已填充
+  const filled: string[] = [];
+  const eqCount = Object.keys(gs.player.equipment || {}).length;
+  filled.push(`装备(${eqCount}件)`);
+  filled.push(`资金(¥${gs.player.funds})`);
+  if (appliedProfileId) filled.push(`身份模板(${appliedProfileId})`);
+  const flagCount = Object.keys(gs.flags || {}).length;
+  if (flagCount > 0) filled.push(`flags(${flagCount}个)`);
+  const skillCount = Object.keys(gs.player.skills || {}).length;
+  if (skillCount > 0) filled.push(`技能(${skillCount}项)`);
+  const abilityCount = Object.keys(gs.player.abilities || {}).length;
+  if (abilityCount > 0) filled.push(`能力(${abilityCount}项)`);
+  if (gs.player.resourcePools && Object.keys(gs.player.resourcePools).length > 0) {
+    filled.push(`资源池(${Object.keys(gs.player.resourcePools).length}个)`);
+  }
+  const relCount = Object.keys(gs.player.relationships || {}).length;
+  if (relCount > 0) filled.push(`社会关系(${relCount}条)`);
+  const propCount = Object.keys(gs.player.properties || {}).length;
+  if (propCount > 0) filled.push(`住宅(${propCount}处)`);
+  lines.push(`✅ 已填充: ${filled.join(" / ")}`);
+
+  // ⚠️ 部分填充
+  const partial: string[] = [];
+  if (eqCount <= 2) partial.push("装备(仅内衣，需外衣/工具)");
+  if ((gs.player.inventory || []).length === 0) partial.push("背包(空)");
+  if (gs.player.funds <= 1000) partial.push("资金(可能不足)");
+  if (partial.length > 0) lines.push(`⚠️ 部分填充: ${partial.join(" / ")}`);
+
+  // ❌ 未填充
+  const missing: string[] = [];
+  const tools: string[] = [];
+  if (skillCount === 0) { missing.push("技能(0项)"); tools.push("grant_skill_exp"); }
+  if (abilityCount === 0) { missing.push("能力(0项)"); }
+  if (!gs.player.resourcePools || Object.keys(gs.player.resourcePools).length === 0) { missing.push("资源池(无)"); }
+  if (propCount === 0) { missing.push("住宅(无)"); tools.push("instantiate_residence 或 create_room"); }
+  if (relCount === 0) { missing.push("社会关系(0条)"); tools.push("adjust_relation"); }
+  if (Object.keys(gs.npcs || {}).length === 0) { missing.push("通讯录/NPC(0人)"); tools.push("create_character / spawn_npc_agent"); }
+  if (Object.keys(gs.flags || {}).length <= 1) { missing.push("身份flags(几乎空)"); tools.push("set_flags"); }
+  if (!gs.player.public_identity) { missing.push("公开身份(无)"); }
+
+  // 检查玩家 NPC 的记忆
+  const playerNpc = gs.npcs?.[gs.player.name];
+  const memCount = playerNpc?.memoryTags?.length || 0;
+  if (memCount === 0) { missing.push("记忆(0条)"); tools.push("add_memory_tag"); }
+
+  if (Object.keys(gs.quests || {}).length === 0) { missing.push("任务(0个)"); }
+
+  if (missing.length > 0) lines.push(`❌ 未填充: ${missing.join(" / ")}`);
+
+  const uniqueTools = [...new Set(tools)];
+  if (uniqueTools.length > 0) {
+    lines.push(`→ 建议工具: ${uniqueTools.join(", ")}`);
+  }
+
+  // 模板是通用起点——如果没自动合并角色数据，提醒 LLM 微调
+  if (!charCorrected) {
+    lines.push(`→ ⚠️ 模板仅提供通用基线。角色特有差异（体型/技能/标签/装备配件/社团/班级）需 GM 用工具微调。`);
+    lines.push(`   常用微调: lookup_character(核实原作设定), spawn_item(眼镜等配件), grant_skill_exp(特有技能), set_flags(中二病/社团标签)`);
+  } else {
+    lines.push(`→ ✅ 角色数据库已自动修正体型/属性/技能。剩余缺口见下方 ❌ 列表。`);
+  }
+
+  // 列出可用模板
+  try {
+    const wpPath = path.resolve(process.cwd(), "worldpacks", activeWorld, "init_profiles.json");
+    if (fs.existsSync(wpPath)) {
+      const profiles = JSON.parse(fs.readFileSync(wpPath, "utf-8"));
+      const ids = Object.keys(profiles).filter(k => !k.startsWith("_"));
+      if (ids.length > 0) {
+        lines.push(`→ 可用身份模板: ${ids.join(", ")}`);
+      }
+    }
+  } catch {}
+
+  return lines.join("\n");
+}
+
 export default {
   name: "init_profile", label: "身份模板",
-  description: "应用初始身份模板。装备/资金/能力。",
+  description: "应用初始身份模板。装备/资金/技能/关系/联系人/记忆/住宅。",
   parameters: Type.Object({
-    profileId: Type.String({ description: "模板ID，如 千叶市高中生" }),
+    profileId: Type.String({ description: "模板ID，如 千叶市高中生。不传则列出可用模板" }),
   }),
   async execute(_id, params) {
     const stateMod = await import("../../engine/state.ts");
     const { gameState, saveState, setPlayerLocation, initPlayerGrid, calcAC } = stateMod;
     const activeWorld = gameState.activeWorld || "oregairu";
+
     let profiles: ProfileMap;
     try {
       profiles = loadProfiles(activeWorld);
@@ -105,7 +187,17 @@ export default {
 
     const profile = profiles[params.profileId];
     if (!profile) {
-      return { content: [{ type: "text", text: `未找到身份模板: ${params.profileId}` }], details: {} };
+      // 无匹配模板 → 列出可用模板 + 缺口报告
+      const availableIds = Object.keys(profiles).filter(k => !k.startsWith("_"));
+      const gapReport = buildGapReport(gameState, activeWorld);
+      const lines = [
+        `未找到身份模板: ${params.profileId}`,
+        availableIds.length > 0 ? `可用模板: ${availableIds.join(", ")}` : "当前世界包无身份模板",
+        ``,
+        `当前角色缺口:`,
+        gapReport,
+      ];
+      return { content: [{ type: "text", text: lines.join("\n") }], details: {} };
     }
 
     try {
@@ -117,28 +209,38 @@ export default {
     const playerSnapshot = structuredClone(gameState.player);
     const flagsSnapshot = structuredClone(gameState.flags);
     try {
+      // ── 资金 / 身份 / 头衔 / flags ──
       if (typeof profile.funds === "number") gameState.player.funds = profile.funds;
       if (profile.public_identity) gameState.player.public_identity = profile.public_identity;
       if (Array.isArray(profile.titles)) gameState.player.titles = [...profile.titles];
       if (profile.flags && typeof profile.flags === "object") {
         for (const [k, v] of Object.entries(profile.flags)) gameState.flags[k] = v as any;
       }
+
+      // ── 装备 ──（叠加而非覆盖——保留 init_game 的兜底内衣）
       if (profile.equipment) {
-        gameState.player.equipment = {};
         for (const [slot, item] of Object.entries(profile.equipment)) {
           gameState.player.equipment[slot as any] = normalizeItem(item, `equipment.${slot}`);
         }
         gameState.player.ac = calcAC(gameState.player.attributes.敏捷, gameState.player.equipment);
       }
+
+      // ── 背包 ──
       if (profile.inventory) {
-        gameState.player.inventory = profile.inventory.map((item: any, idx: number) => normalizeItem(item, `inventory[${idx}]`));
+        gameState.player.inventory = profile.inventory.map((item: any, idx: number) =>
+          normalizeItem(item, `inventory[${idx}]`)
+        );
       }
+
+      // ── 技能 ──
       if (profile.skills && typeof profile.skills === "object") {
         gameState.player.skills = {};
         for (const [name, level] of Object.entries(profile.skills)) {
           gameState.player.skills[name] = normalizeSkill(level);
         }
       }
+
+      // ── 能力 + 资源池 ──
       if (profile.abilities && typeof profile.abilities === "object") {
         gameState.player.abilities = {};
         for (const [name, value] of Object.entries(profile.abilities)) {
@@ -148,54 +250,162 @@ export default {
       const resourcePools = normalizeResourcePools(profile.resourcePools);
       if (resourcePools) gameState.player.resourcePools = resourcePools as any;
 
-      let hasResidence = false;
-      if (profile.residenceTemplate && profile.residenceName) {
-        const { instantiateResidence } = await import("../../engine/state-grid.ts");
-        const r = instantiateResidence(profile.residenceTemplate, profile.residenceName);
-        if (!r.success) throw new Error(r.reason);
-        hasResidence = true;
-        // 注册导航
-        if (!gameState.player.known_locations) gameState.player.known_locations = [];
-        for (const roomName of r.rooms) {
-          if (!gameState.player.known_locations.includes(roomName)) {
-            gameState.player.known_locations.push(roomName);
-          }
-        }
-        if (!gameState.player.known_locations.includes(profile.residenceName)) {
-          gameState.player.known_locations.push(profile.residenceName);
-        }
-        // 注册房产
-        const { residenceTemplates } = await import("../../engine/state.ts");
-        const tmpl = residenceTemplates[profile.residenceTemplate];
-        gameState.player.properties[profile.residenceName] = {
-          propertyId: profile.residenceName,
-          name: profile.residenceName,
-          regionId: tmpl?.region || gameState.player.location,
-          type: "own",
-          arrears_days: 0,
-          storage: [],
-        };
-        if (profile.playerRoomInResidence) {
-          setPlayerLocation(`${profile.residenceName}${profile.playerRoomInResidence}`);
+      // ── 社会关系 ──
+      if (profile.relationships && typeof profile.relationships === "object") {
+        gameState.player.relationships = {};
+        for (const [npcName, relData] of Object.entries(profile.relationships)) {
+          const rel = relData as any;
+          gameState.player.relationships[npcName] = {
+            stage: rel.stage || "熟人",
+            affection: typeof rel.affection === "number" ? Math.max(0, Math.min(100, rel.affection)) : 20,
+            romance: rel.romance || null,
+            notes: rel.notes || rel.tag || "",
+            history: [],
+          };
         }
       }
-      // location 只在没有住宅时生效，避免覆盖 instantiateResidence 设定的房间位置
+
+      // ── 通讯录 ──
+      if (profile.contacts && Array.isArray(profile.contacts)) {
+        try {
+          const { getPlayerPhoneData, addContact } = await import("../../engine/phone.ts");
+          const pd = getPlayerPhoneData();
+          if (pd) {
+            for (const contactName of profile.contacts) {
+              if (typeof contactName === "string") {
+                const existing = pd.contacts.find((c: any) => c.name === contactName);
+                if (!existing) {
+                  addContact(pd, contactName, "", "初始联系人");
+                }
+              }
+            }
+          }
+        } catch (e: any) {
+          console.error("init_profile: 通讯录初始化失败", e.message || String(e));
+        }
+      }
+
+      // ── 记忆 ──
+      if (profile.memories && Array.isArray(profile.memories)) {
+        try {
+          const { addMemoryTag } = stateMod;
+          for (const mem of profile.memories) {
+            if (mem && typeof mem.tag === "string") {
+              addMemoryTag(
+                gameState.player.name,
+                mem.tag,
+                typeof mem.expires === "number" ? mem.expires : 365,
+                mem.tone,
+                mem.priority,
+                mem.emotional_valence,
+                mem.related_npcs,
+                mem.category
+              );
+            }
+          }
+        } catch (e: any) {
+          console.error("init_profile: 记忆初始化失败", e.message || String(e));
+        }
+      }
+
+      // ── 住宅 ──（走权威函数 instantiateResidenceAndIntegrate，与 instantiate_residence 工具同源）
+      let hasResidence = false;
+      if (profile.residenceTemplate && profile.residenceName) {
+        const { instantiateResidenceAndIntegrate } = await import("../../engine/state-grid.ts");
+        const r = instantiateResidenceAndIntegrate(profile.residenceTemplate, profile.residenceName, {
+          movePlayerIn: true,
+          playerRoom: profile.playerRoomInResidence,
+        });
+        if (!r.success) throw new Error(r.reason);
+        hasResidence = true;
+      }
       if (!hasResidence && profile.location) setPlayerLocation(profile.location);
       initPlayerGrid();
+
+      // ── 角色数据库自动合并：玩家名匹配世界包角色时，用原作数据覆盖模板 ──
+      let charCorrections = "";
+      try {
+        const char = stateMod.findCharacter(gameState.player.name);
+        if (char) {
+          const corrections: string[] = [];
+          // 体型——角色数据是权威源
+          if (char.body && typeof char.body === "object") {
+            const old = `${gameState.player.body.height_cm}cm/${gameState.player.body.weight_kg}kg/${gameState.player.body.build}`;
+            gameState.player.body = { ...gameState.player.body, ...char.body };
+            const b = gameState.player.body;
+            const nu = `${b.height_cm}cm/${b.weight_kg}kg/${b.build}`;
+            if (old !== nu) corrections.push(`体型: ${old} → ${nu}`);
+          }
+          // 属性
+          if (char.attributes && typeof char.attributes === "object") {
+            gameState.player.attributes = { ...gameState.player.attributes, ...char.attributes };
+            corrections.push(`属性已按角色数据覆盖`);
+          }
+          // 技能合并（角色技能优先）
+          if (char.skills && typeof char.skills === "object") {
+            for (const [name, level] of Object.entries(char.skills)) {
+              gameState.player.skills[name] = normalizeSkill(level);
+            }
+            corrections.push(`技能合并: ${Object.keys(char.skills).join(", ")}`);
+          }
+          // 标签→flags
+          if (Array.isArray(char.tags)) {
+            for (const tag of char.tags) {
+              if (typeof tag === "string") gameState.flags[tag] = true;
+            }
+            corrections.push(`标签→flags: ${char.tags.join(", ")}`);
+          }
+          // 角色特有装备（不覆盖模板已设的槽位，跳过校验失败的装备）
+          if (char.equipment && typeof char.equipment === "object") {
+            const added: string[] = [];
+            for (const [slot, item] of Object.entries(char.equipment)) {
+              if (!gameState.player.equipment[slot as any] && item && typeof item === "object") {
+                try {
+                  gameState.player.equipment[slot as any] = normalizeItem(item, `character.equipment.${slot}`);
+                  added.push(`${slot}:${(item as any).name || slot}`);
+                } catch (e: any) {
+                  corrections.push(`⚠️ 角色装备 ${slot} 数据不完整，跳过: ${e.message}`);
+                }
+              }
+            }
+            if (added.length > 0) corrections.push(`装备补全: ${added.join(", ")}`);
+          }
+          // 班级/社团→记忆
+          const { addMemoryTag } = stateMod;
+          if (char.schedule?.weekday_morning) {
+            addMemoryTag(gameState.player.name, `班级: ${char.schedule.weekday_morning}`, 365, undefined, 2, "neutral", [], "fact");
+          }
+          if (char.schedule?.weekday_afternoon) {
+            addMemoryTag(gameState.player.name, `社团: ${char.schedule.weekday_afternoon}`, 365, undefined, 2, "neutral", [], "fact");
+          }
+          if (char.personality_brief) {
+            addMemoryTag(gameState.player.name, `性格: ${char.personality_brief.slice(0, 100)}`, 365, undefined, 2, "neutral", [], "fact");
+          }
+          // 重算 AC
+          gameState.player.ac = calcAC(gameState.player.attributes.敏捷, gameState.player.equipment);
+
+          if (corrections.length > 0) {
+            charCorrections = `\n\n🔧 角色数据库自动修正 (${gameState.player.name}):\n  ` + corrections.join("\n  ");
+          }
+        }
+      } catch (e: any) {
+        console.error("init_profile: 角色数据自动合并失败", e.message || String(e));
+      }
+
       saveState();
 
+      // ── 生成报告 ──
+      const wasCharCorrected = charCorrections.length > 0;
+      const gapReport = buildGapReport(gameState, activeWorld, params.profileId, wasCharCorrected);
       const summary = [
         `已应用身份模板: ${params.profileId} (${profile.label})`,
-        `装备${Object.keys(gameState.player.equipment || {}).length}件`,
-        `背包${gameState.player.inventory.length}件`,
-        `flags${Object.keys(profile.flags || {}).length}个`,
         ``,
-        `GM提示: 玩家当前通讯录为空、关系为空、记忆为空——这些是叙事内容，需由GM根据身份描述构建。`,
-        `可用工具: create_character(创建角色), lookup_character(查阅已有角色), spawn_npc_agent(激活NPC), adjust_relation(建立关系), add_memory_tag(添加记忆)。`,
-        `世界包中已有角色无需重建——不存在于数据库的角色可以自由创建。`,
-      ].join("\n");
+        gapReport,
+        charCorrections,
+      ].filter(Boolean).join("\n");
       return { content: [{ type: "text", text: summary }], details: { profileId: params.profileId } };
     } catch (e: any) {
+      console.error("init_profile: 应用身份模板失败，已回滚玩家状态", e?.message || String(e), e?.stack);
       gameState.player = playerSnapshot;
       gameState.flags = flagsSnapshot;
       saveState();

@@ -131,8 +131,9 @@ export function initPlayerGrid(): void {
   const roomName = gameState.player.location;
   const grid = getRoom(roomName);
   if (!grid) {
-    console.warn(`[initPlayerGrid] 位置 "${roomName}" 不在已知房间中，gridPos 设为 null。ROOMS keys: ${Object.keys(ROOMS).join(", ").slice(0, 200)}`);
-    gameState.player.gridPos = null;
+    // 室外位置或未知房间：创建默认 10×10 网格
+    console.warn(`[initPlayerGrid] 位置 "${roomName}" 不在已知房间中，创建默认网格`);
+    gameState.player.gridPos = [5, 5];
     return;
   }
   for (const priority of ["exit", "door", "floor"]) {
@@ -362,6 +363,11 @@ export async function createRoom(
   const { advanceMinutes } = await import("./time.ts");
   if (gameState.time.minute_of_day === undefined) gameState.time.minute_of_day = 480;
   advanceMinutes(gameState.time, constructionMinutes);
+  // 注册导航：玩家自建房间也要能被 go_to_location/travel 找到
+  if (!gameState.player.known_locations) gameState.player.known_locations = [];
+  if (!gameState.player.known_locations.includes(roomName)) {
+    gameState.player.known_locations.push(roomName);
+  }
   saveState();
   const tmplNote = opts?.templateId ? `（模板: ${opts.templateId}）` : "";
   return { success: true, reason: `创建了新房间 ${roomName} (${w}x${h})${tmplNote}，花费${currencySymbol}${constructionCost}，施工耗时${constructionMinutes}分钟。` };
@@ -384,7 +390,24 @@ function findTemplate(templates: any, id: string): any | null {
 export function instantiateResidence(
   templateId: string, residenceName: string
 ): { success: boolean; reason: string; rooms: string[] } {
-  const tmpl = residenceTemplates[templateId];
+  let tmpl = residenceTemplates[templateId];
+  // 内存中没有 → 尝试从世界包文件直接读取（防止 loadActiveWorld 未被调用）
+  if (!tmpl) {
+    try {
+      const fs = require("node:fs");
+      const path = require("node:path");
+      const { gameState: gs } = require("./state.ts");
+      const activeWorld = gs?.activeWorld || "oregairu";
+      const wpPath = path.resolve(process.cwd(), "worldpacks", activeWorld, "residence_templates.json");
+      if (fs.existsSync(wpPath)) {
+        const wpData = JSON.parse(fs.readFileSync(wpPath, "utf-8"));
+        if (wpData[templateId]) {
+          tmpl = wpData[templateId];
+          residenceTemplates[templateId] = tmpl; // 缓存
+        }
+      }
+    } catch {}
+  }
   if (!tmpl) return { success: false, reason: `住宅模板 ${templateId} 不存在`, rooms: [] };
 
   const prefix = residenceName;
@@ -433,6 +456,60 @@ export function instantiateResidence(
     reason: parts.join("。") || "未创建任何房间",
     rooms: [...created, ...skipped],
   };
+}
+
+/**
+ * 住宅实例化 + 接入世界（单一权威入口）。
+ * 建房间(instantiateResidence) + 注册导航(known_locations) + 房产登记(properties)
+ * + 可选把玩家搬进去(setPlayerLocation+initPlayerGrid)。
+ * init_profile 和 instantiate_residence 工具都调这个——消除残缺副本漂移。
+ * @param opts.movePlayerIn 玩家是否搬进该住宅（GM 给 NPC 建房子时传 false）
+ * @param opts.playerRoom  玩家入住的房间 key（如"主卧"/"子女房A"）；不传则用模板 player_room
+ * @param opts.regionId    房产所属区域；不传用模板 region 或玩家当前 location
+ */
+export function instantiateResidenceAndIntegrate(
+  templateId: string,
+  residenceName: string,
+  opts?: { movePlayerIn?: boolean; playerRoom?: string; regionId?: string },
+): { success: boolean; reason: string; rooms: string[]; playerLocation?: string } {
+  const r = instantiateResidence(templateId, residenceName);
+  if (!r.success) return { ...r };
+
+  // 懒加载 state.ts（避免循环依赖；state-grid 已有此先例 @394）
+  const stateMod = require("./state.ts");
+  const gs = stateMod.gameState;
+
+  // ── 步骤2：注册导航（房间名 + 住宅名 → known_locations）──
+  if (!gs.player.known_locations) gs.player.known_locations = [];
+  for (const roomName of r.rooms) {
+    if (!gs.player.known_locations.includes(roomName)) gs.player.known_locations.push(roomName);
+  }
+  if (!gs.player.known_locations.includes(residenceName)) gs.player.known_locations.push(residenceName);
+
+  // ── 步骤3：房产登记 ──
+  const tmpl = residenceTemplates[templateId];
+  gs.player.properties[residenceName] = {
+    propertyId: residenceName,
+    name: residenceName,
+    regionId: opts?.regionId || tmpl?.region || gs.player.location,
+    type: "own",
+    arrears_days: 0,
+    storage: [],
+  };
+
+  // ── 步骤4+5：可选把玩家搬进去 ──
+  let playerLocation: string | undefined;
+  if (opts?.movePlayerIn) {
+    const roomKey = opts.playerRoom || tmpl?.player_room;
+    if (roomKey) {
+      // 住宅房间全名 = residenceName + roomKey（对齐 instantiateResidence 的 {prefix} 命名）
+      playerLocation = `${residenceName}${roomKey}`;
+      stateMod.setPlayerLocation(playerLocation);
+      initPlayerGrid();
+    }
+  }
+
+  return { success: true, reason: r.reason, rooms: r.rooms, playerLocation };
 }
 
 // ── 单元操作 ──

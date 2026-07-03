@@ -47,7 +47,7 @@ export default {
               if (pGender === "女") {
                 (profile as any).female = { breast: { cup: "B", shape: "半球", feel: "柔软" }, vagina: { type: "闭合", tightness: "普通", depth_cm: 10 }, pubic_hair: { amount: "普通", color: "黑色", style: "自然" }, clitoris: "普通" };
               } else {
-                (profile as any).male = { penis: { length_cm: 14, girth_cm: 10, shape: "直", head_size: "普通", circumcised: false, color: "普通" }, testicles: { size: "普通" }, pubic_hair: { amount: "普通", color: "黑色", style: "自然" } };
+                (profile as any).male = { penis: { length_cm: 14, girth_cm: 10, erect_length_cm: 17, erect_girth_cm: 12, shape: "直", head_size: "普通", circumcised: false, color: "普通" }, testicles: { size: "普通" }, pubic_hair: { amount: "普通", color: "黑色", style: "自然" } };
               }
             }
           } else {

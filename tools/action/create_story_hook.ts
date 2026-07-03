@@ -44,6 +44,9 @@ export default {
       };
 
       const result = injectDynamicEvent(event);
+      // 立即扫描注入的钩子，使其在 active_hooks 中立即可见
+      const { checkTimelineEvents } = await import("../../engine/timeline.ts");
+      checkTimelineEvents();
       saveState();
       return {
         content: [{ type: "text", text: `${result}\n钩子文本: ${params.hook_text}\n优先级: ${event.hook.urgency} | 过期: ${event.expires_days}天后` }],

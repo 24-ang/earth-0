@@ -35,16 +35,23 @@ export default {
       }
 
       // 2. 搜索活跃世界包的 ST 世界书 (TF-IDF 相似度)
+      // 注意：TF-IDF 可能返回相似但无关的结果 → 加关键词兜底过滤
       try {
         const { loadActiveWorldbooks, searchWorldbook } = await import("../../engine/worldbook-search.ts");
         const wb = loadActiveWorldbooks(gameState.activeWorld || "oregairu");
         if (wb) {
-          const matches = searchWorldbook(wb, params.keyword, { topK: 3, maxTokens: 1500 });
+          const matches = searchWorldbook(wb, params.keyword, { topK: 5, maxTokens: 1500 });
           for (const m of matches) {
             const title = m.entry.keys?.[0] || m.entry.id;
-            const existing = results.find(r => r.text === m.entry.content.slice(0, 500));
+            const contentSnippet = m.entry.content.slice(0, 500);
+            // 关键词兜底：至少 title 或 content 片段中包含搜索词的任一字（中文单字匹配）
+            const hasKeywordOverlap = params.keyword.split("").some((ch: string) =>
+              title.includes(ch) || contentSnippet.includes(ch)
+            );
+            if (!hasKeywordOverlap && params.keyword.length >= 2) continue; // 完全无交集 → 跳过
+            const existing = results.find(r => r.text === contentSnippet);
             if (!existing) {
-              results.push({ title, text: m.entry.content.slice(0, 500), source: "worldbook" });
+              results.push({ title, text: contentSnippet, source: "worldbook" });
             }
           }
         }

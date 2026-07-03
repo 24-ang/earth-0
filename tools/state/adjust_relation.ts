@@ -13,6 +13,10 @@ export default {
       const delta = Math.max(-20, Math.min(20, params.delta));
       const p = gameState.player;
 
+      if (params.npc === p.name) {
+        return { content: [{ type: "text", text: `不能调整玩家对自己的好感度。` }], details: {} };
+      }
+
       updateRelation(p.relationships, params.npc, delta, params.reason);
       let r = `${params.npc} 好感${delta > 0 ? "+" : ""}${delta}（${params.reason}）`;
 

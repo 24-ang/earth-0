@@ -5523,16 +5523,25 @@ loadActiveWorld("oregairu");
 // ensure worldpack data is loaded (residenceTemplates etc), resetState does not load data
 
 
-test("INIT: init_game 只创建引擎骨架，不写叙事装配", async () => {
+test("INIT: init_game 创建引擎骨架 + 最小兜底（内衣/最低生活费/生殖器档案/world flag）", async () => {
   const tool = require("./tools/state/init_game.ts").default;
   await tool.execute("test", { name: "岸田文雄", gender: "男", age: 67, year: 2018 }, null, null, null);
+  // 引擎骨架
   if (gameState.player.name !== "岸田文雄") throw new Error("玩家姓名未初始化");
   if (gameState.player.age !== 67) throw new Error("玩家年龄未初始化");
-  if (gameState.player.funds !== 0) throw new Error(`init_game 不应给初始资金，实际: ${gameState.player.funds}`);
-  if (Object.keys(gameState.player.equipment || {}).length !== 0) throw new Error("init_game 不应装备制服/西装等叙事物品");
-  if ((gameState.player.inventory || []).length !== 0) throw new Error("init_game 不应放入手机/钱包/钥匙等叙事物品");
+  // 最小兜底：资金按龄给
+  if (gameState.player.funds < 1000) throw new Error(`init_game 应给最低生活费，实际: ${gameState.player.funds}`);
+  // 最小兜底：内衣
+  const eqSlots = Object.keys(gameState.player.equipment || {});
+  if (!eqSlots.includes("inner_top") || !eqSlots.includes("inner_bot")) {
+    throw new Error(`init_game 应给内衣兜底，实际装备槽: ${eqSlots.join(",")}`);
+  }
+  // 背包应该为空（手机/书包是叙事装备，由 init_profile 给）
+  if ((gameState.player.inventory || []).length !== 0) throw new Error("init_game 不应放入叙事物品");
+  // 能力/资源池应该为空（由 init_profile 给）
   if (Object.keys(gameState.player.abilities || {}).length !== 0) throw new Error("init_game 不应授予能力");
   if (gameState.player.resourcePools !== undefined) throw new Error("init_game 不应设置资源池");
+  // 无题材硬编码
   const stateText = JSON.stringify({
     equipment: gameState.player.equipment,
     inventory: gameState.player.inventory,
@@ -5541,19 +5550,48 @@ test("INIT: init_game 只创建引擎骨架，不写叙事装配", async () => {
   if (stateText.includes("总武高") || stateText.includes("比企谷家")) {
     throw new Error("init_game 不应写入题材硬编码");
   }
+  // world flag 应该被设置
+  if (!gameState.flags["worldpack_oregairu"]) throw new Error("应自动设置 worldpack_oregairu flag");
 });
 
-test("INIT: init_profile 千叶市高中生应用装备、背包、资金和flag", async () => {
+test("INIT: init_game 返回结构化缺口报告", async () => {
+  const tool = require("./tools/state/init_game.ts").default;
+  const res = await tool.execute("test", { name: "测试角色", gender: "男", age: 25, year: 2018 }, null, null, null);
+  const text = res.content?.[0]?.text || "";
+  if (!text.includes("✅ 已填充")) throw new Error(`缺口报告应包含已填充列表，实际: ${text.slice(0,200)}`);
+  if (!text.includes("❌ 未填充")) throw new Error(`缺口报告应包含未填充列表，实际: ${text.slice(0,200)}`);
+  if (!text.includes("→ 建议工具")) throw new Error(`缺口报告应包含建议工具，实际: ${text.slice(0,200)}`);
+  if (!text.includes("→ 可用身份模板")) throw new Error(`缺口报告应包含可用模板列表，实际: ${text.slice(0,200)}`);
+  if (!text.includes("技能(0项)") && !text.includes("技能")) throw new Error("缺口报告应提及技能缺口");
+  if (!text.includes("住宅(无)")) throw new Error("缺口报告应提及住宅缺口");
+});
+
+test("INIT: init_profile 千叶市高中生应用装备/背包/资金/flag/技能/关系/联系人/记忆/住宅", async () => {
   const initGame = require("./tools/state/init_game.ts").default;
   const initProfile = require("./tools/state/init_profile.ts").default;
   await initGame.execute("test", { name: "八幡", gender: "男", age: 16, year: 2018 }, null, null, null);
   const res = await initProfile.execute("test", { profileId: "千叶市高中生" }, null, null, null);
   if (!res.content?.[0]?.text?.includes("千叶市高中生")) throw new Error("init_profile 应返回已应用模板说明");
+  // 资金
   if (gameState.player.funds !== 500) throw new Error(`高中生资金应为500，实际: ${gameState.player.funds}`);
+  // 装备（init_profile 覆盖 init_game 的兜底内衣）
   if (gameState.player.equipment.top?.name !== "总武高男生制服") throw new Error("制服应直接穿在 top 装备槽");
+  // 背包
   if (!gameState.player.inventory.some((i: any) => i.name === "手机")) throw new Error("背包应包含手机");
   if (!gameState.player.inventory.some((i: any) => i.name === "书包")) throw new Error("背包应包含书包");
+  // flags
   if (gameState.flags.student !== true || gameState.flags.soubu_high_enrolled !== true) throw new Error("高中生 flags 未设置");
+  // 技能
+  if (!gameState.player.skills["国語"] || gameState.player.skills["国語"].level !== 2) throw new Error("国語技能应为 Lv2");
+  // 关系
+  const rels = gameState.player.relationships || {};
+  if (!rels["比企谷八幡"] || rels["比企谷八幡"].stage !== "熟人") throw new Error("应建立与比企谷八幡的关系");
+  if (!rels["户塚彩加"]) throw new Error("应建立与户塚彩加的关系");
+  // 住宅
+  if (!gameState.player.properties["家"]) throw new Error("应实例化住宅'家'");
+  // 缺口报告应包含已填充内容
+  const text = res.content?.[0]?.text || "";
+  if (!text.includes("✅ 已填充")) throw new Error("应包含缺口报告");
 });
 
 test("INIT: init_profile 替身使者授予能力和资源池，可直接 use_ability", async () => {
@@ -5581,6 +5619,8 @@ test("INIT: init_profile 缺失模板返回错误且不半写状态", async () =
   const res = await initProfile.execute("test", { profileId: "不存在的模板" }, null, null, null);
   const text = res.content?.[0]?.text || "";
   if (!text.includes("未找到身份模板")) throw new Error(`应返回缺失模板错误，实际: ${text}`);
+  if (!text.includes("可用模板")) throw new Error(`应列出可用模板，实际: ${text}`);
+  if (!text.includes("缺口")) throw new Error(`应包含缺口报告，实际: ${text}`);
   if (JSON.stringify(gameState.player) !== before) throw new Error("缺失模板不应修改玩家状态");
 });
 
@@ -5596,10 +5636,32 @@ test("INIT: init_profile 武道见习授予技能，skills 以 {level,exp,nextLe
   if (!g["闪避"] || g["闪避"].level !== 1 || g["闪避"].nextLevel !== 10) {
     throw new Error("闪避应为 Lv1, nextLevel=10");
   }
+  if (!g["气功"] || g["气功"].level !== 1) throw new Error("气功应为 Lv1");
   if (gameState.player.funds !== 300) throw new Error("资金应为300");
   const top = gameState.player.equipment.top as any;
   if (!top || top.name !== "武道着") throw new Error("应装备武道着");
   if (!gameState.flags["martial_trainee"]) throw new Error("flag martial_trainee 应为 true");
+  // 住宅
+  if (!gameState.player.properties["道场寮"]) throw new Error("应实例化道场寮");
+});
+
+test("INIT: 杀手场景——无匹配模板 + 缺口报告指导 LLM 补全", async () => {
+  const initGame = require("./tools/state/init_game.ts").default;
+  const initProfile = require("./tools/state/init_profile.ts").default;
+  await initGame.execute("test", { name: "杀手", gender: "男", age: 30, year: 2018 }, null, null, null);
+  // 兜底
+  if (gameState.player.funds < 1000) throw new Error("杀手应有最低生活费");
+  if (!gameState.player.equipment.inner_top) throw new Error("杀手至少应有内衣");
+  // 无匹配模板
+  const res = await initProfile.execute("test", { profileId: "杀手" }, null, null, null);
+  const text = res.content?.[0]?.text || "";
+  if (!text.includes("未找到身份模板")) throw new Error(`应返回缺失模板错误`);
+  if (!text.includes("可用模板")) throw new Error(`应列出可用模板让 LLM 选择`);
+  // LLM 可以手动补：spawn 武器、set_flags criminal
+  // 引擎不替杀手决定装备，但缺口报告应该告诉 LLM 该怎么做
+  if (!text.includes("建议工具") && !text.includes("grant_skill_exp") && !text.includes("spawn")) {
+    throw new Error(`缺口报告应包含工具建议`);
+  }
 });
 
 

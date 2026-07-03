@@ -95,7 +95,7 @@ export function resolveAttack(
   // 减伤
   let dr = 0;
   for (const [_, item] of Object.entries(defender.state.equipment)) {
-    if (!item) continue;
+    if (!item?.effects) continue;
     for (const eff of item.effects) {
       if (eff.type === "damage_reduction") dr += Number(eff.value);
     }

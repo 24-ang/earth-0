@@ -1819,6 +1819,10 @@ export function growAttribute(attrs: Record<string, number>, key: AttrKey, delta
 
 // --- 关系 ---
 export function updateRelation(rels: Record<string, Relationship>, name: string, delta: number, note?: string): Record<string, Relationship> {
+  if (name === gameState.player.name) {
+    console.error(`updateRelation: 拒绝写入玩家自身关系 (${name})`);
+    return rels;
+  }
   const oldStage = rels[name]?.stage || "陌生";
   if (!rels[name]) {
     rels[name] = { stage: "陌生", affection: 0, romance: null, notes: "", history: [] };
@@ -2194,8 +2198,8 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
         gameState.npcs[name].current_goal = ageDrives.goal;
       }
     }
-    // 魅力→初始印象：NPC首次创建时自动写入关系
-    if (!gameState.player.relationships[name]) {
+    // 魅力→初始印象：NPC首次创建时自动写入关系（玩家自己除外）
+    if (name !== gameState.player.name && !gameState.player.relationships[name]) {
       const impression = Math.round((gameState.player.attributes.魅力 - 10) / 2) * 3;
       const baseAffection = Math.max(-10, Math.min(10, impression));
       if (baseAffection !== 0) {

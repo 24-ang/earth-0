@@ -95,7 +95,12 @@ export async function buildRenderSystemPrompt(
 function buildSceneBrief(gs: any): string {
   const lines: string[] = [];
 
+  // 玩家信息（显式注入，防止缓存/序列化导致的名字丢失）
+  const playerName = gs.player?.name || "???";
+  const playerGender = gs.player?.gender || "?";
+
   lines.push(`[场景状态]`);
+  lines.push(`玩家: ${playerName}（${playerGender === "女" ? "她" : "他"}）`);
   lines.push(`日期: ${gs.time?.game_date || "未知"} ${gs.time?.day_of_week || ""}`);
   
   let timeStr = gs.time?.game_time;

@@ -74,16 +74,17 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
   const { runWorldTick } = await import("./tick.ts");
   await runWorldTick();
 
-  // --- 9. 疲劳累积 ---
+  // --- 9. 疲劳累积（先加后扣睡眠恢复） ---
   const { getFatigueMultiplier } = await import("./weather.ts");
   const kFatigue = getFatigueMultiplier(gameState.weather?.temp ?? 16);
-  gameState.player.fatigue = Math.min(100, (gameState.player.fatigue ?? 0) + Math.round((mins / 12) * kFatigue));
-
-  // --- 10. 跨天结算住房合同 ---
+  let rawFatigue = (gameState.player.fatigue ?? 0) + Math.round((mins / 12) * kFatigue);
+  // --- 10. 跨天结算：住房合同 + 每日睡眠恢复40疲劳 ---
   if (result.daysAdvanced > 0) {
     const { settleHousingContracts } = await import("./housing.ts");
     settleHousingContracts(gameState);
+    rawFatigue = Math.max(0, rawFatigue - result.daysAdvanced * 40);
   }
+  gameState.player.fatigue = Math.min(100, rawFatigue);
 
   // --- 11. 统计同场 NPC 数量 ---
   const countAliveNPCsHere = () =>
@@ -153,6 +154,14 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
 
   // --- 18. 落盘 ---
   saveState();
+
+  // --- 18.5 状态完整性校验（turn 阶段：仅 ERROR 大声） ---
+  try {
+    const { validatePlayerState } = require("./validate-state.ts");
+    validatePlayerState(gameState, { phase: "turn" });
+  } catch (e: any) {
+    console.error("settlement: 状态校验器调用失败", e?.message || String(e));
+  }
 
   // --- 19. 拼结果文案 ---
   const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
