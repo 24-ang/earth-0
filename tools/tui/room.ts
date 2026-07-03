@@ -14,14 +14,12 @@ export default {
       lines.push(`📍 ${loc}`);
       lines.push(`🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day}`);
 
-      const inRoomNPCs: [string, any][] = room
-        ? Object.entries(gameState.npcs).filter(([_, n]) => isSameLocation(n.currentRoom, loc))
-        : [];
-
       if (room) {
         const w = room.width, h = room.height, cs = room.cellSize || 1;
         lines.push(`📏 ${w * cs}m × ${h * cs}m | 你: (${gameState.player.gridPos?.[0]??"?"},${gameState.player.gridPos?.[1]??"?"})`);
         if ((room as any).atmosphere) lines.push(`✨ ${(room as any).atmosphere}`);
+
+        const inRoomNPCs = Object.entries(gameState.npcs).filter(([_, n]) => isSameLocation(n.currentRoom, loc));
         if (inRoomNPCs.length > 0) {
           lines.push("────────────────");
           for (const [name, npc] of inRoomNPCs) {
@@ -40,7 +38,8 @@ export default {
 
       const menuItems: { label: string; detail?: string; action?: (done: () => void) => Promise<void> | void }[] = [];
 
-      // ── NPC ──
+      // ── NPC 交互入口 ──
+      const { showNPCInteractionMenu } = await import("./npc.ts");
       for (const [name, npc] of inRoomNPCs) {
         const char = findCharacter(name);
         const age = getNpcCurrentAge(char?.base_age || 16);
@@ -48,19 +47,10 @@ export default {
         const hStr = body?.height_cm ? ` ${body.height_cm}cm` : "";
         menuItems.push({
           label: `👤 ${name}${hStr}`,
-          detail: `${npc.action || "站立"}`,
-          action: async (closeMenu) => {
-            const npcItems: { label: string; detail?: string; action?: (done: () => void) => void }[] = [];
-            if (char) {
-              npcItems.push({ label: `📋 ${char.appearance_brief || "(无简介)"}` });
-              if (body) npcItems.push({ label: `📏 ${body.height_cm}cm ${body.weight_kg}kg ${body.build}${body.cup ? " " + body.cup + "cup" : ""}` });
-              npcItems.push({ label: `🛡️ HP ${char.hp?.current||"?"}/${char.hp?.max||"?"}` });
-            }
-            const rel = gameState.player.relationships?.[name];
-            if (rel) npcItems.push({ label: `💕 ${rel.stage||"熟人"} · 好感 ${rel.affection||0}`, detail: rel.romance || "" });
-            npcItems.push({ label: `↩ 返回`, action: (d: () => void) => { d(); } });
-            await showMenu(ctx, `👤 ${name}`, npcItems);
-            closeMenu();
+          detail: `${npc.action || "站立"} | ▶ 互动`,
+          action: async (done) => {
+            await showNPCInteractionMenu(name, ctx);
+            done();
           },
         });
       }

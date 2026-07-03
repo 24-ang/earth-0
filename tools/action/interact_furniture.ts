@@ -5,7 +5,7 @@ export default {
     description: "家具互动。action: 坐|躺|睡|查看|使用。不限制LLM叙事。",
     parameters: Type.Object({
       furniture: Type.String({ description: "家具名称，如'床'、'椅子'" }),
-      action: Type.String({ description: "动作，如'睡觉'、'坐下'。不填则列出可选动作。" }),
+      action: Type.Optional(Type.String({ description: "动作，如'睡觉'、'坐下'。不填则列出可选动作。" })),
     }),
     async execute(_id: string, params: any, _s: any, _o: any, _ctx: any) {
       const { gameState, saveState, getRoom } = await import("../../engine/state.ts");

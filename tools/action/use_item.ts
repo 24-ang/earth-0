@@ -55,9 +55,15 @@ export default {
         }
       }
 
-      // 消耗物品
-      p.inventory.splice(idx, 1);
+      // 消耗物品（type:tool 或 communication 效果物品不消耗）
+      const isTool = item.type === "tool";
+      const isCommunication = item.effects?.some((e: any) => e.type === "communication");
+      if (!isTool && !isCommunication) {
+        p.inventory.splice(idx, 1);
+      }
       saveState();
+
+      const consumedNote = (isTool || isCommunication) ? "（此物品不被消耗）" : "";
 
       return {
         content: [{ type: "text", text: `使用了${params.item}：${results.join("；")}` }],

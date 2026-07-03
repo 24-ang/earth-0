@@ -1,5 +1,4 @@
 @echo off
-cd /d "%~dp0"
-if exist state\session.json del /f /q state\*.json 2>nul
-if exist state\turn_backups rmdir /s /q state\turn_backups 2>nul
-powershell -ExecutionPolicy Bypass -File "start.ps1" %*
+del /f /q "%~dp0state\*.json" 2>nul
+rmdir /s /q "%~dp0state\turn_backups" 2>nul
+start "" "C:\Program Files\Git\git-bash.exe" --cd="%~dp0" -c "./start.sh"

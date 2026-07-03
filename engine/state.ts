@@ -703,6 +703,21 @@ export function getNpcCurrentAge(npcBaseAge: number): number {
   return Math.max(0, npcBaseAge + ageDelta);
 }
 
+/** 根据 NPC 当前年龄从 schedule_group_by_age 解析正确的日程组 */
+function resolveScheduleGroup(src: any, currentAge: number): string {
+  const byAge: Record<string, string> | undefined = src?.schedule_group_by_age;
+  if (byAge) {
+    const keys = Object.keys(byAge).map(Number).sort((a, b) => a - b);
+    let best = src.schedule_group || "自由人";
+    for (const k of keys) {
+      if (k <= currentAge) best = byAge[String(k)]!;
+      else break;
+    }
+    return best;
+  }
+  return src?.schedule_group || "自由人";
+}
+
 /** 设置玩家位置并自动发现新地点 */
 export function setPlayerLocation(loc: string): void {
   const oldLoc = gameState.player.location;
@@ -2209,7 +2224,7 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
       currentRoom: src?.default_location || "",
       gridPos: src?.grid_pos || null,
       action: "",
-      scheduleGroup: src?.schedule_group || "自由人",
+      scheduleGroup: resolveScheduleGroup(src, npcAge),
       scheduleOverrides: src?.schedule_overrides,
       currentOutfit: "school",
       funds: src?.funds !== undefined ? src.funds : 1000,
@@ -2834,6 +2849,13 @@ export async function updateNPCSchedules(): Promise<string[]> {
   }
 
   for (const [name, npc] of Object.entries(gameState.npcs)) {
+    // 旧存档修复：用 schedule_group_by_age 重解析 scheduleGroup
+    const _src2 = findCharacter(name);
+    if (_src2?.schedule_group_by_age) {
+      const _age2 = getNpcCurrentAge((_src2 as any).base_age || 16);
+      const _corrected2 = resolveScheduleGroup(_src2, _age2);
+      if (npc.scheduleGroup !== _corrected2) npc.scheduleGroup = _corrected2;
+    }
     // Tier 1: 一次性覆盖（生病/约定/紧急事件）
     if (npc.pendingOverride) {
       const ov = npc.pendingOverride;

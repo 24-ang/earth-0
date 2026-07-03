@@ -209,6 +209,26 @@ export default {
     const playerSnapshot = structuredClone(gameState.player);
     const flagsSnapshot = structuredClone(gameState.flags);
     try {
+      // ── 兜底：init_profile 独立使用时，确保玩家至少有内衣+手机 ──
+      if (!gameState.player.equipment.inner_top && !gameState.player.equipment.inner_bot) {
+        const defaultUnderwear = (await import("../../engine/state.ts")).defaultUnderwear;
+        if (defaultUnderwear) {
+          const uw = defaultUnderwear(gameState.player.gender || "男");
+          if (uw.inner_top) gameState.player.equipment.inner_top = uw.inner_top;
+          if (uw.inner_bot) gameState.player.equipment.inner_bot = uw.inner_bot;
+        }
+      }
+      // 确保手机存在
+      const hasPhone = gameState.player.inventory.some((i: any) =>
+        i.name?.includes("手机") || i.effects?.some((e: any) => e.type === "communication")
+      );
+      if (!hasPhone) {
+        gameState.player.inventory.push({
+          name: "手机", type: "tool", slot: "right_hand", weight: 0.2, volume: 0.2,
+          effects: [{ type: "communication" }], state: "intact",
+        });
+      }
+
       // ── 资金 / 身份 / 头衔 / flags ──
       if (typeof profile.funds === "number") gameState.player.funds = profile.funds;
       if (profile.public_identity) gameState.player.public_identity = profile.public_identity;
@@ -268,11 +288,34 @@ export default {
         }
       }
 
-      // ── 通讯录 ──（从已建立的关系自动同步，不盲灌 profile 名单）
+      // ── 通讯录 ──
       try {
-        const { getPlayerPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
-        const pd = getPlayerPhoneData();
-        if (pd) syncContactsFromRelationships(pd, 0);
+        const { getPlayerPhoneData, createDefaultPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
+        let pd = getPlayerPhoneData();
+        // phoneData 可能还没初始化——懒创建
+        if (!pd) {
+          const phone = gameState.player.inventory.find((i: any) =>
+            i.name?.includes("手机") || i.effects?.some((e: any) => e.type === "communication")
+          );
+          if (phone) {
+            const { createDefaultPhoneData: cdp } = await import("../../engine/phone.ts");
+            (phone as any).phoneData = cdp(gameState.player.name);
+            pd = (phone as any).phoneData;
+          }
+        }
+        if (pd) {
+          // 从关系同步
+          syncContactsFromRelationships(pd, 0);
+          // 再从模板 contacts 补（避免只有关系、没灌模板联系人的盲区）
+          if (Array.isArray(profile.contacts)) {
+            for (const cname of profile.contacts) {
+              if (!pd.contacts.some(c => c.name === cname)) {
+                pd.contacts.push({ name: cname, relation: "同学", number: `090-${1000 + Math.floor(Math.random() * 9000)}-${1000 + Math.floor(Math.random() * 9000)}` });
+              }
+            }
+          }
+          saveState();
+        }
       } catch (e: any) {
         console.error("init_profile: 通讯录初始化失败", e.message || String(e));
       }

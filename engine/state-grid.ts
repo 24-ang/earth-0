@@ -140,6 +140,16 @@ export function initPlayerGrid(): void {
   for (const priority of ["exit", "door", "floor"]) {
     for (let y = 0; y < grid.height; y++) {
       for (let x = 0; x < grid.width; x++) {
+        const c = grid.cells[y]?.[x];
+        if (c?.type === priority && !c.furniture && !c.block) {
+          gameState.player.gridPos = [x, y];
+          return;
+        }
+      }
+    }
+    // 没找到可通行的 → 第二轮不加 furniture/block 约束
+    for (let y = 0; y < grid.height; y++) {
+      for (let x = 0; x < grid.width; x++) {
         if (grid.cells[y]?.[x]?.type === priority) {
           gameState.player.gridPos = [x, y];
           return;
@@ -263,12 +273,15 @@ function createRoomGrid(
       } else {
         const cell: any = { type: "floor", block: false, label: "  " };
         if (opts?.furniture && opts.furniture.length > 0) {
-          // 均匀分布家具到内部格子
-          const innerIdx = (y - 1) * (width - 2) + (x - 1);
-          const fi = innerIdx % opts.furniture.length;
-          if (innerIdx < opts.furniture.length) {
-            cell.furniture = opts.furniture[fi];
-            cell.block = true;
+          const originX = Math.floor(width / 2);
+          const originY = Math.floor(height / 2);
+          // 不在 origin 格放家具，保证玩家出生时至少一个可站立 floor
+          if (x !== originX || y !== originY) {
+            const innerIdx = (y - 1) * (width - 2) + (x - 1);
+            if (innerIdx < opts.furniture.length) {
+              cell.furniture = opts.furniture[innerIdx];
+              cell.block = true;
+            }
           }
         }
         row.push(cell);
