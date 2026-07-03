@@ -3,6 +3,12 @@ import { Type } from "typebox";
 import { gameState, getNamelessNPCs, getCurrency, normalizeLocationName } from "../engine/state.ts";
 import { getNPCContext } from "../engine/scenario-tables.ts";
 
+/** 提取文本第一句话（到第一个句号/换行），用于 NPC agent 输出摘要 */
+function extractFirstSentence(text: string): string {
+  const match = text.match(/^(.+?)[。\n]/);
+  return match ? match[1] + "。" : text.slice(0, 80);
+}
+
 export let pi: ExtensionAPI | null = null;
 export function setPi(piInstance: ExtensionAPI) {
   pi = piInstance;
@@ -179,8 +185,7 @@ export async function moveTo(loc: string, ctx: any, gs: any, save: any) {
   gs.player.location = loc;
   if (!gs.player.known_locations) gs.player.known_locations = ["千叶_住宅区"];
   if (!gs.player.known_locations.includes(loc)) gs.player.known_locations.push(loc);
-  const { initPlayerGrid, stampRoom } = await import("../engine/state.ts");
-  initPlayerGrid();
+  const { stampRoom } = await import("../engine/state.ts");
   stampRoom(loc);
   save(); ctx.ui.notify("📍 " + loc, "info");
   updateChatHUD(ctx);
@@ -921,7 +926,7 @@ export async function recordNpcAgentAction(
     // 3. 写入长期记忆
     addMemoryTag(
       npcName,
-      `[Agent自主发言] ${response.slice(0, 80)}`,
+      `[Agent自主发言] ${extractFirstSentence(response)}`,
       7,                // 默认 7 天过期
       undefined,        // tone
       1,                // priority (1 = 日常)

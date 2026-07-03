@@ -241,7 +241,6 @@ export default {
     // ── 位置 ──
     setPlayerLocation("千叶_住宅区");
     gs.player.known_locations = ["千叶_住宅区"];
-    initPlayerGrid();
 
     // ── 世界 flag ──
     const activeWorld = gs.activeWorld || "oregairu";

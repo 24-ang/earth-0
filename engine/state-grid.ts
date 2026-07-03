@@ -11,6 +11,7 @@ import {
   cleanupTempNPCs,
   LOCATIONS_DELTA,
   roomTemplates, residenceTemplates,
+  PRICE_RANGE,
 } from "./state.ts";
 import { lookupRegion } from "./router.ts";
 import { attrMod } from "./dice.ts";
@@ -505,7 +506,6 @@ export function instantiateResidenceAndIntegrate(
       // 住宅房间全名 = residenceName + roomKey（对齐 instantiateResidence 的 {prefix} 命名）
       playerLocation = `${residenceName}${roomKey}`;
       stateMod.setPlayerLocation(playerLocation);
-      initPlayerGrid();
     }
   }
 
@@ -569,7 +569,14 @@ export function getItemTemplate(itemName: string): import("./types.ts").Item {
   for (const cat of Object.values(itemsCatalog)) {
     if ((cat as any)[itemName]) { itemData = (cat as any)[itemName]; break; }
   }
-  if (itemData) return structuredClone(itemData);
+  if (itemData) {
+    // 价格兜底：items.json 缺少 price 时从 economy.json 自动推算
+    if (itemData.price == null && PRICE_RANGE) {
+      const range = PRICE_RANGE[itemData.type] || [50, 500];
+      itemData.price = Math.round((range[0] + range[1]) / 2);
+    }
+    return structuredClone(itemData);
+  }
   return { name: itemName, type: "tool", slot: "back", weight: 1.0, effects: [], state: "intact", volume: 0.5 };
 }
 

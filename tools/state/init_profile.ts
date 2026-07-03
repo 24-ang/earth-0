@@ -320,7 +320,6 @@ export default {
         hasResidence = true;
       }
       if (!hasResidence && profile.location) setPlayerLocation(profile.location);
-      initPlayerGrid();
 
       // ── 角色数据库自动合并：玩家名匹配世界包角色时，用原作数据覆盖模板 ──
       let charCorrections = "";

@@ -4381,9 +4381,10 @@
       ],
       [
         {
-          "type": "floor",
+          "type": "exit",
           "block": false,
-          "label": "  "
+          "exitTo": "校门",
+          "label": "EX"
         },
         {
           "type": "floor",
@@ -4526,9 +4527,10 @@
           "label": "  "
         },
         {
-          "type": "floor",
+          "type": "exit",
           "block": false,
-          "label": "  "
+          "exitTo": "商店街",
+          "label": "EX"
         }
       ],
       [
@@ -4755,9 +4757,10 @@
           "label": "  "
         },
         {
-          "type": "floor",
+          "type": "exit",
           "block": false,
-          "label": "  "
+          "exitTo": "千叶站前",
+          "label": "EX"
         },
         {
           "type": "floor",

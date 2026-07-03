@@ -88,7 +88,6 @@ import gambleCommand from "./tui/gamble.ts";
 import housingCommand from "./tui/housing.ts";
 import relationsCommand from "./tui/relations.ts";
 import statusCommand from "./tui/status.ts";
-import menuCommand from "./tui/menu.ts";
 import lookCommand from "./tui/look.ts";
 import partyCommand from "./tui/party.ts";
 import identityCommand from "./tui/identity.ts";
@@ -187,7 +186,6 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerCommand("housing", housingCommand);
   pi.registerCommand("relations", relationsCommand);
   pi.registerCommand("status", statusCommand);
-  pi.registerCommand("menu", menuCommand);
   pi.registerCommand("look", lookCommand);
   pi.registerCommand("party", partyCommand);
   pi.registerCommand("identity", identityCommand);

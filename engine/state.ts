@@ -395,6 +395,11 @@ export function loadState(filepath?: string): boolean {
   const targetDir = path.dirname(fp);
   const raw = fs.readFileSync(fp, "utf-8");
   gameState = JSON.parse(raw) as GameState;
+  // 清理旧版 bug 写入 npcs 的玩家幽灵条目
+  if (gameState.npcs && gameState.npcs[gameState.player?.name]) {
+    console.error(`loadState: 清理 npcs 中的玩家幽灵 "${gameState.player.name}"`);
+    delete gameState.npcs[gameState.player.name];
+  }
   setAcademicYearOffset(gameState.academic_year_offset ?? 0);
 
   // 读取 rooms_delta.json 并覆盖 ROOMS
@@ -531,6 +536,14 @@ export function loadState(filepath?: string): boolean {
 
   // 写回最新版本号
   gameState.schemaVersion = currentSchemaVersion;
+
+  // 加载后重建空间状态（gridPos 可能在旧存档为 null）
+  if (gameState.player?.location) {
+    try {
+      const { initPlayerGrid } = require("./state-grid.ts");
+      initPlayerGrid();
+    } catch {}
+  }
 
   return true;
 }
@@ -702,6 +715,11 @@ export function setPlayerLocation(loc: string): void {
   if (oldLoc !== key && gameState.tempNPCs?.length > 0) {
     cleanupTempNPCs("玩家移动");
   }
+  // 移动后自动初始化网格坐标（单点权威——消除调用方碎片化的 initPlayerGrid）
+  try {
+    const { initPlayerGrid } = require("./state-grid.ts");
+    initPlayerGrid();
+  } catch {}
 }
 
 export function getPlayerStatusNarrative(p: PlayerState): string {
@@ -2408,11 +2426,10 @@ export function addMemoryTag(
   related_npcs?: string[],
   category?: "fact" | "emotion" | "milestone" | "general"
 ): void {
-  // 玩家记忆走 npcs[玩家名] 但不经 getOrCreateNPC（防 NPC 表污染）
+  // 玩家记忆写入 player.memories，绝不污染 npcs 表
   if (npcName === gameState.player.name) {
-    gameState.npcs[npcName] ??= { currentRoom: "", alive: true, current_goal: "", memoryTags: [], scheduleGroup: "自由人" } as any;
-    gameState.npcs[npcName].memoryTags ??= [];
-    gameState.npcs[npcName].memoryTags.push({
+    gameState.player.memories ??= [];
+    gameState.player.memories.push({
       tag,
       since: gameState.time.game_date,
       expires: expiresDays,
@@ -2436,6 +2453,10 @@ export function addMemoryTag(
     related_npcs: related_npcs ?? [],
     category: category ?? "general"
   });
+  // 容量上限：超过 50 条则只保留最近 30 条
+  if (npc.memoryTags.length > 50) {
+    npc.memoryTags = npc.memoryTags.slice(-30);
+  }
 }
 
 export function getMemoryTags(npcName: string): string[] {
