@@ -54,7 +54,11 @@ export default {
           break;
         }
       }
-      if (currentRegion && foundRegion && currentRegion === foundRegion) {
+      // 同建筑内房间移动：秒级（非城市级旅行）
+      const ROOMS = (await import("../../engine/state.ts")).ROOMS;
+      if (ROOMS[currentLoc] && ROOMS[dest]) {
+        minutes = 0.5; // 30秒，房间间走几步的距离
+      } else if (currentRegion && foundRegion && currentRegion === foundRegion) {
         minutes = route === "电车" ? 8 : route === "公交" ? 15 : 15; // 同区更短
       }
 

@@ -3468,7 +3468,7 @@ export function switchActiveWorld(targetWorld: string): void {
     gameState.npcs = structuredClone(snapshot.npcs);
     ROOMS = structuredClone(snapshot.room_deltas);
     LOCATIONS_DELTA = structuredClone(snapshot.dynamic_locations);
-    gameState.player.known_locations = structuredClone(snapshot.known_locations || []);
+    gameState.player.known_locations = structuredClone(snapshot.known_locations?.length ? snapshot.known_locations : gameState.player.known_locations);
 
     const phone = findPlayerPhone();
     if (phone && phone.phoneData) {

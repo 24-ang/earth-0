@@ -5536,8 +5536,10 @@ test("INIT: init_game 创建引擎骨架 + 最小兜底（内衣/最低生活费
   if (!eqSlots.includes("inner_top") || !eqSlots.includes("inner_bot")) {
     throw new Error(`init_game 应给内衣兜底，实际装备槽: ${eqSlots.join(",")}`);
   }
-  // 背包应该为空（手机/书包是叙事装备，由 init_profile 给）
-  if ((gameState.player.inventory || []).length !== 0) throw new Error("init_game 不应放入叙事物品");
+  // 背包应仅有手机（基础设施兜底，非叙事物品）
+  const playerInv = gameState.player.inventory || [];
+  const nonPhoneItems = playerInv.filter((i: any) => i.name !== "手机");
+  if (nonPhoneItems.length !== 0) throw new Error(`init_game 不应放入叙事物品: ${nonPhoneItems.map((i:any)=>i.name).join(",")}`);
   // 能力/资源池应该为空（由 init_profile 给）
   if (Object.keys(gameState.player.abilities || {}).length !== 0) throw new Error("init_game 不应授予能力");
   if (gameState.player.resourcePools !== undefined) throw new Error("init_game 不应设置资源池");

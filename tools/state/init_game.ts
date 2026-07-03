@@ -224,10 +224,15 @@ export default {
     const { getLifeStage } = await import("../../engine/time.ts");
     gs.time.player_stage = getLifeStage(params.age);
 
-    // ── 最小兜底：内衣 + 最低生活费 ──
+    // ── 最小兜底：内衣 + 手机 + 最低生活费 ──
     const underwear = defaultUnderwear(params.gender);
     gs.player.equipment = { inner_top: underwear.inner_top, inner_bot: underwear.inner_bot };
     gs.player.funds = minFundsByAge(params.age);
+    // 现代日本基本配备
+    gs.player.inventory.push({
+      name: "手机", type: "tool", slot: "right_hand", weight: 0.2, volume: 0.2,
+      effects: [{ type: "communication" }], state: "intact",
+    });
 
     // ── 生殖器档案自动生成 ──
     try {
