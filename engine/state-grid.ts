@@ -577,7 +577,8 @@ export function getItemTemplate(itemName: string): import("./types.ts").Item {
     }
     return structuredClone(itemData);
   }
-  return { name: itemName, type: "tool", slot: "back", weight: 1.0, effects: [], state: "intact", volume: 0.5 };
+  const range = PRICE_RANGE?.["tool"] || [50, 500];
+  return { name: itemName, type: "tool", slot: "back", weight: 1.0, effects: [], state: "intact", volume: 0.5, price: Math.round((range[0] + range[1]) / 2) };
 }
 
 export function removeFurniture(x: number, y: number): { success: boolean; reason: string; item?: string } {
