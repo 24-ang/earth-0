@@ -154,13 +154,15 @@ export default {
           return { content: [{ type: "text", text: "附近没有可以拾取的家具" }], details: {} };
         }
         const furnitureName = matched.cell.furniture!;
-        // 查物品模板获取重量
-        let itemWeight = 1.0; // 默认1kg
-        const { itemsCatalog } = await import("../../engine/state.ts");
-        for (const cat of Object.values(itemsCatalog)) {
-          if ((cat as any)[furnitureName]) {
-            itemWeight = (cat as any)[furnitureName].weight || 1.0;
-            break;
+        // 优先用 cell 上保留的原始重量（place 时写入），其次查物品模板
+        let itemWeight = (matched.cell as any).furnitureWeight || 1.0;
+        if (itemWeight === 1.0) {
+          const { itemsCatalog } = await import("../../engine/state.ts");
+          for (const cat of Object.values(itemsCatalog)) {
+            if ((cat as any)[furnitureName]) {
+              itemWeight = (cat as any)[furnitureName].weight || 1.0;
+              break;
+            }
           }
         }
         const str = p.attributes.力量;
@@ -170,9 +172,10 @@ export default {
           return { content: [{ type: "text", text: `${furnitureName}太重了（${itemWeight}kg > 力量上限${maxLift}kg），无法拾取` }], details: {} };
         }
 
-        // 获取物品模板
+        // 获取物品模板并恢复原始重量
         const { getItemTemplate } = await import("../../engine/state.ts");
         const template = getItemTemplate(furnitureName);
+        template.weight = itemWeight;  // 覆盖为 cell 上保留的原始重量
 
         if (itemWeight > str * 1.5) {
           // 中等重量：双手搬运

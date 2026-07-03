@@ -555,8 +555,10 @@ export function placeFurniture(x: number, y: number, itemName: string, furniture
   if (cell.furniture) return { success: false, reason: `这里已经有${cell.furniture}了` };
   const idx = gameState.player.inventory.findIndex((i: any) => i.name === itemName);
   if (idx < 0) return { success: false, reason: `背包里没有${itemName}。需要先获取该物品（购买/拾荒/偷窃等）。` };
+  const placedItem = gameState.player.inventory[idx];
   gameState.player.inventory.splice(idx, 1);
   cell.furniture = itemName;
+  (cell as any).furnitureWeight = placedItem.weight;  // 保留原始重量（放置再拾取不丢属性）
   cell.label = itemName.slice(0, 4);
   cell.block = true;
   if (furnitureActions && Object.keys(furnitureActions).length > 0) (cell as any).furniture_actions = furnitureActions;

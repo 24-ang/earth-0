@@ -15,7 +15,7 @@ export default {
       method: Type.Optional(Type.String({ description: "步行|电车|公交|火车|auto，默认auto自动选择" })),
     }),
     async execute(_id, params, _s, _o, ctx) {
-      const { gameState, saveState, isSameLocation } = await import("../../engine/state.ts");
+      const { gameState, saveState, setPlayerLocation, isSameLocation } = await import("../../engine/state.ts");
       const { moveTo, advanceTimeMinutes } = await import("../helpers.ts");
       const { advanceMinutes } = await import("../../engine/time.ts");
       const fs = await import("node:fs");
@@ -160,8 +160,7 @@ export default {
         const { switchActiveWorld } = await import("../../engine/state.ts");
         switchActiveWorld(targetWorld);
 
-        gameState.player.location = dest;
-        gameState.player.gridPos = null;
+        setPlayerLocation(dest);
         saveState();
 
         return {

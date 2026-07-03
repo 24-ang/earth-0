@@ -9,7 +9,7 @@ export default {
       destination: Type.String({ description: "目标站名" })
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, saveState, switchActiveWorld } = await import("../../engine/state.ts");
+      const { gameState, saveState, setPlayerLocation, switchActiveWorld } = await import("../../engine/state.ts");
       const { advanceMinutes } = await import("../../engine/time.ts");
       const fs = await import("node:fs");
       const path = await import("node:path");
@@ -41,9 +41,8 @@ export default {
       
       switchActiveWorld(targetWorld);
       
-      gameState.player.location = params.destination;
-      gameState.player.gridPos = null;
-      
+      setPlayerLocation(params.destination);
+
       saveState();
 
       return {
