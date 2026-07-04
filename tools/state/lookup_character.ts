@@ -26,7 +26,8 @@ export default {
         return { content: [{ type: "text", text: "无此角色" }], details: {} };
       }
       const age = getNpcCurrentAge(c.base_age || 16);
-      const aged = { ...c, body: getBodyForAge(c, age) };
+      const npc = gameState.npcs?.[params.name];
+      const aged = { ...c, body: getBodyForAge(c, age), schedule_group: npc?.scheduleGroup || c.schedule_group };
 
       // 构建装备物品的 flavor 速查表
       const flavorMap = new Map<string, string>();
@@ -38,7 +39,6 @@ export default {
 
       // 当前穿着物品及flavor
       const equipLines: string[] = [];
-      const npc = gameState.npcs?.[params.name];
       if (npc) {
         const key = npc.currentOutfit || "school";
         const outfit = c.outfits?.[key];

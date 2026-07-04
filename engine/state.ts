@@ -816,8 +816,10 @@ export function setPlayerLocation(loc: string): void {
   if (oldLoc !== key && gameState.tempNPCs?.length > 0) {
     cleanupTempNPCs("玩家移动");
   }
-  // 移动后自动初始化网格坐标（initPlayerGrid 已在文件顶部从 state-grid.ts 导入）
-  initPlayerGrid();
+  // 移动后自动初始化网格坐标（仅位置变化时，避免覆盖同房间 gridPos）
+  if (oldLoc !== key) {
+    initPlayerGrid();
+  }
 }
 
 export function getPlayerStatusNarrative(p: PlayerState): string {
@@ -2348,6 +2350,13 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
           romance: null,
           notes: baseAffection > 0 ? "第一印象不错" : "第一印象不太好",
         };
+      }
+    }
+    // 自动收录 NPC 的 default_location 到玩家已知地点（否则 travel 找不到）
+    if (src?.default_location) {
+      const defLoc = src.default_location as string;
+      if (!gameState.player.known_locations.some((k: string) => isSameLocation(k, defLoc))) {
+        gameState.player.known_locations.push(defLoc);
       }
     }
   }
