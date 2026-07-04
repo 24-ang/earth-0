@@ -8,17 +8,21 @@ export default {
       text: Type.String({ description: "短信内容" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { getPlayerPhoneData, getPlayerPhone, createDefaultPhoneData, canContact, deliverMessage } =
+      const { canContact, deliverMessage, createDefaultPhoneData } =
         await import("../../engine/phone.ts");
       const { gameState, saveState } = await import("../../engine/state.ts");
-      let pd = getPlayerPhoneData();
-      if (!pd) {
-        const phone = getPlayerPhone();
-        if (phone) {
-          (phone as any).phoneData = createDefaultPhoneData(gameState.player.name);
-          saveState();
-          pd = (phone as any).phoneData;
-        }
+      // 直接扫背包+装备找手机，不依赖 phone.ts 的静态 gameState 缓存
+      const p = gameState.player;
+      let phone: any = null;
+      for (const item of Object.values(p.equipment)) {
+        if (item?.effects?.some((e: any) => e.type === "communication") || item?.name?.includes("手机")) { phone = item; break; }
+      }
+      if (!phone) phone = p.inventory.find((i: any) => i.effects?.some((e: any) => e.type === "communication") || i.name?.includes("手机")) || null;
+      let pd = phone?.phoneData || null;
+      if (!pd && phone) {
+        phone.phoneData = createDefaultPhoneData(p.name);
+        saveState();
+        pd = phone.phoneData;
       }
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。" }], details: {} };

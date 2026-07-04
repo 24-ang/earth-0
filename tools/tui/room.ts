@@ -14,12 +14,13 @@ export default {
       lines.push(`📍 ${loc}`);
       lines.push(`🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day}`);
 
+      const inRoomNPCs = Object.entries(gameState.npcs || {}).filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, loc));
+
       if (room) {
         const w = room.width, h = room.height, cs = room.cellSize || 1;
         lines.push(`📏 ${w * cs}m × ${h * cs}m | 你: (${gameState.player.gridPos?.[0]??"?"},${gameState.player.gridPos?.[1]??"?"})`);
         if ((room as any).atmosphere) lines.push(`✨ ${(room as any).atmosphere}`);
 
-        const inRoomNPCs = Object.entries(gameState.npcs).filter(([_, n]) => isSameLocation(n.currentRoom, loc));
         if (inRoomNPCs.length > 0) {
           lines.push("────────────────");
           for (const [name, npc] of inRoomNPCs) {
