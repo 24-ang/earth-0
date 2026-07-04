@@ -8,7 +8,7 @@ import {
   getRoomKey, isSameLocation, normalizeLocationName,
   getCurrency, getConstructionMultiplier,
   saveState, damageItem, getEquipmentBonus, hasEquipmentEffect,
-  cleanupTempNPCs,
+  cleanupTempNPCs, setPlayerLocation,
   LOCATIONS_DELTA,
   roomTemplates, residenceTemplates,
   PRICE_RANGE,
@@ -410,8 +410,7 @@ export function instantiateResidence(
     try {
       const fs = require("node:fs");
       const path = require("node:path");
-      const { gameState: gs } = require("./state.ts");
-      const activeWorld = gs?.activeWorld || "oregairu";
+      const activeWorld = gameState?.activeWorld || "oregairu";
       const wpPath = path.resolve(process.cwd(), "worldpacks", activeWorld, "residence_templates.json");
       if (fs.existsSync(wpPath)) {
         const wpData = JSON.parse(fs.readFileSync(wpPath, "utf-8"));
@@ -489,23 +488,19 @@ export function instantiateResidenceAndIntegrate(
   const r = instantiateResidence(templateId, residenceName);
   if (!r.success) return { ...r };
 
-  // 懒加载 state.ts（避免循环依赖；state-grid 已有此先例 @394）
-  const stateMod = require("./state.ts");
-  const gs = stateMod.gameState;
-
   // ── 步骤2：注册导航（房间名 + 住宅名 → known_locations）──
-  if (!gs.player.known_locations) gs.player.known_locations = [];
+  if (!gameState.player.known_locations) gameState.player.known_locations = [];
   for (const roomName of r.rooms) {
-    if (!gs.player.known_locations.includes(roomName)) gs.player.known_locations.push(roomName);
+    if (!gameState.player.known_locations.includes(roomName)) gameState.player.known_locations.push(roomName);
   }
-  if (!gs.player.known_locations.includes(residenceName)) gs.player.known_locations.push(residenceName);
+  if (!gameState.player.known_locations.includes(residenceName)) gameState.player.known_locations.push(residenceName);
 
   // ── 步骤3：房产登记 ──
   const tmpl = residenceTemplates[templateId];
-  gs.player.properties[residenceName] = {
+  gameState.player.properties[residenceName] = {
     propertyId: residenceName,
     name: residenceName,
-    regionId: opts?.regionId || tmpl?.region || gs.player.location,
+    regionId: opts?.regionId || tmpl?.region || gameState.player.location,
     type: "own",
     arrears_days: 0,
     storage: [],
@@ -516,9 +511,8 @@ export function instantiateResidenceAndIntegrate(
   if (opts?.movePlayerIn) {
     const roomKey = opts.playerRoom || tmpl?.player_room;
     if (roomKey) {
-      // 住宅房间全名 = residenceName + roomKey（对齐 instantiateResidence 的 {prefix} 命名）
       playerLocation = `${residenceName}${roomKey}`;
-      stateMod.setPlayerLocation(playerLocation);
+      setPlayerLocation(playerLocation);
     }
   }
 

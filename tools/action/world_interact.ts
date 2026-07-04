@@ -23,18 +23,15 @@ export default {
       }))),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getRoom, placeFurniture, removeFurniture, editCellType, toggleDoor, initPlayerGrid } = await import("../../engine/state.ts");
-      const p = gameState.player;
-      if (!p.gridPos) {
-        initPlayerGrid();
-        if (gameState.player.gridPos) {
-          const { saveState: ws2 } = await import("../../engine/state.ts");
-          ws2();
-        }
+      const { gameState, getRoom, placeFurniture, removeFurniture, editCellType, toggleDoor, setPlayerLocation } = await import("../../engine/state.ts");
+      // gridPos null → 走 setPlayerLocation 完整恢复（保证 location+gridPos 原子一致）
+      if (!gameState.player.gridPos) {
+        setPlayerLocation(gameState.player.location);
       }
       if (!gameState.player.gridPos) {
-        return { content: [{ type: "text", text: `当前玩家没有网格坐标（位置: ${p.location}），无法进行网格交互。尝试 move 激活网格。` }], details: {} };
+        return { content: [{ type: "text", text: `当前玩家没有网格坐标（位置: ${gameState.player.location}），无法进行网格交互。尝试 move 激活网格。` }], details: {} };
       }
+      const p = gameState.player;
       const room = getRoom(p.location);
       if (!room) {
         return { content: [{ type: "text", text: `当前位置 ${p.location} 没有地图格，无法进行网格交互` }], details: {} };
