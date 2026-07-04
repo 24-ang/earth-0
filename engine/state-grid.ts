@@ -348,11 +348,14 @@ export async function createRoom(
   const cleanName = normalizeLocationName(roomName);
   if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
 
-  // 如果有 template，从 room_templates 读尺寸
+  // 如果有 template，从 room_templates 读尺寸（用户显式传值优先）
   let w = width, h = height;
   if (opts?.templateId) {
     const tmpl = findTemplate(roomTemplates, opts.templateId);
-    if (tmpl) { w = tmpl.width || w; h = tmpl.height || h; }
+    if (tmpl) {
+      w = (opts as any).userWidth !== undefined ? (opts as any).userWidth : (tmpl.width || w);
+      h = (opts as any).userHeight !== undefined ? (opts as any).userHeight : (tmpl.height || h);
+    }
   }
 
   if (w < 3 || h < 3) return { success: false, reason: `房间尺寸至少 3×3（${w}×${h}太小，内部无可行走空间）` };

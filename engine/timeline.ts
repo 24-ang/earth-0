@@ -213,7 +213,6 @@ export function getCalendarPhase(date: string, location: string): {
 }
 
 function locationMatches(entryLoc: string, playerLoc: string): boolean {
-  const { isSameLocation, getLocationNav } = require("./state.ts");
   if (isSameLocation(entryLoc, playerLoc)) return true;
   try {
     const nav = getLocationNav(playerLoc);

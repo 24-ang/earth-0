@@ -10,7 +10,7 @@ function baseStats(age: number, gender: string) {
   if (age <= 12) {
     return {
       attributes: { 力量: 5, 敏捷: 7, 体质: 6, 智力: 9, 感知: 8, 魅力: 8 },
-      body: { height_cm: gender === "女" ? 148 : 150, weight_kg: gender === "女" ? 38 : 40, build: "纤细", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
+      body: { height_cm: gender === "女" ? 142 : 144, weight_kg: gender === "女" ? 35 : 37, build: "纤细", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
     };
   }
   if (age <= 15) {
@@ -169,6 +169,7 @@ export default {
     gender: Type.String({ description: "玩家性别，男/女" }),
     age: Type.Number({ description: "起始年龄，例如16" }),
     year: Type.Optional(Type.Number({ description: "起始年份，默认2018" })),
+    location: Type.Optional(Type.String({ description: "起始地点，默认千叶_住宅区。高中生→千叶_住宅区，独居→千叶_住宅区或千叶市街，外国人/外星人→自行指定" })),
   }),
   async execute(_id, params, _signal, _onUpdate, _ctx) {
     const stateMod = await import("../../engine/state.ts");
@@ -237,8 +238,9 @@ export default {
     }
 
     // ── 位置 ──
-    setPlayerLocation("千叶_住宅区");
-    gs.player.known_locations = ["千叶_住宅区"];
+    const startLocation = params.location || "千叶_住宅区";
+    setPlayerLocation(startLocation);
+    gs.player.known_locations = [startLocation];
 
     // ── 世界 flag ──
     const activeWorld = gs.activeWorld || "oregairu";

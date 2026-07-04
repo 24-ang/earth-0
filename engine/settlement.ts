@@ -163,7 +163,7 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
 
   // --- 18.5 状态完整性校验（turn 阶段：仅 ERROR 大声） ---
   try {
-    const { validatePlayerState } = require("./validate-state.ts");
+    const { validatePlayerState } = await import("./validate-state.ts");
     validatePlayerState(gameState, { phase: "turn" });
   } catch (e: any) {
     console.error("settlement: 状态校验器调用失败", e?.message || String(e));

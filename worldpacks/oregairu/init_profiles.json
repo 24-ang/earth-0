@@ -1,8 +1,8 @@
 {
-  "_note": "身份模板。init_profile工具读取。每个模板定义初始装备/资金/技能/关系/联系人/记忆/住宅。",
+  "_note": "身份模板。init_profile工具读取。设备/资金/技能由模板定义；父母/联系人/入学记忆由引擎自动生成。",
   "千叶市小学生": {
     "label": "千叶市立稻毛小学校学生",
-    "description": "千叶市稻毛区的小学生，身穿黄色通学帽+红色书包，10岁以下适用。同年级有雪之下雪乃等同龄角色。",
+    "description": "千叶市稻毛区的小学生，身穿黄色通学帽+红色书包。",
     "funds": 100,
     "equipment": {
       "head": {
@@ -45,26 +45,17 @@
         "effects": [{"type": "communication"}]
       }
     ],
-    "flags": {
-      "student": true,
-      "elementary_enrolled": true
-    },
     "skills": {
       "国語": 1,
       "运动": 2
     },
-    "contacts": [],
-    "relationships": {},
-    "memories": [
-      { "tag": "入学稻毛小学校", "category": "milestone", "priority": 2, "emotional_valence": "positive" }
-    ],
     "residenceTemplate": "独栋_2F_4人家庭",
     "residenceName": "家",
     "playerRoomInResidence": "子女房A"
   },
   "千叶市高中生": {
     "label": "千叶市立总武高等学校学生",
-    "description": "总武高中在读学生，身穿校服，携带手机和书包，每月有少量零花钱。可匹配材木座义辉等配角开局。",
+    "description": "总武高中在读学生，身穿校服，每月有少量零花钱。",
     "funds": 500,
     "equipment": {
       "top": {
@@ -99,29 +90,10 @@
         "volume": 0.5
       }
     ],
-    "flags": {
-      "student": true,
-      "soubu_high_enrolled": true
-    },
     "skills": {
       "国語": 2,
       "运动": 1
     },
-    "contacts": [
-      "比企谷八幡",
-      "雪之下雪乃",
-      "由比滨结衣",
-      "户塚彩加"
-    ],
-    "relationships": {
-      "比企谷八幡": { "stage": "熟人", "affection": 25, "notes": "同校/侍奉部——需GM根据具体角色调整班级和社团" },
-      "雪之下雪乃": { "stage": "熟人", "affection": 15, "notes": "同校/侍奉部部长" },
-      "由比滨结衣": { "stage": "熟人", "affection": 15, "notes": "同校/侍奉部成员" },
-      "户塚彩加": { "stage": "熟人", "affection": 20, "notes": "同校/网球部" }
-    },
-    "memories": [
-      { "tag": "入学总武高", "category": "milestone", "priority": 2, "emotional_valence": "positive" }
-    ],
     "residenceTemplate": "独栋_2F_4人家庭",
     "residenceName": "家",
     "playerRoomInResidence": "子女房A"
@@ -130,6 +102,10 @@
     "label": "千叶市通勤上班族",
     "description": "千叶市内某会社的普通社员，每天通勤，有一定经济基础。",
     "funds": 5000,
+    "flags": {
+      "employed": true,
+      "commuter": true
+    },
     "equipment": {
       "top": {
         "name": "商务衬衫",
@@ -163,19 +139,10 @@
         "volume": 2.0
       }
     ],
-    "flags": {
-      "employed": true,
-      "commuter": true
-    },
     "skills": {
       "职场社交": 2,
       "计算机操作": 2
     },
-    "contacts": [],
-    "relationships": {},
-    "memories": [
-      { "tag": "入职会社", "category": "milestone", "priority": 2, "emotional_valence": "neutral" }
-    ],
     "residenceTemplate": "公寓_3F_单身",
     "residenceName": "自宅",
     "playerRoomInResidence": "居室"
@@ -186,6 +153,11 @@
     "funds": 50000,
     "titles": ["日本国内阁总理大臣"],
     "public_identity": "日本国内阁总理大臣",
+    "flags": {
+      "employed": true,
+      "government_official": true,
+      "prime_minister": true
+    },
     "equipment": {
       "top": {
         "name": "高定西装外套",
@@ -219,25 +191,18 @@
         "volume": 3.0
       }
     ],
-    "flags": {
-      "employed": true,
-      "government_official": true,
-      "prime_minister": true
-    },
     "skills": {
       "政治演说": 5,
       "外交谈判": 4,
       "危机管理": 3
-    },
-    "contacts": [],
-    "relationships": {},
-    "memories": [
-      { "tag": "就任内阁总理大臣", "category": "milestone", "priority": 3, "emotional_valence": "positive" }
-    ]
+    }
   },
   "替身使者": {
     "label": "替身使者",
     "description": "被箭选中觉醒替身能力之人，拥有超自然的战斗伙伴。",
+    "flags": {
+      "stand_user": true
+    },
     "abilities": {
       "黄金体验": 1
     },
@@ -249,20 +214,15 @@
     },
     "skills": {
       "替身操控": 1
-    },
-    "flags": {
-      "stand_user": true
-    },
-    "contacts": [],
-    "relationships": {},
-    "memories": [
-      { "tag": "被箭刺中觉醒替身", "category": "milestone", "priority": 3, "emotional_valence": "positive" }
-    ]
+    }
   },
   "武道见习": {
     "label": "武道见习生",
-    "description": "刚入门的武道修行者，掌握基础格斗和闪避技巧，用于示范 skills 字段用法。",
+    "description": "刚入门的武道修行者，掌握基础格斗和闪避技巧。",
     "funds": 300,
+    "flags": {
+      "martial_trainee": true
+    },
     "equipment": {
       "top": {
         "name": "武道着",
@@ -277,14 +237,6 @@
       "闪避": 1,
       "气功": 1
     },
-    "flags": {
-      "martial_trainee": true
-    },
-    "contacts": [],
-    "relationships": {},
-    "memories": [
-      { "tag": "入门武道修行", "category": "milestone", "priority": 2, "emotional_valence": "positive" }
-    ],
     "residenceTemplate": "公寓_3F_单身",
     "residenceName": "道场寮",
     "playerRoomInResidence": "居室"

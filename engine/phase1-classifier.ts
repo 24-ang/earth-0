@@ -64,15 +64,17 @@ const ACTION_WHITELIST = [
 
 // ── 公开 API ──
 
-/** 执行 Phase 1 分类 → 工具执行 → 或回退兜底 */
+/** 执行 Phase 1 分类 → 工具执行 → 或回退兜底
+ *  @param startup turn 0 时为 true，允许初始化工具（init_game/init_profile/grant_skill_exp/set_flags/instantiate_residence）*/
 export async function runPhase1(
   playerInput: string,
   ctx: any,
+  startup = false,
 ): Promise<Phase1Outcome> {
   const { gameState, saveState } = await import("./state.ts");
 
   // 1. 组装分类 prompt
-  const prompt = buildClassificationPrompt(playerInput, gameState);
+  const prompt = buildClassificationPrompt(playerInput, gameState, startup);
 
   // 2. 调 LLM 获取 JSON
   let result: ClassificationResult;
@@ -89,10 +91,13 @@ export async function runPhase1(
   // 3. 执行工具
   const toolsExecuted: string[] = [];
   const executedDetails: string[] = [];
+  const allowedTools = startup
+    ? [...ACTION_WHITELIST, "init_game", "init_profile", "grant_skill_exp", "set_flags", "instantiate_residence", "settle_scene", "create_location", "create_room", "world_interact", "add_memory_tag", "create_character", "set_npc_relation", "open_quest", "create_story_hook", "add_calendar_event"]
+    : ACTION_WHITELIST; // init_game 始终可用——不然有存档时无法开新档
 
   for (const action of result.actions) {
     if (action.confidence < 0.7) continue;
-    if (!ACTION_WHITELIST.includes(action.tool)) {
+    if (!allowedTools.includes(action.tool)) {
       console.warn(`Phase1: tool "${action.tool}" not in whitelist, skipping`);
       continue;
     }
@@ -127,7 +132,7 @@ export async function runPhase1(
 
 // ── 分类 prompt 组装 ──
 
-export function buildClassificationPrompt(playerInput: string, gs: any): string {
+export function buildClassificationPrompt(playerInput: string, gs: any, startup = false): string {
   const npcsHere = getPresentNPCNames(gs);
   const npcList = npcsHere.length > 0 ? npcsHere.join("、") : "（无人）";
 
@@ -137,6 +142,70 @@ export function buildClassificationPrompt(playerInput: string, gs: any): string 
   const hasShop = roomData?.shop || gs.shops?.[location];
   const hasFurniture = roomData?.furniture && Object.keys(roomData.furniture).length > 0;
   const furnitureNames = hasFurniture ? Object.keys(roomData.furniture).join("、") : "";
+
+  if (startup) {
+    return [
+      "你是开局导演。读完玩家的描述，想象这个角色睁开眼看到的第一个画面——然后让他真的能站在那里。只输出 JSON。",
+
+      `玩家描述: "${playerInput}"`,
+
+      "",
+      "init_game(name, gender, age, location?) 第一步。之后逐个思考:",
+
+      "",
+      "1. 穿什么？init_game 只给了内衣。",
+      "   有匹配模板就 init_profile，全套解决。",
+      "   没匹配就 spawn_item 给衣服+鞋+随身物。",
+      "   手机 init_game 已经给了。不需要再给——除非身份不该有手机（古代人/野兽），那就别 spawn_item。",
+
+      "",
+      "2. 会什么？",
+      "   init_profile 自带技能。没模板就 grant_skill_exp 按身份给 2-4 项，等级 1-5。",
+      "   不是什么都要等级 5——高中生棒球 Lv1 够了，职业杀手暗杀才 Lv5。",
+
+      "",
+      "3. 住哪？在哪？",
+      "   instantiate_residence 自动建房+放家具，一步搞定。模板只有 独栋_2F_4人家庭 / 公寓_3F_单身。",
+      "   房子不在千叶也没关系——引擎会自动把出口连到你的 location。",
+      "",
+      "   如果角色不住标准日式住宅（外星飞船/白宫/安全屋/古堡）：",
+      "     create_location 注册地点 → create_room 建房间（必须带 atmosphere 描述环境）",
+      "     → 紧接着 world_interact place 放家具。建一间放一间，不要建完空着。",
+      "     驾驶舱 = 仪表盘+座椅+全景窗。椭圆办公室 = 坚毅桌+国旗+地毯。安全屋 = 武器架+行军床+保险柜。",
+      "     你是导演——你知道什么房间该有什么。",
+
+      "",
+      "4. 认识谁？手机里有谁？",
+      "   通讯录不是引擎自动填的。create_character 创建 + adjust_relation 设关系 = 自动进手机通讯录。",
+      "   用 notes 写清关系（父亲/母亲/恋人/搭档）。引擎读到 notes 就同步联系人标签。",
+      "   正常人→至少父母。孤儿→跳过。外星人→队友或跳过。杀手→中间人/雇主。",
+      "   玩家说「我是XX的弟弟」→ create_character XX + adjust_relation(70, notes:\"姐姐\")。",
+
+      "",
+      "5. 身份标记？记忆？",
+      "   set_flags 打标签。不只是 {student:true}——外星人需要 {alien:true, extraterrestrial:true}，",
+      "   杀手需要 {assassin:true, criminal:true}，总统需要 {us_president:true, world_leader:true}。",
+      "   add_memory_tag 写入生节点——入学/觉醒/第一次任务/离开母星。",
+
+      "",
+      "6. 开局势能？玩家睁开眼第一件事做什么？",
+      "   create_story_hook — 催促行动的钩子。转校生→「开学典礼在礼堂举行」。",
+      "   外星人→「母星发来紧急通讯：能量核心泄漏」。总统→「幕僚长敲门：紧急会议」。",
+      "   引擎自动注入 active_hooks，开局势能拉满。open_quest 等玩家接受后再用，不要同时调。",
+
+      "",
+      "最后 settle_scene(summary, elapsed_minutes:0)。",
+
+      "",
+      "可用工具: init_game init_profile grant_skill_exp set_flags spawn_item",
+      "  instantiate_residence create_location create_room world_interact",
+      "  create_character adjust_relation set_npc_relation add_memory_tag",
+      "  open_quest create_story_hook add_calendar_event settle_scene",
+
+      "",
+      "默认: 名→维, 性别→男, 年龄→16。按年龄匹配模板。模板是快捷键，不匹配就自己当导演。",
+    ].join("\n");
+  }
 
   return [
     "你是意图分类器。将玩家输入映射为动作列表。只输出 JSON，不要解释。",
@@ -160,6 +229,7 @@ export function buildClassificationPrompt(playerInput: string, gs: any): string 
     "- use_item: 使用背包物品。param: item(物品名)",
     "- equip_item: 装备/卸下物品。有slot=装备到该槽位；无slot=卸下该物品放入背包。param: item(物品名), slot(可选)",
     "- adjust_relation: 好感增减。param: npc(NPC名), delta(数值)",
+    "- init_game: 开新游戏。param: name(姓名), gender(男/女), age(年龄)。会清空所有存档。玩家明确说开始新游戏时调用",
     "",
 
     "规则:",

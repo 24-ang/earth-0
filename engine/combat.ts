@@ -89,7 +89,7 @@ export function resolveAttack(
   // 伤害计算
   const strMod = useStr ? Math.floor((attacker.state.attributes.力量 - 10) / 2) : 0;
   const baseDmg = rollDamage(weapon.damage?.dice ?? "1d2", strMod);
-  const critBonus = roll.crit ? Math.floor(baseDmg * 0.5) : 0;
+  const critBonus = roll.crit ? Math.max(1, Math.floor(baseDmg * 0.5)) : 0;
   const rawDmg = baseDmg + critBonus;
 
   // 减伤

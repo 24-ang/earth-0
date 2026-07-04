@@ -78,7 +78,7 @@ export function syncContactsFromRelationships(pd: PhoneData, minAffection = 20):
   const added: Contact[] = [];
   for (const [npcName, rel] of Object.entries(gameState.player.relationships)) {
     if (rel.affection >= minAffection && !pd.contacts.some(c => c.name === npcName)) {
-      added.push(addContact(pd, npcName, generatePhoneNumber(npcName), "关系联系人"));
+      added.push(addContact(pd, npcName, generatePhoneNumber(npcName), rel.stage || rel.notes?.slice(0, 10) || "联系人"));
     }
   }
   return added;

@@ -273,74 +273,41 @@ export default {
       const resourcePools = normalizeResourcePools(profile.resourcePools);
       if (resourcePools) gameState.player.resourcePools = resourcePools as any;
 
-      // ── 社会关系 ──
-      if (profile.relationships && typeof profile.relationships === "object") {
-        gameState.player.relationships = {};
-        for (const [npcName, relData] of Object.entries(profile.relationships)) {
-          const rel = relData as any;
-          gameState.player.relationships[npcName] = {
-            stage: rel.stage || "熟人",
-            affection: typeof rel.affection === "number" ? Math.max(0, Math.min(100, rel.affection)) : 20,
-            romance: rel.romance || null,
-            notes: rel.notes || rel.tag || "",
-            history: [],
-          };
+      // ── 引擎生成：入学记忆 + 学校 flag（从年龄推断，不依赖模板）──
+      try {
+        const playerAge = gameState.player.age;
+        const { addMemoryTag } = stateMod;
+        let schoolName = "";
+        let schoolFlag = "";
+        if (playerAge <= 6) { schoolName = "幼儿园"; schoolFlag = "kindergarten_enrolled"; }
+        else if (playerAge <= 12) { schoolName = "稻毛小学校"; schoolFlag = "elementary_enrolled"; }
+        else if (playerAge <= 15) { schoolName = "稻毛中学校"; schoolFlag = "middle_enrolled"; }
+        else if (playerAge <= 18) { schoolName = "总武高中"; schoolFlag = "soubu_high_enrolled"; }
+        if (schoolName) {
+          addMemoryTag(gameState.player.name, `入学${schoolName}`, 365, undefined, 2, "positive", [], "milestone");
         }
+        if (schoolFlag) {
+          gameState.flags[schoolFlag] = true;
+          gameState.flags["student"] = true;
+        }
+      } catch (e: any) {
+        console.error("init_profile: 入学记忆生成失败", e.message || String(e));
       }
 
-      // ── 通讯录 ──
+      // ── 手机通讯录初始化（仅创建 phoneData，不预设联系人）──
       try {
-        const { getPlayerPhoneData, createDefaultPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
+        const { getPlayerPhoneData, createDefaultPhoneData } = await import("../../engine/phone.ts");
         let pd = getPlayerPhoneData();
-        // phoneData 可能还没初始化——懒创建
         if (!pd) {
           const phone = gameState.player.inventory.find((i: any) =>
             i.name?.includes("手机") || i.effects?.some((e: any) => e.type === "communication")
           );
           if (phone) {
-            const { createDefaultPhoneData: cdp } = await import("../../engine/phone.ts");
-            (phone as any).phoneData = cdp(gameState.player.name);
-            pd = (phone as any).phoneData;
+            (phone as any).phoneData = createDefaultPhoneData(gameState.player.name);
           }
-        }
-        if (pd) {
-          // 从关系同步
-          syncContactsFromRelationships(pd, 0);
-          // 再从模板 contacts 补（避免只有关系、没灌模板联系人的盲区）
-          if (Array.isArray(profile.contacts)) {
-            for (const cname of profile.contacts) {
-              if (!pd.contacts.some(c => c.name === cname)) {
-                pd.contacts.push({ name: cname, relation: "同学", number: `090-${1000 + Math.floor(Math.random() * 9000)}-${1000 + Math.floor(Math.random() * 9000)}`, addedAt: gameState.time.game_date });
-              }
-            }
-          }
-          saveState();
         }
       } catch (e: any) {
-        console.error("init_profile: 通讯录初始化失败", e.message || String(e));
-      }
-
-      // ── 记忆 ──
-      if (profile.memories && Array.isArray(profile.memories)) {
-        try {
-          const { addMemoryTag } = stateMod;
-          for (const mem of profile.memories) {
-            if (mem && typeof mem.tag === "string") {
-              addMemoryTag(
-                gameState.player.name,
-                mem.tag,
-                typeof mem.expires === "number" ? mem.expires : 365,
-                mem.tone,
-                mem.priority,
-                mem.emotional_valence,
-                mem.related_npcs,
-                mem.category
-              );
-            }
-          }
-        } catch (e: any) {
-          console.error("init_profile: 记忆初始化失败", e.message || String(e));
-        }
+        console.error("init_profile: 手机数据初始化失败", e.message || String(e));
       }
 
       // ── 住宅 ──（走权威函数 instantiateResidenceAndIntegrate，与 instantiate_residence 工具同源）

@@ -23,7 +23,10 @@ export default {
           templateId: params.template,
           exitFrom: params.exitFrom,
           atmosphere: params.atmosphere,
-        }
+          // 用户显式传的值优先于模板默认值。传原始值（可能是 undefined）让引擎判断
+          userWidth: params.width,
+          userHeight: params.height,
+        } as any
       );
       return { content: [{ type: "text", text: r.reason }], details: r };
     },

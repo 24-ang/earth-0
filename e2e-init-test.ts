@@ -79,9 +79,8 @@ async function main() {
     check("技能 写作 lv5", p.skills["写作"]?.level === 5);
     check("技能 国語 lv3（角色库覆盖）", p.skills["国語"]?.level === 3);
 
-    // profile 关系
-    check("关系 比企谷八幡", !!p.relationships["比企谷八幡"]);
-    check("关系 雪之下雪乃", !!p.relationships["雪之下雪乃"]);
+    // profile 不预设关系——社交自然增长（contacts/relationships 由游戏内行为决定）
+    check("引擎不预设关系", !p.relationships["比企谷八幡"] && !p.relationships["雪之下雪乃"]);
 
     // 住宅：init_profile 实例化独栋_2F_4人家庭，"家"
     check("住宅'家'已登记", !!p.properties["家"]);
@@ -140,8 +139,9 @@ async function main() {
     // 世界 flag
     check("场景2 flag 世界包", getGS().flags["worldpack_oregairu"] === true);
 
-    // profile 关系仍应存在
-    check("场景2 关系 比企谷八幡", !!q.relationships["比企谷八幡"]);
+    // 引擎生成 flag + 技能（不预设硬编码关系）
+    check("场景2 student flag", getGS().flags["student"] === true);
+    check("场景2 技能继承", Object.keys(q.skills || {}).length > 0);
 
     // 住宅
     check("场景2 住宅已登记", !!q.properties["家"]);

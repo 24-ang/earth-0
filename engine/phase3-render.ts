@@ -62,30 +62,34 @@ export async function buildRenderSystemPrompt(
   // 在场 NPC 的外观描述
   const npcAppearances = await buildNpcAppearanceBlock(gameState);
 
-  const parts = [
-    read("gm-pre.md"),
+  const parts: string[] = [];
 
-    sceneBrief,
-    renderStateCtx,
+  // turn 0: 注入开局指引（角色确认 + 开场叙事 + 新手指南）
+  // turn > 0: 跳过，省 token
+  if (gameState.turn === 0) {
+    parts.push(read("gm-start.md"));
+  }
 
-    npcAppearances,
+  parts.push(read("gm-pre.md"));
+  parts.push(sceneBrief);
+  parts.push(renderStateCtx);
+  parts.push(npcAppearances);
 
-    // 导演单 + NPC 回应
-    renderCtx.directorNote,
-    renderCtx.npcResponses
-      ? `\n[NPC 独立回应 — 以下台词由NPC独立生成，必须原文引用，不得改写、提炼或替换措辞]\n${renderCtx.npcResponses}\n`
-      : "",
-    renderCtx.viewpointText
-      ? `\n[切镜/幕间 — 以下为引擎自动生成的侧面描写，直接追加到正文末尾、「[/切镜]」或「[/幕间]」标记之后不要加任何内容]\n${renderCtx.viewpointText}\n`
-      : "",
+  // 导演单 + NPC 回应
+  parts.push(renderCtx.directorNote);
+  if (renderCtx.npcResponses) {
+    parts.push(`\n[NPC 独立回应 — 以下台词由NPC独立生成，必须原文引用，不得改写、提炼或替换措辞]\n${renderCtx.npcResponses}\n`);
+  }
+  if (renderCtx.viewpointText) {
+    parts.push(`\n[切镜/幕间 — 以下为引擎自动生成的侧面描写，直接追加到正文末尾、「[/切镜]」或「[/幕间]」标记之后不要加任何内容]\n${renderCtx.viewpointText}\n`);
+  }
 
-    // Voice + Mode
-    read(voiceFile),
-    read(modeFile),
+  // Voice + Mode
+  parts.push(read(voiceFile));
+  parts.push(read(modeFile));
 
-    // 渲染指令（替代 gm-contract.md）
-    buildRenderContract(wordBudget, interactionMode),
-  ];
+  // 渲染指令（替代 gm-contract.md）
+  parts.push(buildRenderContract(wordBudget, interactionMode));
 
   return parts.filter(Boolean).join("\n\n---\n\n");
 }

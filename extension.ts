@@ -25,15 +25,8 @@ export default function (pi: ExtensionAPI) {
   // ═══════════════════════════════════════════════════════════
 
   pi.on("session_start", async (_event, ctx) => {
-    const { gameState, loadState, saveState, resetState, buildStatePrompt } = await import("./engine/state.ts");
-    if (loadState()) {
-      await buildStatePrompt();
-      saveState();
-      ctx.ui.notify(`earth-0 ${(await import("./engine/state.ts")).gameState.time.game_date}`, "info");
-    } else {
-      resetState();
-      ctx.ui.notify("earth-0 新游戏", "info");
-    }
+    const { resetState } = await import("./engine/state.ts");
+    resetState();
     updateChatHUD(ctx);
   });
 
@@ -68,6 +61,50 @@ export default function (pi: ExtensionAPI) {
     const { runSettlement } = await import("./engine/settlement.ts");
     const { runPhase1 } = await import("./engine/phase1-classifier.ts");
 
+    // ═══════════════════════════════════════════════════
+    // 主菜单 (turn 0)
+    // ═══════════════════════════════════════════════════
+    if (gameState.turn === 0) {
+      const input = (gameState._lastUserInput || "").trim();
+      gameState._lastUserInput = "";
+
+      // 没有输入 → 渲染主菜单
+      if (!input) {
+        return { systemPrompt: buildMainMenu() };
+      }
+
+      // [2] 继续游戏
+      if (input === "2" || input.startsWith("继续")) {
+        const { loadState: ls, buildStatePrompt } = await import("./engine/state.ts");
+        if (ls()) {
+          await buildStatePrompt();
+          saveState();
+          updateChatHUD(ctx);
+          return {
+            systemPrompt: `[引擎: 已载入存档 — ${gameState.time?.game_date || "?"} 第${gameState.turn}回合。你只需原样输出以下内容。]\n\n📂 继续游戏 — ${gameState.time?.game_date || "?"} ${gameState.player?.location || "?"}\n\n你回到了上次离开的地方。`,
+          };
+        }
+        return { systemPrompt: buildMainMenu("⚠️ 没有自动存档。开始新游戏吧。") };
+      }
+
+      // [3] 读取存档
+      if (input === "3" || input.startsWith("读取")) {
+        const { listSaves } = await import("./engine/state.ts");
+        const saves = listSaves();
+        if (saves.length === 0) {
+          return { systemPrompt: buildMainMenu("📭 没有手动存档。") };
+        }
+        const lines = saves.map((s: any) => `  /load ${s.name} — ${s.date} 第${s.turn}回合 @ ${s.location}`).join("\n");
+        return { systemPrompt: `[引擎: 你只需原样输出以下内容。]\n\n📂 存档列表\n${lines}\n\n输入 /load <存档名> 载入。` };
+      }
+
+      // [1] 新游戏 或 玩家直接描述角色
+      // 去掉菜单前缀 "1" / "新游戏"，剩下的给分类器当角色描述
+      const charDesc = input === "1" ? "" : input.replace(/^1\s*|^新游戏\s*/i, "");
+      gameState._lastUserInput = charDesc || "开始游戏";
+      saveState();
+    }
+
     // ── P0: settle_scene 漏调兜底 ──
     let autoSettled = false;
     const prevTurn = gameState._turnAtLastCheck;
@@ -79,8 +116,11 @@ export default function (pi: ExtensionAPI) {
 
     // ── Phase 1: 分类 LLM → JSON → 引擎执行工具 ──
     const playerInput = gameState._lastUserInput || "";
+    // turn 0: 上帝模式分类器（允 init_game/init_profile/grant_skill_exp/set_flags/instantiate_residence）
+    // turn >=1: 日常约束分类器（禁止 init 工具）
+    const isStartup = gameState.turn === 0;
     const phase1 = playerInput.trim()
-      ? await runPhase1(playerInput, ctx)
+      ? await runPhase1(playerInput, ctx, isStartup)
       : await engineOnlyPhase1(ctx); // 空输入 → 直接结算
 
     // 存储 Phase 1 结果供 Phase 4 使用
@@ -585,4 +625,21 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
     read(modeFile),
     read("gm-contract.md"),
   ].filter(Boolean).join("\n\n---\n\n");
+}
+
+/** 主菜单 prompt——turn 0 无输入时显示 */
+function buildMainMenu(hint?: string): string {
+  const lines = [
+    "┌─ earth-0 ──────────────────────────────┐",
+    "│                                         │",
+    "│  [1] 新游戏      开始一段全新的故事     │",
+    "│  [2] 继续游戏    从上次离开的地方继续   │",
+    "│  [3] 读取存档    载入手动保存的存档     │",
+    "│                                         │",
+    hint ? `│  ${hint}${" ".repeat(Math.max(0, 37 - (hint?.length || 0)))}│` : "",
+    "└─────────────────────────────────────────┘",
+    "",
+    "输入数字选择。",
+  ].filter(Boolean).join("\n");
+  return `[引擎: 你只需原样输出以下主菜单，不分析、不评价。]\n\n${lines}`;
 }

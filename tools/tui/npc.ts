@@ -19,7 +19,7 @@ async function showTalkMenu(name: string, done: () => void, ctx: any) {
     { label: "💬 聊聊自己", detail: "向对方分享一些自己的经历", action: async () => { done(); await pi.sendUserMessage(ctx, `我主动向 ${name} 聊起了自己最近的一些经历和看法。`); } },
     { label: "💬 聊聊对方", detail: "询问关于对方的喜好或近况", action: async () => { done(); await pi.sendUserMessage(ctx, `我关切地向 ${name} 询问起她的近况，并聊了聊她的兴趣爱好。`); } },
     { label: "💬 聊些八卦", detail: "分享学校或街区里的有趣传闻", action: async () => { done(); await pi.sendUserMessage(ctx, `我神秘兮兮地和 ${name} 分享了最近在学校听到的八卦传闻。`); } },
-    { label: "◀ 返回", detail: "", action: () => {} },
+    { label: "◀ 返回", detail: "", action: (d: () => void) => { d(); } },
   ];
   await showMenu(ctx, `💬 交流谈话: ${name}`, items);
 }
@@ -57,7 +57,7 @@ async function showTouchMenu(gameState: any, saveState: () => void, name: string
 
   items.push({ label: `💋 深情亲吻 ${aff >= 70 || isLover(gameState, name) ? "" : "(好感70+或恋人)"}`, detail: (aff >= 70 || isLover(gameState, name)) ? "深情的一吻" : "还不是时候...", action: (aff >= 70 || isLover(gameState, name)) ? async () => { done(); const ok = Math.random() > 0.3; const r = touchResult(ok, "深情亲吻", 5, 15); await pi.sendUserMessage(ctx, ok ? `我靠近 ${name}，轻轻吻了上去。${name}闭上了眼睛。${r}` : `我凑近 ${name} 想亲吻，但${name}别开了脸。「……不行。」${r}`); } : undefined });
 
-  items.push({ label: "◀ 返回", detail: "", action: () => {} });
+  items.push({ label: "◀ 返回", detail: "", action: (d: () => void) => { d(); } });
   await showMenu(ctx, `🖐️ 肢体接触: ${name}`, items);
 }
 
@@ -66,7 +66,7 @@ async function showRomanceMenu(gameState: any, saveState: () => void, name: stri
   const items: any[] = [
     { label: `💌 告白交往 ${aff >= 70 ? "" : "(好感70+)"}`, detail: aff >= 70 ? "向对方表达心意" : "还需要更多羁绊...", action: aff >= 70 ? async () => { done(); const rel = gameState.player.relationships[name] || (gameState.player.relationships[name] = { stage: "熟人", affection: aff, history: [], notes: "" }); const ok = Math.random() > 0.25; if (ok) { rel.affection = Math.min(100, (rel.affection || 0) + 10); rel.romance = "恋人"; saveState(); await pi.sendUserMessage(ctx, `我向 ${name} 告白了。${name}沉默了很久，然后轻轻点了点头。「……我也。」好感+10，成为恋人！`); } else { rel.affection = Math.max(0, (rel.affection || 0) - 10); saveState(); await pi.sendUserMessage(ctx, `我向 ${name} 告白了。${name}低下了头。「……对不起。」好感-10。`); } } : undefined },
     { label: `📅 邀请约会 ${aff >= 50 ? "" : "(好感50+)"}`, detail: aff >= 50 ? "邀对方一起出去玩" : "还不够熟...", action: aff >= 50 ? async () => { done(); const ok = Math.random() > 0.2; const rel = gameState.player.relationships[name] || (gameState.player.relationships[name] = { stage: "熟人", affection: aff, history: [], notes: "" }); if (ok) { rel.affection = Math.min(100, (rel.affection || 0) + 5); saveState(); await pi.sendUserMessage(ctx, `我约 ${name} 周末一起出去玩。${name}笑了笑：「好啊，去哪里？」好感+5。`); } else { rel.affection = Math.max(0, (rel.affection || 0) - 5); saveState(); await pi.sendUserMessage(ctx, `我约 ${name} 出去玩，但${name}说周末有事。好感-5。`); } } : undefined },
-    { label: "◀ 返回", detail: "", action: () => {} },
+    { label: "◀ 返回", detail: "", action: (d: () => void) => { d(); } },
   ];
   await showMenu(ctx, `💕 恋爱互动: ${name}`, items);
 }
@@ -76,7 +76,7 @@ async function showPushDownMenu(gameState: any, saveState: () => void, name: str
   const canPush = isLover(gameState, name) && aff >= 80;
   const items: any[] = [
     { label: `🔥 亲密求欢 ${canPush ? "" : "(需恋人+好感80+)"}`, detail: canPush ? "与恋人共度亲密时光" : "条件未满足", action: canPush ? async () => { done(); const ok = Math.random() > 0.2; if (ok) { gameState.mode = "sex"; gameState.layer1Enabled = true; saveState(); await pi.sendUserMessage(ctx, `${name}红着脸点了点头。我把${name}拉到了身边……`); } else { const rel = gameState.player.relationships[name]; if (rel) rel.affection = Math.max(0, (rel.affection || 0) - 15); saveState(); await pi.sendUserMessage(ctx, `我刚想靠近，${name}一巴掌甩了过来。「……你把我当什么了？」好感-15。`); } } : undefined },
-    { label: "◀ 返回", detail: "", action: () => {} },
+    { label: "◀ 返回", detail: "", action: (d: () => void) => { d(); } },
   ];
   await showMenu(ctx, `🔥 亲密: ${name}`, items);
 }
@@ -85,7 +85,7 @@ async function showCombatMenu(gameState: any, saveState: () => void, name: strin
   const items: any[] = [
     { label: "⚔️ 切磋武艺", detail: "友好切磋，点到为止", action: async () => { done(); gameState.mode = "rpg"; saveState(); await pi.sendUserMessage(ctx, `我对 ${name} 抱拳行礼：「请赐教。」${name}摆出了架势。切磋开始！`); } },
     { label: "💀 发起死斗", detail: "以命相搏，关系降为死敌", action: async () => { done(); const rel = gameState.player.relationships[name] || (gameState.player.relationships[name] = { stage: "熟人", affection: 0, history: [], notes: "" }); rel.affection = Math.max(0, (rel.affection || 0) - 50); rel.stage = "死敌"; gameState.mode = "rpg"; saveState(); await pi.sendUserMessage(ctx, `我向 ${name} 发起了死斗！一场你死我活的战斗即将展开……`); } },
-    { label: "◀ 返回", detail: "", action: () => {} },
+    { label: "◀ 返回", detail: "", action: (d: () => void) => { d(); } },
   ];
   await showMenu(ctx, `⚔️ 战斗: ${name}`, items);
 }

@@ -224,8 +224,30 @@ export async function interactFurniture(
   }
 
   if (!actionDef) {
-    const available = getAvailableActions(def, furnitureName).join("、");
-    return { message: `不能这样操作${furnitureName}。可以：${available}`, narrative: "", effects: [] };
+    // "查看/检查" — 尝试匹配可读动作（浏览/阅读/查看/观察/检查）
+    if (action === "查看" || action === "检查") {
+      if (def?.actions) {
+        for (const [key, val] of Object.entries(def.actions)) {
+          if (["浏览", "阅读", "查看", "观察", "检查"].includes(key)) {
+            actionDef = val; break;
+          }
+        }
+      }
+      if (!actionDef) {
+        // 没有匹配的可读动作 → 描述物理属性
+        const parts: string[] = [];
+        if (def?.containers?.length) {
+          parts.push(`有${def.containers.length}个存储空间: ${def.containers.map(c => c.id).join("、")}`);
+        }
+        const desc = parts.length > 0 ? parts.join("。") : `普通的${furnitureName}，没什么特别的。`;
+        return { message: `【${furnitureName}】${desc}`, narrative: `你仔细看了看${furnitureName}。${desc}`, effects: [] };
+      }
+    }
+    // 仍未匹配 → 真正的"不能这样操作"
+    if (!actionDef) {
+      const available = getAvailableActions(def, furnitureName).join("、");
+      return { message: `不能这样操作${furnitureName}。可以：${available}`, narrative: "", effects: [] };
+    }
   }
 
   // 距离校验：先 3×3 邻域，再全房间扫描

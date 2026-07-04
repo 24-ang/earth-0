@@ -31,7 +31,7 @@ export default {
       }
 
       // 列出可选动作
-      if (!params.action || params.action === "?" || params.action === "查看") {
+      if (!params.action || params.action === "?") {
         let actions: string[];
         if (inlineActions) {
           actions = Object.keys(inlineActions);

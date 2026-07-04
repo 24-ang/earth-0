@@ -540,7 +540,6 @@ export function loadState(filepath?: string): boolean {
   // 加载后重建空间状态（gridPos 可能在旧存档为 null）
   if (gameState.player?.location) {
     try {
-      const { initPlayerGrid } = require("./state-grid.ts");
       initPlayerGrid();
     } catch {}
   }
@@ -762,13 +761,46 @@ function hydrateNPCState(src: any, effectiveAge: number): {
   scheduleGroup: string;
   personality: string;
   attributes: Record<string, number>;
+  equipment: Record<string, any>;
+  inventory: any[];
 } {
+  const baseAge = src?.base_age ?? 16;
+  const ageGap = Math.abs(effectiveAge - baseAge);
+
+  // 装备：优先按年龄分层取，缺数据时年龄差>3岁则跳过（防止7岁穿高中制服）
+  let equipment: Record<string, any> = {};
+  if (src?.equipment_by_age) {
+    const keys = Object.keys(src.equipment_by_age).map(Number).sort((a, b) => a - b);
+    let best = keys[0];
+    for (const k of keys) { if (k <= effectiveAge) best = k; else break; }
+    equipment = structuredClone(src.equipment_by_age[String(best)] ?? {});
+  } else if (ageGap <= 3) {
+    equipment = structuredClone(src?.equipment ?? {});
+  } else {
+    console.warn(`hydrateNPCState: ${src?.name ?? "?"} age=${effectiveAge} vs base_age=${baseAge} (gap=${ageGap})，无 equipment_by_age 数据，跳过装备注入`);
+  }
+
+  // 库存：同上
+  let inventory: any[] = [];
+  if (src?.inventory_by_age) {
+    const keys = Object.keys(src.inventory_by_age).map(Number).sort((a, b) => a - b);
+    let best = keys[0];
+    for (const k of keys) { if (k <= effectiveAge) best = k; else break; }
+    inventory = structuredClone(src.inventory_by_age[String(best)] ?? []);
+  } else if (ageGap <= 3) {
+    inventory = structuredClone(src?.inventory ?? []);
+  } else {
+    console.warn(`hydrateNPCState: ${src?.name ?? "?"} age=${effectiveAge} vs base_age=${baseAge} (gap=${ageGap})，无 inventory_by_age 数据，跳过库存注入`);
+  }
+
   return {
     body: getBodyForAge(src, effectiveAge),
     appearance: getAppearanceForAge(src, effectiveAge),
     scheduleGroup: resolveScheduleGroup(src, effectiveAge),
     personality: resolvePersonality(src, effectiveAge),
     attributes: scaleAttributesForAge(src, effectiveAge),
+    equipment,
+    inventory,
   };
 }
 
@@ -2278,8 +2310,8 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
     }
 
     gameState.npcs[name] = {
-      inventory: src ? structuredClone(src.inventory ?? []) : [],
-      equipment: src ? fillEffectsFromCatalog(src.equipment ?? {}) : {},
+      inventory: hydrated?.inventory ?? (src ? structuredClone(src.inventory ?? []) : []),
+      equipment: hydrated ? fillEffectsFromCatalog(hydrated.equipment) : (src ? fillEffectsFromCatalog(src.equipment ?? {}) : {}),
       currentRoom: src?.default_location || "",
       gridPos: src?.grid_pos || null,
       action: "",
