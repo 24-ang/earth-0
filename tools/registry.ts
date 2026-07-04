@@ -96,6 +96,7 @@ import goskipCommand from "./tui/goskip.ts";
 import saveCommand from "./tui/save.ts";
 import loadCommand from "./tui/load.ts";
 import savesCommand from "./tui/saves.ts";
+import newCommand from "./tui/new.ts";
 import redoCommand from "./tui/redo.ts";
 import sleepCommand from "./tui/sleep.ts";
 import layer1Command from "./tui/layer1.ts";
@@ -194,6 +195,7 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerCommand("save", saveCommand);
   pi.registerCommand("load", loadCommand);
   pi.registerCommand("saves", savesCommand);
+  pi.registerCommand("new", newCommand);
   pi.registerCommand("redo", redoCommand);
   pi.registerCommand("sleep", sleepCommand);
   pi.registerCommand("layer1", layer1Command);

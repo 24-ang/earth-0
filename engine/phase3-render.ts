@@ -66,7 +66,7 @@ export async function buildRenderSystemPrompt(
 
   // turn 0: 注入开局指引（角色确认 + 开场叙事 + 新手指南）
   // turn > 0: 跳过，省 token
-  if (gameState.turn === 0) {
+  if (gameState._newGame) {
     parts.push(read("gm-start.md"));
   }
 

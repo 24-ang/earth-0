@@ -16,18 +16,6 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { registerAll } from "./tools/registry.ts";
 import { updateChatHUD } from "./tools/helpers.ts";
 
-const MAIN_MENU_PROMPT = `你是主菜单渲染器。你只需原样输出以下内容，不分析、不评价、不加任何额外文字。
-
-┌─ earth-0 ──────────────────────────────┐
-│                                         │
-│  [1] 新游戏      开始一段全新的故事     │
-│  [2] 继续游戏    从上次离开的地方继续   │
-│  [3] 读取存档    载入手动保存的存档     │
-│                                         │
-└─────────────────────────────────────────┘
-
-输入数字选择。`;
-
 export default function (pi: ExtensionAPI) {
   // Register all modular tools and commands
   registerAll(pi);
@@ -37,8 +25,67 @@ export default function (pi: ExtensionAPI) {
   // ═══════════════════════════════════════════════════════════
 
   pi.on("session_start", async (_event, ctx) => {
-    const { resetState } = await import("./engine/state.ts");
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const { gameState, loadState, saveState, resetState, buildStatePrompt, listSaves, loadSave } = await import("./engine/state.ts");
+
+    // 检查存档
+    const sessionPath = path.resolve(process.cwd(), "state", "session.json");
+    const hasAutoSave = fs.existsSync(sessionPath);
+    const saves = listSaves();
+    let autoDate = "";
+    if (hasAutoSave) {
+      try {
+        const raw = JSON.parse(fs.readFileSync(sessionPath, "utf-8"));
+        autoDate = `${raw.time?.game_date || "?"} 第${raw.turn || "?"}回合`;
+      } catch {}
+    }
+
+    // 先 reset，让后续选择决定是否 load
     resetState();
+
+    const items: any[] = [
+      {
+        label: "🆕 新游戏",
+        detail: "开始一段全新的旅程",
+        action: async (d: () => void) => { gameState._startup = "new"; gameState._newGame = true; d(); },
+      },
+      {
+        label: "▶ 继续游戏",
+        detail: hasAutoSave ? autoDate : "没有进度",
+        action: hasAutoSave ? async (d: () => void) => {
+          loadState();
+          await buildStatePrompt();
+          saveState();
+          gameState._startup = "continue"; d();
+        } : undefined,
+      },
+      {
+        label: `📂 读取存档`,
+        detail: saves.length > 0 ? `${saves.length} 个可用` : "没有命名存档",
+        action: saves.length > 0 ? async (d: () => void) => {
+          const { showMenu } = await import("./tools/helpers.ts");
+          const saveItems = saves.map((s: any) => ({
+            label: s.name,
+            detail: `${s.date} 第${s.turn}回合 @ ${s.location}`,
+            action: async (d2: () => void) => {
+              loadSave(s.name);
+              await buildStatePrompt();
+              saveState();
+              gameState._startup = "continue"; d2(); d();
+            },
+          }));
+          saveItems.push({ label: "◀ 返回", detail: "", action: undefined });
+          await showMenu(ctx, "📂 选择存档", saveItems);
+          if (!gameState._startup) d();
+        } : undefined,
+      },
+    ];
+
+    const { showMenu } = await import("./tools/helpers.ts");
+    await showMenu(ctx, "🌍 earth-0", items.filter(i => i.action));
+    if (!gameState._startup) gameState._startup = "new";
+
     updateChatHUD(ctx);
   });
 
@@ -73,63 +120,6 @@ export default function (pi: ExtensionAPI) {
     const { runSettlement } = await import("./engine/settlement.ts");
     const { runPhase1 } = await import("./engine/phase1-classifier.ts");
 
-    // ═══════════════════════════════════════════════════
-    // 主菜单 (turn 0)
-    // ═══════════════════════════════════════════════════
-    if (gameState.turn === 0) {
-      const input = (gameState._lastUserInput || "").trim();
-
-      if (input) {
-        gameState._lastUserInput = "";
-
-        // [2] 继续游戏
-        if (input === "2" || input.startsWith("继续")) {
-          const { loadState: ls, buildStatePrompt } = await import("./engine/state.ts");
-          if (ls()) {
-            await buildStatePrompt();
-            saveState();
-            updateChatHUD(ctx);
-            const { generateCompletion: gc } = await import("./tools/helpers.ts");
-            try {
-              const rendered = await gc(`[引擎: 你只需原样输出以下内容。]\n\n📂 继续游戏 — ${gameState.time?.game_date || "?"} ${gameState.player?.location || "?"}\n\n你回到了上次离开的地方。`, 256, ctx);
-              if (rendered) return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${rendered}` };
-            } catch {}
-          }
-        }
-
-        // [3] 读取存档
-        if (input === "3" || input.startsWith("读取")) {
-          const { listSaves } = await import("./engine/state.ts");
-          const saves = listSaves();
-          const lines = saves.length > 0
-            ? saves.map((s: any) => `  /load ${s.name} — ${s.date} 第${s.turn}回合 @ ${s.location}`).join("\n")
-            : "📭 没有手动存档。";
-          const { generateCompletion: gc } = await import("./tools/helpers.ts");
-          try {
-            const rendered = await gc(`[引擎: 你只需原样输出以下内容。]\n\n📂 存档列表\n${lines}\n\n输入 /load <存档名> 载入。`, 512, ctx);
-            if (rendered) return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${rendered}` };
-          } catch {}
-        }
-
-        // [1] 新游戏 或 玩家直接描述角色
-        const charDesc = input === "1" ? "" : input.replace(/^1\s*|^新游戏\s*/i, "");
-        gameState._lastUserInput = charDesc || "开始游戏";
-        saveState();
-      }
-
-      // 无输入 → 跳过 Phase1/Phase2，直接渲染主菜单
-      if (!input) {
-        gameState._lastUserInput = "";
-        saveState();
-        const { generateCompletion: gc } = await import("./tools/helpers.ts");
-        try {
-          const rendered = await gc(MAIN_MENU_PROMPT, 512, ctx);
-          if (rendered) return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${rendered}` };
-        } catch {}
-        return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${MAIN_MENU_PROMPT}` };
-      }
-    }
-
     // ── P0: settle_scene 漏调兜底 ──
     let autoSettled = false;
     const prevTurn = gameState._turnAtLastCheck;
@@ -141,9 +131,12 @@ export default function (pi: ExtensionAPI) {
 
     // ── Phase 1: 分类 LLM → JSON → 引擎执行工具 ──
     const playerInput = gameState._lastUserInput || "";
-    // turn 0: 上帝模式分类器（允 init_game/init_profile/grant_skill_exp/set_flags/instantiate_residence）
-    // turn >=1: 日常约束分类器（禁止 init 工具）
-    const isStartup = gameState.turn === 0;
+    // turn 0 且 _newGame：上帝模式分类器。init_game 执行后 _newGame 自动清除
+    const isStartup = gameState._newGame === true;
+    // 新游戏等待玩家输入，不做引擎自动结算（turn 保持 0）
+    if (!playerInput.trim() && isStartup) {
+      return { systemPrompt: "新的旅程即将开始。你是谁？你想成为什么样的人？告诉我。" };
+    }
     const phase1 = playerInput.trim()
       ? await runPhase1(playerInput, ctx, isStartup)
       : await engineOnlyPhase1(ctx); // 空输入 → 直接结算
@@ -308,6 +301,8 @@ export default function (pi: ExtensionAPI) {
     saveState();
 
     // ── Phase 3: 裸 stream 渲染（PHILOSOPHY §2.1 完整版） ──
+    // 不再走 pi agent loop。直接用 generateCompletion 裸 stream —
+    // 物理上没有 tool definitions，渲染 LLM 无法跳过结算或调写工具。
     const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");
 
     const renderCtx = {
