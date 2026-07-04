@@ -360,7 +360,7 @@ async function applyEffect(def: FurnitureActionDef, gs: GameState, furnitureDef?
     case "train": {
       if (def.skill && def.exp) {
         const { addSkillExp } = await import("./state.ts");
-        addSkillExp(def.skill, def.exp);
+        addSkillExp(gs.player.skills, def.skill, def.exp);
         effects.push(`${def.skill} 经验 +${def.exp}`);
       }
       if (!narrative) narrative = "练习了一会儿。";

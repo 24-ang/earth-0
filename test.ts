@@ -2810,91 +2810,16 @@ test("㉓ Intercity Travel: switchActiveWorld & travel_intercity Tool", async ()
   if (gameState.player.funds !== 3000) throw new Error("城际旅行车票扣费错误");
 });
 
-test("㉔ Dual-model Rendering: render_scene Tool with local directors_note and narrative render model", async () => {
-  resetState();
-  const renderTool = registeredTools["render_scene"];
-  if (!renderTool) throw new Error("render_scene 工具未注册");
-
-  const originalFetch = globalThis.fetch;
-  let fetchCallCount = 0;
-  let firstPrompt = "";
-
-  globalThis.fetch = async (url: any, init: any) => {
-    fetchCallCount++;
-    const reqBody = JSON.parse(init.body);
-    firstPrompt = reqBody.messages[0].content;
-    return {
-      ok: true,
-      json: async () => ({
-        content: [{
-          text: "战斗结束，你赢了。\n---\n> [格斗] ① 庆祝"
-        }]
-      })
-    } as any;
-  };
-
-  try {
-    const res = await renderTool.execute("id", {
-      playerAction: "攻击",
-      resolvedChanges: "NPC HP扣减",
-      sceneResult: "战斗结束",
-      openHooks: "无",
-      nextPressure: "无",
-      npcResponses: "雪乃: 可恶..."
-    }, null, null, null);
-
-    if (fetchCallCount !== 1) {
-      throw new Error(`应调用 1 次大模型，实际调用了 ${fetchCallCount} 次`);
-    }
-    if (!firstPrompt.includes("文学主笔") || !firstPrompt.includes("<directors_note>")) {
-      throw new Error("渲染 Prompt 不正确，应包含文学主笔规则和导演单 XML");
-    }
-    if (!res.content[0].text.includes("战斗结束，你赢了。")) {
-      throw new Error(`最终正文不正确: ${res.content[0].text}`);
-    }
-    if (!res.details.directorsNote.includes("NPC HP扣减") || !res.details.directorsNote.includes("雪乃: 可恶...")) {
-      throw new Error("返回 of directorsNote 不包含拼接的数据详情");
-    }
-
-    // 2. 模拟渲染模型调用失败，退回到单阶段传统 Prompt 渲染路径
-    fetchCallCount = 0;
-    globalThis.fetch = async (url: any, init: any) => {
-      fetchCallCount++;
-      if (fetchCallCount === 1) {
-        throw new Error("API Network Error");
-      } else {
-        const reqBody = JSON.parse(init.body);
-        firstPrompt = reqBody.messages[0].content;
-        return {
-          ok: true,
-          json: async () => ({
-            content: [{ text: "Fallback 渲染出来的文本。" }]
-          })
-        } as any;
-      }
-    };
-
-    const resFallback = await renderTool.execute("id", {
-      playerAction: "攻击",
-      resolvedChanges: "NPC HP扣减",
-      sceneResult: "战斗结束",
-      openHooks: "无",
-      nextPressure: "无",
-    }, null, null, null);
-
-    if (fetchCallCount !== 2) {
-      throw new Error(`全部崩溃时应调用 2 次 fetch，实际为: ${fetchCallCount}`);
-    }
-    if (!firstPrompt.includes("你是 earth-0 的渲染 GM")) {
-      throw new Error("单模型回退 Prompt 应当被送给渲染器");
-    }
-    if (!resFallback.content[0].text.includes("Fallback 渲染出来的文本。")) {
-      throw new Error("Fallback 渲染出来的文本不正确");
-    }
-
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+test("㉔ Phase3 auto-pipeline: render_scene removed, replaced by extension.ts bare stream", async () => {
+  // render_scene tool was removed from registry — Phase 3 auto pipeline (extension.ts)
+  // now handles rendering via generateCompletion bare stream (PHILOSOPHY §2.1).
+  // Verify the tool file still exists (for /reroll fallback) but isn't registered.
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const toolPath = path.resolve(process.cwd(), "tools/action/render_scene.ts");
+  if (!fs.existsSync(toolPath)) throw new Error("render_scene.ts file missing — keep for reference but don't register");
+  // Registry check: the local registeredTools map won't contain render_scene
+  if (registeredTools["render_scene"]) throw new Error("render_scene should be unregistered from local tool map");
 });
 
 test("存档安全: 隔离不同存档路径的动态地点与角色防止信息污染", async () => {

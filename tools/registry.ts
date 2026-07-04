@@ -29,7 +29,7 @@ import worldInteractTool from "./action/world_interact.ts";
 import settleSceneTool from "./action/settle_scene.ts";
 import recordTurnLogTool from "./action/record_turn_log.ts";
 import revealSecretTool from "./action/reveal_secret.ts";
-import renderSceneTool from "./action/render_scene.ts";
+// render_scene removed — Phase 3 auto pipeline handles rendering (PHILOSOPHY §2.1)
 import spawnNpcAgentTool from "./state/spawn_npc_agent.ts";
 import spawnNpcAgentsTool from "./state/spawn_npc_agents.ts";
 import createRoomTool from "./action/create_room.ts";
@@ -162,7 +162,7 @@ export function registerAll(pi: ExtensionAPI) {
     grantSkillExpTool, initGameTool, initProfileTool, setFlagsTool, toggleLayer1Tool,
     toggleAumodeTool, _sexTouchTool, _masturbateTool, combatActionTool, stealItemTool,
     equipItemTool, useItemTool, worldInteractTool, settleSceneTool, recordTurnLogTool,
-    revealSecretTool, renderSceneTool, spawnNpcAgentTool, spawnNpcAgentsTool,
+    revealSecretTool, spawnNpcAgentTool, spawnNpcAgentsTool,
     createRoomTool, updateReputationTool, scheduleOverrideTool, createCharacterTool,
     setNpcOutfitTool, mountVehicleTool, dismountVehicleTool, buyItemTool,
     identityCheckTool, sellItemTool, monthlyGrowthTool, workJobTool, spawnItemTool,

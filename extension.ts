@@ -242,7 +242,9 @@ export default function (pi: ExtensionAPI) {
 
     saveState();
 
-    // ── Phase 3: 组装渲染 prompt → 交给 pi agent loop ──
+    // ── Phase 3: 裸 stream 渲染（PHILOSOPHY §2.1 完整版） ──
+    // 不再走 pi agent loop。直接用 generateCompletion 裸 stream —
+    // 物理上没有 tool definitions，渲染 LLM 无法跳过结算或调写工具。
     const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");
 
     const renderCtx = {
@@ -261,7 +263,6 @@ export default function (pi: ExtensionAPI) {
       notices.push(`[引擎] 上轮 GM 未调用 settle_scene，引擎已自动完整结算（当前 turn ${gameState.turn}）。`);
     }
     if (phase1.classified && phase1.toolsExecuted.length > 0) {
-      // 从 directorNote 提取 resolved_changes，让 LLM 知道每个工具的真实执行结果
       const dn = (phase1 as any).directorNote || "";
       const rcMatch = dn.match(/<resolved_changes>([\s\S]*?)<\/resolved_changes>/);
       const details = rcMatch ? rcMatch[1].trim() : "";
@@ -274,6 +275,45 @@ export default function (pi: ExtensionAPI) {
       gmPrompt += "\n\n" + notices.join("\n");
     }
 
+    // ── 裸 stream 渲染：generateCompletion 物理上无 tool definitions ──
+    const { generateCompletion, setLastRenderedProse: setLRP, setLastRenderParams: setParams } = await import("./tools/helpers.ts");
+    const flagModel = pi.getFlag("render-model") as string | undefined;
+
+    // 保存渲染参数供 /reroll 使用
+    const dn2 = (phase1 as any).directorNote || "";
+    const paMatch = dn2.match(/<player_action>([\s\S]*?)<\/player_action>/);
+    const rcMatch2 = dn2.match(/<resolved_changes>([\s\S]*?)<\/resolved_changes>/);
+    setParams({
+      playerAction: paMatch ? paMatch[1].trim() : phase1.summary,
+      resolvedChanges: rcMatch2 ? rcMatch2[1].trim() : "无",
+      sceneResult: `玩家在${gameState.player?.location || "未知地点"}，turn ${gameState.turn}`,
+      openHooks: "无",
+      nextPressure: "无",
+      npcResponses: npcResponses || "",
+    });
+
+    try {
+      let rendered = await generateCompletion(gmPrompt, 32768, ctx, flagModel);
+      if (rendered) {
+        // Lint 扫描
+        try {
+          const { lintProse } = await import("./engine/audit/lint-rules.ts");
+          const lintResult = lintProse(rendered, gameState);
+          if (lintResult.needsRetry) {
+            console.warn("[Phase3] lint needs retry, auto-pipeline skips retry");
+          }
+          rendered = lintResult.prose || rendered;
+        } catch (_) { /* lint unavailable */ }
+
+        setLRP(rendered);
+
+        return { systemPrompt: `[引擎已预生成叙事正文。你只需原样输出以下内容，不分析、不评价、不加额外文字、不调任何工具。]\n\n${rendered}` };
+      }
+    } catch (e) {
+      console.error("Phase3: bare stream render failed, falling back to pi agent:", e);
+    }
+
+    // fallback: pi agent 用完整 prompt 自己写
     return { systemPrompt: gmPrompt };
   });
 

@@ -5,7 +5,7 @@ export default {
     description: "保持游戏状态不变，重新渲染最后一轮叙事",
     handler: async (_args, ctx) => {
       if (!lastRenderParams) {
-        await showPanel(ctx, "🔄 重渲染", ["没有可重渲染的回合（尚未调用 render_scene）。"]);
+        await showPanel(ctx, "🔄 重渲染", ["没有可重渲染的回合（尚未完成场景渲染）。"]);
         return;
       }
 
