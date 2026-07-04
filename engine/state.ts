@@ -726,14 +726,15 @@ function resolveScheduleGroup(src: any, currentAge: number): string {
   return src?.schedule_group || "社会人";
 }
 
-/** 按年龄缩放属性（6岁=~50%, 12岁=~80%, 16岁=100%） */
+/** 按年龄缩放属性。身体属性按年龄比例缩放，心智属性保持 baseline */
 function scaleAttributesForAge(src: any, age: number): Record<string, number> {
   const base = (src?.attributes as Record<string, number>) || { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
-  const ratio = age <= 6 ? 0.5 : age <= 12 ? 0.8 : age <= 15 ? 0.9 : 1.0;
-  if (ratio >= 1.0) return { ...base };
+  const physicalRatio = age <= 6 ? 0.5 : age <= 12 ? 0.7 : age <= 15 ? 0.85 : 1.0;
+  if (physicalRatio >= 1.0) return { ...base };
+  const physical = new Set(["力量", "敏捷", "体质"]);
   const scaled: Record<string, number> = {};
   for (const [k, v] of Object.entries(base)) {
-    scaled[k] = Math.max(1, Math.round(v * ratio));
+    scaled[k] = physical.has(k) ? Math.max(1, Math.round(v * physicalRatio)) : v;
   }
   return scaled;
 }
