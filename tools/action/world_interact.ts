@@ -24,9 +24,10 @@ export default {
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, getRoom, placeFurniture, removeFurniture, editCellType, toggleDoor, setPlayerLocation } = await import("../../engine/state.ts");
-      // gridPos null → 走 setPlayerLocation 完整恢复（保证 location+gridPos 原子一致）
+      // gridPos null → 直接调用 initPlayerGrid（绕过 setPlayerLocation 的同房间守卫）
+      const { initPlayerGrid } = await import("../../engine/state-grid.ts");
       if (!gameState.player.gridPos) {
-        setPlayerLocation(gameState.player.location);
+        initPlayerGrid();
       }
       if (!gameState.player.gridPos) {
         return { content: [{ type: "text", text: `当前玩家没有网格坐标（位置: ${gameState.player.location}），无法进行网格交互。尝试 move 激活网格。` }], details: {} };

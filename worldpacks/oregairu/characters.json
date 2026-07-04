@@ -284,7 +284,7 @@
       3,
       5
     ],
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -527,7 +527,7 @@
       5,
       3
     ],
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_overrides": {},
     "schedule_group_by_age": {
       "6": "小学生",
@@ -673,7 +673,7 @@
       1,
       6
     ],
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_overrides": {},
     "schedule_group_by_age": {
       "6": "小学生",
@@ -832,7 +832,7 @@
       3,
       3
     ],
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -1164,7 +1164,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "中学生",
+    "schedule_group": "小学生",
     "grid_pos": null,
     "anchors": {
       "private": "八幡的妹妹。嘴甜但偶尔毒舌，跟哥哥一样看人很准。经常吐槽哥哥是废物。"
@@ -1241,7 +1241,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "grid_pos": null,
     "anchors": {
       "private": "网球部王牌。八幡看到他也会心跳加速。性格温柔，不擅长拒绝。"
@@ -1417,7 +1417,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "7": "小学生",
       "12": "中学生",
@@ -1504,7 +1504,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "grid_pos": null,
     "anchors": {
       "private": "如月家的二哥，真绫的亲弟弟。重度阿宅，爱打飞机。和弟弟（玩家）关系微妙——既亲近又有距离感。在学校也隐藏姐弟关系。"
@@ -1870,7 +1870,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "千叶_雪之下邸",
-    "schedule_group": "大学生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "8": "小学生",
       "12": "中学生",
@@ -1929,7 +1929,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "千叶_雪之下邸",
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_overrides": {},
     "anchors": {
       "private": "雪之下家的私生子弟弟。据说是绫乃流落在外的儿子，5年前被带回雪之下家。性格任性猥琐好色。魔改模式专属角色。"
@@ -2165,7 +2165,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_世田谷_橘家",
-    "schedule_group": "大学生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "10": "小学生",
       "12": "中学生",
@@ -2315,7 +2315,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_世田谷_橘家",
-    "schedule_group": "大学生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "10": "小学生",
       "12": "中学生",
@@ -2461,7 +2461,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_圣迹樱丘",
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -2622,7 +2622,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_圣迹樱丘",
-    "schedule_group": "高校生",
+    "schedule_group": "小学生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",

@@ -537,8 +537,8 @@ export function loadState(filepath?: string): boolean {
   // 写回最新版本号
   gameState.schemaVersion = currentSchemaVersion;
 
-  // 加载后重建空间状态（gridPos 可能在旧存档为 null）
-  if (gameState.player?.location) {
+  // 加载后重建空间状态（仅 gridPos 为 null 时初始化，防止覆盖已持久化的位置）
+  if (gameState.player?.location && !gameState.player.gridPos) {
     try {
       initPlayerGrid();
     } catch {}
@@ -816,8 +816,8 @@ export function setPlayerLocation(loc: string): void {
   if (oldLoc !== key && gameState.tempNPCs?.length > 0) {
     cleanupTempNPCs("玩家移动");
   }
-  // 移动后自动初始化网格坐标（仅位置变化时，避免覆盖同房间 gridPos）
-  if (oldLoc !== key) {
+  // 移动后自动初始化网格坐标（位置变化时 或 gridPos 为 null 时触发）
+  if (oldLoc !== key || !gameState.player.gridPos) {
     initPlayerGrid();
   }
 }
@@ -2391,7 +2391,8 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
   return `${npcName} → ${outfitKey}: ${desc}`;
 }
 
-/** 获取 NPC 当前 outfit 的外观描述。已从装备槽移除的物品不显示 */
+/** 获取 NPC 当前 outfit 的外观描述。已从装备槽移除的物品不显示。
+ *  支持 outfits_by_age 按年龄段选择服装；年龄差 >3 且无 by_age 数据时用年龄大体型通用描述。 */
 export function getNPCOutfitDesc(npcName: string): string {
   const src = findCharacter(npcName);
   if (!src?.outfits) {
@@ -2399,8 +2400,31 @@ export function getNPCOutfitDesc(npcName: string): string {
     return hairDesc || src?.appearance_brief || "";
   }
   const npc = gameState.npcs[npcName];
-  const key = npc?.currentOutfit || "school";
-  const outfit = src.outfits[key];
+  const curAge = npc ? getNpcCurrentAge(src.base_age || 16) : (src.base_age || 16);
+  const baseAge = src.base_age || 16;
+  const ageGap = Math.abs(curAge - baseAge);
+
+  // 年龄差 >3 且无 outfits_by_age → 用年龄体型的通用描述（防 6 岁穿高中制服）
+  if (ageGap > 3 && !src.outfits_by_age) {
+    const body = getBodyForAge(src, curAge);
+    const h = body?.height_cm || "?";
+    if (curAge <= 6) return `${h}cm，穿着儿童便服（${curAge}岁）`;
+    if (curAge <= 12) return `${h}cm，穿着小学生校服（${curAge}岁）`;
+    if (curAge <= 15) return `${h}cm，穿着中学生校服（${curAge}岁）`;
+    // 年龄差大但在高中以上 → 继续走正常路径（成年人穿高中制服没那么违和）
+  }
+
+  // 有 outfits_by_age → 按年龄选择对应 outfit key
+  let outfitKey: string;
+  if (src.outfits_by_age) {
+    const keys = Object.keys(src.outfits_by_age).map(Number).sort((a,b) => a-b);
+    let best = keys[0]!;
+    for (const k of keys) { if (k <= curAge) best = k; else break; }
+    outfitKey = src.outfits_by_age[String(best)];
+  } else {
+    outfitKey = npc?.currentOutfit || "school";
+  }
+  const outfit = src.outfits[outfitKey];
   if (!outfit) {
     const hairDesc = [src?.hair_color, src?.hair_style].filter(Boolean).join("");
     return hairDesc || src.appearance_brief || "";
@@ -2408,22 +2432,27 @@ export function getNPCOutfitDesc(npcName: string): string {
   // 分层：内层 vs 外层；跳过已被移除的装备
   const inner: string[] = [];
   const outer: string[] = [];
-  // 懒加载 items.json
+  // 懒加载 items.json（优先读 worldpacks，fallback 到 data）
   let itemsData = null;
-  const getFlavor = (itemName) => {
+  const getFlavor = (itemName: string) => {
     if (!itemsData) {
       try {
-        itemsData = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "data", "items.json"), "utf-8"));
+        const wpPath = path.resolve(process.cwd(), "worldpacks", activeWorldName || "oregairu", "items.json");
+        if (fs.existsSync(wpPath)) {
+          itemsData = JSON.parse(fs.readFileSync(wpPath, "utf-8"));
+        } else {
+          itemsData = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "data", "items.json"), "utf-8"));
+        }
       } catch { itemsData = {}; }
     }
-    return itemsData[itemName]?.flavor || itemName;
+    return (itemsData as any)[itemName]?.flavor || itemName;
   };
   for (const [slot, item] of Object.entries(outfit)) {
     if (slot === 'desc' || slot === 'hair' || slot === 'acc' || slot === 'head') continue;
     // 检查装备槽：如果对应槽位为空 (undefined) 表示未被交互过，默认穿着；如果显式为 null 表示被剥除
     const equipSlot = npc?.equipment?.[slot as any];
     const isMissing = equipSlot === null;
-    const flavor = getFlavor(item);
+    const flavor = getFlavor(item as string);
     const label = isMissing ? `${flavor}（已被拿走）` : flavor;
     if (slot.startsWith("inner_")) inner.push(label);
     else outer.push(label);

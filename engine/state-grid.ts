@@ -386,6 +386,13 @@ export async function createRoom(
     gameState.player.known_locations.push(roomName);
   }
   saveState();
+  // 自动将玩家移入新创建的房间
+  try {
+    const { setPlayerLocation } = await import("./state.ts");
+    setPlayerLocation(roomName);
+  } catch (e) {
+    console.error("createRoom: auto-move to new room failed", e);
+  }
   const tmplNote = opts?.templateId ? `（模板: ${opts.templateId}）` : "";
   return { success: true, reason: `创建了新房间 ${roomName} (${w}x${h})${tmplNote}，施工耗时${constructionMinutes}分钟（不收费）。` };
 }

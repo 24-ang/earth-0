@@ -496,7 +496,7 @@ export async function showPhoneTUI(ctx: any, phoneItem: any) {
 
   syncContactsFromRelationships(pd);
 
-  const gameYear = parseInt(gameState.time.game_date.split("-")[0]) || 2018;
+  const gameYear = parseInt(gameState.time.game_date.split("-")[0]) || (gameState.time.timeline_origin?.year ?? 2018);
   const isJP = true;
 
   function eraMatches(era: string): boolean {

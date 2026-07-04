@@ -85,8 +85,9 @@ export function getStageDescription(stage: string): string {
 /** 推进时间（以天为单位） */
 export function advanceTime(state: TimeState, days: number): TimeState {
   if (!state?.game_date) {
-    console.error("advanceTime: game_date is undefined, initializing to 2018-04-07");
-    state.game_date = "2018-04-07";
+    console.warn("advanceTime: game_date is undefined, using timeline_origin");
+    const originYear = state.timeline_origin?.year || 2018;
+    state.game_date = `${originYear}-04-07`;
   }
   const [y, m, d] = state.game_date.split("-").map(Number);
   const date = new Date(y, m - 1, d + days);
@@ -108,8 +109,9 @@ export function advanceTime(state: TimeState, days: number): TimeState {
 /** 推进行时间（分钟），返回新的 time_of_day */
 export function advanceMinutes(state: TimeState, minutes: number): { newDate: string; dayOfWeek: string; timeOfDay: string; daysAdvanced: number } {
   if (!state?.game_date) {
-    console.error("advanceMinutes: game_date is undefined, initializing to 2018-04-07");
-    state.game_date = "2018-04-07";
+    console.warn("advanceMinutes: game_date is undefined, using timeline_origin");
+    const originYear = state.timeline_origin?.year || 2018;
+    state.game_date = `${originYear}-04-07`;
   }
   const totalMinutes = state.minute_of_day + minutes;
   const daysAdvanced = Math.floor(totalMinutes / 1440);

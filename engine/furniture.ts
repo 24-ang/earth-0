@@ -166,6 +166,35 @@ export async function interactFurniture(
   /** 格子上存储的内联动作定义（优先于 furniture.json） */
   inlineActions?: Record<string, FurnitureActionDef> | null
 ): Promise<FurnitureResult> {
+  // ── 房间扫描辅助函数 ──
+  const scanRoom = (name: string): boolean => {
+    if (!roomCells || roomCells.length === 0) return false;
+    for (const row of roomCells) {
+      if (!row) continue;
+      for (const cell of row) {
+        if (cell?.furniture === name) return true;
+      }
+    }
+    return false;
+  };
+
+  // ── 非空间动作（不需要靠近家具也能执行）──
+  const isNonSpatial = action === "出来" || action === "不藏了" || action === "查看" || action === "检查" || action === "?" || action === "" || !action;
+
+  // ── 有房间数据时，先校验家具是否在本房间 ──
+  if (roomCells && roomCells.length > 0 && !scanRoom(furnitureName)) {
+    // 家具不在本房间
+    if (isNonSpatial) {
+      return { message: `这里没有${furnitureName}。`, narrative: "", effects: [] };
+    }
+    return { message: `这里没有${furnitureName}，无法进行操作。`, narrative: "", effects: [] };
+  }
+
+  // ── 无房间数据 / 无坐标 → 非空间动作放行，空间动作拒绝 ──
+  if ((!playerGridPos || !roomCells || roomCells.length === 0) && !isNonSpatial) {
+    return { message: "无法确定你的精确位置，请先移动一步再操作家具。", narrative: "", effects: [] };
+  }
+
   // 优先级: 1. 内联动作(格子数据) 2. furniture.json 3. 泛用 fallback
   let def: FurnitureDef | null = null;
 
@@ -176,25 +205,21 @@ export async function interactFurniture(
   }
   if (!def) {
     // 泛用 fallback：不在目录里的家具也能交互
-    // LLM 可以自由叙事，引擎提供基础"休息"效果
     if (action === "查看" || action === "检查" || action === "?" || action === "" || !action) {
       return { message: `你看了看${furnitureName}。`, narrative: `你打量着${furnitureName}。`, effects: [] };
     }
-    // 泛用"使用/坐下/躺下"→ 轻度休息效果
     const genericRest = /坐|躺|靠|趴|睡|休息|使用|用/.test(action);
     if (genericRest) {
       const reduction = /躺|睡|趴/.test(action) ? 10 : 5;
       gameState.player.fatigue = Math.max(0, (gameState.player.fatigue ?? 0) - reduction);
       return { message: `你${action}在${furnitureName}上，疲劳 -${reduction}。`, narrative: `你${action}在${furnitureName}上，稍微缓了口气。`, effects: [`疲劳 -${reduction}`] };
     }
-    // 其他动作：纯叙事，LLM 自由发挥
     return { message: `你${action}了${furnitureName}。`, narrative: `你${action}了${furnitureName}。`, effects: [] };
   }
 
   // 匹配 action（精确 → 物理属性推断 → 显式actions模糊匹配）
   let actionDef: FurnitureActionDef | undefined;
 
-  // 先查显式 actions
   if (def.actions) {
     actionDef = def.actions[action];
     if (!actionDef) {
@@ -204,7 +229,6 @@ export async function interactFurniture(
     }
   }
 
-  // 如果显式 actions 没匹配到，尝试从物理属性推断
   if (!actionDef && def.physical && def.physical.length > 0) {
     const inferred = getActionsFromPhysical(def.physical);
     const matched = inferred.find(a => action.includes(a) || a.includes(action));
@@ -213,18 +237,17 @@ export async function interactFurniture(
     }
   }
 
-  // 特殊：出来/不藏了 → unhide（任何家具都可用，玩家在躲藏时使用）
+  // 特殊：出来/不藏了 → unhide
   if (!actionDef && (action === "出来" || action === "不藏了")) {
     actionDef = { effect: "unhide" };
   }
 
-  // 特殊：躲进去/藏进去 → hide（容器可藏人时）
+  // 特殊：躲进去/藏进去 → hide
   if (!actionDef && (action === "躲进去" || action === "藏进去") && def.containers?.some(c => c.can_hold_person)) {
     actionDef = { effect: "hide" };
   }
 
   if (!actionDef) {
-    // "查看/检查" — 尝试匹配可读动作（浏览/阅读/查看/观察/检查）
     if (action === "查看" || action === "检查") {
       if (def?.actions) {
         for (const [key, val] of Object.entries(def.actions)) {
@@ -234,7 +257,6 @@ export async function interactFurniture(
         }
       }
       if (!actionDef) {
-        // 没有匹配的可读动作 → 描述物理属性
         const parts: string[] = [];
         if (def?.containers?.length) {
           parts.push(`有${def.containers.length}个存储空间: ${def.containers.map(c => c.id).join("、")}`);
@@ -243,39 +265,27 @@ export async function interactFurniture(
         return { message: `【${furnitureName}】${desc}`, narrative: `你仔细看了看${furnitureName}。${desc}`, effects: [] };
       }
     }
-    // 仍未匹配 → 真正的"不能这样操作"
     if (!actionDef) {
       const available = getAvailableActions(def, furnitureName).join("、");
       return { message: `不能这样操作${furnitureName}。可以：${available}`, narrative: "", effects: [] };
     }
   }
 
-  // 距离校验：先 3×3 邻域，再全房间扫描
+  // 距离校验：检查家具是否在玩家 3×3 邻域内
   if (playerGridPos && roomCells && roomCells.length > 0) {
     const [px, py] = playerGridPos;
-    let found = false;
+    let near = false;
     const maxY = roomCells.length - 1;
     for (let y = Math.max(0, py - 1); y <= Math.min(maxY, py + 1); y++) {
       const row = roomCells[y];
       if (!row) continue;
       const maxX = row.length - 1;
       for (let x = Math.max(0, px - 1); x <= Math.min(maxX, px + 1); x++) {
-        if (row[x]?.furniture === furnitureName) { found = true; break; }
+        if (row[x]?.furniture === furnitureName) { near = true; break; }
       }
-      if (found) break;
+      if (near) break;
     }
-    if (!found) {
-      // 全房间扫描 fallback
-      for (let y = 0; y <= maxY; y++) {
-        const row = roomCells[y];
-        if (!row) continue;
-        for (let x = 0; x < row.length; x++) {
-          if (row[x]?.furniture === furnitureName) { found = true; break; }
-        }
-        if (found) break;
-      }
-    }
-    if (!found) {
+    if (!near) {
       return { message: `你离${furnitureName}太远了，走近一点再操作。`, narrative: "", effects: [] };
     }
   }

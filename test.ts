@@ -5804,6 +5804,101 @@ test("ABILITY: 社交技能返回 social_effect 提示", () => {
   if (!result.narrative.includes("[社交效果]")) throw new Error("社交技能应注入[社交效果]文本");
 });
 
+// ── 回归护栏：gridPos save/load + 家具拒绝 + 年龄适配 + 2018兜底 ──
+
+test("REGRESSION: gridPos 在 saveState→loadState 后不丢失", async () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const STATE_FILE = path.resolve(process.cwd(), "state", "session.json");
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  gameState.player.gridPos = [3, 2];
+  saveState(STATE_FILE);
+  loadState(STATE_FILE);
+  if (!gameState.player.gridPos) throw new Error("gridPos 在 loadState 后变为 null");
+  const [px, py] = gameState.player.gridPos;
+  if (px !== 3 || py !== 2) throw new Error("gridPos 被 loadState 覆盖: 期望[3,2] 实际[" + px + "," + py + "]");
+});
+
+test("REGRESSION: loadState 已有 gridPos 时不重置", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  if (!gameState.player.gridPos) throw new Error("initPlayerGrid 失败");
+  const posBefore = [...gameState.player.gridPos];
+  saveState();
+  const { loadState } = require("./engine/state.ts");
+  loadState();
+  if (!gameState.player.gridPos) throw new Error("gridPos 被 loadState 清空");
+  const [px2, py2] = gameState.player.gridPos;
+  if (px2 !== posBefore[0] || py2 !== posBefore[1]) throw new Error("gridPos 被覆盖: " + posBefore + " -> [" + px2 + "," + py2 + "]");
+});
+
+test("REGRESSION: 家具交互 无床房间睡觉→拒绝", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const room = getRoom("侍奉部");
+  if (!room || !room.cells || room.cells.length === 0) return;
+  const { interactFurniture } = await import("./engine/furniture.ts");
+  const r = await interactFurniture("床", "睡觉", gameState, gameState.player.gridPos as [number,number], room.cells);
+  if (!r.message) throw new Error("应返回 message");
+  if (r.effects && r.effects.length > 0 && r.effects.some((e: string) => e.includes("疲劳") || e.includes("HP") || e.includes("体力"))) {
+    throw new Error("无床房间不应产生休息效果: " + JSON.stringify(r.effects));
+  }
+});
+
+test("REGRESSION: 家具交互 gridPos=null 空间动作→拒绝", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  const { interactFurniture } = await import("./engine/furniture.ts");
+  gameState.player.gridPos = null as any;
+  const r = await interactFurniture("床", "睡觉", gameState, null as any, null as any);
+  if (!r.message) throw new Error("应返回 message");
+  if (r.message.includes("疲劳") || (r.effects && r.effects.some((e: string) => e.includes("疲劳")))) {
+    throw new Error("gridPos=null 时应拒绝空间动作，不应产生效果");
+  }
+});
+
+test("REGRESSION: 家具交互 unhide null坐标→放行", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  const { interactFurniture, findFurnitureDef } = await import("./engine/furniture.ts");
+  const safeDef = findFurnitureDef("保险箱", gameState.activeWorld);
+  if (!safeDef?.containers?.[0]) return;
+  safeDef.containers[0].can_hold_person = true;
+  safeDef.containers[0].max_volume = 100;
+  safeDef.state = safeDef.state || {};
+  safeDef.state.locked = false;
+  gameState.player.concealed = true;
+  gameState.player.hiding_in = "保险箱";
+  const r = await interactFurniture("保险箱", "出来", gameState, null as any, null as any);
+  if (gameState.player.concealed) throw new Error("concealed应清除");
+  if (gameState.player.hiding_in) throw new Error("hiding_in应清除");
+});
+
+test("REGRESSION: getNPCOutfitDesc 年龄差>3 不穿高中制服", () => {
+  gameState.npcs["雪之下雪乃"] = { currentRoom: "", alive: true, current_goal: "", memoryTags: [], scheduleGroup: "小学生", currentOutfit: "school" } as any;
+  const saved = gameState.time.game_date;
+  gameState.time.game_date = "2009-04-07";
+  try {
+    const desc = getNPCOutfitDesc("雪之下雪乃");
+    if (desc.includes("总武高制服")) throw new Error("年龄差>3不应穿高中制服: " + desc);
+    if (!desc.includes("cm")) throw new Error("应包含身高: " + desc);
+  } finally {
+    gameState.time.game_date = saved;
+    delete gameState.npcs["雪之下雪乃"];
+  }
+});
+
+test("REGRESSION: advanceTime 兜底用 timeline_origin 而非 2018", () => {
+  const { advanceTime } = require("./engine/time.ts");
+  const ts: any = { game_date: undefined, timeline_origin: { year: 2009, age: 10 }, minute_of_day: 480, day_of_week: "月", player_age: 10, player_stage: "child", time_of_day: "morning" };
+  advanceTime(ts, 1);
+  if (ts.game_date.slice(0, 4) !== "2009") throw new Error("advanceTime 应用2009而非2018: " + ts.game_date);
+});
+
 (async () => {
   for (const t of testQueue) {
     try {

@@ -8,7 +8,7 @@ export default {
       text: Type.String({ description: "短信内容" }),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { canContact, deliverMessage, createDefaultPhoneData } =
+      const { canContact, deliverMessage, createDefaultPhoneData, syncContactsFromRelationships } =
         await import("../../engine/phone.ts");
       const { gameState, saveState } = await import("../../engine/state.ts");
       // 直接扫背包+装备找手机，不依赖 phone.ts 的静态 gameState 缓存
@@ -27,6 +27,7 @@ export default {
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。" }], details: {} };
       }
+      syncContactsFromRelationships(pd);
       if (!canContact(pd, params.to)) {
         const contact = pd.contacts.find(c => c.name === params.to);
         if (!contact) {
