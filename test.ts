@@ -5018,16 +5018,19 @@ test("VIEWPOINT: processViewpointTriggers aftermath", async () => {
   const npc = getOrCreateNPC("由比滨结衣");
   npc.currentRoom = "侍奉部";
   gameState.player.location = "侍奉部";
-  
+
   // Simulate 3 turns of conversation in the room
   await processViewpointTriggers(gameState, 2, 2, null);
   await processViewpointTriggers(gameState, 2, 2, null);
   await processViewpointTriggers(gameState, 2, 0, null); // Exit co-presence
-  
-  const queue = gameState._cutaway_queue || [];
-  const aftermath = queue.find(q => q.type === "余波" && q.npc === "由比滨结衣");
-  if (!aftermath) {
-    throw new Error("Exit co-presence after >= 3 turns did not trigger aftermath cutaway");
+
+  // aftermath 触发后 turnsInConversation 应从 0→1→2→3 然后被重置为 0
+  if (gameState.turnsInConversation !== 0) {
+    throw new Error("turnsInConversation should reset to 0 after aftermath triggers");
+  }
+  // cooldown 应被设置为 3（防止连续触发）
+  if (gameState._cutaway_cooldown !== 3) {
+    throw new Error("_cutaway_cooldown should be 3 after consuming an aftermath cutaway");
   }
 });
 

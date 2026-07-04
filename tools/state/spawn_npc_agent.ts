@@ -156,7 +156,7 @@ export default {
           const pTop = (pEquip as any).top || (pEquip as any).inner_top || "";
           const pBot = (pEquip as any).bottom || (pEquip as any).legs || "";
           const pOutfit = [pTop, pBot].filter(Boolean).join("+") || "便服";
-          let list = `在场人物: 玩家（${[pBuild, pH, pOutfit].filter(Boolean).join("·")}）`;
+          let list = `在场人物: 玩家（${[gameState.player.gender, pBuild, pH, pOutfit].filter(Boolean).join("·")}）`;
           for (const oName of otherNPCs) {
             const oSrc = findCharacter(oName);
             if (!oSrc) { list += `、${oName}`; continue; }

@@ -169,26 +169,25 @@ export default function (pi: ExtensionAPI) {
 
     // ── 先创建 NPC（buildStatePrompt → lookupRegion → getOrCreateNPC）──
     const statePrompt = await (await import("./engine/state.ts")).buildStatePrompt();
-    // NPC 刚创建时 currentRoom 是 default_location（可能不匹配当前地点）
-    // 按当前时间段移动 NPC 到正确位置
-    await (await import("./engine/state.ts")).updateNPCSchedules();
 
-    // NPC 移动完成后重新校准 interactionMode（结算时的 npcs 还是空的）
-    const { isSameLocation: isSameLoc } = await import("./engine/state.ts");
-    const postScheduleCount = Object.values(gameState.npcs).filter((n: any) =>
-      n.alive && isSameLoc(n.currentRoom, gameState.player.location)
-    ).length;
-    const { detectInteractionMode: detectIM } = await import("./engine/detect-mode.ts");
-    const freshIM = detectIM(gameState, postScheduleCount);
-    gameState.interactionMode = freshIM.interactionMode;
-
-    // ── Phase 2: 引擎自举 — 自动 spawn 同场 NPC ──
+    // ── Phase 2: 引擎自举 — 自动 spawn 同场 NPC（在日程更新前做，否则日程把NPC挪走查不到人）──
     let npcResponses = "";
     try {
       npcResponses = await autoSpawnNPCs(ctx);
     } catch (e) {
       console.error("Phase2: auto-spawn NPCs failed:", e);
     }
+
+    // NPC 刚创建时 currentRoom 是 default_location，按当前时间段移动 NPC 到正确位置
+    await (await import("./engine/state.ts")).updateNPCSchedules();
+
+    // 重新校准 interactionMode（日程更新后同场人数可能变了）
+    const { isSameLocation: isSameLoc } = await import("./engine/state.ts");
+    const postScheduleCount = Object.values(gameState.npcs).filter((n: any) =>
+      n.alive && isSameLoc(n.currentRoom, gameState.player.location)
+    ).length;
+    const { detectInteractionMode: detectIM } = await import("./engine/detect-mode.ts");
+    gameState.interactionMode = detectIM(gameState, postScheduleCount).interactionMode;
 
     // ── 切镜/幕间消费（viewpoint.ts 的异步 promise → 追加到 NPC 回应后）──
     let viewpointText = "";
@@ -478,7 +477,7 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
 
         const prompt = [
           `你是${name}。你现在正在${loc}。`,
-          `在场人物: 玩家${toSpawn.length > 1 ? "、" + toSpawn.filter(n => n.name !== name).map(n => n.name).join("、") : "（仅你一人）"}。`,
+          `在场人物: 玩家（${gameState.player?.gender || ""}）${toSpawn.length > 1 ? "、" + toSpawn.filter(n => n.name !== name).map(n => n.name).join("、") : "（仅你一人）"}。`,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,

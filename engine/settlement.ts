@@ -98,10 +98,8 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
       (n: any) => n.alive && isSameLocation(n.currentRoom, gameState.player.location)
     ).length;
 
-  const previousRoundNPCs = (() => {
-    // auto-settled 时上一轮的数据已不可得，用当前数据作为近似
-    return countAliveNPCsHere();
-  })();
+  // 上一轮同场 NPC 数 —— 从上次结算存下的快照读取，而非再数一遍当前
+  const previousRoundNPCs = gameState._prevSettlementNpcCount ?? 0;
 
   const currentRoundNPCs = countAliveNPCsHere();
 
@@ -157,6 +155,9 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
       console.error("runSettlement auto recordTurnLog error:", e);
     }
   }
+
+  // --- 17.5 存下本轮同场 NPC 数，供下次结算的 previousRoundNPCs 使用 ---
+  gameState._prevSettlementNpcCount = currentRoundNPCs;
 
   // --- 18. 落盘 ---
   saveState();

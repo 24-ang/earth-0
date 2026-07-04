@@ -53,7 +53,7 @@ export default {
 
         const prompt = [
           `你是${npcName}。你现在正在${gameState.player.location}。`,
-          `在场人物: 玩家${batchOthers.length > 0 ? "、" + batchOthers.join("、") : "（仅你一人）"}。`,
+          `在场人物: 玩家（${gameState.player.gender}）${batchOthers.length > 0 ? "、" + batchOthers.join("、") : "（仅你一人）"}。`,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,
