@@ -16,6 +16,18 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { registerAll } from "./tools/registry.ts";
 import { updateChatHUD } from "./tools/helpers.ts";
 
+const MAIN_MENU_PROMPT = `你是主菜单渲染器。你只需原样输出以下内容，不分析、不评价、不加任何额外文字。
+
+┌─ earth-0 ──────────────────────────────┐
+│                                         │
+│  [1] 新游戏      开始一段全新的故事     │
+│  [2] 继续游戏    从上次离开的地方继续   │
+│  [3] 读取存档    载入手动保存的存档     │
+│                                         │
+└─────────────────────────────────────────┘
+
+输入数字选择。`;
+
 export default function (pi: ExtensionAPI) {
   // Register all modular tools and commands
   registerAll(pi);
@@ -66,43 +78,56 @@ export default function (pi: ExtensionAPI) {
     // ═══════════════════════════════════════════════════
     if (gameState.turn === 0) {
       const input = (gameState._lastUserInput || "").trim();
-      gameState._lastUserInput = "";
 
-      // 没有输入 → 渲染主菜单
+      if (input) {
+        gameState._lastUserInput = "";
+
+        // [2] 继续游戏
+        if (input === "2" || input.startsWith("继续")) {
+          const { loadState: ls, buildStatePrompt } = await import("./engine/state.ts");
+          if (ls()) {
+            await buildStatePrompt();
+            saveState();
+            updateChatHUD(ctx);
+            const { generateCompletion: gc } = await import("./tools/helpers.ts");
+            try {
+              const rendered = await gc(`[引擎: 你只需原样输出以下内容。]\n\n📂 继续游戏 — ${gameState.time?.game_date || "?"} ${gameState.player?.location || "?"}\n\n你回到了上次离开的地方。`, 256, ctx);
+              if (rendered) return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${rendered}` };
+            } catch {}
+          }
+        }
+
+        // [3] 读取存档
+        if (input === "3" || input.startsWith("读取")) {
+          const { listSaves } = await import("./engine/state.ts");
+          const saves = listSaves();
+          const lines = saves.length > 0
+            ? saves.map((s: any) => `  /load ${s.name} — ${s.date} 第${s.turn}回合 @ ${s.location}`).join("\n")
+            : "📭 没有手动存档。";
+          const { generateCompletion: gc } = await import("./tools/helpers.ts");
+          try {
+            const rendered = await gc(`[引擎: 你只需原样输出以下内容。]\n\n📂 存档列表\n${lines}\n\n输入 /load <存档名> 载入。`, 512, ctx);
+            if (rendered) return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${rendered}` };
+          } catch {}
+        }
+
+        // [1] 新游戏 或 玩家直接描述角色
+        const charDesc = input === "1" ? "" : input.replace(/^1\s*|^新游戏\s*/i, "");
+        gameState._lastUserInput = charDesc || "开始游戏";
+        saveState();
+      }
+
+      // 无输入 → 跳过 Phase1/Phase2，直接渲染主菜单
       if (!input) {
-        return { systemPrompt: buildMainMenu() };
+        gameState._lastUserInput = "";
+        saveState();
+        const { generateCompletion: gc } = await import("./tools/helpers.ts");
+        try {
+          const rendered = await gc(MAIN_MENU_PROMPT, 512, ctx);
+          if (rendered) return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${rendered}` };
+        } catch {}
+        return { systemPrompt: `[引擎已预生成内容，你只需原样输出。]\n\n${MAIN_MENU_PROMPT}` };
       }
-
-      // [2] 继续游戏
-      if (input === "2" || input.startsWith("继续")) {
-        const { loadState: ls, buildStatePrompt } = await import("./engine/state.ts");
-        if (ls()) {
-          await buildStatePrompt();
-          saveState();
-          updateChatHUD(ctx);
-          return {
-            systemPrompt: `[引擎: 已载入存档 — ${gameState.time?.game_date || "?"} 第${gameState.turn}回合。你只需原样输出以下内容。]\n\n📂 继续游戏 — ${gameState.time?.game_date || "?"} ${gameState.player?.location || "?"}\n\n你回到了上次离开的地方。`,
-          };
-        }
-        return { systemPrompt: buildMainMenu("⚠️ 没有自动存档。开始新游戏吧。") };
-      }
-
-      // [3] 读取存档
-      if (input === "3" || input.startsWith("读取")) {
-        const { listSaves } = await import("./engine/state.ts");
-        const saves = listSaves();
-        if (saves.length === 0) {
-          return { systemPrompt: buildMainMenu("📭 没有手动存档。") };
-        }
-        const lines = saves.map((s: any) => `  /load ${s.name} — ${s.date} 第${s.turn}回合 @ ${s.location}`).join("\n");
-        return { systemPrompt: `[引擎: 你只需原样输出以下内容。]\n\n📂 存档列表\n${lines}\n\n输入 /load <存档名> 载入。` };
-      }
-
-      // [1] 新游戏 或 玩家直接描述角色
-      // 去掉菜单前缀 "1" / "新游戏"，剩下的给分类器当角色描述
-      const charDesc = input === "1" ? "" : input.replace(/^1\s*|^新游戏\s*/i, "");
-      gameState._lastUserInput = charDesc || "开始游戏";
-      saveState();
     }
 
     // ── P0: settle_scene 漏调兜底 ──
@@ -283,8 +308,6 @@ export default function (pi: ExtensionAPI) {
     saveState();
 
     // ── Phase 3: 裸 stream 渲染（PHILOSOPHY §2.1 完整版） ──
-    // 不再走 pi agent loop。直接用 generateCompletion 裸 stream —
-    // 物理上没有 tool definitions，渲染 LLM 无法跳过结算或调写工具。
     const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");
 
     const renderCtx = {
@@ -625,21 +648,4 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
     read(modeFile),
     read("gm-contract.md"),
   ].filter(Boolean).join("\n\n---\n\n");
-}
-
-/** 主菜单 prompt——turn 0 无输入时显示 */
-function buildMainMenu(hint?: string): string {
-  const lines = [
-    "┌─ earth-0 ──────────────────────────────┐",
-    "│                                         │",
-    "│  [1] 新游戏      开始一段全新的故事     │",
-    "│  [2] 继续游戏    从上次离开的地方继续   │",
-    "│  [3] 读取存档    载入手动保存的存档     │",
-    "│                                         │",
-    hint ? `│  ${hint}${" ".repeat(Math.max(0, 37 - (hint?.length || 0)))}│` : "",
-    "└─────────────────────────────────────────┘",
-    "",
-    "输入数字选择。",
-  ].filter(Boolean).join("\n");
-  return `[引擎: 你只需原样输出以下主菜单，不分析、不评价。]\n\n${lines}`;
 }
