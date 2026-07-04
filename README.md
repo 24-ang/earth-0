@@ -1,3 +1,6 @@
+目前存在大量bug修复中，许愿式编程不可行阿
+
+
 # earth-0
 
 **A general-purpose deterministic engine + decoupled multi-agent runtime for interactive fiction.**
