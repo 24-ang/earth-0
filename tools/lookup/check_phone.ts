@@ -32,8 +32,8 @@ export default {
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机或手机数据未初始化。" }], details: {} };
       }
-      syncContactsFromRelationships(pd);
-      const summary = getUnreadSummary(pd);
+      syncContactsFromRelationships(gameState, pd);
+      const summary = getUnreadSummary(gameState, pd);
       const contactList = pd.contacts.map(c => `${c.name} (${c.relation})`).join("、");
       const text = [
         summary || "[手机] 没有新通知。",

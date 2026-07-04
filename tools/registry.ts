@@ -150,10 +150,12 @@ export function registerAll(pi: ExtensionAPI) {
   });
 
   // Lookup tools: NOT tracked (pure queries that don't modify state)
+  // post_sns/send_sms/make_call moved here — withToolTracking wrapper
+  // creates module instance mismatch that breaks gameState reads
   const lookupTools = [
     lookupRegionTool, diceRollTool, createLocationTool, lookupLoreTool,
     lookupVillainTool, checkPhoneTool, browseSnsTool, lookupWeatherTool,
-    lookupAbilityTool,
+    lookupAbilityTool, postSnsTool, sendSmsTool, makeCallTool,
   ];
   for (const t of lookupTools) if (t) pi.registerTool(t);
 
@@ -174,7 +176,6 @@ export function registerAll(pi: ExtensionAPI) {
     spawnTempNpcTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
     managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
     useAbilityTool,
-    debugSexHeatTool,
     travelTool, // P2: 统一旅行（合并 go_to_location + travel_intercity + complete_travel）
     // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
     moveTool, moveToTool, boardTrainTool, completeTravelTool, goToLocationTool,

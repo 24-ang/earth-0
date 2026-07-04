@@ -221,7 +221,7 @@ export function validatePlayerState(
       getPlayerPhone = require("./phone.ts").getPlayerPhone;
     } catch { /* phone 模块不存在则跳过 */ }
     if (getPlayerPhone) {
-      const phone = getPlayerPhone() as Record<string, unknown> | null;
+      const phone = getPlayerPhone(gs) as Record<string, unknown> | null;
       if (phone && !phone.phoneData) {
         warnings.push("手机存在但 phoneData 尚未初始化（将在首次访问时懒初始化）");
       }

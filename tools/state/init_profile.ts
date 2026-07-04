@@ -96,7 +96,7 @@ function buildGapReport(gs: any, activeWorld: string, appliedProfileId?: string,
   filled.push(`装备(${eqCount}件)`);
   filled.push(`资金(¥${gs.player.funds})`);
   if (appliedProfileId) filled.push(`身份模板(${appliedProfileId})`);
-  const flagCount = Object.keys(gs.flags || {}).length;
+  const flagCount = Object.keys(gs.player.flags || {}).length;
   if (flagCount > 0) filled.push(`flags(${flagCount}个)`);
   const skillCount = Object.keys(gs.player.skills || {}).length;
   if (skillCount > 0) filled.push(`技能(${skillCount}项)`);
@@ -127,7 +127,7 @@ function buildGapReport(gs: any, activeWorld: string, appliedProfileId?: string,
   if (propCount === 0) { missing.push("住宅(无)"); tools.push("instantiate_residence 或 create_room"); }
   if (relCount === 0) { missing.push("社会关系(0条)"); tools.push("adjust_relation"); }
   if (Object.keys(gs.npcs || {}).length === 0) { missing.push("通讯录/NPC(0人)"); tools.push("create_character / spawn_npc_agent"); }
-  if (Object.keys(gs.flags || {}).length <= 1) { missing.push("身份flags(几乎空)"); tools.push("set_flags"); }
+  if (Object.keys(gs.player.flags || {}).length <= 1) { missing.push("身份flags(几乎空)"); tools.push("set_flags"); }
   if (!gs.player.public_identity) { missing.push("公开身份(无)"); }
 
   // 检查玩家 NPC 的记忆
@@ -207,11 +207,11 @@ export default {
     }
 
     const playerSnapshot = structuredClone(gameState.player);
-    const flagsSnapshot = structuredClone(gameState.flags);
+    const flagsSnapshot = structuredClone(gameState.player.flags || {});
     try {
       // ── 兜底：init_profile 独立使用时，确保玩家至少有内衣+手机 ──
       if (!gameState.player.equipment.inner_top && !gameState.player.equipment.inner_bot) {
-        const defaultUnderwear = (await import("../../engine/state.ts")).defaultUnderwear;
+        const { defaultUnderwear } = await import("./init_game.ts");
         if (defaultUnderwear) {
           const uw = defaultUnderwear(gameState.player.gender || "男");
           if (uw.inner_top) gameState.player.equipment.inner_top = uw.inner_top;
@@ -234,13 +234,29 @@ export default {
       if (profile.public_identity) gameState.player.public_identity = profile.public_identity;
       if (Array.isArray(profile.titles)) gameState.player.titles = [...profile.titles];
       if (profile.flags && typeof profile.flags === "object") {
-        for (const [k, v] of Object.entries(profile.flags)) gameState.flags[k] = v as any;
+        if (!gameState.player.flags) gameState.player.flags = {};
+        for (const [k, v] of Object.entries(profile.flags)) gameState.player.flags[k] = v as any;
       }
 
       // ── 装备 ──（叠加而非覆盖——保留 init_game 的兜底内衣）
       if (profile.equipment) {
         for (const [slot, item] of Object.entries(profile.equipment)) {
           gameState.player.equipment[slot as any] = normalizeItem(item, `equipment.${slot}`);
+        }
+        // 性别适配：女生穿男制服 → 自动替换为女版
+        if (gameState.player.gender === "女") {
+          const swap: Record<string, string> = {
+            "总武高男生制服": "总武高女生制服",
+            "总武高制服裤": "总武高制服裙",
+            "男生制服": "女生制服",
+            "西装裤": "百褶裙",
+          };
+          for (const slot of ["top", "bottom"] as const) {
+            const eq = gameState.player.equipment[slot];
+            if (eq && swap[eq.name]) {
+              eq.name = swap[eq.name];
+            }
+          }
         }
         gameState.player.ac = calcAC(gameState.player.attributes.敏捷, gameState.player.equipment);
       }
@@ -287,8 +303,8 @@ export default {
           addMemoryTag(gameState.player.name, `入学${schoolName}`, 365, undefined, 2, "positive", [], "milestone");
         }
         if (schoolFlag) {
-          gameState.flags[schoolFlag] = true;
-          gameState.flags["student"] = true;
+          gameState.player.flags[schoolFlag] = true;
+          gameState.player.flags["student"] = true;
         }
       } catch (e: any) {
         console.error("init_profile: 入学记忆生成失败", e.message || String(e));
@@ -297,7 +313,7 @@ export default {
       // ── 手机通讯录初始化（仅创建 phoneData，不预设联系人）──
       try {
         const { getPlayerPhoneData, createDefaultPhoneData } = await import("../../engine/phone.ts");
-        let pd = getPlayerPhoneData();
+        let pd = getPlayerPhoneData(gameState);
         if (!pd) {
           const phone = gameState.player.inventory.find((i: any) =>
             i.name?.includes("手机") || i.effects?.some((e: any) => e.type === "communication")
@@ -352,7 +368,7 @@ export default {
           // 标签→flags
           if (Array.isArray(char.tags)) {
             for (const tag of char.tags) {
-              if (typeof tag === "string") gameState.flags[tag] = true;
+              if (typeof tag === "string") gameState.player.flags[tag] = true;
             }
             corrections.push(`标签→flags: ${char.tags.join(", ")}`);
           }
@@ -408,7 +424,7 @@ export default {
     } catch (e: any) {
       console.error("init_profile: 应用身份模板失败，已回滚玩家状态", e?.message || String(e), e?.stack);
       gameState.player = playerSnapshot;
-      gameState.flags = flagsSnapshot;
+      gameState.player.flags = flagsSnapshot;
       saveState();
       return { content: [{ type: "text", text: `应用身份模板失败: ${e.message || String(e)}` }], details: {} };
     }

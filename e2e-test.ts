@@ -2,6 +2,7 @@
  * 端到端测试：Phase 1 分类 → 关键词回落 → Phase 3 渲染 prompt
  * 不依赖 LLM API，纯测引擎层行为
  */
+process.env.NODE_ENV = "test";
 async function main() {
   const { runPhase1, keywordFallback, buildClassificationPrompt } = await import("./engine/phase1-classifier.ts");
   const { buildRenderSystemPrompt } = await import("./engine/phase3-render.ts");

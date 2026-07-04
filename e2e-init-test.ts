@@ -2,6 +2,7 @@
 // 真跑 init_game → init_profile → validatePlayerState，断言最终状态完好
 // 两个场景：角色库内（材木座义辉）+ 角色库外（无名路人，验证兜底）
 //
+process.env.NODE_ENV = "test";
 // 注意：不要 destructure gameState（ESM live binding 陷阱——resetState() 重赋值后
 // destructured const 仍是旧引用）。始终通过 getGS() 访问。
 
@@ -64,12 +65,12 @@ async function main() {
     check("HP 上限>0", p.hp.max > 0);
     check("HP 当前在范围内", p.hp.current >= 0 && p.hp.current <= p.hp.max);
 
-    // 角色库合并：tags → flags
-    check("flag 中二病", getGS().flags["中二病"] === true);
-    check("flag 剑豪将军", getGS().flags["剑豪将军"] === true);
+    // 角色库合并：tags → flags（写入 PlayerState.flags）
+    check("flag 中二病", getGS().player.flags["中二病"] === true);
+    check("flag 剑豪将军", getGS().player.flags["剑豪将军"] === true);
 
-    // profile flags
-    check("flag soubu_high_enrolled", getGS().flags["soubu_high_enrolled"] === true);
+    // profile flags（写入 PlayerState.flags）
+    check("flag soubu_high_enrolled", getGS().player.flags["soubu_high_enrolled"] === true);
 
     // init_game 世界 flags
     check("flag 世界包 worldpack_oregairu", getGS().flags["worldpack_oregairu"] === true);
@@ -129,18 +130,18 @@ async function main() {
     // 无角色库匹配 → 体型保持默认值（不被错误覆盖为材木座的 82kg）
     check("场景2 体型未被错误覆盖(非82kg)", q.body.weight_kg !== 82);
 
-    // 无角色库匹配 → flags 不含材木座特有标签
-    check("场景2 无中二病 flag", getGS().flags["中二病"] !== true);
-    check("场景2 无剑豪将军 flag", getGS().flags["剑豪将军"] !== true);
+    // 无角色库匹配 → flags 不含材木座特有标签（PlayerState.flags）
+    check("场景2 无中二病 flag", getGS().player.flags["中二病"] !== true);
+    check("场景2 无剑豪将军 flag", getGS().player.flags["剑豪将军"] !== true);
 
-    // profile flags 仍应存在
-    check("场景2 flag soubu_high_enrolled", getGS().flags["soubu_high_enrolled"] === true);
+    // profile flags 仍应存在（PlayerState.flags）
+    check("场景2 flag soubu_high_enrolled", getGS().player.flags["soubu_high_enrolled"] === true);
 
-    // 世界 flag
+    // 世界 flag（GameState.flags）
     check("场景2 flag 世界包", getGS().flags["worldpack_oregairu"] === true);
 
-    // 引擎生成 flag + 技能（不预设硬编码关系）
-    check("场景2 student flag", getGS().flags["student"] === true);
+    // 引擎生成 flag + 技能（PlayerState.flags）
+    check("场景2 student flag", getGS().player.flags["student"] === true);
     check("场景2 技能继承", Object.keys(q.skills || {}).length > 0);
 
     // 住宅

@@ -97,19 +97,20 @@ export function wrapLine(text: string, maxW: number): string[] {
 }
 
 export async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string, systemPrompt?: string): Promise<string> {
-  // Try pi streamSimple first (all ctx access wrapped — stale ctx silently falls through to direct fetch)
+  // Try pi streamSimple first
   try {
     const { streamSimple } = await import("@earendil-works/pi-ai");
     let model: any = undefined;
-    try { if (ctx?.model?.provider && ctx?.model?.id) model = ctx.modelRegistry.find(ctx.model.provider, ctx.model.id); } catch {}
+    try { if (ctx?.model?.provider && ctx?.model?.id) model = ctx.modelRegistry.find(ctx.model.provider, ctx.model.id); } catch (e) { console.error("[Phase3] ctx.modelRegistry.find FAILED:", String(e)); }
     const targetStr = flagModel || process.env.PI_RENDER_MODEL || process.env.FATE_RENDER_MODEL;
     if (targetStr && model == null) {
       try {
         if (targetStr.includes("/")) { const [p, i] = targetStr.split("/"); model = ctx.modelRegistry.find(p, i); }
         else { model = ctx.modelRegistry.getAll().find((m: any) => m.id === targetStr || m.name === targetStr); }
-      } catch {}
+      } catch (e) { console.error("[Phase3] modelRegistry flag lookup FAILED:", String(e)); }
     }
     if (model) {
+      console.error("[Phase3] pi streamSimple: using model", model.provider, model.id, ", has ctx.model:", !!ctx?.model);
       try {
         const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
         if (auth.ok) {
@@ -120,13 +121,15 @@ export async function generateCompletion(promptText: string, maxTokens: number, 
           const msg = await stream.result();
           const text = msg.content.filter((c: any) => c.type === "text").map((c: any) => c.text).join("");
           if (text) return text.trim();
-        }
-      } catch {}
-    }
-  } catch {}
+          console.error("[Phase3] pi streamSimple returned empty text");
+        } else { console.error("[Phase3] getApiKeyAndHeaders NOT OK"); }
+      } catch (e) { console.error("[Phase3] pi streamSimple call FAILED:", String(e)); }
+    } else { console.error("[Phase3] NO MODEL found. ctx.model:", !!ctx?.model, "flagModel:", flagModel, "PI_RENDER_MODEL:", !!process.env.PI_RENDER_MODEL); }
+  } catch (e) { console.error("[Phase3] import @earendil-works/pi-ai FAILED:", String(e)); }
 
   // Fallback: Fetch directly using environment variables
   const apiKey = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
+  console.error("[Phase3] direct fetch fallback: apiKey set:", !!apiKey, "url:", process.env.DEEPSEEK_API_URL || "default");
   const baseUrl = process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/anthropic/v1/messages";
   const modelName = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
 

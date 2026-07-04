@@ -6,8 +6,10 @@ export default {
     parameters: Type.Object({ flags: Type.Record(Type.String(), Type.Union([Type.Boolean(), Type.String()])) }),
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { gameState, saveState } = await import("../../engine/state.ts");
-      for (const [k, v] of Object.entries(params.flags)) gameState.flags[k] = v;
+      // 写入 PlayerState.flags（与 get_status 读取的是同一对象）
+      if (!gameState.player.flags) gameState.player.flags = {};
+      for (const [k, v] of Object.entries(params.flags)) gameState.player.flags[k] = v;
       saveState();
-      return { content: [{ type: "text", text: "flags: " + JSON.stringify(gameState.flags) }], details: {} };
+      return { content: [{ type: "text", text: "flags: " + JSON.stringify(gameState.player.flags) }], details: {} };
     },
   };

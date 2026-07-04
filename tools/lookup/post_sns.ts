@@ -10,21 +10,25 @@ export default {
       likes: Type.Optional(Type.Number({ description: "初始赞数，默认0" })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { getPlayerPhoneData, getPlayerPhone, createDefaultPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
+      const { createDefaultPhoneData, syncContactsFromRelationships } = await import("../../engine/phone.ts");
       const { gameState, saveState } = await import("../../engine/state.ts");
-      let pd = getPlayerPhoneData();
-      if (!pd) {
-        const phone = getPlayerPhone();
-        if (phone) {
-          (phone as any).phoneData = createDefaultPhoneData(gameState.player.name);
-          saveState();
-          pd = (phone as any).phoneData;
-        }
+      // 直接扫背包+装备找手机（不靠 phone.ts 的静态 import——pi 管线里可能拿不同实例）
+      const p = gameState.player;
+      let phone: any = null;
+      for (const item of Object.values(p.equipment)) {
+        if (item?.effects?.some((e: any) => e.type === "communication") || item?.name?.includes("手机")) { phone = item; break; }
+      }
+      if (!phone) phone = p.inventory.find((i: any) => i.effects?.some((e: any) => e.type === "communication") || i.name?.includes("手机")) || null;
+      let pd = phone?.phoneData || null;
+      if (!pd && phone) {
+        phone.phoneData = createDefaultPhoneData(p.name);
+        saveState();
+        pd = phone.phoneData;
       }
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。无法发布SNS帖。" }], details: {} };
       }
-      syncContactsFromRelationships(pd);
+      syncContactsFromRelationships(gameState, pd);
       const post = {
         id: Date.now(),
         author: params.author,

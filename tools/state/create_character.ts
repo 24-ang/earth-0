@@ -106,7 +106,7 @@ export default {
       // 立即创建运行时 NPC 状态并同步位置
       const { getOrCreateNPC } = await import("../../engine/state.ts");
       const npcState = getOrCreateNPC(params.name);
-      npcState.currentRoom = gameState.player.location;
+      npcState.currentRoom = params.default_location || gameState.player.location;
       saveState();
 
       // 汇总创建的字段列表

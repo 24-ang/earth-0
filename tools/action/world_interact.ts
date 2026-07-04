@@ -90,6 +90,9 @@ export default {
       ];
 
       const targets = [];
+      // 也把当前格加入——toggle_door 需要能操作玩家站着的门
+      const curCell = room.cells[py][px];
+      targets.push({ x: px, y: py, cell: curCell, dir: "当前" });
       for (const dir of directions) {
         const nx = px + dir.dx;
         const ny = py + dir.dy;

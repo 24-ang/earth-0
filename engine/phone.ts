@@ -3,10 +3,11 @@
  *
  * 宪法：引擎管物理约束（投递、存储、未读计数），LLM 管内容与时机。
  * 手机数据存在 Item.phoneData 上，不污染全局 GameState。
+ *
+ * 注意：所有函数接收 gameState 参数，避免 CJS 双实例导致静态 import 拿到旧引用。
  */
 
-import type { Item, PhoneData, Contact, PhoneMessage, CallLogEntry, SnsPost, PhotoEntry } from "./types.ts";
-import { gameState, saveState } from "./state.ts";
+import type { Item, PhoneData, Contact, PhoneMessage, CallLogEntry, SnsPost, PhotoEntry, GameState } from "./types.ts";
 
 const MAX_MESSAGES_PER_THREAD = 30;
 const MAX_SNS_POSTS = 50;
@@ -15,7 +16,7 @@ const MAX_PHOTOS = 100;
 // ── 手机定位 ──
 
 /** 扫描玩家装备+背包，找到手机 Item（按通讯效果 + 名字兜底） */
-export function getPlayerPhone(): Item | null {
+export function getPlayerPhone(gameState: GameState): Item | null {
   const p = gameState.player;
   // 装备
   for (const item of Object.values(p.equipment)) {
@@ -39,13 +40,13 @@ export function getPlayerPhone(): Item | null {
   return null;
 }
 
-/** 获取/懒初始化玩家手机的 phoneData */
-export function getPlayerPhoneData(): PhoneData | null {
-  const phone = getPlayerPhone();
+/** 获取/懒初始化玩家手机的 phoneData。调用方负责 saveState()。 */
+export function getPlayerPhoneData(gameState: GameState): PhoneData | null {
+  const phone = getPlayerPhone(gameState);
   if (!phone) return null;
   if (!phone.phoneData) {
     phone.phoneData = createDefaultPhoneData(gameState.player.name);
-    saveState();
+    // 调用方负责 saveState()——本函数不再自动持久化，避免拿到错误的 saveState 闭包
   }
   return phone.phoneData;
 }
@@ -65,7 +66,7 @@ export function createDefaultPhoneData(owner: string): PhoneData {
 
 // ── 通讯录 ──
 
-export function addContact(pd: PhoneData, name: string, number: string, relation: string): Contact {
+export function addContact(gameState: GameState, pd: PhoneData, name: string, number: string, relation: string): Contact {
   const existing = pd.contacts.find(c => c.name === name);
   if (existing) return existing;
   const contact: Contact = { name, number, relation, addedAt: gameState.time.game_date };
@@ -74,18 +75,18 @@ export function addContact(pd: PhoneData, name: string, number: string, relation
 }
 
 /** 根据好感度自动同步通讯录：好感>=20可见，>=40可主动联系 */
-export function syncContactsFromRelationships(pd: PhoneData, minAffection = 20): Contact[] {
+export function syncContactsFromRelationships(gameState: GameState, pd: PhoneData, minAffection = 20): Contact[] {
   const added: Contact[] = [];
   for (const [npcName, rel] of Object.entries(gameState.player.relationships)) {
     if (rel.affection >= minAffection && !pd.contacts.some(c => c.name === npcName)) {
-      added.push(addContact(pd, npcName, generatePhoneNumber(npcName), rel.stage || rel.notes?.slice(0, 10) || "联系人"));
+      added.push(addContact(gameState, pd, npcName, generatePhoneNumber(npcName), rel.stage || rel.notes?.slice(0, 10) || "联系人"));
     }
   }
   return added;
 }
 
 /** 检查 NPC 是否在通讯录且好感足够主动联系 */
-export function canContact(pd: PhoneData, npcName: string): boolean {
+export function canContact(gameState: GameState, pd: PhoneData, npcName: string): boolean {
   const contact = pd.contacts.find(c => c.name === npcName);
   if (!contact) return false;
   const rel = gameState.player.relationships[npcName];
@@ -102,7 +103,7 @@ export function generatePhoneNumber(name: string): string {
 
 // ── 消息 ──
 
-export function deliverMessage(pd: PhoneData, from: string, to: string, text: string): PhoneMessage {
+export function deliverMessage(gameState: GameState, pd: PhoneData, from: string, to: string, text: string): PhoneMessage {
   const msg: PhoneMessage = {
     id: pd.messages.length + 1,
     from, to, text,
@@ -112,6 +113,11 @@ export function deliverMessage(pd: PhoneData, from: string, to: string, text: st
   };
   pd.messages.push(msg);
   if (to === gameState.player.name) pd.unreadCount++;
+  // 自动将发信人加入通讯录（如果还不在）
+  if (from !== "系统" && !pd.contacts.some(c => c.name === from)) {
+    const rel = gameState.player.relationships[from];
+    addContact(gameState, pd, from, generatePhoneNumber(from), rel?.notes?.slice(0, 10) || rel?.stage || "联系人");
+  }
   compressOldMessages(pd, from, to);
   return msg;
 }
@@ -138,7 +144,7 @@ function compressOldMessages(pd: PhoneData, partyA: string, partyB: string): voi
   pd.messages.splice(insertAt >= 0 ? insertAt : pd.messages.length, 0, compressMsg);
 }
 
-export function markAllRead(pd: PhoneData): void {
+export function markAllRead(gameState: GameState, pd: PhoneData): void {
   for (const m of pd.messages) m.read = true;
   pd.unreadCount = 0;
   pd.lastCheckTime = gameState.time.game_date;
@@ -146,7 +152,7 @@ export function markAllRead(pd: PhoneData): void {
 
 // ── 通话 ──
 
-export function initiateCall(pd: PhoneData, caller: string, callee: string): CallLogEntry {
+export function initiateCall(gameState: GameState, pd: PhoneData, caller: string, callee: string): CallLogEntry {
   for (const cl of pd.callLog) {
     if (cl.status === "ongoing") {
       cl.status = "missed";
@@ -165,7 +171,7 @@ export function initiateCall(pd: PhoneData, caller: string, callee: string): Cal
   return call;
 }
 
-export function endCall(pd: PhoneData, status: "answered" | "missed" | "rejected"): CallLogEntry | null {
+export function endCall(gameState: GameState, pd: PhoneData, status: "answered" | "missed" | "rejected"): CallLogEntry | null {
   const ongoing = pd.callLog.find(c => c.status === "ongoing");
   if (!ongoing) return null;
   ongoing.status = status;
@@ -176,7 +182,7 @@ export function endCall(pd: PhoneData, status: "answered" | "missed" | "rejected
 
 // ── SNS ──
 
-export function addSnsPost(pd: PhoneData, author: string, text: string, platform: "mixi" | "twitter"): SnsPost {
+export function addSnsPost(gameState: GameState, pd: PhoneData, author: string, text: string, platform: "mixi" | "twitter"): SnsPost {
   const post: SnsPost = {
     id: pd.snsPosts.length + 1,
     author, text,
@@ -192,7 +198,7 @@ export function addSnsPost(pd: PhoneData, author: string, text: string, platform
 
 // ── 照片 ──
 
-export function addPhoto(pd: PhoneData, caption: string, location: string): PhotoEntry {
+export function addPhoto(gameState: GameState, pd: PhoneData, caption: string, location: string): PhotoEntry {
   const photo: PhotoEntry = {
     id: pd.photos.length + 1,
     filename: `photo_${String(pd.photos.length + 1).padStart(3, "0")}.png`,
@@ -207,7 +213,7 @@ export function addPhoto(pd: PhoneData, caption: string, location: string): Phot
 // ── 通知注入（给 buildStatePrompt 用）──
 
 /** 生成未读摘要，~10 token。有新消息或有未接来电时返回非 null。 */
-export function getUnreadSummary(pd: PhoneData | null): string | null {
+export function getUnreadSummary(gameState: GameState, pd: PhoneData | null): string | null {
   if (!pd) return null;
   const parts: string[] = [];
   if (pd.unreadCount > 0) {

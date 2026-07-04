@@ -7,6 +7,7 @@ export default {
     async execute(_id, params, _signal, _onUpdate, _ctx) {
       const { lookupRegion } = await import("../../engine/router.ts");
       const r = lookupRegion(params.location);
-      return { content: [{ type: "text", text: `地区: ${r.matched_regions.join("、")}\n角色: ${r.all_characters.join("、")}` }], details: r };
+      const regionNames = r.matched_regions.map((reg: any) => reg.name || reg);
+      return { content: [{ type: "text", text: `地区: ${regionNames.join("、")}\n角色: ${r.all_characters.join("、")}` }], details: r };
     },
   };

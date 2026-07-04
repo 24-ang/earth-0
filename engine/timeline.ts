@@ -674,6 +674,7 @@ function checkAndQueueIntermission(outcome: any) {
 /** 自动推进所有满足 auto_if 条件的 beat，返回推进描述列表 */
 async function autoAdvanceQuest(ev: any, q: any): Promise<string[]> {
   const logs: string[] = [];
+  if (!ev.beats) return logs;  // 动态事件无 beats 定义，直接返回
   let safety = 0;
   while (safety < 20) {
     safety++;
@@ -725,7 +726,12 @@ async function autoAdvanceQuest(ev: any, q: any): Promise<string[]> {
 /** 打开一个 quest（LLM 通过工具调用） */
 export async function openQuest(eventId: string): Promise<string | null> {
   const events = loadAllTimelines();
-  const ev = events.find(e => e.id === eventId);
+  let ev: any = events.find(e => e.id === eventId);
+  // 没找到 → 尝试动态事件注册表（LLM/引擎运行时创建）
+  if (!ev) {
+    gameState.dynamicEvents ??= [];
+    ev = gameState.dynamicEvents.find((e: any) => e.id === eventId);
+  }
   if (!ev) return `未找到事件: ${eventId}`;
 
   gameState.quests ??= {};

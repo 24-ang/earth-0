@@ -37,11 +37,23 @@ export default {
         }
       }
 
-      // 当前穿着物品及flavor
+      // 当前穿着物品及flavor（年龄感知：ageGap>3 用通用描述，与 getNPCOutfitDesc 一致）
       const equipLines: string[] = [];
       if (npc) {
-        const key = npc.currentOutfit || "school";
-        const outfit = c.outfits?.[key];
+        const baseAge = c.base_age || 16;
+        const curAge = age;
+        const ageGap = Math.abs(curAge - baseAge);
+        let outfit: any = null;
+        if (c.outfits_by_age) {
+          const keys = Object.keys(c.outfits_by_age).map(Number).sort((a,b) => a-b);
+          let best = keys[0]!;
+          for (const k of keys) { if (k <= curAge) best = k; else break; }
+          outfit = c.outfits[c.outfits_by_age[String(best)]];
+        }
+        if (!outfit && ageGap <= 3) {
+          const key = npc.currentOutfit || "school";
+          outfit = c.outfits?.[key];
+        }
         if (outfit) {
           const outer: string[] = [];
           const inner: string[] = [];
@@ -54,6 +66,13 @@ export default {
           }
           if (outer.length > 0) equipLines.push(`穿着: ${outer.join("、")}`);
           if (inner.length > 0) equipLines.push(`内衣: ${inner.join("、")}`);
+        } else if (ageGap > 3) {
+          // 年龄差距过大，无适配 outfit → 通用描述
+          const body = aged.body;
+          const h = body?.height_cm || "?";
+          if (curAge <= 6) equipLines.push(`穿着: ${h}cm儿童便服`);
+          else if (curAge <= 12) equipLines.push(`穿着: ${h}cm小学生校服`);
+          else if (curAge <= 15) equipLines.push(`穿着: ${h}cm中学生校服`);
         }
         // 非服装装备（武器等）
         const nonClothing = Object.entries(npc.equipment)

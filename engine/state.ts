@@ -127,10 +127,22 @@ export function isSameLocation(loc1: string, loc2: string): boolean {
 let _orgCache: Record<string, any> | null = null;
 
 // --- 模块级游戏状态（单例，整个 session 一份） ---
-const STATE_DIR = path.resolve(process.cwd(), "state");
-const STATE_FILE = path.join(STATE_DIR, "session.json");
-const TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
-const SAVES_DIR = path.join(STATE_DIR, "saves");
+let STATE_DIR = path.resolve(process.cwd(), "state");
+let STATE_FILE = path.join(STATE_DIR, "session.json");
+let TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
+let SAVES_DIR = path.join(STATE_DIR, "saves");
+
+function checkStatePaths() {
+  const targetDir = process.env.NODE_ENV === "test"
+    ? path.resolve(process.cwd(), "state_test")
+    : path.resolve(process.cwd(), "state");
+  if (STATE_DIR !== targetDir) {
+    STATE_DIR = targetDir;
+    STATE_FILE = path.join(STATE_DIR, "session.json");
+    TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
+    SAVES_DIR = path.join(STATE_DIR, "saves");
+  }
+}
 const MAX_BACKUPS = 5;
 const AGENTS_DIR = path.resolve(process.cwd(), "agents");
 
@@ -366,6 +378,7 @@ function atomicWrite(filepath: string, data: string): void {
 }
 
 export function saveState(filepath?: string): void {
+  checkStatePaths();
   const fp = filepath ?? STATE_FILE;
   const targetDir = path.dirname(fp);
   fs.mkdirSync(targetDir, { recursive: true });
@@ -390,11 +403,16 @@ export function saveState(filepath?: string): void {
 }
 
 export function loadState(filepath?: string): boolean {
+  checkStatePaths();
   const fp = filepath ?? STATE_FILE;
   if (!fs.existsSync(fp)) return false;
   const targetDir = path.dirname(fp);
   const raw = fs.readFileSync(fp, "utf-8");
-  gameState = JSON.parse(raw) as GameState;
+  // 原地更新，不替换引用：CJS 模块（state-grid.ts/phone.ts）的 import 是值拷贝，
+  // 替换 gameState 会导致它们持有旧对象引用 → 所有读写打到不同的 gameState
+  const parsed = JSON.parse(raw) as GameState;
+  for (const key of Object.keys(gameState)) { delete (gameState as any)[key]; }
+  Object.assign(gameState, parsed);
   // 清理旧版 bug 写入 npcs 的玩家幽灵条目
   if (gameState.npcs && gameState.npcs[gameState.player?.name]) {
     console.error(`loadState: 清理 npcs 中的玩家幽灵 "${gameState.player.name}"`);
@@ -402,11 +420,15 @@ export function loadState(filepath?: string): boolean {
   }
   setAcademicYearOffset(gameState.academic_year_offset ?? 0);
 
-  // 读取 rooms_delta.json 并覆盖 ROOMS
+  // 读取 rooms_delta.json 并覆盖 ROOMS（原地更新，不替换引用）
+  function updateROOMS(newRooms: any) {
+    for (const key of Object.keys(ROOMS)) { delete (ROOMS as any)[key]; }
+    Object.assign(ROOMS, newRooms);
+  }
   const roomsDeltaPath = path.join(targetDir, "rooms_delta.json");
   if (fs.existsSync(roomsDeltaPath)) {
     try {
-      ROOMS = JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8"));
+      updateROOMS(JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8")));
     } catch (e) {
       console.error("loadState: 解析 rooms_delta.json 失败，回退到静态rooms", e);
       ROOMS = structuredClone(rooms);
@@ -551,6 +573,7 @@ export function loadState(filepath?: string): boolean {
 
 /** 创建手动存档 */
 export function createSave(name: string): string {
+  checkStatePaths();
   const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50) || "quick";
   fs.mkdirSync(SAVES_DIR, { recursive: true });
   const fp = path.join(SAVES_DIR, `${safeName}.json`);
@@ -563,6 +586,7 @@ export function createSave(name: string): string {
 
 /** 载入手动存档 */
 export function loadSave(name: string): boolean {
+  checkStatePaths();
   const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
   const fp = path.join(SAVES_DIR, `${safeName}.json`);
   if (!fs.existsSync(fp)) return false;
@@ -573,6 +597,7 @@ export function loadSave(name: string): boolean {
 
 /** 删除手动存档 */
 export function deleteSave(name: string): boolean {
+  checkStatePaths();
   const safeName = name.replace(/[<>:"/\\|?*]/g, "_").slice(0, 50);
   const fp = path.join(SAVES_DIR, `${safeName}.json`);
   if (!fs.existsSync(fp)) return false;
@@ -582,6 +607,7 @@ export function deleteSave(name: string): boolean {
 
 /** 列出所有手动存档 */
 export function listSaves(): { name: string; date: string; turn: number; location: string }[] {
+  checkStatePaths();
   const result: { name: string; date: string; turn: number; location: string }[] = [];
   if (!fs.existsSync(SAVES_DIR)) return result;
   for (const f of fs.readdirSync(SAVES_DIR)) {
@@ -598,6 +624,7 @@ export function listSaves(): { name: string; date: string; turn: number; locatio
 
 /** 备份当前存档（commit_turn 前自动调用），滚动保留最近 N 个 */
 export function backupBeforeTurn(): void {
+  checkStatePaths();
   fs.mkdirSync(TURN_BACKUP_DIR, { recursive: true });
   // M2 fix: 每个 turn 用子目录存全部 5 个文件（session.json + 4 delta）
   for (let i = MAX_BACKUPS - 1; i >= 1; i--) {
@@ -620,6 +647,7 @@ export function backupBeforeTurn(): void {
 
 /** 还原到倒数第 N 回合的存档（1=上一回合） */
 export function restoreLastTurn(n: number = 1): boolean {
+  checkStatePaths();
   const safeN = Math.max(1, Math.min(n, MAX_BACKUPS));
   const fp = path.join(TURN_BACKUP_DIR, `turn_${safeN}`, "session.json");
   if (!fs.existsSync(fp)) return false;
@@ -628,6 +656,7 @@ export function restoreLastTurn(n: number = 1): boolean {
 
 /** 列出可用的备份 */
 export function listBackups(): number[] {
+  checkStatePaths();
   const result: number[] = [];
   for (let i = 1; i <= MAX_BACKUPS; i++) {
     if (fs.existsSync(path.join(TURN_BACKUP_DIR, `turn_${i}`, "session.json"))) result.push(i);
@@ -636,7 +665,11 @@ export function listBackups(): number[] {
 }
 
 export function resetState(): void {
-  gameState = createInitialState();
+  checkStatePaths();
+  // 原地更新，不替换引用（原因同 loadState）
+  const fresh = createInitialState();
+  for (const key of Object.keys(gameState)) { delete (gameState as any)[key]; }
+  Object.assign(gameState, fresh);
   ROOMS = structuredClone(rooms);
   // 删除默认 session 对应的 rooms_delta.json
   const roomsDeltaPath = path.join(STATE_DIR, "rooms_delta.json");
@@ -1405,7 +1438,7 @@ export async function buildStatePrompt(): Promise<string> {
   // 手机通知注入
   try {
     const { getPlayerPhoneData, getUnreadSummary } = await import("./phone.ts");
-    const phoneNote = getUnreadSummary(getPlayerPhoneData());
+    const phoneNote = getUnreadSummary(gameState, getPlayerPhoneData(gameState));
     if (phoneNote) tpl += `\n${phoneNote}`;
   } catch (e) { console.error("buildStatePrompt: 手机通知注入失败", e); }
 
@@ -1559,7 +1592,11 @@ export function mountVehicle(itemName: string): string {
   const found = p.inventory.splice(idx, 1)[0];
   const vtype = found.effects.find(e => e.type === "vehicle")?.value as string || "bicycle";
   const def = VEHICLES[vtype];
-  if (!def) return `未知载具类型: ${vtype}`;
+  if (!def) {
+    // 已知载具类型列表供 LLM 参考
+    const known = Object.keys(VEHICLES).join("、");
+    return `未知载具类型: ${vtype}。已知类型: ${known}`;
+  }
 
   p.equipment.mount = found;
   p.vehicle = { type: vtype as any, name: found.name, speedMul: def.speedMul };
@@ -2869,7 +2906,6 @@ export function buyItem(itemName: string, price: number, shopName?: string): str
   for (const cat of Object.values(itemsCatalog)) {
     if ((cat as any)[itemName]) { itemData = (cat as any)[itemName]; break; }
   }
-  if (!itemData) return `LLM必须指定有效物品名`;
 
   // 货架校验：如果指定了商店，检查该商店是否售卖此物品
   if (shopName) {
@@ -2877,14 +2913,35 @@ export function buyItem(itemName: string, price: number, shopName?: string): str
       (gameState as any).shops && Object.keys((gameState as any).shops).length > 0
         ? (gameState as any).shops   // 运行时货架（restock_shop写入）
         : shops;                     // 文件货架（worldpack/data/shops.json）
-    const shopEntry = activeShops[shopName];
+    // 模糊匹配商店名：LLM 可能传 "住宅区便利店" 而 key 是 "便利店"
+    let shopEntry = activeShops[shopName];
+    if (!shopEntry || !Array.isArray(shopEntry.items)) {
+      const shopKeys = Object.keys(activeShops);
+      const fuzzyKey = shopKeys.find(k => shopName.includes(k) || k.includes(shopName));
+      if (fuzzyKey) shopEntry = activeShops[fuzzyKey];
+    }
     if (!shopEntry || !Array.isArray(shopEntry.items)) {
       return `${shopName}没有货架信息`;
     }
     if (!shopEntry.items.includes(itemName)) {
       return `${shopName}不卖${itemName}`;
     }
+    // 物品在货架上但不在 itemsCatalog 中 → 自动生成基本物品数据
+    if (!itemData) {
+      itemData = {
+        name: itemName,
+        type: "consumable",
+        slot: "back",
+        weight: 0.2,
+        effects: [],
+        state: "intact",
+        volume: 0.3,
+        flavor: `${shopName}售卖的${itemName}`,
+      };
+    }
   }
+
+  if (!itemData) return `LLM必须指定有效物品名`;
 
   const err = validatePrice(itemName, price);
   if (err) return err;
@@ -3304,9 +3361,9 @@ export async function updateNPCSchedules(): Promise<string[]> {
   // 手机消息：从事件中生成 NPC 短信（使用 phone.ts 引擎）
   try {
     const { getPlayerPhoneData, syncContactsFromRelationships, deliverMessage } = await import("./phone.ts");
-    const pd = getPlayerPhoneData();
+    const pd = getPlayerPhoneData(gameState);
     if (pd) {
-      syncContactsFromRelationships(pd);
+      syncContactsFromRelationships(gameState, pd);
       const now = gameState.time.game_date;
       for (const ev of events) {
         const match = ev.match(/^(.+?):\s*(.+?)\s*→\s*(.+)/);
@@ -3319,7 +3376,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
               `刚路过${from}，现在到${to}了。`,
               `移动中 ${from}→${to}`,
             ];
-            deliverMessage(pd, name, gameState.player.name,
+            deliverMessage(gameState, pd, name, gameState.player.name,
               templates[Math.floor(Math.random() * templates.length)]);
           }
         }
@@ -3328,7 +3385,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
           const [, a, b, loc] = meetMatch;
           const relA = gameState.player.relationships[a];
           if (relA && relA.affection >= 40 && Math.random() < 0.4) {
-            deliverMessage(pd, a, gameState.player.name, `刚在${loc}碰到${b}了！`);
+            deliverMessage(gameState, pd, a, gameState.player.name, `刚在${loc}碰到${b}了！`);
           }
         }
       }
@@ -3338,7 +3395,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
         if (!rel || rel.affection <= 0) continue;
         const latest = npc.memoryTags[npc.memoryTags.length - 1];
         if (latest && Math.random() < 0.25) {
-          deliverMessage(pd, nname, gameState.player.name,
+          deliverMessage(gameState, pd, nname, gameState.player.name,
             `听说 "${latest.tag}"…能告诉我更多吗？`);
         }
       }

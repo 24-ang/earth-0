@@ -133,6 +133,10 @@ export default {
           minutes,
           timeOfDay: gameState.time.time_of_day || "morning",
         };
+
+        // 同城到达：直接更新位置+网格坐标（不再依赖 complete_travel）
+        setPlayerLocation(dest);
+        advanceMinutes(gameState.time, minutes);
         saveState();
 
         const vehicleHint =

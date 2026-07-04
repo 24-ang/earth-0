@@ -28,14 +28,14 @@ export default function (pi: ExtensionAPI) {
         markAllRead, getUnreadSummary
       } = await import("../engine/phone.ts");
 
-      let pd = getPlayerPhoneData();
+      let pd = getPlayerPhoneData(gameState);
       if (!pd) {
         ctx.ui.notify("你没有手机！需要装备具有 communication 效果的物品。", "warning");
         return;
       }
 
       // 自动同步通讯录
-      syncContactsFromRelationships(pd);
+      syncContactsFromRelationships(gameState, pd);
       saveState();
 
       let cursor = 0;
@@ -221,7 +221,7 @@ export default function (pi: ExtensionAPI) {
               if (subApp) {
                 if (d === "\x1b") { subApp = null; msgSel = 0; contactSel = 0; if (tui.requestRender) tui.requestRender(); return; }
                 if (d === "r" && subApp === "短信") {
-                  markAllRead(pd!);
+                  markAllRead(gameState, pd!);
                   saveState();
                   APPS[0].detail = "无新消息";
                   if (tui.requestRender) tui.requestRender();
@@ -250,7 +250,7 @@ export default function (pi: ExtensionAPI) {
                   subApp = APPS[cursor].name;
                   contactSel = 0;
                   msgSel = 0;
-                  if (subApp === "短信") markAllRead(pd!);
+                  if (subApp === "短信") markAllRead(gameState, pd!);
                 }
                 if (tui.requestRender) tui.requestRender();
               }

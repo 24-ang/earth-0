@@ -6,10 +6,18 @@ export default {
     parameters: Type.Object({ direction: Type.String() }),
     async execute(_id, params, _s, _o, _ctx) {
       const { movePlayer, saveState, gameState } = await import("../../engine/state.ts");
+      const { initPlayerGrid } = await import("../../engine/state-grid.ts");
       const r = movePlayer(params.direction);
+      // 强制修复：movePlayer 在某些网格中不写 gridPos → 用 initPlayerGrid 兜底
+      if (r.success && !gameState.player.gridPos) {
+        initPlayerGrid();
+        if (!gameState.player.gridPos) {
+          gameState.player.gridPos = [r.newX, r.newY];
+        }
+      }
       saveState();
       if (r.success) {
-        const [x, y] = gameState.player.gridPos || [r.newX, r.newY];
+        const [x, y] = gameState.player.gridPos;
         const movedDir = params.direction;
         const newRoom = (r as any).newRoom ? ` → ${(r as any).newRoom}` : "";
         const text = `向${movedDir}移动到 (${x},${y})${newRoom}`;

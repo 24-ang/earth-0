@@ -203,6 +203,15 @@ export function movePlayer(direction: string, running: boolean = false): import(
   const nx = cx + delta[0];
   const ny = cy + delta[1];
   if (nx < 0 || nx >= curRoom.width || ny < 0 || ny >= curRoom.height) {
+    // 站在出口/门上时，允许走出边界触发房间切换
+    const curCell = curRoom.cells[cy]?.[cx];
+    if (curCell && (curCell.type === "exit" || curCell.type === "door") && curCell.exitTo && curCell.isOpen !== false) {
+      if (!ROOMS[curCell.exitTo]) return { success: false, newX: cx, newY: cy, blocked: true, reason: `${curCell.exitTo}不存在`, distance: 0, seconds: 0 };
+      gameState.player.location = curCell.exitTo;
+      initPlayerGrid();
+      if (gameState.tempNPCs?.length > 0) cleanupTempNPCs("玩家移动");
+      return { success: true, newX: gameState.player.gridPos?.[0] ?? 0, newY: gameState.player.gridPos?.[1] ?? 0, newRoom: curCell.exitTo, blocked: false, reason: "", distance: curRoom.cellSize };
+    }
     return { success: false, newX: cx, newY: cy, blocked: true, reason: "前方没有路了", distance: 0, seconds: 0 };
   }
   const cell = curRoom.cells[ny]?.[nx];
@@ -315,18 +324,31 @@ function connectRooms(roomA: string, roomB: string): void {
 
 function placeExitOnBorder(room: any, exitTo: string): boolean {
   const w = room.width, h = room.height;
-  // 优先在长边的中间位置找 wall 格
-  const candidates: [number, number][] = [];
-  for (let x = 0; x < w; x++) { candidates.push([x, 0]); candidates.push([x, h - 1]); }
-  for (let y = 0; y < h; y++) { candidates.push([0, y]); candidates.push([w - 1, y]); }
-  for (const [x, y] of candidates) {
-    const cell = room.cells[y]?.[x];
-    if (cell && cell.type === "wall") {
+  // 收集所有 border wall 格
+  const walls: [number, number][] = [];
+  for (let x = 0; x < w; x++) {
+    for (const y of [0, h - 1]) {
+      if (room.cells[y]?.[x]?.type === "wall") walls.push([x, y]);
+    }
+  }
+  for (let y = 0; y < h; y++) {
+    for (const x of [0, w - 1]) {
+      if (room.cells[y]?.[x]?.type === "wall") walls.push([x, y]);
+    }
+  }
+  if (walls.length === 0) return false;
+  // 优先选与内部 floor 相邻的 wall（避免把出口放在不可达的角落）
+  for (const [x, y] of walls) {
+    const neighbors = [[x, y-1], [x, y+1], [x-1, y], [x+1, y]];
+    if (neighbors.some(([nx, ny]) => room.cells[ny]?.[nx]?.type === "floor")) {
       room.cells[y][x] = { type: "exit", block: false, exitTo, label: "DR" };
       return true;
     }
   }
-  return false;
+  // 兜底：没有 floor 相邻的（如 1-high 走廊），用第一个 wall
+  const [x, y] = walls[0];
+  room.cells[y][x] = { type: "exit", block: false, exitTo, label: "DR" };
+  return true;
 }
 
 function placeExitAnywhere(room: any, exitTo: string): void {
@@ -361,8 +383,8 @@ export async function createRoom(
   if (w < 3 || h < 3) return { success: false, reason: `房间尺寸至少 3×3（${w}×${h}太小，内部无可行走空间）` };
   if (w * h > 10000) return { success: false, reason: `房间面积过大（${w * h}m²，上限10000m²）` };
 
-  // create_room 是 GM 工具，免费
-  const constructionMinutes = w * h * 5;
+  // create_room 是 GM 工具，免费。模板房间蓝图现成，秒建。
+  const constructionMinutes = opts?.templateId ? 5 : w * h * 5;
 
   // 创建网格（带可选的氛围和出口）
   const gridOpts: any = {};
@@ -722,3 +744,4 @@ export function getGridContext(): string {
   ctx += ` | ${around.join("。")}`;
   return ctx;
 }
+

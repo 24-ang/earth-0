@@ -93,7 +93,7 @@ export async function runPhase1(
   const executedDetails: string[] = [];
   const allowedTools = startup
     ? [...ACTION_WHITELIST, "init_game", "init_profile", "grant_skill_exp", "set_flags", "instantiate_residence", "settle_scene", "create_location", "create_room", "world_interact", "add_memory_tag", "create_character", "set_npc_relation", "open_quest", "create_story_hook", "add_calendar_event"]
-    : ACTION_WHITELIST; // init_game 始终可用——不然有存档时无法开新档
+    : [...ACTION_WHITELIST, "init_game"]; // 非 startup 也允许 init_game——否则有存档时无法开新档
 
   for (const action of result.actions) {
     if (action.confidence < 0.7) continue;
@@ -229,7 +229,7 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "- use_item: 使用背包物品。param: item(物品名)",
     "- equip_item: 装备/卸下物品。有slot=装备到该槽位；无slot=卸下该物品放入背包。param: item(物品名), slot(可选)",
     "- adjust_relation: 好感增减。param: npc(NPC名), delta(数值)",
-    "- init_game: 开新游戏。param: name(姓名), gender(男/女), age(年龄)。会清空所有存档。玩家明确说开始新游戏时调用",
+    "- init_game: 开新游戏，会清空所有存档。param: name(姓名), gender(男/女), age(年龄)。**仅当玩家明确说「新游戏」「重新开始」「/new」「开新档」时才调。「我是XX」「身份XX」「扮演XX」不是开新档——那只表示玩家想扮演，不调 init_game。**",
     "",
 
     "规则:",
@@ -395,7 +395,95 @@ export async function keywordFallback(playerInput: string, ctx: any): Promise<Ph
   const actions: ClassifiedAction[] = [];
   const text = playerInput;
 
-  // 否定检测：如果关键词前后有否定词，跳过
+  // ── 新游戏关键词（分类 LLM 失败时兜底——防 GM 不调 init_game）──
+  const isStartup = gameState._newGame === true;
+  if (isStartup) {
+    // 尝试从玩家输入提取姓名/性别/年龄
+    const nameMatch = text.match(/叫[做]?(.{1,6})[，,]|名字[是叫]?(.{1,6})[，,]|我是(.{1,6})[，,]/);
+    const rawName = nameMatch?.[1] || nameMatch?.[2] || nameMatch?.[3] || "";
+    const name = rawName.replace(/[一一个]|[男女]|[岁年紀]|\d+/g, "").trim() || "未命名";
+    const gender = /女|妹|姐|娘|她/.test(text) ? "女" : "男";
+    const ageMatch = text.match(/(\d{1,2})\s*[岁年紀]/);
+    const age = ageMatch ? parseInt(ageMatch[1]) : 16;
+    const yearMatch = text.match(/(\d{4})\s*年/);
+    const year = yearMatch ? parseInt(yearMatch[1]) : undefined;
+
+    actions.push({
+      tool: "init_game",
+      params: { name, gender, age, ...(year ? { year } : {}) },
+      confidence: 0.9,
+    });
+
+    // 身份模板检测
+    if (/高中|学生|总武|校服/.test(text)) {
+      actions.push({ tool: "init_profile", params: { profileId: "千叶市高中生" }, confidence: 0.85 });
+    } else if (/小学|儿童|小[一二三四五六]|低年级/.test(text) || age <= 12) {
+      actions.push({ tool: "init_profile", params: { profileId: "千叶市小学生" }, confidence: 0.85 });
+    } else if (/上班|社畜|白领|OL|职员/.test(text)) {
+      actions.push({ tool: "init_profile", params: { profileId: "千叶市上班族" }, confidence: 0.85 });
+    } else if (/外星|宇宙|星球|飞船|异星/.test(text)) {
+      actions.push({ tool: "init_profile", params: { profileId: "外星人访客" }, confidence: 0.8 });
+    }
+
+    // 身份关键词 → set_flags
+    if (/外星/.test(text)) {
+      actions.push({ tool: "set_flags", params: { flags: { alien: true, extraterrestrial: true } }, confidence: 0.85 });
+    }
+
+    // 身份关键词没有匹配到模板 → 尝试直接按照玩家描述给技能+flags
+    const hasProfile = actions.some(a => a.tool === "init_profile");
+    if (!hasProfile) {
+      // 尝试匹配已知标签
+      const tagMap: Record<string, string[]> = {
+        "杀手|暗杀|刺客": ["assassin", "criminal"],
+        "警察|刑警|警官": ["police", "law_enforcement"],
+        "医生|医师|护士": ["doctor", "medical"],
+        "教师|老师|教授": ["teacher", "academic"],
+        "运动员|选手|球员": ["athlete", "sports"],
+        "偶像|歌手|演员": ["idol", "entertainer"],
+        "武士|忍者|浪人": ["samurai", "warrior"],
+        "黑客|程序员|工程师": ["hacker", "tech"],
+        "宅|御宅|二次元": ["otaku", "nerd"],
+        "不良|ヤンキー|混混": ["delinquent", "punk"],
+        "替身|スタンド": ["stand_user", "supernatural"],
+        "魔法|魔女|巫师": ["mage", "magical"],
+        "超能力|异能|ESP": ["psychic", "esper"],
+        "中二|邪王|漆黑": ["chuunibyou", "delusional"],
+      };
+      const flags: Record<string, boolean> = {};
+      for (const [reStr, tags] of Object.entries(tagMap)) {
+        if (new RegExp(reStr).test(text)) {
+          for (const t of tags) flags[t] = true;
+        }
+      }
+      if (Object.keys(flags).length > 0) {
+        actions.push({ tool: "set_flags", params: { flags }, confidence: 0.8 });
+      }
+    }
+
+    // settle_scene 收尾
+    actions.push({ tool: "settle_scene", params: { summary: `新角色${name}开局`, elapsed_minutes: 0 }, confidence: 0.9 });
+
+    // 执行所有 startup 动作
+    const toolsExecuted: string[] = [];
+    const details: string[] = [];
+    for (const action of actions) {
+      try {
+        const detail = await executeSingleTool(action.tool, action.params, ctx);
+        if (detail) { toolsExecuted.push(action.tool); details.push(detail); }
+      } catch (e) { console.error(`keywordFallback startup: ${action.tool} failed:`, e); }
+    }
+    saveState();
+
+    return {
+      directorNote: buildDirectorNote(text, toolsExecuted, details, gameState),
+      toolsExecuted,
+      summary: text,
+      classified: false,
+    };
+  }
+
+  // ── 常规关键词（非新游戏）──
   const isNegated = (keyword: string): boolean => {
     const idx = text.indexOf(keyword);
     if (idx === -1) return true; // 没找到就算否定

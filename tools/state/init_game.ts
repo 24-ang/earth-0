@@ -53,7 +53,7 @@ function minFundsByAge(age: number): number {
 }
 
 /** 最小兜底装备：内衣。引擎不替 LLM 决定穿什么，但「裸体」不是合法默认状态。 */
-function defaultUnderwear(gender: string) {
+export function defaultUnderwear(gender: string) {
   const innerTop: any = {
     name: gender === "女" ? "内衣(上)" : "汗衫",
     type: "clothing", slot: "inner_top", weight: 0.1, volume: 0.1, effects: [], state: "intact",
@@ -194,6 +194,7 @@ export default {
     gs.player.memories = [];
     gs.npcs = {};
     gs.flags = {};
+    gs.player.flags = {};
     gs.quests = {};
     gs.active_hooks = [];
     gs.completed_events = [];
@@ -224,7 +225,7 @@ export default {
     gs.player.funds = minFundsByAge(params.age);
     // 现代日本基本配备
     gs.player.inventory.push({
-      name: "手机", type: "tool", slot: "right_hand", weight: 0.2, volume: 0.2,
+      name: "手机", type: "tool", weight: 0.2, volume: 0.2,
       effects: [{ type: "communication" }], state: "intact",
     });
 

@@ -27,15 +27,15 @@ export default {
       if (!pd) {
         return { content: [{ type: "text", text: "你没有手机。" }], details: {} };
       }
-      syncContactsFromRelationships(pd);
-      if (!canContact(pd, params.to)) {
+      syncContactsFromRelationships(gameState, pd);
+      if (!canContact(gameState, pd, params.to)) {
         const contact = pd.contacts.find(c => c.name === params.to);
         if (!contact) {
           return { content: [{ type: "text", text: `${params.to} 不在你的通讯录中。` }], details: {} };
         }
         return { content: [{ type: "text", text: `与 ${params.to} 的好感度不足（需>=40，当前通讯录可见需>=20）。` }], details: {} };
       }
-      const msg = deliverMessage(pd, gameState.player.name, params.to, params.text);
+      const msg = deliverMessage(gameState, pd, gameState.player.name, params.to, params.text);
       saveState();
       return {
         content: [{ type: "text", text: `已向 ${params.to} 发送短信: "${params.text}"` }],
