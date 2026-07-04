@@ -1,5 +1,67 @@
 {
   "_note": "身份模板。init_profile工具读取。每个模板定义初始装备/资金/技能/关系/联系人/记忆/住宅。",
+  "千叶市小学生": {
+    "label": "千叶市立稻毛小学校学生",
+    "description": "千叶市稻毛区的小学生，身穿黄色通学帽+红色书包，10岁以下适用。同年级有雪之下雪乃等同龄角色。",
+    "funds": 100,
+    "equipment": {
+      "head": {
+        "name": "黄色通学帽",
+        "type": "clothing",
+        "slot": "head",
+        "weight": 0.1,
+        "volume": 0.1,
+        "effects": []
+      },
+      "top": {
+        "name": "小学校服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.3,
+        "volume": 0.3
+      },
+      "bottom": {
+        "name": "小学短裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.2,
+        "volume": 0.2
+      },
+      "back": {
+        "name": "红色书包",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.5,
+        "volume": 2.0
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "right_hand",
+        "weight": 0.2,
+        "volume": 0.2,
+        "effects": [{"type": "communication"}]
+      }
+    ],
+    "flags": {
+      "student": true,
+      "elementary_enrolled": true
+    },
+    "skills": {
+      "国語": 1,
+      "运动": 2
+    },
+    "contacts": [],
+    "relationships": {},
+    "memories": [
+      { "tag": "入学稻毛小学校", "category": "milestone", "priority": 2, "emotional_valence": "positive" }
+    ],
+    "residenceTemplate": "独栋_2F_4人家庭",
+    "residenceName": "家",
+    "playerRoomInResidence": "子女房A"
+  },
   "千叶市高中生": {
     "label": "千叶市立总武高等学校学生",
     "description": "总武高中在读学生，身穿校服，携带手机和书包，每月有少量零花钱。可匹配材木座义辉等配角开局。",
