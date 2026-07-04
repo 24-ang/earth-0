@@ -1,13 +1,16 @@
 # earth-0 项目规则（每次会话自动加载）
 
-## 当前架构速览（2026-07-03）
+## 当前架构速览（2026-07-05）
 
-**四阶段流水线**（`extension.ts`）：
-1. **Phase 1** — 分类 LLM（`phase1-classifier.ts`）→ JSON → 引擎执行工具
-2. **Phase 2** — 引擎自动 spawn NPC agent（独立 LLM，每人自己的记忆/关系）
-3. **交互检测** — LLM mini-judge 判断 NPC 是否 cue 玩家（`detect-mode.ts`）+ GAL 场景边界锁
-4. **Phase 3** — `generateCompletion` 裸 stream 渲染，**物理零工具**。pi agent loop 只 echo
-5. **Phase 4** — 创意层（可选，best-effort）
+**四阶段流水线**（`extension.ts`，确认全部在运行）：
+1. **Phase 1** — 分类 LLM（`phase1-classifier.ts`）→ JSON → 引擎执行工具。终端有 `Phase1: tool "xxx" not in whitelist` 日志
+2. **Phase 2** — `autoSpawnNPCs()` 自动 spawn 同场 NPC（在 `updateNPCSchedules` 之前跑）
+3. **交互检测** — `detectInteractionMode()`（settlement.ts:108）+ `analyzeNpcResponses()`（extension.ts:221）
+4. **Phase 3** — `buildRenderSystemPrompt()` → `generateCompletion` 裸 stream（deepseek-v4-pro），物理零工具
+5. **Phase 4** — `agent_end` 钩子，best-effort，ctx stale 时静默跳过
+
+**幕间/切镜**（`viewpoint.ts`）：`processViewpointTriggers()` 在 settlement.ts:113 每回合跑。余波触发需 `previousNPCs >= 2 && currentNPCs === 0`。消费需 `interactionMode === "novel"`（默认已改为 novel）。
+**模式默认**：`interactionMode: "novel"`, `turnsSinceLastNPCInteraction: 2`。有 NPC cue 时切 turn_based。
 
 **测试**：`npx tsx test.ts`（274）+ `npx tsx e2e-test.ts`（45）+ `npx tsx e2e-init-test.ts`（开局管线冒烟，护栏），改完必跑，必须全绿。
 
@@ -45,6 +48,8 @@
 - ❌ 在没读 PHILOSOPHY.md 和 decisions.md 的情况下质疑现有设计然后推翻重做
 - ❌ 改 `data/characters.json` 或 `data/items.json` 等世界专属数据——改 worldpacks/oregairu/ 下的同名文件
 - ❌ 写静默 `catch (_) {}` — 至少加 `console.error("函数名: 失败原因", e)`
+- ❌ **贴提示词补丁**。如果 NPC 输出有问题，先查数据（记忆/关系/存档污染），再查引擎注入的字段有没有缺失，最后才考虑改 prompt。regex 后处理几乎永远不是正确答案。
+- ❌ **一个月改 15 个文件为一个 bug**。如果 diff 超过 5 个文件——退一步，找根因。
 
 ## 代码质量
 
