@@ -365,19 +365,29 @@ function placeExitAnywhere(room: any, exitTo: string): void {
 /** 创建房间（玩家施工路径，收费+耗时）。支持 template/exitFrom/atmosphere 可选参数。 */
 export async function createRoom(
   roomName: string, width: number, height: number, floor: number,
-  opts?: { templateId?: string; exitFrom?: string; atmosphere?: string }
+  opts?: { templateId?: string; exitFrom?: string; atmosphere?: string; furniture?: string[]; userWidth?: number; userHeight?: number }
 ): Promise<{ success: boolean; reason: string }> {
   const cleanName = normalizeLocationName(roomName);
   if (ROOMS[cleanName] || ROOMS[roomName]) return { success: false, reason: `房间 ${roomName} 已存在` };
 
-  // 如果有 template，从 room_templates 读尺寸（用户显式传值优先）
+  // 如果有 template，从 room_templates 读尺寸/氛围/家具（用户显式传值优先覆盖模板默认）
   let w = width, h = height;
+  const gridOpts: any = {};
   if (opts?.templateId) {
     const tmpl = findTemplate(roomTemplates, opts.templateId);
     if (tmpl) {
-      w = (opts as any).userWidth !== undefined ? (opts as any).userWidth : (tmpl.width || w);
-      h = (opts as any).userHeight !== undefined ? (opts as any).userHeight : (tmpl.height || h);
+      w = opts.userWidth !== undefined ? opts.userWidth : (tmpl.width || w);
+      h = opts.userHeight !== undefined ? opts.userHeight : (tmpl.height || h);
+      // 氛围：用户传值优先，否则用模板默认
+      gridOpts.atmosphere = opts.atmosphere || tmpl.atmosphere || undefined;
+      // 家具：用户传值优先（含空数组=故意不要家具），否则用模板默认
+      const furniture = opts.furniture !== undefined ? opts.furniture : tmpl.furniture;
+      if (furniture?.length > 0) gridOpts.furniture = furniture;
     }
+  } else {
+    // 无模板时：用户显式传的氛围/家具仍然生效
+    if (opts?.atmosphere) gridOpts.atmosphere = opts.atmosphere;
+    if (opts?.furniture?.length) gridOpts.furniture = opts.furniture;
   }
 
   if (w < 3 || h < 3) return { success: false, reason: `房间尺寸至少 3×3（${w}×${h}太小，内部无可行走空间）` };
@@ -386,9 +396,7 @@ export async function createRoom(
   // create_room 是 GM 工具，免费。模板房间蓝图现成，秒建。
   const constructionMinutes = opts?.templateId ? 5 : w * h * 5;
 
-  // 创建网格（带可选的氛围和出口）
-  const gridOpts: any = {};
-  if (opts?.atmosphere) gridOpts.atmosphere = opts.atmosphere;
+  // 创建网格（带氛围、家具和出口）
   if (opts?.exitFrom) gridOpts.exitTo = opts.exitFrom;
   createRoomGrid(roomName, w, h, floor, gridOpts);
 

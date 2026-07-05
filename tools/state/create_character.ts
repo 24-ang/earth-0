@@ -23,8 +23,8 @@ export default {
       dislikes: Type.Optional(Type.Array(Type.String(), { description: "厌恶列表" })),
       outfits: Type.Optional(Type.Record(Type.String(), Type.Record(Type.String(), Type.String()), { description: "多套换装 {school:{top:'制服'},casual:{...},pe:{...},swim:{...},sleep:{...}}" })),
       schedule: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "精确到时段行程 {'08:00':'教室','12:00':'食堂'}" })),
-      schedule_group: Type.Optional(Type.String({ description: "日程组: 学生/教师/不良/店员/自由人，默认自由人" })),
-      schedule_group_by_age: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "不同年龄段日程组" })),
+      schedule_group: Type.Optional(Type.String({ description: "日程组（14个可用值，来自schedule_templates.json）: 小学生/中学生/高校生/总武高学生/总武高教师/运动部员/自由人/不良/店员/社团部员/大学生/海外留学/上班族/格斗家。默认自由人" })),
+      schedule_group_by_age: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "不同年龄段日程组。引擎自动按年龄选择，优先于schedule_group。如{'6':'小学生','16':'高校生','22':'上班族'}" })),
       default_location: Type.Optional(Type.String({ description: "默认出现地点，默认同玩家当前位置" })),
       appearance_by_age: Type.Optional(Type.Record(Type.String(), Type.Object({
         hair_color: Type.Optional(Type.String()),

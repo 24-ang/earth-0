@@ -21,7 +21,7 @@ export default {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
+      const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine } = await import("../../engine/state.ts");
       const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
 
       async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<{response: string; outfit: string}> {
@@ -51,9 +51,49 @@ export default {
         // 社交情境 → 按 NPC 个体生成约束标签
         const socialTags = await getSocialContextTagsForNPC(npcName, params.socialContext);
 
+        const pBody = (gameState.player as any).body || {};
+        const pBuild = pBody.build || "普通";
+        const pWounds = gameState.player.wounds || [];
+        const woundNote = pWounds.length > 0 ? `，身上有伤: ${pWounds.map((w: any) => `${w.severity || ''}${w.text || w.desc || w.type}`).filter(Boolean).join("、")}` : "";
+        const visibleBody = getVisibleBodyDescription();
+        const batchNPCEntries = batchOthers.map((oName: string) => {
+          const oBody = getNPCVisibleBodyDescription(oName);
+          return oBody ? `${oName}（${oBody}）` : oName;
+        });
+        // 路人（引擎随机生成的同场无名NPC）
+        const nameless = getNamelessNPCs(gameState.player.location, gameState.turn || 1);
+        const namelessStr = nameless.length > 0 ? `\n[在场路人] ${nameless.map(n => `${n.name}(${n.act})`).join("、")}` : "";
         const prompt = [
           `你是${npcName}。你现在正在${gameState.player.location}。`,
-          `在场人物: 玩家（${gameState.player.gender}）${batchOthers.length > 0 ? "、" + batchOthers.join("、") : "（仅你一人）"}。`,
+          // 环境感知（天气/季节/时段）
+          (() => {
+            const weather = gameState.weather;
+            const time = gameState.time;
+            const m = parseInt((time?.game_date || "2018-04").split("-")[1]) || 4;
+            const seasons = ["冬","冬","春","春","春","夏","夏","夏","秋","秋","秋","冬"];
+            const timeOfDayZH: Record<string, string> = { dawn:"拂晓", morning:"上午", noon:"正午", afternoon:"下午", evening:"傍晚", night:"深夜" };
+            const td = timeOfDayZH[time?.time_of_day] || time?.time_of_day || "";
+            return `环境: ${seasons[m-1]}季${td}，${weather?.type || "晴"} ${weather?.temp ?? "?"}°C`;
+          })(),
+          // 房间感知
+          (() => {
+            const room = getRoom(gameState.player.location);
+            if (!room) return "";
+            const furniture = new Set<string>();
+            for (const row of room.cells) {
+              if (!row) continue;
+              for (const cell of row) {
+                if (cell?.furniture) furniture.add(cell.furniture);
+              }
+            }
+            const aging = getRoomAgingLine(gameState.player.location);
+            const parts: string[] = [];
+            if (room.atmosphere) parts.push(`房间氛围: ${room.atmosphere}`);
+            if (furniture.size > 0) parts.push(`房间里有: ${Array.from(furniture).join("、")}`);
+            if (aging) parts.push(`房间状态: ${aging}`);
+            return parts.join("。");
+          })(),
+          `在场人物: 玩家（${[gameState.player.gender, pBuild].filter(Boolean).join("·")}${woundNote}）${batchOthers.length > 0 ? "、" + batchNPCEntries.join("、") : "（仅你一人）"}。` + (visibleBody ? `\n[玩家身体暴露] ${visibleBody}` : "") + namelessStr,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,

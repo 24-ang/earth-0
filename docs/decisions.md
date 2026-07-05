@@ -182,7 +182,38 @@
 
 ---
 
-> 最后更新：2026-06-26。新决策随时追加。
+## 21. 群演/路人：引擎给数据，LLM 做叙事
+
+**是什么**：房间群演（教室里的学生、商店的顾客）由引擎提供结构化数据（区域类型、时段、预估人数、活动标签），Phase 1 LLM 作为场景导演自行判断该创建什么群演（`spawn_temp_npc`），Phase 3 LLM 拿数据写叙事。
+
+**为什么**：
+- 2026-07-05 第一版在引擎里硬编码了集群描述文本（"教室后排5-6人在低头记笔记"）——引擎在替 LLM 写小说，违反了 PHILOSOPHY §1.2
+- 回滚后改为纯数据输出：`"学生 (~28人) 在上课/课间活动 (school weekday_morning)"`——LLM 有创作自由但不是从零开始
+- PHILOSOPHY §1.2 的框架已经有了（引擎给数据、LLM 做叙事），但之前没落地到 room 感知层
+
+**放弃了什么**：引擎不做密度预测→就不做。Phase 1 有 `spawn_temp_npc` 工具 + "场景导演职责"规则（第0条）→ LLM 自己决定。
+
+**不要做**：❌ 在引擎里拼接叙事文本（"三人躲在角落抽烟"）。❌ 用 `public_rooms` 名单限制哪些房间有路人。
+
+**相关代码**：`engine/state.ts:3793-3830` (getNamelessNPCs 数据层), `engine/phase1-classifier.ts:254` (场景导演规则), `tools/action/spawn_temp_npc.ts`
+
+---
+
+## 22. CJS 双实例——写 ROOMS 永远用原地更新
+
+**是什么**：`ROOMS` 是可变全局对象。CJS 的 `import { ROOMS } from "..."` 是值拷贝——如果后续代码做 `ROOMS = newObj`（替换引用），`state-grid.ts` 等模块会持旧引用。此后 `saveState()` 写的是旧引用，动态房间全丢。
+
+2026-07-05 发现 `loadActiveWorld()`、`loadState()`、`resetState()`、`switchActiveWorld()` 共 5 处使用了 `ROOMS = structuredClone(x)` 替换引用。全部改为 `updateROOMSInPlace(x)` 原地更新。
+
+**为什么**：和 07-04 修复的 `phone.ts` CJS 双实例是同一个根因。ESM live binding 无此问题——但 tsx 在处理跨文件 import 时实际走的是 CJS 路径。
+
+**不要做**：❌ 任何地方做 `ROOMS = xxx`（替换引用）。✅ 只用 `updateROOMSInPlace()` 或逐个 key 的 `ROOMS[key] = value`。
+
+**相关代码**：`engine/state.ts:64-67` (updateROOMSInPlace), `state.ts` 多处修复
+
+---
+
+> 最后更新：2026-07-05。新决策随时追加。
 
 ```
 ## N. 决策标题

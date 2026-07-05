@@ -475,9 +475,14 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
           presentNPCs: toSpawn.filter(n => n.name !== name).map(n => n.name),
         });
 
+        const pBody2 = (gameState.player as any).body || {};
+        const pBuild = pBody2.build || "";
+        const pWounds = gameState.player?.wounds || [];
+        const woundNote = pWounds.length > 0 ? `·身上有伤: ${pWounds.map((w: any) => `${w.severity || ''}${w.text || w.desc || w.type}`).filter(Boolean).join("、")}` : "";
+
         const prompt = [
           `你是${name}。你现在正在${loc}。`,
-          `在场人物: 玩家（${gameState.player?.gender || ""}）${toSpawn.length > 1 ? "、" + toSpawn.filter(n => n.name !== name).map(n => n.name).join("、") : "（仅你一人）"}。`,
+          `在场人物: 玩家（${[gameState.player?.gender || "", pBuild, woundNote].filter(Boolean).join("·")}）${toSpawn.length > 1 ? "、" + toSpawn.filter(n => n.name !== name).map(n => n.name).join("、") : "（仅你一人）"}。`,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,

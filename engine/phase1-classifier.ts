@@ -57,6 +57,7 @@ const ACTION_WHITELIST = [
   "mount_vehicle",
   "dismount_vehicle",
   "schedule_override",
+  "spawn_temp_npc",
   "table_crud",
   "add_memory_tag",
   "add_calendar_event",
@@ -140,75 +141,27 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
   const location = gs.player.location || "未知";
   const roomData = gs.rooms?.[location];
   const hasShop = roomData?.shop || gs.shops?.[location];
-  const hasFurniture = roomData?.furniture && Object.keys(roomData.furniture).length > 0;
-  const furnitureNames = hasFurniture ? Object.keys(roomData.furniture).join("、") : "";
+
+  // 从网格格子里扫家具名（家具嵌在 cells[y][x].furniture，不在 roomData.furniture 顶层）
+  let furnitureNames = "";
+  if (roomData?.cells) {
+    const names = new Set<string>();
+    for (const row of roomData.cells) {
+      if (!row) continue;
+      for (const cell of row) {
+        if (cell?.furniture) names.add(cell.furniture);
+      }
+    }
+    furnitureNames = Array.from(names).join("、");
+  }
+  const hasFurniture = furnitureNames.length > 0;
 
   if (startup) {
-    return [
-      "你是开局导演。读完玩家的描述，想象这个角色睁开眼看到的第一个画面——然后让他真的能站在那里。只输出 JSON。",
-
-      `玩家描述: "${playerInput}"`,
-
-      "",
-      "init_game(name, gender, age, location?) 第一步。之后逐个思考:",
-
-      "",
-      "1. 穿什么？init_game 只给了内衣。",
-      "   有匹配模板就 init_profile，全套解决。",
-      "   没匹配就 spawn_item 给衣服+鞋+随身物。",
-      "   手机 init_game 已经给了。不需要再给——除非身份不该有手机（古代人/野兽），那就别 spawn_item。",
-
-      "",
-      "2. 会什么？",
-      "   init_profile 自带技能。没模板就 grant_skill_exp 按身份给 2-4 项，等级 1-5。",
-      "   不是什么都要等级 5——高中生棒球 Lv1 够了，职业杀手暗杀才 Lv5。",
-
-      "",
-      "3. 住哪？在哪？",
-      "   instantiate_residence 自动建房+放家具，一步搞定。模板只有 独栋_2F_4人家庭 / 公寓_3F_单身。",
-      "   房子不在千叶也没关系——引擎会自动把出口连到你的 location。",
-      "",
-      "   如果角色不住标准日式住宅（外星飞船/白宫/安全屋/古堡）：",
-      "     create_location 注册地点 → create_room 建房间（必须带 atmosphere 描述环境）",
-      "     → 紧接着 world_interact place 放家具。建一间放一间，不要建完空着。",
-      "     驾驶舱 = 仪表盘+座椅+全景窗。椭圆办公室 = 坚毅桌+国旗+地毯。安全屋 = 武器架+行军床+保险柜。",
-      "     你是导演——你知道什么房间该有什么。",
-
-      "",
-      "4. 认识谁？手机里有谁？",
-      "   通讯录不是引擎自动填的。create_character 创建 + adjust_relation 设关系 = 自动进手机通讯录。",
-      "   用 notes 写清关系（父亲/母亲/恋人/搭档）。引擎读到 notes 就同步联系人标签。",
-      "   正常人→至少父母。孤儿→跳过。外星人→队友或跳过。杀手→中间人/雇主。",
-      "   玩家说「我是XX的弟弟」→ create_character XX + adjust_relation(70, notes:\"姐姐\")。",
-
-      "",
-      "5. 身份标记？记忆？",
-      "   set_flags 打标签。不只是 {student:true}——外星人需要 {alien:true, extraterrestrial:true}，",
-      "   杀手需要 {assassin:true, criminal:true}，总统需要 {us_president:true, world_leader:true}。",
-      "   add_memory_tag 写入生节点——入学/觉醒/第一次任务/离开母星。",
-
-      "",
-      "6. 开局势能？玩家睁开眼第一件事做什么？",
-      "   create_story_hook — 催促行动的钩子。转校生→「开学典礼在礼堂举行」。",
-      "   外星人→「母星发来紧急通讯：能量核心泄漏」。总统→「幕僚长敲门：紧急会议」。",
-      "   引擎自动注入 active_hooks，开局势能拉满。open_quest 等玩家接受后再用，不要同时调。",
-
-      "",
-      "最后 settle_scene(summary, elapsed_minutes:0)。",
-
-      "",
-      "可用工具: init_game init_profile grant_skill_exp set_flags spawn_item",
-      "  instantiate_residence create_location create_room world_interact",
-      "  create_character adjust_relation set_npc_relation add_memory_tag",
-      "  open_quest create_story_hook add_calendar_event settle_scene",
-
-      "",
-      "默认: 名→维, 性别→男, 年龄→16。按年龄匹配模板。模板是快捷键，不匹配就自己当导演。",
-    ].join("\n");
+    return buildStartupPrompt(playerInput);
   }
 
   return [
-    "你是意图分类器。将玩家输入映射为动作列表。只输出 JSON，不要解释。",
+    "你是意图分类器 + 场景导演。只输出 JSON，不要解释。",
 
     `玩家输入: "${playerInput}"`,
     `当前位置: ${location}`,
@@ -217,32 +170,104 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     hasFurniture ? `可交互家具: ${furnitureNames}` : "",
 
     "",
-    "可用动作:",
-    "- travel: 移动去另一个地点。param: destination(地点名)。玩家当前在别处要去某地时必须调",
-    "- buy_item: 购买物品。param: item(物品名), price(日元)",
-    "- sell_item: 出售物品。param: item(物品名)",
-    "- intimate_touch: 亲密接触（仅sex模式）。param: part(身体部位), intensity(轻/中/重)",
-    "- interact_furniture: 与家具交互（桌椅床柜等物理物件）。param: furniture(家具名), action(坐/躺/开/关/拿/放)",
-    "- world_interact: 建造/放置/移除。param: action(place/build/remove/destroy), target(目标物)",
-    "- steal_item: 偷窃。param: item(物品名), target_npc(目标NPC)",
-    "- combat_action: 战斗。param: action(attack/defend/flee), target(目标)",
-    "- use_item: 使用背包物品。param: item(物品名)",
-    "- equip_item: 装备/卸下物品。有slot=装备到该槽位；无slot=卸下该物品放入背包。param: item(物品名), slot(可选)",
-    "- adjust_relation: 好感增减。param: npc(NPC名), delta(数值)",
-    "- init_game: 开新游戏，会清空所有存档。param: name(姓名), gender(男/女), age(年龄)。**仅当玩家明确说「新游戏」「重新开始」「/new」「开新档」时才调。「我是XX」「身份XX」「扮演XX」不是开新档——那只表示玩家想扮演，不调 init_game。**",
+    "场景导演规则（第0优先级）:",
+    "  走进任何空间时，先想——这个时间·这个地点·应该有什么人？",
+    "  教室上课→同学+老师。午休→散步的学生。商店街→店员+顾客。车站→乘客。",
+    "  用 spawn_temp_npc 逐个创建群演（3-5个足够）。不要让世界空的。",
     "",
-
-    "规则:",
-    "1. 理解玩家真实意图，不要机械匹配关键词",
-    "2. 玩家说了要去某地 → 加 travel",
-    '3. "想去但放弃了的事" → 不做（例："想去便利店但太远了算了" → actions为空）',
-    "4. 和NPC聊天/交谈 → 不需要工具（引擎会自动处理NPC对话）",
-    "5. 不确定时不要输出。没有任何需要做的 → actions 为空数组",
-    "6. 不要使用不在上面列表中的动作名",
+    "工具分类（不复制参数细节——参数在工具自身定义里）:",
+    "  🚶 移动: travel",
+    "  👥 群演: spawn_temp_npc",
+    "  🏠 场景: world_interact（建造/放置/移除）, interact_furniture（与家具互动）",
+    "  💬 关系: adjust_relation, transfer_item",
+    "  🛒 经济: buy_item, sell_item, spawn_item, restock_shop",
+    "  ⚔️ 冲突: combat_action, steal_item, intimate_touch, inflict_damage, identity_check",
+    "  🎒 物品: use_item, equip_item",
+    "  🚗 载具: mount_vehicle, dismount_vehicle",
+    "  📋 管理: schedule_override, table_crud, add_memory_tag, add_calendar_event",
+    "  🆕 新游戏: init_game（仅当玩家明确说「新游戏」「重新开始」——「我是XX」不是新游戏）",
+    "",
+    "分类规则:",
+    "  1. 理解玩家真实意图，不要机械匹配关键词",
+    "  2. 玩家说了要去某地 → travel",
+    "  3. 想去但放弃了的事 → 不做（例：想去便利店但太远了算了 → actions为空）",
+    "  4. 和NPC聊天/交谈 → 不需要工具（引擎自动处理NPC对话）",
+    "  5. 不确定 → actions 为空数组",
+    "  6. 不要使用上面没列出的工具名",
     "",
     "输出纯 JSON（不要 markdown 代码块，不要其他文字）:",
     '{"actions": [{"tool": "...", "params": {...}, "confidence": 0.9}], "summary": "玩家意图的一句话"}',
   ].filter(Boolean).join("\n");
+}
+
+// ── 开局导演 prompt（独立函数，与意图分类语义分离）──
+
+export function buildStartupPrompt(playerInput: string): string {
+  return [
+    "你是开局导演。读完玩家的描述，想象这个角色睁开眼看到的第一个画面——然后让他真的能站在那里。只输出 JSON。",
+
+    `玩家描述: "${playerInput}"`,
+
+    "",
+    "init_game(name, gender, age, location?) 第一步。之后逐个思考:",
+
+    "",
+    "1. 穿什么？init_game 只给了内衣。",
+    "   有匹配模板就 init_profile，全套解决。",
+    "   没匹配就 spawn_item 给衣服+鞋+随身物。",
+    "   手机 init_game 已经给了。不需要再给——除非身份不该有手机（古代人/野兽），那就别 spawn_item。",
+
+    "",
+    "2. 会什么？",
+    "   init_profile 自带技能。没模板就 grant_skill_exp 按身份给 2-4 项，等级 1-5。",
+    "   不是什么都要等级 5——高中生棒球 Lv1 够了，职业杀手暗杀才 Lv5。",
+
+    "",
+    "3. 住哪？在哪？",
+    "   instantiate_residence 自动建房+放家具，一步搞定。模板只有 独栋_2F_4人家庭 / 公寓_3F_单身。",
+    "   房子不在千叶也没关系——引擎会自动把出口连到你的 location。",
+    "",
+    "   如果角色不住标准日式住宅（外星飞船/白宫/安全屋/古堡）——即模板不匹配时：",
+    "     ① lookup_furniture 查有哪些可用模板和家具",
+    "     ② 有近似模板 → create_room(template, furniture=[调整后列表], atmosphere=[按剧情重写])",
+    "          ⚠️ 模板只是起点！按角色性格/场景气氛调整 furniture 和 atmosphere",
+    "          两个 NPC 的卧室不该完全一样——一个可能堆满手办，另一个干净到没有一点尘",
+    "     ③ 无任何模板匹配 → create_room(width, height, furniture=[自己选], atmosphere=[自写])",
+    "         先用 lookup_furniture(search='关键词') 确认每件家具在目录中存在",
+    "         目录中完全没有的家具名也能用——引擎会自动兜底，只是没有专属交互",
+    "     ④ furniture 直接传给 create_room，一行搞定。不再需要逐件 world_interact place",
+
+    "",
+    "4. 认识谁？手机里有谁？",
+    "   通讯录不是引擎自动填的。create_character 创建 + adjust_relation 设关系 = 自动进手机通讯录。",
+    "   用 notes 写清关系（父亲/母亲/恋人/搭档）。引擎读到 notes 就同步联系人标签。",
+    "   正常人→至少父母。孤儿→跳过。外星人→队友或跳过。杀手→中间人/雇主。",
+    "   玩家说「我是XX的弟弟」→ create_character XX + adjust_relation(70, notes:\"姐姐\")。",
+
+    "",
+    "5. 身份标记？记忆？",
+    "   set_flags 打标签。不只是 {student:true}——外星人需要 {alien:true, extraterrestrial:true}，",
+    "   杀手需要 {assassin:true, criminal:true}，总统需要 {us_president:true, world_leader:true}。",
+    "   add_memory_tag 写入生节点——入学/觉醒/第一次任务/离开母星。",
+
+    "",
+    "6. 开局势能？玩家睁开眼第一件事做什么？",
+    "   create_story_hook — 催促行动的钩子。转校生→「开学典礼在礼堂举行」。",
+    "   外星人→「母星发来紧急通讯：能量核心泄漏」。总统→「幕僚长敲门：紧急会议」。",
+    "   引擎自动注入 active_hooks，开局势能拉满。open_quest 等玩家接受后再用，不要同时调。",
+
+    "",
+    "最后 settle_scene(summary, elapsed_minutes:0)。",
+
+    "",
+    "可用工具: init_game init_profile grant_skill_exp set_flags spawn_item",
+    "  instantiate_residence create_location create_room world_interact",
+    "  create_character adjust_relation set_npc_relation add_memory_tag",
+    "  open_quest create_story_hook add_calendar_event settle_scene",
+
+    "",
+    "默认: 名→维, 性别→男, 年龄→16。按年龄匹配模板。模板是快捷键，不匹配就自己当导演。",
+  ].join("\n");
 }
 
 // ── JSON 解析 ──
@@ -344,6 +369,7 @@ async function loadTool(toolName: string): Promise<any | null> {
     mount_vehicle: "../tools/action/mount_vehicle.ts",
     dismount_vehicle: "../tools/action/dismount_vehicle.ts",
     schedule_override: "../tools/action/schedule_override.ts",
+    spawn_temp_npc: "../tools/action/spawn_temp_npc.ts",
     table_crud: "../tools/action/table_crud.ts",
     add_memory_tag: "../tools/state/add_memory_tag.ts",
     add_calendar_event: "../tools/action/add_calendar_event.ts",

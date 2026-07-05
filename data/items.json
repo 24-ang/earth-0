@@ -246,8 +246,24 @@
           "value": 10
         }
       ],
+      "flavor": "深蓝色帆布书包，拉链有点卡，底部磨出了小洞。",
       "state": "intact",
       "volume": 0.5
+    },
+    "公文包": {
+      "name": "公文包",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.8,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 12
+        }
+      ],
+      "flavor": "黑色皮革公文包，边角略有磨损，内侧夹层印着淡淡的公司logo。",
+      "state": "intact",
+      "volume": 0.8
     },
     "钥匙": {
       "name": "钥匙",

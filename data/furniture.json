@@ -73,13 +73,23 @@
     }
   },
   "储物柜": {
-    "physical": ["storage", "container", "lockable"],
+    "physical": ["storage", "container", "lockable", "concealable"],
     "containers": [
-      { "id": "储物格", "visible": true, "max_volume": 50, "max_weight": 20 }
+      { "id": "储物格", "visible": true, "max_volume": 50, "max_weight": 20, "can_hold_person": true }
     ],
     "state": { "locked": false, "key_id": "locker_key" },
     "actions": {
       "打开": { "effect": "storage", "narrative": "你打开了储物柜。" }
+    }
+  },
+  "衣柜": {
+    "physical": ["container", "storage", "concealable"],
+    "containers": [
+      { "id": "内部", "visible": false, "lockable": false, "max_volume": 200, "max_weight": 50, "can_hold_person": true }
+    ],
+    "state": {},
+    "actions": {
+      "打开": { "effect": "storage", "narrative": "衣柜门吱呀一声开了，里面挂着几件衣物。" }
     }
   },
   "靠墙的书架": {
@@ -153,6 +163,206 @@
       "打开": { "effect": "storage", "narrative": "保险箱的厚重门打开了。" },
       "锁上": { "effect": "lock", "key_id": "safe_key", "narrative": "保险箱锁上了。" },
       "解锁": { "effect": "unlock", "key_id": "safe_key", "narrative": "你尝试打开保险箱的锁。" }
+    }
+  },
+  "单人床": {
+    "physical": ["bed", "surface"],
+    "actions": {
+      "睡觉": { "effect": "sleep", "hours": 8, "restore_hp": "full", "restore_fatigue": "full" },
+      "躺下": { "effect": "rest", "fatigue_reduction": 15, "narrative": "你躺在单人床上，弹簧微微下陷。" }
+    }
+  },
+  "双人床": {
+    "physical": ["bed", "surface"],
+    "actions": {
+      "睡觉": { "effect": "sleep", "hours": 8, "restore_hp": "full", "restore_fatigue": "full" },
+      "躺下": { "effect": "rest", "fatigue_reduction": 20, "narrative": "双人床宽大舒适，你摊开四肢，整个人陷进被褥里。" }
+    }
+  },
+  "餐桌": {
+    "physical": ["surface", "table"],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 5, "narrative": "你在餐桌旁坐下。" }
+    }
+  },
+  "小桌": {
+    "physical": ["surface", "table"],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 3 }
+    }
+  },
+  "梳妆台": {
+    "physical": ["surface", "container", "display"],
+    "containers": [
+      { "id": "抽屉", "visible": false, "max_volume": 10, "max_weight": 3 }
+    ],
+    "state": {},
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 3 }
+    }
+  },
+  "电视": {
+    "physical": ["interface", "switchable", "display"],
+    "state": { "isOn": false },
+    "actions": {
+      "打开": { "effect": "toggle", "stateKey": "isOn", "narrative": "屏幕亮了起来，正在播午间新闻。" },
+      "关闭": { "effect": "toggle", "stateKey": "isOn", "narrative": "屏幕暗了下去。" }
+    }
+  },
+  "冰箱": {
+    "physical": ["container", "switchable", "machine"],
+    "containers": [
+      { "id": "冷藏室", "visible": false, "max_volume": 150, "max_weight": 25 },
+      { "id": "冷冻室", "visible": false, "max_volume": 50, "max_weight": 10 }
+    ],
+    "state": { "isOn": true },
+    "actions": {
+      "打开": { "effect": "storage", "narrative": "冰箱门开了，冷气扑面而来。" }
+    }
+  },
+  "灶台": {
+    "physical": ["machine", "switchable", "craftable", "surface"],
+    "state": { "isOn": false },
+    "actions": {
+      "打开": { "effect": "toggle", "stateKey": "isOn", "narrative": "你拧开燃气灶，蓝色的火苗跳了起来。" },
+      "关闭": { "effect": "toggle", "stateKey": "isOn", "narrative": "火苗熄灭了。" },
+      "做饭": { "effect": "craft", "consumes": ["食材"], "produces": "便当", "narrative": "你站在灶台前忙了一会儿，一份热气腾腾的料理完成了。" }
+    }
+  },
+  "浴缸": {
+    "physical": ["container", "surface"],
+    "containers": [
+      { "id": "浴缸", "visible": true, "max_volume": 200, "max_weight": 100, "can_hold_person": true }
+    ],
+    "state": {},
+    "actions": {
+      "泡澡": { "effect": "rest", "fatigue_reduction": 30, "narrative": "你慢慢滑进热水里，一天的疲劳都被泡化了。" },
+      "放水": { "effect": "narrative", "narrative": "热水哗哗地注入浴缸，蒸汽慢慢升腾。" }
+    }
+  },
+  "洗脸台": {
+    "physical": ["surface", "container"],
+    "containers": [
+      { "id": "柜子", "visible": false, "max_volume": 20, "max_weight": 10 }
+    ],
+    "state": {},
+    "actions": {
+      "洗脸": { "effect": "narrative", "narrative": "你用冷水洗了把脸，清醒了不少。" }
+    }
+  },
+  "洗衣机": {
+    "physical": ["machine", "switchable", "container"],
+    "containers": [
+      { "id": "滚筒", "visible": false, "max_volume": 60, "max_weight": 15 }
+    ],
+    "state": { "isOn": false },
+    "actions": {
+      "打开": { "effect": "toggle", "stateKey": "isOn", "narrative": "洗衣机嗡嗡地转了起来。" },
+      "关闭": { "effect": "toggle", "stateKey": "isOn", "narrative": "洗衣机停了。" }
+    }
+  },
+  "微波炉": {
+    "physical": ["machine", "switchable", "container"],
+    "containers": [
+      { "id": "内部", "visible": false, "max_volume": 20, "max_weight": 3 }
+    ],
+    "state": { "isOn": false },
+    "actions": {
+      "加热": { "effect": "narrative", "narrative": "微波炉嗡嗡地转了两分钟，叮一声停了。" }
+    }
+  },
+  "电饭煲": {
+    "physical": ["machine", "switchable", "craftable"],
+    "state": { "isOn": false },
+    "actions": {
+      "煮饭": { "effect": "craft", "consumes": ["米"], "produces": "米饭", "narrative": "电饭煲噗噗地冒着蒸汽，米饭的香气飘满了厨房。" }
+    }
+  },
+  "咖啡机": {
+    "physical": ["machine", "switchable", "craftable"],
+    "state": { "isOn": false },
+    "actions": {
+      "煮咖啡": { "effect": "craft", "consumes": ["咖啡豆"], "produces": "咖啡", "narrative": "咖啡机咕噜咕噜地萃取着，深褐色的液体滴进玻璃壶里，满室都是咖啡香。" }
+    }
+  },
+  "吧台": {
+    "physical": ["surface", "table", "container"],
+    "containers": [
+      { "id": "台面", "visible": true, "max_volume": 20, "max_weight": 10 }
+    ],
+    "actions": {
+      "坐下": { "effect": "rest", "fatigue_reduction": 5, "narrative": "你在吧台边坐下，手指在台面上无意识地敲了敲。" }
+    }
+  },
+  "收银台": {
+    "physical": ["surface", "machine", "container"],
+    "containers": [
+      { "id": "抽屉", "visible": false, "lockable": true, "max_volume": 10, "max_weight": 5 }
+    ],
+    "state": { "locked_抽屉": false },
+    "actions": {
+      "查看": { "effect": "narrative", "narrative": "收银台上放着POS机和几卷塑料袋。" }
+    }
+  },
+  "货架": {
+    "physical": ["surface", "display", "container"],
+    "containers": [
+      { "id": "货架", "visible": true, "max_volume": 100, "max_weight": 40 }
+    ],
+    "actions": {
+      "浏览": { "effect": "narrative", "narrative": "货架上琳琅满目，摆满了各种商品。" }
+    }
+  },
+  "冰柜": {
+    "physical": ["container", "switchable"],
+    "containers": [
+      { "id": "内部", "visible": false, "max_volume": 300, "max_weight": 80 }
+    ],
+    "state": { "isOn": true },
+    "actions": {
+      "打开": { "effect": "storage", "narrative": "冰柜门开了，一股冷气裹挟着霜雾涌了出来。" }
+    }
+  },
+  "食券机": {
+    "physical": ["machine", "interface"],
+    "actions": {
+      "使用": { "effect": "narrative", "narrative": "你把硬币投进食券机，按下按钮，一张小票弹了出来。" }
+    }
+  },
+  "点歌机": {
+    "physical": ["machine", "interface", "switchable"],
+    "state": { "isOn": false },
+    "actions": {
+      "打开": { "effect": "toggle", "stateKey": "isOn", "narrative": "点歌机的屏幕亮了起来，歌曲列表滚动着。" },
+      "点歌": { "effect": "narrative", "narrative": "你选了一首熟悉的歌，前奏立刻响了起来。" }
+    }
+  },
+  "鞋柜": {
+    "physical": ["container", "storage"],
+    "containers": [
+      { "id": "内部", "visible": false, "max_volume": 30, "max_weight": 10 }
+    ],
+    "state": {},
+    "actions": {
+      "打开": { "effect": "storage", "narrative": "鞋柜里整齐地码着几双鞋。" }
+    }
+  },
+  "碗柜": {
+    "physical": ["container", "storage", "display"],
+    "containers": [
+      { "id": "内部", "visible": false, "max_volume": 40, "max_weight": 15 }
+    ],
+    "actions": {
+      "打开": { "effect": "storage", "narrative": "碗柜里整整齐齐摞着碟子和碗。" }
+    }
+  },
+  "书架": {
+    "physical": ["surface", "readable", "display", "container"],
+    "containers": [
+      { "id": "书架", "visible": true, "max_volume": 80, "max_weight": 60 }
+    ],
+    "actions": {
+      "浏览": { "effect": "narrative", "narrative": "书架上排满了各种书籍，有几本被翻得起了毛边。" }
     }
   }
 }

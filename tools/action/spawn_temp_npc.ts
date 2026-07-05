@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "spawn_temp_npc", label: "临时NPC",
-    description: "临时NPC，敌对可交战，场景结束自动回收",
+    description: "临时NPC/群演/路人/背景角色。填充场景用——教室同学、店员、乘客等。场景结束自动回收。不要让世界空着",
     parameters: Type.Object({
       name: Type.String({ description: "临时NPC名" }),
       act: Type.String({ description: "当前动作描述，如'握着棒球棍逼近'" }),

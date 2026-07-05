@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Type } from "typebox";
+import { itemsCatalog } from "../../engine/state.ts";
 
 type ProfileMap = Record<string, any>;
 
@@ -27,10 +28,24 @@ function normalizeItem(raw: any, where: string): any {
     if (typeof raw[key] !== "number" || raw[key] < 0) missing.push(key);
   }
   if (missing.length > 0) throw new Error(`${where} 缺少必填字段: ${missing.join(", ")}`);
+
+  // 从 itemsCatalog 合并缺失字段（模板物品通常只写 name/type/slot/weight/volume，
+  // effects/flavor 等在 items.json 中定义——不合并会导致公文包无 pocket、衣服无描述）
+  let fromCatalog: any = null;
+  for (const cat of Object.values(itemsCatalog)) {
+    const entry = (cat as any)[raw.name];
+    if (entry) { fromCatalog = entry; break; }
+  }
+
   return {
-    ...raw,
-    effects: Array.isArray(raw.effects) ? raw.effects : [],
+    effects: fromCatalog?.effects || [],
+    flavor: fromCatalog?.flavor || undefined,
+    ...raw, // 模板显式值优先
+    effects: Array.isArray(raw.effects) ? raw.effects
+          : (Array.isArray(fromCatalog?.effects) ? [...fromCatalog.effects] : []),
+    flavor: raw.flavor || fromCatalog?.flavor || undefined,
     state: raw.state || "intact",
+    volume: raw.volume ?? fromCatalog?.volume ?? 0.5,
   };
 }
 

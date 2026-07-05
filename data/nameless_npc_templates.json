@@ -1,26 +1,46 @@
 {
+  "_note": "路人模板 — traits按zones(适用地点)和times(时段)分类。引擎根据当前位置区域类型和游戏时间自动过滤。zones: school=学校, street=街道/商业区, residential=住宅区, station=车站, park=公园",
   "public_rooms": ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前", "操场", "校门", "自行车棚", "便利店街", "商店街", "住宅区", "千叶_住宅区", "千叶市街", "稲毛海岸通り"],
   "traits": [
-    { "name": "路人(戴耳机)", "act": "戴着耳机闭目听歌", "height": "168cm" },
-    { "name": "路人(低头看书)", "act": "边走路边低头看书", "height": "172cm" },
-    { "name": "路人(学生)", "act": "背着书包急匆匆赶路", "height": "162cm" },
-    { "name": "路人(职员)", "act": "一边大声打电话一边赶路", "height": "175cm" },
-    { "name": "路人(情侣二人组)", "act": "牵着手小声说笑", "height": "165/178cm" },
-    { "name": "路人(发呆的女生)", "act": "靠在路灯旁吃零食发呆", "height": "160cm" },
-    { "name": "路人(不良少年)", "act": "蹲在角落抽烟", "height": "170cm" },
-    { "name": "路人(主妇)", "act": "提着购物袋匆忙走过", "height": "158cm" },
-    { "name": "路人(小学生)", "act": "背着红蓝书包互相追逐", "height": "135cm" },
-    { "name": "路人(流浪汉)", "act": "躺在纸箱上睡觉", "height": "165cm" },
-    { "name": "路人(巡警)", "act": "四处张望巡视", "height": "178cm" },
-    { "name": "路人(骑自行车)", "act": "骑着自行车慢慢经过", "height": "172cm", "vehicle": "自行车" },
-    { "name": "路人(骑摩托)", "act": "骑着摩托车从旁边呼啸而过", "height": "175cm", "vehicle": "摩托车" },
-    { "name": "路人(开轻自动车)", "act": "开着黄色牌照的轻自动车堵在路上", "height": "170cm", "vehicle": "轻自动车" },
-    { "name": "路人(开货车)", "act": "开着送货卡车停在路边", "height": "180cm", "vehicle": "卡车" },
-    { "name": "路人(上班族)", "act": "拎着公文包神情疲惫", "height": "172cm" },
-    { "name": "路人(老奶奶)", "act": "慢悠悠地推着购物车", "height": "155cm" },
-    { "name": "路人(小学生二人组)", "act": "背着书包一边走一边打闹", "height": "145/148cm" },
-    { "name": "路人(便利店店员)", "act": "在门口抽烟休息", "height": "170cm" },
-    { "name": "路人(跑步的运动服)", "act": "戴着耳机沿着街道慢跑", "height": "175cm" },
-    { "name": "路人(遛狗)", "act": "牵着柴犬在散步", "height": "165cm" }
+    { "name": "路人(学生)", "act": "背着书包急匆匆赶路", "height": "162cm", "zones": ["school"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon"] },
+    { "name": "路人(学生)", "act": "和朋友边走边聊", "height": "160cm", "zones": ["school"], "times": ["weekday_lunch","weekday_afternoon"] },
+    { "name": "路人(学生)", "act": "独自坐在长凳上看手机", "height": "165cm", "zones": ["school","park"], "times": ["weekday_lunch","weekend_lunch","weekend_afternoon"] },
+    { "name": "路人(不良少年)", "act": "蹲在角落偷偷看手机", "height": "170cm", "zones": ["school"], "times": ["weekday_afternoon"] },
+    { "name": "路人(不良少年)", "act": "蹲在角落抽烟", "height": "170cm", "zones": ["street"], "times": ["weekday_evening","weekend"] },
+    { "name": "路人(低头看书)", "act": "边走路边低头看文库本", "height": "172cm", "zones": ["school","street","station"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon"] },
+
+    { "name": "路人(上班族)", "act": "拎着公文包匆忙赶路", "height": "172cm", "zones": ["street","station"], "times": ["weekday_morning","weekday_evening"] },
+    { "name": "路人(上班族)", "act": "在便利店门口买咖啡", "height": "170cm", "zones": ["street"], "times": ["weekday_morning"] },
+    { "name": "路人(职员)", "act": "一边大声打电话一边赶路", "height": "175cm", "zones": ["street","station"], "times": ["weekday_morning","weekday_evening"] },
+    { "name": "路人(职员)", "act": "坐在长凳上疲惫地叹气", "height": "173cm", "zones": ["park","station"], "times": ["weekday_evening"] },
+
+    { "name": "路人(主妇)", "act": "提着购物袋匆忙走过", "height": "158cm", "zones": ["street","residential"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon","weekend"] },
+    { "name": "路人(主妇)", "act": "推着婴儿车慢慢散步", "height": "160cm", "zones": ["street","residential","park"], "times": ["weekday_morning","weekday_afternoon","weekend"] },
+    { "name": "路人(老奶奶)", "act": "慢悠悠地推着购物车", "height": "155cm", "zones": ["street","residential"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon"] },
+    { "name": "路人(老奶奶)", "act": "坐在长凳上晒太阳", "height": "153cm", "zones": ["park","residential"], "times": ["weekday_lunch","weekday_afternoon","weekend"] },
+
+    { "name": "路人(小学生)", "act": "背着红蓝书包互相追逐", "height": "135cm", "zones": ["street","residential","park"], "times": ["weekday_morning","weekday_afternoon"] },
+    { "name": "路人(小学生二人组)", "act": "背着书包一边走一边打闹", "height": "145/148cm", "zones": ["street","residential","park"], "times": ["weekday_morning","weekday_afternoon"] },
+    { "name": "路人(小学生)", "act": "蹲在路边观察蚂蚁", "height": "130cm", "zones": ["residential","park"], "times": ["weekend"] },
+
+    { "name": "路人(巡警)", "act": "四处张望巡视", "height": "178cm", "zones": ["street","station","park"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon","weekday_evening","weekend"] },
+    { "name": "路人(情侣二人组)", "act": "牵着手小声说笑", "height": "165/178cm", "zones": ["street","park","station"], "times": ["weekday_afternoon","weekday_evening","weekend"] },
+    { "name": "路人(跑步的运动服)", "act": "戴着耳机沿着街道慢跑", "height": "175cm", "zones": ["street","residential","park"], "times": ["weekday_morning","weekend_morning"] },
+    { "name": "路人(遛狗)", "act": "牵着柴犬在散步", "height": "165cm", "zones": ["street","residential","park"], "times": ["weekday_morning","weekday_evening","weekend"] },
+
+    { "name": "路人(便利店店员)", "act": "在门口抽烟休息", "height": "170cm", "zones": ["street"], "times": ["weekday_lunch","weekday_afternoon","weekday_evening","weekend"] },
+
+    { "name": "路人(戴耳机)", "act": "戴着耳机闭目听歌", "height": "168cm", "zones": ["street","station","park"], "times": ["weekday_lunch","weekday_afternoon","weekday_evening","weekend"] },
+    { "name": "路人(发呆的女生)", "act": "靠着墙吃零食发呆", "height": "160cm", "zones": ["street","park"], "times": ["weekday_afternoon","weekday_evening","weekend"] },
+
+    { "name": "路人(骑自行车)", "act": "骑着自行车慢慢经过", "height": "172cm", "vehicle": "自行车", "zones": ["street","residential"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon","weekend"] },
+    { "name": "路人(骑摩托)", "act": "骑着摩托车呼啸而过", "height": "175cm", "vehicle": "摩托车", "zones": ["street"], "times": ["weekday_morning","weekday_evening"] },
+    { "name": "路人(开轻自动车)", "act": "开着黄色牌照的轻自动车堵在路上", "height": "170cm", "vehicle": "轻自动车", "zones": ["street"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon","weekday_evening"] },
+    { "name": "路人(开货车)", "act": "开着送货卡车停在路边", "height": "180cm", "vehicle": "卡车", "zones": ["street"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon"] },
+
+    { "name": "路人(流浪汉)", "act": "躺在纸箱上睡觉", "height": "165cm", "zones": ["station"], "times": ["weekday_evening","weekend"] },
+    { "name": "路人(流浪汉)", "act": "在公园长椅上裹着报纸打盹", "height": "168cm", "zones": ["park"], "times": ["weekday_morning","weekday_evening","weekend"] },
+
+    { "name": "路人(飞驰的外卖员)", "act": "骑着电动车从车流中穿过", "height": "172cm", "vehicle": "摩托车", "zones": ["street"], "times": ["weekday_lunch","weekday_evening","weekend"] }
   ]
 }

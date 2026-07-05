@@ -106,7 +106,7 @@ export default {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter } = await import("../../engine/state.ts");
+      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine } = await import("../../engine/state.ts");
       const { getNPCContext } = await import("../../engine/scenario-tables.ts");
       const sexMod: any = await import("../../engine/sex.ts").catch(() => null);
 
@@ -148,15 +148,53 @@ export default {
 
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
+        // 环境感知（天气/季节/时段——NPC也是人，能感知冷暖昼夜）
         (() => {
-          const pBody = getBodyForAge({ base_age: gameState.player.age || 17 } as any, gameState.player.age || 17);
+          const weather = gameState.weather;
+          const time = gameState.time;
+          const m = parseInt((time?.game_date || "2018-04").split("-")[1]) || 4;
+          const seasons = ["冬","冬","春","春","春","夏","夏","夏","秋","秋","秋","冬"];
+          const timeOfDayZH: Record<string, string> = { dawn:"拂晓", morning:"上午", noon:"正午", afternoon:"下午", evening:"傍晚", night:"深夜" };
+          const td = timeOfDayZH[time?.time_of_day] || time?.time_of_day || "";
+          return `环境: ${seasons[m-1]}季${td}，${weather?.type || "晴"} ${weather?.temp ?? "?"}°C`;
+        })(),
+        // 房间感知（这个房间长什么样、有什么家具）
+        (() => {
+          const room = getRoom(gameState.player.location);
+          if (!room) return "";
+          const furniture = new Set<string>();
+          for (const row of room.cells) {
+            if (!row) continue;
+            for (const cell of row) {
+              if (cell?.furniture) furniture.add(cell.furniture);
+            }
+          }
+          const aging = getRoomAgingLine(gameState.player.location);
+          const parts: string[] = [];
+          if (room.atmosphere) parts.push(`房间氛围: ${room.atmosphere}`);
+          if (furniture.size > 0) parts.push(`房间里有: ${Array.from(furniture).join("、")}`);
+          if (aging) parts.push(`房间状态: ${aging}`);
+          return parts.join("。");
+        })(),
+        (() => {
+          // 优先用玩家真实身体数据，只有缺失时才按年龄推算
+          const pBody = (gameState.player as any).body
+            || getBodyForAge({ base_age: gameState.player.age || 17 } as any, gameState.player.age || 17);
           const pBuild = pBody?.build || "普通";
           const pH = hDiff(pBody?.height_cm || 172);
           const pEquip = gameState.player.equipment || {};
           const pTop = (pEquip as any).top || (pEquip as any).inner_top || "";
           const pBot = (pEquip as any).bottom || (pEquip as any).legs || "";
           const pOutfit = [pTop, pBot].filter(Boolean).join("+") || "便服";
-          let list = `在场人物: 玩家（${[gameState.player.gender, pBuild, pH, pOutfit].filter(Boolean).join("·")}）`;
+          // 伤口和血量
+          const wounds = gameState.player.wounds || [];
+          const woundNote = wounds.length > 0 ? `，身上有伤: ${wounds.map((w: any) => `${w.severity || ''}${w.text || w.desc || w.type}`).filter(Boolean).join("、")}` : "";
+          const pHp = gameState.player.hp || {};
+          const hpNote = pHp.current !== undefined && pHp.max !== undefined
+            && pHp.current < pHp.max ? `，血量${pHp.current}/${pHp.max}` : "";
+          let list = `在场人物: 玩家（${[gameState.player.gender, pBuild, pH, pOutfit + woundNote + hpNote].filter(Boolean).join("·")}）`;
+          const visibleBody = getVisibleBodyDescription();
+          if (visibleBody) list += `\n[玩家身体暴露] ${visibleBody}`;
           for (const oName of otherNPCs) {
             const oSrc = findCharacter(oName);
             if (!oSrc) { list += `、${oName}`; continue; }
@@ -164,7 +202,15 @@ export default {
             const oHeight = getBodyForAge(oSrc, oAge)?.height_cm || 160;
             const oDesc = describePerson(oName, oSrc, oAge);
             const oH = hDiff(oHeight);
-            list += `、${oName}（${[oDesc, oH].filter(Boolean).join("·")}）`;
+            const oBody = getNPCVisibleBodyDescription(oName);
+            const oBodyExtra = oBody ? `，${oBody}` : "";
+            list += `、${oName}（${[oDesc, oH].filter(Boolean).join("·")}${oBodyExtra}）`;
+          }
+          // 路人（引擎随机生成的同场无名NPC——NPC也应感知到他们的存在）
+          const nameless = getNamelessNPCs(gameState.player.location, gameState.turn || 1);
+          if (nameless.length > 0) {
+            const namelessBrief = nameless.map(n => `${n.name}(${n.act})`).join("、");
+            list += `\n[在场路人] ${namelessBrief}`;
           }
           return list + "。";
         })(),

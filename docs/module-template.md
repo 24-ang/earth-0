@@ -177,6 +177,8 @@ gamble: ["place_bet", "dice_roll"],
 - [ ] 所有参数有 description
 - [ ] 引擎函数在 `engine/` + 数据在 `data/`
 - [ ] 场景映射已添加
-- [ ] `npx tsx test.ts` 测试数 ≥ 266（+ e2e-test.ts 45 passed，在原有基准上只增不减）
+- [ ] `npx tsx test.ts` 测试数 ≥ 281（+ e2e-test.ts 45 + e2e-init-test.ts 57，在原有基准上只增不减）
 - [ ] 不包含任何硬编码的题材特定内容（人物名、地名、作品名）
-- [ ] 如有世界设定，放入 `worldpacks/{世界}/` 对应子目录（timelines/calendar/orgs/locations/secrets 等），`data/` 仅兜底
+- [ ] 如有世界设定，放入 `worldpacks/{世界}/` 对应子目录，`data/` 仅兜底。sync 两份
+- [ ] **工具 description 不手写会过时的枚举值**。值多或来源在 JSON 文件 → 点 LLM 去 `lookup_xxx` 查。值少（≤10）且稳定 → 直接列
+- [ ] Phase 1 需加 `spawn_temp_npc` 白名单（如果工具与场景填充相关）

@@ -148,7 +148,7 @@ function buildSceneBrief(gs: any): string {
 // 不含：工具提示/剧情钩子/任务机制（Phase 3 不需要）
 
 async function buildRenderStateContext(gs: any): Promise<string> {
-  const { getGridContext, getRegionContext, getRoomAgingLine, getPlayerStatusNarrative, hasEquipmentEffect, isSameLocation } = await import("./state.ts");
+  const { getGridContext, getRegionContext, getRoomAgingLine, getPlayerStatusNarrative, hasEquipmentEffect, isSameLocation, getVisibleBodyDescription } = await import("./state.ts");
   const parts: string[] = [];
 
   // ── 空间网格上下文（墙/家具/门窗/出口/四周） ──
@@ -198,6 +198,9 @@ async function buildRenderStateContext(gs: any): Promise<string> {
     }
     const eqSummary = wornParts.length > 0 ? wornParts.join(" | ") : "（全裸）";
     parts.push(`[玩家装备] ${eqSummary}`);
+    // 身体暴露特征（基于装备覆盖——脱了就能看到）
+    const visibleBody = getVisibleBodyDescription();
+    if (visibleBody) parts.push(`[身体暴露] ${visibleBody}`);
     if (emptySlots.length > 0 && emptySlots.length <= 6) {
       parts.push(`[装备空槽] ${emptySlots.join("、")}`);
     }
@@ -277,7 +280,7 @@ async function buildNpcAppearanceBlock(gs: any): Promise<string> {
 
   if (present.length === 0) return "[在场人物] 无";
 
-  const { findCharacter, getAppearanceForAge, getNpcCurrentAge, getNPCOutfitDesc } =
+  const { findCharacter, getAppearanceForAge, getNpcCurrentAge, getNPCOutfitDesc, getNPCVisibleBodyDescription } =
     await import("./state.ts");
 
   const isGAL = gs.mode === "gal";
@@ -298,12 +301,16 @@ async function buildNpcAppearanceBlock(gs: any): Promise<string> {
       // 性格素材（防止渲染 LLM 写 NPC 时 OOC）
       const personality = src.personality_brief ? ` [性格:${src.personality_brief}]` : "";
 
+      // 身体暴露特征（基于装备覆盖——脱了就能看到）
+      const npcVisibleBody = getNPCVisibleBodyDescription(name);
+
       const brief = [
         app?.hair_color, app?.hair_style,
         app?.eye_color ? `${app.eye_color}眼睛` : "",
         outfitDetail ? `穿着${outfitDetail}` : "",
       ].filter(Boolean).join("；");
-      lines.push(`${name}${relNote}${personality}: ${brief || "外貌未知"}`);
+      const bodyExtra = npcVisibleBody ? ` [${npcVisibleBody}]` : "";
+      lines.push(`${name}${relNote}${personality}: ${brief || "外貌未知"}${bodyExtra}`);
     } catch {
       lines.push(`${name}: 数据加载失败`);
     }

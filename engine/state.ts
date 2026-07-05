@@ -59,6 +59,13 @@ export let activeWorldName = "oregairu";
 // --- 空间数据定义 ---
 export let ROOMS = structuredClone(rooms);
 
+/** 原地更新 ROOMS（不替换引用）。CJS import 是值拷贝，替换引用会让
+ *  state-grid.ts 等持有旧引用 → saveState 写错数据、动态房间丢失。 */
+function updateROOMSInPlace(src: Record<string, any>) {
+  for (const key of Object.keys(ROOMS)) { delete (ROOMS as any)[key]; }
+  Object.assign(ROOMS, src);
+}
+
 import locationsDataStatic from "../data/locations.json" with { type: "json" };
 import schoolMapDataStatic from "../data/school_map.json" with { type: "json" };
 import cityMapDataStatic from "../data/city_map.json" with { type: "json" };
@@ -431,10 +438,10 @@ export function loadState(filepath?: string): boolean {
       updateROOMS(JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8")));
     } catch (e) {
       console.error("loadState: 解析 rooms_delta.json 失败，回退到静态rooms", e);
-      ROOMS = structuredClone(rooms);
+      updateROOMS(rooms);
     }
   } else {
-    ROOMS = structuredClone(rooms);
+    updateROOMS(rooms);
   }
 
   loadLocationsDelta(targetDir);
@@ -670,7 +677,7 @@ export function resetState(): void {
   const fresh = createInitialState();
   for (const key of Object.keys(gameState)) { delete (gameState as any)[key]; }
   Object.assign(gameState, fresh);
-  ROOMS = structuredClone(rooms);
+  updateROOMSInPlace(rooms);
   // 删除默认 session 对应的 rooms_delta.json
   const roomsDeltaPath = path.join(STATE_DIR, "rooms_delta.json");
   if (fs.existsSync(roomsDeltaPath)) {
@@ -869,6 +876,101 @@ export function getPlayerStatusNarrative(p: PlayerState): string {
     desc += ` | 伤势描述: ${p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")}`;
   }
   return desc;
+}
+
+/** 根据装备覆盖检测玩家身体暴露情况，返回 NPC 可感知的性征描述（生殖器/胸部/阴毛等）。
+ *  原则：物理可见性驱动——脱了就能看到，不脱就看不到。与 mode（gal/sex/rpg）无关。 */
+export function getVisibleBodyDescription(): string {
+  const p = gameState.player;
+  const eq = p.equipment || {};
+
+  // 覆盖检测：所有覆盖该区域的槽位都为空 → 暴露
+  const bottomCovered = !!(eq.bottom || eq.inner_bot);
+  const topCovered = !!(eq.top || eq.shirt || eq.inner_top);
+
+  if (bottomCovered && topCovered) return ""; // 全身穿着整齐，无需额外注入
+
+  // 读玩家自己的 sex profile
+  const sState = gameState.sexStates?.[p.name];
+  const profile = sState?.profile;
+  if (!profile) return "";
+
+  const parts: string[] = [];
+
+  // ── 下身暴露 → 生殖器可见 ──
+  if (!bottomCovered) {
+    if (profile.male) {
+      const m = profile.male;
+      const circum = m.penis.circumcised ? "已割包皮" : "未割包皮";
+      parts.push(`阴茎${m.penis.length_cm}cm ${m.penis.shape}型 ${m.penis.head_size}头 ${circum}`);
+      parts.push(`睾丸${m.testicles.size}`);
+      if (m.pubic_hair) {
+        parts.push(`阴毛${m.pubic_hair.amount} ${m.pubic_hair.color} ${m.pubic_hair.style}`);
+      }
+    } else if (profile.female) {
+      const f = profile.female;
+      parts.push(`阴部${f.vagina.type}型 ${f.labia_size}阴唇 ${f.vagina.inner_color}`);
+      parts.push(`阴蒂${f.clitoris}`);
+      if (f.pubic_hair) {
+        parts.push(`阴毛${f.pubic_hair.amount} ${f.pubic_hair.color} ${f.pubic_hair.style}`);
+      }
+    }
+  }
+
+  // ── 上身暴露 → 胸部可见（主要对女性有意义） ──
+  if (!topCovered && profile.female) {
+    const f = profile.female;
+    parts.push(`胸部${f.breast.cup}cup ${f.breast.shape} ${f.breast.nipple_color}乳头 ${f.breast.nipple_size}`);
+  }
+
+  if (parts.length === 0) return "";
+  return `可见身体: ${parts.join("；")}`;
+}
+
+/** NPC 版本：检测指定 NPC 的装备覆盖，返回其他角色可感知的性征描述。
+ *  与 getVisibleBodyDescription 逻辑完全对称——装备决定可见性。 */
+export function getNPCVisibleBodyDescription(npcName: string): string {
+  const npc = gameState.npcs?.[npcName];
+  if (!npc) return "";
+  const eq = npc.equipment || {};
+
+  const bottomCovered = !!(eq.bottom || eq.inner_bot);
+  const topCovered = !!(eq.top || eq.shirt || eq.inner_top);
+
+  if (bottomCovered && topCovered) return "";
+
+  const sState = gameState.sexStates?.[npcName];
+  const profile = sState?.profile;
+  if (!profile) return "";
+
+  const parts: string[] = [];
+
+  if (!bottomCovered) {
+    if (profile.male) {
+      const m = profile.male;
+      const circum = m.penis.circumcised ? "已割包皮" : "未割包皮";
+      parts.push(`阴茎${m.penis.length_cm}cm ${m.penis.shape}型 ${m.penis.head_size}头 ${circum}`);
+      parts.push(`睾丸${m.testicles.size}`);
+      if (m.pubic_hair) {
+        parts.push(`阴毛${m.pubic_hair.amount} ${m.pubic_hair.color} ${m.pubic_hair.style}`);
+      }
+    } else if (profile.female) {
+      const f = profile.female;
+      parts.push(`阴部${f.vagina.type}型 ${f.labia_size}阴唇 ${f.vagina.inner_color}`);
+      parts.push(`阴蒂${f.clitoris}`);
+      if (f.pubic_hair) {
+        parts.push(`阴毛${f.pubic_hair.amount} ${f.pubic_hair.color} ${f.pubic_hair.style}`);
+      }
+    }
+  }
+
+  if (!topCovered && profile.female) {
+    const f = profile.female;
+    parts.push(`胸部${f.breast.cup}cup ${f.breast.shape} ${f.breast.nipple_color}乳头 ${f.breast.nipple_size}`);
+  }
+
+  if (parts.length === 0) return "";
+  return `可见身体: ${parts.join("；")}`;
 }
 
 // --- 称号系统（引擎自动授予，只加不删） ---
@@ -1078,7 +1180,7 @@ function ensureCollectors(): void {
         .map(([name, n]) => `${name}${n.action ? "(" + n.action + ")" : ""}`);
       if (inRoom.length > 0) lines.push(`[在场] ${inRoom.join(", ")}`);
       const namelessNPCs = getNamelessNPCs(p.location, s().turn);
-      if (namelessNPCs.length > 0) lines.push(`[在场路人] ${namelessNPCs.map(n => `${n.name}(正在${n.act})`).join(", ")}`);
+      if (namelessNPCs.length > 0) lines.push(`[在场路人] ${namelessNPCs.map((n: any) => `${n.name}(${n.act})`).join("；")}`);
       return lines.length > 0 ? { text: lines.join("\n"), priority: 20, layer: "enhanced", degradeStrategy: "compress", sourceName: "npc-presence" } : null;
     },
   });
@@ -1684,17 +1786,14 @@ export function checkAddVolume(
   newItem: { volume: number; name: string }
 ): VolumeCheckResult {
   const curVol = calcInventoryVolume(inventory, equipment);
-  const maxVol = calcPocketVolume(equipment);
+  const pocketVol = calcPocketVolume(equipment);
+  // 最小容积：即使裸体/无口袋，人的双手也能抱 ≈ STR×2 升
+  const minVol = Math.max(pocketVol, (gameState.player.attributes.力量 || 10) * 2);
+  const maxVol = minVol;
   const newVol = curVol + newItem.volume;
-
-  if (maxVol === 0) {
-    // 没有任何容器，视为无限空间（裸奔状态）
-    return { ok: true, totalVolume: newVol, maxVolume: 0, severity: "ok", narrative: "" };
-  }
-
   const ratio = newVol / maxVol;
 
-  if (ratio <= 1.0) {
+  if (newVol <= maxVol) {
     return { ok: true, totalVolume: newVol, maxVolume: maxVol, severity: "ok", narrative: "" };
   }
   if (ratio <= 1.2) {
@@ -3206,56 +3305,76 @@ export async function updateNPCSchedules(): Promise<string[]> {
     roomCounts[finalRoom] ??= 0;
     roomCounts[finalRoom]++;
 
-    // 物理优先：当前房间有网格时才检查出口
+    // 物理碰撞：门关了/出口格被占 → 拦住（CellData.block 框架落地）
+    let doorBlocked = false;
     if (npc.currentRoom !== finalRoom && npc.gridPos) {
       const curRoom = ROOMS[npc.currentRoom];
       if (curRoom) {
-        // 找通往目标方向的出口
-        let exitFound = false;
-        for (const row of curRoom.cells) {
-          for (const cell of row) {
+        const pGrid = gameState.player.gridPos;
+        const playerHere = gameState.player.location === npc.currentRoom;
+        for (let y = 0; y < curRoom.cells.length && !doorBlocked; y++) {
+          const row = curRoom.cells[y];
+          if (!row) continue;
+          for (let x = 0; x < row.length && !doorBlocked; x++) {
+            const cell = row[x];
+            if (!cell) continue;
             if ((cell.type === "exit" || cell.type === "door") && cell.exitTo) {
               const exitKey = getRoomKey(cell.exitTo);
               const finalKey = getRoomKey(finalRoom);
-              if (exitKey && finalKey && exitKey === finalKey) {
-                if (cell.isOpen === false) {
-                  events.push(`${name}: 门关着，无法离开${npc.currentRoom}前往${finalRoom}`);
-                  exitFound = true;
-                  break;
-                }
-                exitFound = true;
-                break;
+              if (!exitKey || !finalKey || exitKey !== finalKey) continue;
+
+              if (cell.isOpen === false) {
+                events.push(`[日程受阻] ${name}: ${npc.currentRoom}→${finalRoom}的门${cell.locked ? "锁着" : "关着"}，${name}无法离开`);
+                doorBlocked = true; break;
               }
+              if (playerHere && pGrid && pGrid[0] === x && pGrid[1] === y) {
+                events.push(`[日程受阻] ${name}: ${npc.currentRoom}→${finalRoom}的出口被玩家挡住，${name}无法通过`);
+                doorBlocked = true; break;
+              }
+              if (cell.furniture && cell.block) {
+                events.push(`[日程受阻] ${name}: ${npc.currentRoom}→${finalRoom}的出口被${cell.furniture}堵住`);
+                doorBlocked = true; break;
+              }
+              if (doorBlocked) break;
             }
           }
-          if (exitFound) break;
         }
       }
     }
-    
-    // 移动
+    if (doorBlocked) continue;
+
+    // 通勤提示：NPC跨区域移动时经过车站/电车
+    if (npc.currentRoom !== finalRoom && npc.currentRoom && finalRoom) {
+      const fromZone = getLocationZone(npc.currentRoom);
+      const toZone = getLocationZone(finalRoom);
+      const commuteHours = time_of_day === "morning" || time_of_day === "afternoon";
+      if (fromZone === "residential" && toZone === "school" && commuteHours) {
+        events.push(`[通勤] ${name}: ${npc.currentRoom} → 🚃车站/电车 → ${finalRoom}`);
+      } else if (fromZone === "school" && toZone === "residential" && commuteHours) {
+        events.push(`[放学] ${name}: ${npc.currentRoom} → 🚃回家路上 → ${finalRoom}`);
+      }
+    }
+
+    // 移动（门开着或不在网格房间则正常执行）
     if (npc.currentRoom !== finalRoom) {
       const oldRoom = npc.currentRoom;
+      if (isSameLocation(oldRoom, gameState.player.location)) {
+        events.push(`[离场] ${name}离开了${oldRoom}，前往${finalRoom}`);
+      }
       npc.currentRoom = finalRoom;
       npc.gridPos = ROOMS[finalRoom]?.origin || null;
       events.push(`${name}: ${oldRoom} → ${finalRoom}`);
     }
   }
   
-  // 公共区域填充：带属性的随机路人
-  const publicRooms = ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前"];
-  const traits = [
-    "戴耳机听歌", "低头看书", "背着书包赶路", "大声打电话", 
-    "情侣二人组", "发呆的女生", "角落里抽烟的不良", "提着购物袋的主妇", 
-    "互相追逐的小学生", "睡觉的流浪汉", "四处巡视的巡警", "飞驰而过的外卖员"
-  ];
-  for (const rn of publicRooms) {
+  // 公共区域填充：用 getNamelessNPCs（有地点/时段/区域过滤）
+  const publicRoomNames = ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前"];
+  for (const rn of publicRoomNames) {
     const room = ROOMS[rn];
     if (!room) continue;
-    const count = 1 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < count; i++) {
-      const t = traits[Math.floor(Math.random() * traits.length)];
-      events.push(`[路人: ${t}]: ${rn}`);
+    const nameless = getNamelessNPCs(rn, gameState.turn || 1);
+    for (const n of nameless) {
+      events.push(`[路人: ${n.act}]: ${rn}`);
     }
   }
   
@@ -3671,30 +3790,73 @@ export interface NamelessNPC {
   gridPos: [number, number];
 }
 
+/**
+ * 房间群演数据层 — 输出场景中有多少路人、什么类型、在干嘛。不做叙事拼接。
+ * Phase 1 LLM 根据这些数据自行判断该创建什么群演（spawn_temp_npc）。
+ * Phase 3 LLM 根据数据自行编织人群描写。
+ */
 export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
-  const publicRooms = namelessNpcTemplates.public_rooms;
-  const isPublic = publicRooms.some(pr => isSameLocation(loc, pr)) || loc.includes("街") || loc.includes("公园") || loc.includes("站");
-  if (!isPublic) return [];
-
   const rKey = getRoomKey(loc);
   const room = rKey ? ROOMS[rKey] : null;
-  const seed = turn + loc.length;
-  const count = 1 + (seed % 3); // 1 to 3 nameless NPCs
-  const traits = namelessNpcTemplates.traits;
-  
-  const npcs: NamelessNPC[] = [];
-  for (let i = 0; i < count; i++) {
-    const item = traits[(seed + i * 7) % traits.length];
-    let nx = 2 + ((seed + i * 13) % (room?.width ? Math.max(1, room.width - 4) : 4));
-    let ny = 2 + ((seed + i * 17) % (room?.height ? Math.max(1, room.height - 4) : 4));
-    npcs.push({
-      name: item.name,
-      act: item.act,
-      height: item.height,
-      gridPos: [nx, ny]
-    });
-  }
-  return npcs;
+  if (!room) return [];
+
+  const zone = getLocationZone(loc);
+  const timeLabel = getCurrentTimeLabel();
+  const cap = getRoomCapacity(loc);
+  const namedHere = Object.values(gameState.npcs)
+    .filter((n: any) => isSameLocation(n.currentRoom, loc)).length;
+
+  if (namedHere >= cap) return [];
+
+  var densityMap = {
+    school: { weekday_morning:0.7, weekday_lunch:0.5, weekday_afternoon:0.55, weekday_evening:0.1, weekend:0 },
+    street: { weekday_morning:0.5, weekday_lunch:0.6, weekday_afternoon:0.6, weekday_evening:0.7, weekend:0.7 },
+    residential: { weekday_morning:0.1, weekday_lunch:0.15, weekday_afternoon:0.15, weekday_evening:0.3, weekend:0.25 },
+    station: { weekday_morning:0.8, weekday_lunch:0.5, weekday_afternoon:0.5, weekday_evening:0.8, weekend:0.6 },
+    park: { weekday_morning:0.2, weekday_lunch:0.3, weekday_afternoon:0.4, weekday_evening:0.3, weekend:0.6 },
+  };
+  var zoneD = densityMap[zone] || densityMap["street"];
+  var density = (zoneD[timeLabel] !== undefined ? zoneD[timeLabel] : 0.3);
+  var estimate = Math.max(0, Math.round(cap * density) - namedHere);
+
+  var crowdType = { school:"学生", street:"顾客/路人", residential:"居民", station:"乘客", park:"散步的人" }[zone] || "路人";
+  var typeAct = { school:"在上课/课间活动", street:"在逛街/购物/路过", residential:"在附近散步/活动", station:"在候车/赶路", park:"在散步/休憩" }[zone] || "在附近活动";
+
+  if (estimate <= 0) return [];
+
+  return [{
+    name: crowdType + " (~" + estimate + "人)",
+    act: typeAct + " (房间容量" + cap + ", " + zone + " " + timeLabel + ")",
+    height: "",
+    gridPos: [1, 1],
+    clusterSize: estimate,
+  } as any];
+}
+
+/** 根据位置名推断区域类型 */
+function getLocationZone(loc: string): string {
+  const normalized = loc.toLowerCase();
+  if (normalized.includes("学校") || normalized.includes("教室") || normalized.includes("校") ||
+      normalized.includes("走廊") || normalized.includes("中庭") || normalized.includes("操场") ||
+      normalized.includes("体育") || normalized.includes("図書") || normalized.includes("部室") ||
+      normalized.includes("j班") || normalized.includes("f班") || normalized.includes("侍奉部")) return "school";
+  if (normalized.includes("駅") || normalized.includes("站") || normalized.includes("月台") || normalized.includes("電車")) return "station";
+  if (normalized.includes("公園") || normalized.includes("河堤") || normalized.includes("神社") || normalized.includes("広場")) return "park";
+  if (normalized.includes("住宅") || normalized.includes("自宅") || normalized.includes("マンション") || normalized.includes("アパート")) return "residential";
+  return "street"; // 默认街道/商业区
+}
+
+/** 根据游戏时间返回时段标签 */
+function getCurrentTimeLabel(): string {
+  const tt = gameState.time?.time_of_day;
+  const dow = gameState.time?.day_of_week;
+  if (!dow) return tt === "morning" ? "weekday_morning" : tt === "night" || tt === "dawn" ? "weekday_evening" : "weekday_lunch";
+  const isWeekend = dow === "日曜日" || dow === "土曜日";
+  if (isWeekend) return "weekend";
+  if (tt === "night" || tt === "dawn") return "weekday_evening";
+  if (tt === "morning") return "weekday_morning";
+  if (tt === "noon") return "weekday_lunch";
+  return "weekday_afternoon";
 }
 
 // ── 世界状态冻结与热挂载 ──
@@ -3738,7 +3900,7 @@ export function switchActiveWorld(targetWorld: string): void {
   const snapshot = gameState.world_states[targetWorld];
   if (snapshot) {
     gameState.npcs = structuredClone(snapshot.npcs);
-    ROOMS = structuredClone(snapshot.room_deltas);
+    updateROOMSInPlace(snapshot.room_deltas);
     LOCATIONS_DELTA = structuredClone(snapshot.dynamic_locations);
     // 合并快照的地点 + 玩家当前已知地点（避免快照覆盖新探索的地点）
     const merged = new Set(gameState.player.known_locations || []);
@@ -3753,7 +3915,7 @@ export function switchActiveWorld(targetWorld: string): void {
     }
   } else {
     gameState.npcs = {};
-    ROOMS = structuredClone(rooms);
+    updateROOMSInPlace(rooms);
     LOCATIONS_DELTA = {};
     gameState.player.known_locations = [];
 
@@ -3853,8 +4015,10 @@ export function loadActiveWorld(worldName?: string): void {
       }
     } catch (e) { console.error("loadActiveWorld: 脑裂检测失败", e); }
 
-    // Re-initialize dependent variables
-    ROOMS = structuredClone(rooms);
+    // Re-initialize dependent variables — MUST update in-place, NEVER reassign
+    // (CJS import is value copy; reassigning ROOMS causes state-grid.ts to hold
+    // a stale reference → dynamic rooms silently lost on next saveState)
+    updateROOMSInPlace(rooms);
     LOCATIONS_BASE = locationsData as any;
     SCHOOL_MAP = schoolMapData as any;
     CITY_MAP = cityMapData as any;

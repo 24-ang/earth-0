@@ -1,21 +1,32 @@
 # earth-0 项目规则（每次会话自动加载）
 
-## 当前架构速览（2026-07-05）
+## 当前架构速览（2026-07-05 晚）
 
-**四阶段流水线**（`extension.ts`，确认全部在运行）：
-1. **Phase 1** — 分类 LLM（`phase1-classifier.ts`）→ JSON → 引擎执行工具。终端有 `Phase1: tool "xxx" not in whitelist` 日志
+**四阶段流水线**（`extension.ts`）：
+1. **Phase 1** — 意图分类 + **场景导演**（`phase1-classifier.ts`）→ JSON → 引擎执行工具。新增角色：走进空间时自行判断该有什么群演，用 `spawn_temp_npc` 填充。有 `lookup_furniture` 查可用家具/模板。
 2. **Phase 2** — `autoSpawnNPCs()` 自动 spawn 同场 NPC（在 `updateNPCSchedules` 之前跑）
 3. **交互检测** — `detectInteractionMode()`（settlement.ts:108）+ `analyzeNpcResponses()`（extension.ts:221）
 4. **Phase 3** — `buildRenderSystemPrompt()` → `generateCompletion` 裸 stream（deepseek-v4-pro），物理零工具
 5. **Phase 4** — `agent_end` 钩子，best-effort，ctx stale 时静默跳过
 
-**幕间/切镜**（`viewpoint.ts`）：`processViewpointTriggers()` 在 settlement.ts:113 每回合跑。余波触发需 `previousNPCs >= 2 && currentNPCs === 0`。消费需 `interactionMode === "novel"`（默认已改为 novel）。
-**模式默认**：`interactionMode: "novel"`, `turnsSinceLastNPCInteraction: 2`。有 NPC cue 时切 turn_based。
+**提示词架构**（三层，2026-07-05 晚确认）：
+- Phase 系统提示词 = 身份 + 流程 + 什么时候想到用什么（**不抄 param 细节**——那是工具 `parameters` 的事）
+- 工具 description = 怎么用、参数什么含义、取值从哪查
+- 数据文件 = 真相的唯一来源。工具 description 不手写会过时的枚举值，写"用 lookup_xxx 查询"
 
-**测试**：`npx tsx test.ts`（274）+ `npx tsx e2e-test.ts`（45）+ `npx tsx e2e-init-test.ts`（开局管线冒烟，护栏），改完必跑，必须全绿。
+**关键新增/修复**（2026-07-05）：
+- `furniture.json` 20→44 件，`room_templates.json` 53 模板全补 furniture+atmosphere
+- `lookup_furniture` 工具：LLM 查家具和模板目录
+- `createRoom()` 自动套模板的 atmosphere + furniture
+- 身体暴露：基于装备覆盖（脱了就注入 sex_profile）
+- NPC 碰撞：门关了/玩家堵门/家具堵出口 → NPC 被拦住
+- 路人 zones+times 过滤：学校不出现流浪汉/主妇/外卖员
+- `checkAddVolume()` 裸体不再=无限空间（min = STR×2）
+- ROOMS CJS 双实例修复（`updateROOMSInPlace`）
+- NPC 环境感知：天气/季节/房间家具/路人 全注入 NPC Agent prompt
+- Phase 1 场景导演规则（第0条）：走进空间→判断该有什么人→spawn_temp_npc
 
-**参考文档**：`docs/decisions.md` #16（三段式演变）、`docs/新建文件夹/earth-0-E-state拆分.md`（拆分进度）。
-`0-groovy-shannon.md` 仅作历史参考——很多条目已过时。做了的事翻 git log 确认文件存在。
+**测试**：`npx tsx test.ts`（281）+ `npx tsx e2e-test.ts`（45）+ `npx tsx e2e-init-test.ts`（57），改完必跑，必须全绿。
 
 ## 必须先读
 

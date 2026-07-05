@@ -284,7 +284,7 @@
       3,
       5
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "总武高学生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -527,7 +527,7 @@
       5,
       3
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_overrides": {},
     "schedule_group_by_age": {
       "6": "小学生",
@@ -673,7 +673,7 @@
       1,
       6
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_overrides": {},
     "schedule_group_by_age": {
       "6": "小学生",
@@ -832,7 +832,7 @@
       3,
       3
     ],
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -1099,7 +1099,13 @@
       "丈夫过度加班",
       "买不到合身的衣服",
       "强烈紫外线"
-    ]
+    ],
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "22": "自由人"
+    }
   },
   {
     "name": "比企谷小町",
@@ -1164,7 +1170,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
       "private": "八幡的妹妹。嘴甜但偶尔毒舌，跟哥哥一样看人很准。经常吐槽哥哥是废物。"
@@ -1241,7 +1247,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
       "private": "网球部王牌。八幡看到他也会心跳加速。性格温柔，不擅长拒绝。"
@@ -1417,7 +1423,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "总武高学生",
     "schedule_group_by_age": {
       "7": "小学生",
       "12": "中学生",
@@ -1504,7 +1510,7 @@
     },
     "inventory": [],
     "default_location": "千叶_住宅区",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
       "private": "如月家的二哥，真绫的亲弟弟。重度阿宅，爱打飞机。和弟弟（玩家）关系微妙——既亲近又有距离感。在学校也隐藏姐弟关系。"
@@ -1557,12 +1563,18 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_丸之内",
-    "schedule_group": "自由人",
+    "schedule_group": "上班族",
     "grid_pos": null,
     "anchors": {
       "private": "如月家的父亲，投行高管。工作狂，常年在东京和海外出差。开明且尊重孩子，会和佑一起打游戏。是父亲也是朋友。"
     },
-    "funds": 120000
+    "funds": 120000,
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "22": "上班族"
+    }
   },
   {
     "name": "如月綾乃",
@@ -1620,7 +1632,13 @@
     "anchors": {
       "private": "如月家的母亲，国际航班空姐。温柔优雅，比实际年龄看起来年轻十岁。经常飞国际线不在家，但回家时全家人围在一起吃晚餐。"
     },
-    "funds": 80000
+    "funds": 80000,
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "22": "自由人"
+    }
   },
   {
     "name": "雪之下绫乃",
@@ -1729,7 +1747,13 @@
     "anchors": {
       "private": "雪之下家真正掌舵人，丈夫是傀儡。政治动物，喜欢掌控一切。性格强势，说一不二。雪乃的死穴——导致雪乃独居搬出。对阳乃寄予厚望。外表端庄一丝不苟，擅长茶道花道。称呼平冢静为「小静」。曾反对雪乃办毕业舞会，后在交锋中认可了八幡。和雪乃外表相似但感性更像阳乃。"
     },
-    "funds": 350000
+    "funds": 350000,
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "22": "自由人"
+    }
   },
   {
     "name": "雪之下阳乃",
@@ -1870,7 +1894,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "千叶_雪之下邸",
-    "schedule_group": "小学生",
+    "schedule_group": "大学生",
     "schedule_group_by_age": {
       "8": "小学生",
       "12": "中学生",
@@ -1929,7 +1953,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "千叶_雪之下邸",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_overrides": {},
     "anchors": {
       "private": "雪之下家的私生子弟弟。据说是绫乃流落在外的儿子，5年前被带回雪之下家。性格任性猥琐好色。魔改模式专属角色。"
@@ -2048,7 +2072,13 @@
     "anchors": {
       "private": "橘家的一家之主。年纪轻轻结婚生了双胞胎女儿，丈夫不久后去世。独自扛起家庭重担，在大型企业做OL拼命工作养大两个女儿。有浓厚母性，坚毅忍耐力强。和如月家有远亲关系——后来收养了失去父母的如月佑（橘家IF线）。外表严厉但内在温柔，过早失去丈夫让她把佑当成了男人看待。"
     },
-    "funds": 150000
+    "funds": 150000,
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "22": "上班族"
+    }
   },
   {
     "name": "橘结花",
@@ -2165,7 +2195,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_世田谷_橘家",
-    "schedule_group": "小学生",
+    "schedule_group": "大学生",
     "schedule_group_by_age": {
       "10": "小学生",
       "12": "中学生",
@@ -2315,7 +2345,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_世田谷_橘家",
-    "schedule_group": "小学生",
+    "schedule_group": "大学生",
     "schedule_group_by_age": {
       "10": "小学生",
       "12": "中学生",
@@ -2461,7 +2491,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_圣迹樱丘",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -2622,7 +2652,7 @@
     "equipment": {},
     "inventory": [],
     "default_location": "东京_圣迹樱丘",
-    "schedule_group": "小学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -2833,7 +2863,15 @@
       "12": {
         "hair_style": "中长发"
       }
-    }
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "22": "总武高教师"
+    },
+    "default_location": "职员室"
   },
   {
     "name": "式守都",

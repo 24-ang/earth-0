@@ -77,6 +77,7 @@ import blackMarketTradeTool from "./action/black_market_trade.ts";
 import managePropertyTool from "./action/manage_property.ts";
 import housingStorageTool from "./action/housing_storage.ts";
 import lookupWeatherTool from "./lookup/lookup_weather.ts";
+import lookupFurnitureTool from "./lookup/lookup_furniture.ts";
 import travelIntercityTool from "./lookup/travel_intercity.ts";
 import interactFurnitureTool from "./action/interact_furniture.ts";
 import restockShopTool from "./action/restock_shop.ts";
@@ -154,7 +155,7 @@ export function registerAll(pi: ExtensionAPI) {
   // creates module instance mismatch that breaks gameState reads
   const lookupTools = [
     lookupRegionTool, diceRollTool, createLocationTool, lookupLoreTool,
-    lookupVillainTool, checkPhoneTool, browseSnsTool, lookupWeatherTool,
+    lookupVillainTool, checkPhoneTool, browseSnsTool, lookupWeatherTool, lookupFurnitureTool,
     lookupAbilityTool, postSnsTool, sendSmsTool, makeCallTool,
   ];
   for (const t of lookupTools) if (t) pi.registerTool(t);

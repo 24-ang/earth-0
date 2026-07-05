@@ -15,6 +15,13 @@ export default {
       const targetChar = isPlayer ? gameState.player : getOrCreateNPC(params.target);
 
       targetChar.hp.current = Math.max(0, targetChar.hp.current - params.amount);
+      // 写入伤口记录
+      targetChar.wounds ??= [];
+      targetChar.wounds.push({
+        severity: params.type,
+        text: params.reason,
+        date: gameState.date || new Date().toISOString().slice(0, 10)
+      });
       if (targetChar.hp.current === 0) {
         if (isPlayer) {
           gameState.player.alive = false;

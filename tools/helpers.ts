@@ -110,7 +110,6 @@ export async function generateCompletion(promptText: string, maxTokens: number, 
       } catch (e) { console.error("[Phase3] modelRegistry flag lookup FAILED:", String(e)); }
     }
     if (model) {
-      console.error("[Phase3] pi streamSimple: using model", model.provider, model.id, ", has ctx.model:", !!ctx?.model);
       try {
         const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
         if (auth.ok) {
@@ -129,7 +128,7 @@ export async function generateCompletion(promptText: string, maxTokens: number, 
 
   // Fallback: Fetch directly using environment variables
   const apiKey = process.env.DEEPSEEK_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || "";
-  console.error("[Phase3] direct fetch fallback: apiKey set:", !!apiKey, "url:", process.env.DEEPSEEK_API_URL || "default");
+  // console.error("[Phase3] direct fetch fallback: apiKey set:", !!apiKey, "url:", process.env.DEEPSEEK_API_URL || "default");
   const baseUrl = process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/anthropic/v1/messages";
   const modelName = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
 
@@ -661,6 +660,17 @@ export async function runStatus(ctx: any) {
   const pocketVol = calcPocketVolume(p.equipment);
   const invVol = calcInventoryVolume(p.inventory, p.equipment);
 
+  // 构建物品 flavor 速查表（从 itemsCatalog 读描述文本）
+  const flavorMap = new Map<string, string>();
+  try {
+    const { itemsCatalog } = await import("../engine/state.ts");
+    for (const cat of Object.values(itemsCatalog as any)) {
+      for (const [iname, item] of Object.entries(cat as any)) {
+        if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
+      }
+    }
+  } catch (e) { console.error("runStatus: flavorMap lookup error", e); }
+
   const buildMenu = () => {
     const items: MenuItem[] = [];
     const identityStr = p.public_identity ? ` | 🎭 伪装: ${p.public_identity}` : "";
@@ -695,8 +705,10 @@ export async function runStatus(ctx: any) {
     for (const [slotKey, slotName] of Object.entries(SLOT_NAMES)) {
       const item = p.equipment[slotKey as any];
       if (item) {
+        const flavor = flavorMap.get(item.name) || (item as any).flavor;
+        const desc = flavor ? `${item.name} — ${flavor}` : item.name;
         items.push({
-          label: `  [${slotName}] ${item.name}`,
+          label: `  [${slotName}] ${desc}`,
           detail: `🛡️ 卸下`,
           action: (_done) => {
             p.inventory.push(item);
@@ -734,8 +746,10 @@ export async function runStatus(ctx: any) {
     items.push({ label: "── 背包物品 (点击查看/操作) ──", detail: "" });
     if (p.inventory.length > 0) {
       p.inventory.forEach(it => {
+        const itFlavor = flavorMap.get(it.name) || (it as any).flavor;
+        const itDesc = itFlavor ? `${it.name} — ${itFlavor}` : it.name;
         items.push({
-          label: `  ${it.name}`,
+          label: `  ${itDesc}`,
           detail: `${it.type} ${it.weight}kg`,
           action: async (_done) => {
             const isPhone = it.name.includes("手机") || it.effects?.some((e: any) => e.type === "communication");
