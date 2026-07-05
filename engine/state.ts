@@ -223,6 +223,14 @@ function createInitialState(): GameState {
     dynamicEvents: [],
     academic_year_offset: 0,
     world_states: {},
+    completed_events: [],
+    quests: {},
+    worldState: {
+      tech: 0,
+      stability: 0,
+      tension: 0,
+      globalFlags: {}
+    },
     schemaVersion: 1,
     interactionMode: "novel",
     turnsSinceLastNPCInteraction: 2,
@@ -426,6 +434,13 @@ export function loadState(filepath?: string): boolean {
     delete gameState.npcs[gameState.player.name];
   }
   setAcademicYearOffset(gameState.academic_year_offset ?? 0);
+  gameState.worldState = {
+    tech: 0,
+    stability: 0,
+    tension: 0,
+    globalFlags: {},
+    ...(gameState.worldState || {})
+  };
 
   // 读取 rooms_delta.json 并覆盖 ROOMS（原地更新，不替换引用）
   function updateROOMS(newRooms: any) {
@@ -2757,6 +2772,25 @@ export {
 
 // --- 记忆标签：LLM观察到某事 → 打标签 ---
 // --- 记忆标签：LLM观察到某事 → 打标签 ---
+/** 将全局大势（WorldState）翻译成自然语言描述 */
+export function translateWorldState(ws?: any): string {
+  if (!ws) return "";
+  const lines: string[] = [];
+  if (ws.stability !== undefined) {
+    if (ws.stability <= -2) lines.push("【社会大局势】战火蔓延，街头可见巡逻兵，物资配给开始受限。人们普遍缺乏安全感。");
+    else if (ws.stability <= -1) lines.push("【社会大局势】社会暗流涌动，治安恶化。人们在街上行走时下意识加快了脚步。");
+    else if (ws.stability >= 2) lines.push("【社会大局势】社会处于高压秩序下，街头布满监控与警卫，秩序井然得有些压抑。");
+  }
+  if (ws.tech !== undefined) {
+    if (ws.tech >= 4) lines.push("【科技水平】虚拟现实和AI已渗透日常生活。全息广告随处可见。");
+    else if (ws.tech >= 2) lines.push("【科技水平】一些新奇的技术开始进入民用领域。");
+  }
+  if (ws.tension !== undefined) {
+    if (ws.tension >= 4) lines.push("【危机感】人人自危，危机逼近的压抑感弥漫在每个角落。");
+  }
+  return lines.join("\n");
+}
+
 export function addMemoryTag(
   npcName: string,
   tag: string,
@@ -2767,11 +2801,19 @@ export function addMemoryTag(
   related_npcs?: string[],
   category?: "fact" | "emotion" | "milestone" | "general"
 ): void {
+  let stainedTag = tag;
+  if (gameState.worldState) {
+    const ws = gameState.worldState;
+    if (ws.stability !== undefined && ws.stability < 0) stainedTag += "（但笼罩在局势动荡的阴影下）";
+    if (ws.tension !== undefined && ws.tension >= 4) stainedTag += "（在人人自危的氛围中）";
+    if (ws.tech !== undefined && ws.tech >= 4) stainedTag += "（在这个AI渗透日常的时代）";
+  }
+
   // 玩家记忆写入 player.memories，绝不污染 npcs 表
   if (npcName === gameState.player.name) {
     gameState.player.memories ??= [];
     gameState.player.memories.push({
-      tag,
+      tag: stainedTag,
       since: gameState.time.game_date,
       expires: expiresDays,
       tone: tone as any,
@@ -2785,7 +2827,7 @@ export function addMemoryTag(
   const npc = getOrCreateNPC(npcName);
   npc.memoryTags ??= [];
   npc.memoryTags.push({
-    tag,
+    tag: stainedTag,
     since: gameState.time.game_date,
     expires: expiresDays,
     tone: tone as any,

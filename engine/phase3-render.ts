@@ -148,7 +148,7 @@ function buildSceneBrief(gs: any): string {
 // 不含：工具提示/剧情钩子/任务机制（Phase 3 不需要）
 
 async function buildRenderStateContext(gs: any): Promise<string> {
-  const { getGridContext, getRegionContext, getRoomAgingLine, getPlayerStatusNarrative, hasEquipmentEffect, isSameLocation, getVisibleBodyDescription } = await import("./state.ts");
+  const { getGridContext, getRegionContext, getRoomAgingLine, getPlayerStatusNarrative, hasEquipmentEffect, isSameLocation, getVisibleBodyDescription, translateWorldState } = await import("./state.ts");
   const parts: string[] = [];
 
   // ── 空间网格上下文（墙/家具/门窗/出口/四周） ──
@@ -171,6 +171,10 @@ async function buildRenderStateContext(gs: any): Promise<string> {
   // ── 房间时间痕迹（脏污/灰尘） ──
   const agingLine = getRoomAgingLine(gs.player?.location);
   if (agingLine) parts.push(`[场景氛围] ${agingLine}`);
+
+  // ── 全球大势 ──
+  const wsLine = translateWorldState(gs.worldState);
+  if (wsLine) parts.push(`[全球大势] ${wsLine}`);
 
   // ── 玩家装备 ──
   const p = gs.player;

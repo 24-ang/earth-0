@@ -694,12 +694,20 @@ export interface CutawayDirective {
   reveal_level?: string;
 }
 
+export interface WorldState {
+  tech: number;       // 0~5
+  stability: number;  // -3~3
+  tension: number;    // 0~5
+  globalFlags: Record<string, boolean>;
+}
+
 // --- 游戏状态 ---
 export interface GameState {
   time: TimeState;
   weather: { type: string; temp: number };  // 天气+温度
   player: PlayerState;
   npcs: Record<string, NPCRuntimeState>;
+  worldState?: WorldState;
   sexStates?: Record<string, SexState>;      // 记录各个 NPC 的运行时 SexState，支持持久化
   mode: "gal" | "rpg" | "sex";
   layer1Enabled: boolean;

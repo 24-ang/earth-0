@@ -21,7 +21,7 @@ export default {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine } = await import("../../engine/state.ts");
+      const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine, translateWorldState } = await import("../../engine/state.ts");
       const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
 
       async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<{response: string; outfit: string}> {
@@ -52,8 +52,10 @@ export default {
         const socialTags = await getSocialContextTagsForNPC(npcName, params.socialContext);
 
         const presentLine = await buildPresentLine(gameState, body?.height_cm || 160, batchOthers);
+        const wsLine = translateWorldState(gameState.worldState);
         const prompt = [
           `你是${npcName}。你现在正在${gameState.player.location}。`,
+          wsLine,
           // 环境感知（天气/季节/时段）
           (() => {
             const weather = gameState.weather;

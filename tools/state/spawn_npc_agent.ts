@@ -106,7 +106,7 @@ export default {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine } = await import("../../engine/state.ts");
+      const { gameState, getOrCreateNPC, getMemoryTags, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine, translateWorldState } = await import("../../engine/state.ts");
       const { getNPCContext } = await import("../../engine/scenario-tables.ts");
       const sexMod: any = await import("../../engine/sex.ts").catch(() => null);
 
@@ -146,9 +146,11 @@ export default {
       const myHeight = body?.height_cm || 160;
       const hDiff = (h: number) => h > myHeight + 8 ? "需仰视" : h > myHeight + 3 ? "稍高" : h < myHeight - 8 ? "需俯视" : h < myHeight - 3 ? "稍矮" : "";
       const presentLine = await buildPresentLine(gameState, myHeight, otherNPCs);
+      const wsLine = translateWorldState(gameState.worldState);
 
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
+        wsLine,
         // 环境感知（天气/季节/时段——NPC也是人，能感知冷暖昼夜）
         (() => {
           const weather = gameState.weather;

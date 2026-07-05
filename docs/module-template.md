@@ -97,7 +97,7 @@ if (gameState.xxxCondition) {
 
 ```bash
 # 每加一个新模块，测试数只增不减
-npx tsx test.ts  # 当前基准：266 passed, 0 failed（+ npx tsx e2e-test.ts 45 passed）
+npx tsx test.ts  # 当前基准：281 passed, 0 failed（+ npx tsx e2e-test.ts 45 + npx tsx e2e-init-test.ts 57 = 383 total）
 
 # 新模块至少 2 个测试：
 # - 正常路径

@@ -455,7 +455,7 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
 
   try {
     const { generateCompletion, getNpcAgentModel, recordNpcAgentAction, buildPresentLine } = await import("./tools/helpers.ts");
-    const { findCharacter, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
+    const { findCharacter, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, translateWorldState } = await import("./engine/state.ts");
     const charStages = await import("./data/character_stages.json", { with: { type: "json" } });
 
     const results = await Promise.all(toSpawn.map(async ({ name }) => {
@@ -480,10 +480,12 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
         });
 
         const presentLine = await buildPresentLine(gameState, body?.height_cm || 160, presentOthers);
+        const wsLine = translateWorldState(gameState.worldState);
 
         const prompt = [
           `你是${name}。你现在正在${loc}。`,
           presentLine,
+          wsLine,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,

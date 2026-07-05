@@ -536,6 +536,7 @@ export async function expireHooks(): Promise<void> {
 function expireHookSync(hook: Hook, ev: TimelineEvent | DynamicEvent): void {
   // 记录到 completed_events
   if (!ev.repeatable) {
+    gameState.completed_events ??= [];
     gameState.completed_events.push(ev.id);
   }
 
@@ -549,8 +550,55 @@ function expireHookSync(hook: Hook, ev: TimelineEvent | DynamicEvent): void {
   }
 }
 
+function checkBranchCondition(cond: any, gs: any): boolean {
+  if (!cond) return true;
+  gs.worldState ??= { tech: 0, stability: 0, tension: 0, globalFlags: {} };
+  const ws = gs.worldState;
+
+  if (cond.tech !== undefined) {
+    if (typeof cond.tech === "object") {
+      if (cond.tech.min !== undefined && ws.tech < cond.tech.min) return false;
+      if (cond.tech.max !== undefined && ws.tech > cond.tech.max) return false;
+    } else if (ws.tech !== cond.tech) return false;
+  }
+  if (cond.stability !== undefined) {
+    if (typeof cond.stability === "object") {
+      if (cond.stability.min !== undefined && ws.stability < cond.stability.min) return false;
+      if (cond.stability.max !== undefined && ws.stability > cond.stability.max) return false;
+    } else if (ws.stability !== cond.stability) return false;
+  }
+  if (cond.tension !== undefined) {
+    if (typeof cond.tension === "object") {
+      if (cond.tension.min !== undefined && ws.tension < cond.tension.min) return false;
+      if (cond.tension.max !== undefined && ws.tension > cond.tension.max) return false;
+    } else if (ws.tension !== cond.tension) return false;
+  }
+
+  if (cond.globalFlags) {
+    const wsFlags = ws.globalFlags || {};
+    for (const [k, expected] of Object.entries(cond.globalFlags)) {
+      if (!!wsFlags[k] !== !!expected) return false;
+    }
+  }
+
+  return true;
+}
+
+function resolveExpireEffects(ev: any): any {
+  if (!ev.on_expire) return null;
+  if (ev.on_expire.branches && Array.isArray(ev.on_expire.branches)) {
+    for (const branch of ev.on_expire.branches) {
+      if (branch.default) return branch.effects;
+      if (checkBranchCondition(branch.condition, gameState)) {
+        return branch.effects;
+      }
+    }
+  }
+  return ev.on_expire.effects;
+}
+
 /** 单个钩子过期处理 */
-async function expireHook(hook: Hook, silent = false): Promise<void> {
+export async function expireHook(hook: Hook, silent = false): Promise<void> {
   const events = loadAllTimelines();
   let ev: TimelineEvent | DynamicEvent | undefined = events.find(e => e.id === hook.event_id);
   // 没找到 → 尝试动态事件注册表
@@ -564,8 +612,11 @@ async function expireHook(hook: Hook, silent = false): Promise<void> {
   expireHookSync(hook, ev);
 
   // 执行 on_expire effects（仅 TimelineEvent 有）
-  if (!silent && "on_expire" in ev && ev.on_expire?.effects) {
-    await applyBeatEffects(ev.on_expire.effects);
+  if (!silent && "on_expire" in ev && ev.on_expire) {
+    const eff = resolveExpireEffects(ev);
+    if (eff) {
+      await applyBeatEffects(eff);
+    }
   }
 }
 
@@ -877,13 +928,14 @@ export function getTodayCalendar(): string {
   }
 }
 
-async function applyBeatEffects(effects: {
+export async function applyBeatEffects(effects: {
   flags?: Record<string, boolean>;
   affection?: Record<string, number>;
   sex?: any;
   memoryTags?: Record<string, { tag: string; expires?: number; tone?: string }[]>;
   npcRelations?: Record<string, Record<string, { stage: string; tone: string; notes: string }>>;
   playerRelations?: Record<string, { stage?: string; romance?: string; notes?: string }>;
+  worldStateDelta?: { tech?: number; stability?: number; tension?: number; globalFlags?: Record<string, boolean> };
 }): Promise<void> {
   if (effects.flags) {
     for (const [k, v] of Object.entries(effects.flags)) {
@@ -954,6 +1006,25 @@ async function applyBeatEffects(effects: {
       }
     }
   }
+  if (effects.worldStateDelta) {
+    gameState.worldState ??= { tech: 0, stability: 0, tension: 0, globalFlags: {} };
+    const ws = gameState.worldState;
+    if (effects.worldStateDelta.tech !== undefined) {
+      ws.tech = Math.max(0, Math.min(5, (ws.tech || 0) + effects.worldStateDelta.tech));
+    }
+    if (effects.worldStateDelta.stability !== undefined) {
+      ws.stability = Math.max(-3, Math.min(3, (ws.stability || 0) + effects.worldStateDelta.stability));
+    }
+    if (effects.worldStateDelta.tension !== undefined) {
+      ws.tension = Math.max(0, Math.min(5, (ws.tension || 0) + effects.worldStateDelta.tension));
+    }
+    if (effects.worldStateDelta.globalFlags) {
+      ws.globalFlags ??= {};
+      for (const [k, v] of Object.entries(effects.worldStateDelta.globalFlags)) {
+        ws.globalFlags[k] = v;
+      }
+    }
+  }
 }
 
 
@@ -995,8 +1066,11 @@ export async function fastForwardTimeline(startingDay: number): Promise<string[]
 
     // max_day 已过 → 事件窗口关闭，应用 on_expire 效果（如果有）
     if (t.max_day && startingDay > t.max_day) {
-      if (ev.on_expire?.effects) {
-        try { await applyBeatEffects(ev.on_expire.effects); } catch (e) { console.error(`fastForward: on_expire ${ev.id} error`, e); }
+      if (ev.on_expire) {
+        const eff = resolveExpireEffects(ev);
+        if (eff) {
+          try { await applyBeatEffects(eff); } catch (e) { console.error(`fastForward: on_expire ${ev.id} error`, e); }
+        }
       }
       gameState.completed_events.push(ev.id);
       autoCompleted.push(`${ev.id}(expired)`);

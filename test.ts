@@ -5913,6 +5913,122 @@ test("REGRESSION: advanceTime 兜底用 timeline_origin 而非 2018", () => {
   if (ts.game_date.slice(0, 4) !== "2009") throw new Error("advanceTime 应用2009而非2018: " + ts.game_date);
 });
 
+test("WorldState: applyBeatEffects and translateWorldState limits", async () => {
+  resetState();
+  const { applyBeatEffects } = require("./engine/timeline.ts");
+  const { translateWorldState } = require("./engine/state.ts");
+
+  // Initial tech stability tension
+  if (gameState.worldState.tech !== 0 || gameState.worldState.stability !== 0 || gameState.worldState.tension !== 0) {
+    throw new Error("WorldState initial values should be 0");
+  }
+
+  // Delta updates
+  await applyBeatEffects({
+    worldStateDelta: { tech: 2, stability: -1, tension: 5, globalFlags: { war_broke_out: true } }
+  });
+  if (gameState.worldState.tech !== 2 || gameState.worldState.stability !== -1 || gameState.worldState.tension !== 5) {
+    throw new Error("Delta update failed: " + JSON.stringify(gameState.worldState));
+  }
+  if (gameState.worldState.globalFlags.war_broke_out !== true) {
+    throw new Error("Global flag merge failed");
+  }
+
+  // Bounds checks
+  await applyBeatEffects({
+    worldStateDelta: { tech: 10, stability: -10, tension: -2 }
+  });
+  if (gameState.worldState.tech !== 5 || gameState.worldState.stability !== -3 || gameState.worldState.tension !== 3) {
+    throw new Error("Bounds enforcement failed: " + JSON.stringify(gameState.worldState));
+  }
+
+  // Natural language translation
+  const trans = translateWorldState(gameState.worldState);
+  if (!trans.includes("战火") || !trans.includes("虚拟现实")) {
+    throw new Error("Natural language translation wrong: " + trans);
+  }
+});
+
+test("WorldState: conditional on_expire branches", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { expireHook } = require("./engine/timeline.ts");
+
+  // Make an event with branch expire conditions
+  const ev = {
+    id: "test_branch_expire",
+    title: "测试分支过期",
+    trigger: { min_day: 1 },
+    on_expire: {
+      branches: [
+        {
+          condition: { stability: { max: -2 } },
+          effects: { flags: { war_branch_hit: true } }
+        },
+        {
+          condition: { tech: { min: 4 } },
+          effects: { flags: { tech_branch_hit: true } }
+        },
+        {
+          default: true,
+          effects: { flags: { default_branch_hit: true } }
+        }
+      ]
+    }
+  };
+
+  // Run with default/initial worldState (all 0)
+  const hook = { event_id: "test_branch_expire", source_npc: "雪之下雪乃", hook_text: "", urgency: "low", created_day: 1, expires_day: 2, seen_count: 0 };
+  
+  // Inject mock event
+  gameState.dynamicEvents = [ev as any];
+  await expireHook(hook);
+  if (gameState.flags.default_branch_hit !== true) {
+    throw new Error("Default branch not hit when state is 0");
+  }
+
+  // Run with low stability (stability <= -2)
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.worldState = { tech: 0, stability: -3, tension: 0, globalFlags: {} };
+  gameState.dynamicEvents = [ev as any];
+  await expireHook(hook);
+  if (gameState.flags.war_branch_hit !== true) {
+    throw new Error("Stability branch not hit under war state");
+  }
+
+  // Run with high tech (tech >= 4)
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.worldState = { tech: 5, stability: 0, tension: 0, globalFlags: {} };
+  gameState.dynamicEvents = [ev as any];
+  await expireHook(hook);
+  if (gameState.flags.tech_branch_hit !== true) {
+    throw new Error("Tech branch not hit under cyber state");
+  }
+});
+
+test("WorldState: memory staining", () => {
+  resetState();
+  const { addMemoryTag } = require("./engine/state.ts");
+
+  // 1. Normal state -> no staining
+  addMemoryTag("雪之下雪乃", "送了一本书", 365, "喜欢");
+  let tag = gameState.npcs["雪之下雪乃"].memoryTags[0].tag;
+  if (tag !== "送了一本书") {
+    throw new Error("Memory stained when state is normal: " + tag);
+  }
+
+  // 2. High tension & low stability state -> stained
+  resetState();
+  gameState.worldState = { tech: 0, stability: -1, tension: 5, globalFlags: {} };
+  addMemoryTag("雪之下雪乃", "送了一本书", 365, "喜欢");
+  tag = gameState.npcs["雪之下雪乃"].memoryTags[0].tag;
+  if (!tag.includes("局势动荡") || !tag.includes("人人自危")) {
+    throw new Error("Memory not stained correctly under tension/instability: " + tag);
+  }
+});
+
 (async () => {
   for (const t of testQueue) {
     try {
