@@ -1,13 +1,12 @@
 # earth-0 项目规则（每次会话自动加载）
 
-## 当前架构速览（2026-07-05 晚）
+## 当前架构速览（2026-07-06）
 
 **四阶段流水线**（`extension.ts`）：
-1. **Phase 1** — 意图分类 + **场景导演**（`phase1-classifier.ts`）→ JSON → 引擎执行工具。新增角色：走进空间时自行判断该有什么群演，用 `spawn_temp_npc` 填充。有 `lookup_furniture` 查可用家具/模板。
-2. **Phase 2** — `autoSpawnNPCs()` 自动 spawn 同场 NPC（在 `updateNPCSchedules` 之前跑）
-3. **交互检测** — `detectInteractionMode()`（settlement.ts:108）+ `analyzeNpcResponses()`（extension.ts:221）
-4. **Phase 3** — `buildRenderSystemPrompt()` → `generateCompletion` 裸 stream（deepseek-v4-pro），物理零工具
-5. **Phase 4** — `agent_end` 钩子，best-effort，ctx stale 时静默跳过
+1. **Phase 1** — 意图分类 + **场景导演**（`phase1-classifier.ts`）→ JSON → 引擎执行工具。走进空间时自行判断该有什么群演，用 `spawn_temp_npc` 填充。有 `lookup_furniture` 查可用家具/模板。
+2. **Phase 2** — `autoSpawnNPCs()` **并行化**（`Promise.all`）自动 spawn 同场 NPC，统一用 `buildPresentLine` 注入在场描述（含玩家/NPC身体暴露/伤口/路人），在 `updateNPCSchedules` 之前跑
+3. **Phase 3** — `buildRenderSystemPrompt()` → `generateCompletion` 裸 stream，物理零工具。`_toolsLocked` 锁防 Fallback 双重执行。
+4. **Phase 4** — `agent_end` 钩子，best-effort
 
 **提示词架构**（三层，2026-07-05 晚确认）：
 - Phase 系统提示词 = 身份 + 流程 + 什么时候想到用什么（**不抄 param 细节**——那是工具 `parameters` 的事）
@@ -26,7 +25,7 @@
 - NPC 环境感知：天气/季节/房间家具/路人 全注入 NPC Agent prompt
 - Phase 1 场景导演规则（第0条）：走进空间→判断该有什么人→spawn_temp_npc
 
-**测试**：`npx tsx test.ts`（281）+ `npx tsx e2e-test.ts`（45）+ `npx tsx e2e-init-test.ts`（57），改完必跑，必须全绿。
+**测试**：`npx tsx test.ts`（281）+ `npx tsx e2e-test.ts`（45）+ `npx tsx e2e-init-test.ts`（57）= **383 passed**，改完必跑，必须全绿。
 
 ## 必须先读
 
@@ -72,36 +71,34 @@
 
 ```
 engine/          — 通用算法
-  types.ts           — GameState 类型定义
-  state.ts           — 状态引擎（init/load/save/buildStatePrompt；O6 _orgCache 去硬编码）
-  settlement.ts      — 回合结算（M1+M2 原子写+备份补全）
-  detect-mode.ts     — 交互检测（LLM mini-judge cue 检测 + 关键词兜底）
-  phase1-classifier.ts — Phase 1 分类 LLM + 工具执行 + 回退兜底
-  phase3-render.ts   — Phase 3 渲染 prompt 组装
-  phase4-creative.ts — Phase 4 创意层（可选）
-  viewpoint.ts       — 切镜队列 + 幕间触发
-  timeline.ts        — 双轨制剧情时间线（轻量强化：must_cover/recommended_lore/iconic_lines）
+  types.ts           — GameState/WorldState 类型定义
+  state.ts           — 状态引擎（init/load/save/buildStatePrompt；_orgCache去硬编码；updateROOMSInPlace）
+  settlement.ts      — 回合结算（M1+M2 原子写+备份补全；detectInteractionMode）
+  phase1-classifier.ts — Phase 1 分类+场景导演（spawn_temp_npc群演）
+  phase3-render.ts   — Phase 3 渲染 prompt 组装（含 [全球大势] 预留）
+  detect-mode.ts     — 交互检测（LLM mini-judge + 关键词兜底）
+  viewpoint.ts       — 切镜队列 + 幕间触发（声望切镜/余波/涟漪）
+  timeline.ts        — 双轨制剧情时间线（must_cover/recommended_lore/iconic_lines）
   state-location.ts / state-grid.ts — 拆分自 state.ts（1a+1b）
-  abilities.ts       — 能力系统 v2（技能树 + 规则系 + 社交技能）
-  sex.ts, combat.ts, dice.ts, phone.ts, weather.ts, lore.ts, housing.ts, ...
+  abilities.ts       — 能力系统 v2（技能树buildSkillTree + 规则系 + 社交技能）
 tools/           — LLM 工具 + TUI 命令
-  action/     — 世界修改工具（O8 withToolTracking 自动 try-catch + saveState）
-    create_room.ts       — 玩家建造房间（收费施工，支持 template/exitFrom/atmosphere）
-    instantiate_residence.ts — GM免费用住宅实例化（读 residence_templates 蓝图）
-  lookup/     — 只读查询工具
-  state/      — 状态管理工具
-  tui/        — 终端 UI 面板
-  registry.ts — 工具注册中心 + withToolTracking wrapper（O8）
+  action/     — 世界修改工具（withToolTracking 自动 try-catch+saveState+_toolsLocked拦截）
+    create_room.ts / instantiate_residence.ts / replay_pov.ts / world_interact.ts ...
+  lookup/     — 只读查询 + 状态修改混合（lookup_furniture / lookup_character / self_check ...）
+  state/      — 状态管理工具（spawn_npc_agent(s) / init_profile / party_management ...）
+  tui/        — 终端 UI 面板（new / npc / bag / status / relations ... 34个）
+  registry.ts — 工具注册中心 + withToolTracking wrapper（try-catch + saveState + _toolsLocked）
+  helpers.ts  — generateCompletion / buildPresentLine / NPC_MOTIVATION_PROMPT
 agents/          — LLM 系统提示词
-  gm-phase1-classifier.md — Phase 1 分类器规则
+  gm-phase1-classifier.md — Phase 1 分类+场景导演规则
+  gm-intermission-contract.md — 幕间/切镜合约
   gm-pre/mode-rpg/gal/sex/voice-novel/turnbased.md — 叙事规则（Phase 3 不加载 gm-contract/rules/start）
 worldpacks/      — 可切换的世界数据包（oregairu/）
   timelines/(48) locations/(3) orgs/(1) secrets/(1) — 子目录结构（§十四重组）
-  residence_templates.json — 住宅模板（独栋_2F_4人家庭 / 公寓_3F_单身）
-  room_templates.json      — 单体房间模板（5大类31种）
-data/            — 跨世界通用数据（abilities v2: 18 能力含技能树/规则系/社交）
-  residence_templates.json — 兜底空文件
-docs/            — PHILOSOPHY.md / decisions.md / AUDIT / COMPARISON
-extension.ts     — pi 框架扩展入口（四阶段编排，pi 退化为传输层）
-e2e-test.ts (45) + test.ts (266) — 测试套件
+  init_profiles.json / residence_templates.json / room_templates.json (53模板)
+  furniture.json (44件) / items.json / characters.json ...
+data/            — 跨世界通用数据 + TS静态导入兜底
+docs/            — PHILOSOPHY.md / decisions.md / module-template.md / AUDIT / COMPARISON
+extension.ts     — pi 框架扩展入口（四阶段编排，pi退化为传输层）
+e2e-test.ts (45) + e2e-init-test.ts (57) + test.ts (281) — 测试套件（383 passed）
 ```

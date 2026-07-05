@@ -213,7 +213,45 @@
 
 ---
 
-> 最后更新：2026-07-05。新决策随时追加。
+> 最后更新：2026-07-06。新决策随时追加。
+
+---
+
+## 23. Phase 2 NPC spawn 并行化
+
+**是什么**：`extension.ts:autoSpawnNPCs()` 从 `for...of` 串行等待改为 `Promise.all(toSpawn.map(...))` 异步并发执行。每个 NPC 的 prompt 互相独立，无跨依赖。
+
+**为什么**：多 NPC 场景（3-5人）的 Turn 响应时间显著缩短。每个 NPC Agent 调用是纯 I/O 等待，串行 = 3×延迟，并行 = 1×延迟。
+
+**不要做**：❌ 并行后再加串行依赖（如一个 NPC 的输出喂给另一个）。
+
+**相关代码**：`extension.ts:autoSpawnNPCs()`
+
+---
+
+## 24. `_toolsLocked` — Fallback 渲染防双重执行
+
+**是什么**：Phase 1 结束后 `gameState._toolsLocked = true`。`withToolTracking()` 包装器在 execute 前检查该标志——如果已上锁，拦截并返回 `"[引擎已拦截] 渲染阶段禁止调用工具。"`。Phase 1 分类器直接 import 原始模块不走 wrapper，不受影响。
+
+**为什么**：当 Phase 3 渲染失败时 pi 主 agent 会接管续写叙事。它携带完整 tool definitions，可能在描述剧情时误调工具导致双重执行（钱被扣两次、NPC 被 spawn 两次）。锁机制是结构性的——物理上阻止调用，不是 prompt 劝说。
+
+**放弃了什么**：无。Phase 1 直调原始模块不经过 wrapper，锁不住 Phase 1（这正是设计目的）。
+
+**不要做**：❌ 在 Phase 1 结束前上锁。❌ 用 prompt 替代锁（违反 PHILOSOPHY §1.3）。
+
+**相关代码**：`tools/registry.ts:124-143` (withToolTracking), `extension.ts:118-165` (解锁+上锁)
+
+---
+
+## 25. `buildPresentLine` — 统一 NPC 在场描述
+
+**是什么**：`tools/helpers.ts` 中的 `buildPresentLine` 作为唯一权威的在場人物描述源。`spawn_npc_agent.ts`、`spawn_npc_agents.ts`、`extension.ts:autoSpawnNPCs()` 全部调用它，移除各自的内联拼装代码。支持玩家/NPC身体暴露、伤口、血量、随机路人。
+
+**为什么**：三个地方拼同一段 prompt，拼法不同，其中一个还残留了未定义变量 `genderLabel` 导致 ReferenceError。统一后消除 bug 温床，且 NPC 获得的视觉信息（谁在场、长什么样、穿什么、有没有受伤）完全一致。
+
+**不要做**：❌ 在调用方再手动拼装在场描述字符串。❌ 绕过 buildPresentLine 直接写死 "在场人物: 玩家"。
+
+**相关代码**：`tools/helpers.ts:990-1050` (buildPresentLine), `tools/state/spawn_npc_agent.ts`, `tools/state/spawn_npc_agents.ts`, `extension.ts`
 
 ```
 ## N. 决策标题
