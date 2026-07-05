@@ -493,7 +493,7 @@ export async function showPhoneTUI(ctx: any, phoneItem: any) {
   const phoneApps: any[] = phoneAppsCatalog;
   const { gameState } = await import("../engine/state.ts");
 
-  const pd = getPlayerPhoneData();
+  const pd = getPlayerPhoneData(gameState);
   if (!pd) { ctx.ui.notify("没有手机数据", "warning"); return; }
 
   syncContactsFromRelationships(pd);
@@ -989,4 +989,64 @@ export function autoSwitchMode(toolName: string): void {
     gameState._prevMode = gameState.mode;
     gameState.mode = "rpg";
   }
+}
+
+/** 构建"在场人物"行（玩家+其他NPC描述），供 NPC Agent prompt 使用 */
+export async function buildPresentLine(gs: any, npcHeight: number, otherNPCs: string[]): Promise<string> {
+  const { getBodyForAge, getNpcCurrentAge, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getNPCOutfitDesc } = await import("../engine/state.ts");
+  const hDiff = (h: number) => h > npcHeight + 8 ? "需仰视" : h > npcHeight + 3 ? "稍高" : h < npcHeight - 8 ? "需俯视" : h < npcHeight - 3 ? "稍矮" : "";
+
+  // 1. 玩家描述
+  const pBody = (gs.player as any).body || getBodyForAge({ base_age: gs.player.age || 17 }, gs.player.age || 17);
+  const pBuild = pBody?.build || "普通";
+  const pH = hDiff(pBody?.height_cm || 172);
+  const pEquip = gs.player.equipment || {};
+  const hasTop = !!pEquip.top || !!pEquip.shirt;
+  const hasBottom = !!pEquip.bottom;
+  const pTop = pEquip.top || (pEquip.inner_top && !hasTop ? "[内衣]" : "");
+  const pBot = pEquip.bottom || "";
+  const pOutfit = [pTop, pBot].filter(Boolean).join("+") || "便服";
+  const outfitNote = (!hasTop && !hasBottom) ? "（全裸）" : (!hasTop || !hasBottom) ? "（衣着不整）" : "";
+  const genderLabel = gs.player.gender === "女" ? "女性" : gs.player.gender === "男" ? "男性" : (gs.player.gender || "");
+
+  // 伤口和血量
+  const wounds = gs.player.wounds || [];
+  const woundNote = wounds.length > 0 ? `，身上有伤: ${wounds.map((w: any) => `${w.severity || ''}${w.text || w.desc || w.type}`).filter(Boolean).join("、")}` : "";
+  const pHp = gs.player.hp || {};
+  const hpNote = pHp.current !== undefined && pHp.max !== undefined && pHp.current < pHp.max ? `，血量${pHp.current}/${pHp.max}` : "";
+
+  let list = `在场人物: 玩家（${[genderLabel, pBuild, pH, pOutfit + outfitNote + woundNote + hpNote].filter(Boolean).join("·")}）`;
+
+  const visibleBody = getVisibleBodyDescription();
+  if (visibleBody) list += `\n[玩家身体暴露] ${visibleBody}`;
+
+  // 2. 其他NPC描述
+  for (const oName of otherNPCs) {
+    const oSrc = findCharacter(oName);
+    if (!oSrc) { list += `、${oName}`; continue; }
+    const oAge = getNpcCurrentAge(oSrc.base_age || 16);
+    const oHeight = getBodyForAge(oSrc, oAge)?.height_cm || 160;
+    const oApp = getAppearanceForAge(oSrc, oAge);
+    
+    const oOutfit = getNPCOutfitDesc(oName) || "";
+    const oDescParts = [oApp?.build];
+    const hair = [oApp?.hair_color, oApp?.hair_style].filter(Boolean).join("");
+    if (hair) oDescParts.push(hair);
+    if (oOutfit) oDescParts.push(oOutfit);
+    const oDesc = oDescParts.filter(Boolean).join("·") || oName;
+    
+    const oH = hDiff(oHeight);
+    const oBody = getNPCVisibleBodyDescription(oName);
+    const oBodyExtra = oBody ? `，${oBody}` : "";
+    list += `、${oName}（${[oDesc, oH].filter(Boolean).join("·")}${oBodyExtra}）`;
+  }
+
+  // 3. 在场路人
+  const nameless = getNamelessNPCs(gs.player.location, gs.turn || 1);
+  if (nameless.length > 0) {
+    const namelessBrief = nameless.map((n: any) => `${n.name}(${n.act})`).join("、");
+    list += `\n[在场路人] ${namelessBrief}`;
+  }
+
+  return list + "。";
 }

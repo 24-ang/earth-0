@@ -61,6 +61,7 @@ const ACTION_WHITELIST = [
   "table_crud",
   "add_memory_tag",
   "add_calendar_event",
+  "replay_pov",
 ];
 
 // ── 公开 API ──
@@ -186,6 +187,14 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "  🚗 载具: mount_vehicle, dismount_vehicle",
     "  📋 管理: schedule_override, table_crud, add_memory_tag, add_calendar_event",
     "  🆕 新游戏: init_game（仅当玩家明确说「新游戏」「重新开始」——「我是XX」不是新游戏）",
+    "  🎬 镜头: create_story_hook（剧情钩子,可带intermission幕间）, replay_pov（同场复述——某句关键台词值得慢镜头重放）",
+    "",
+    "幕间使用指引（引擎自动消费，你只管建钩子时带上intermission）:",
+    "  - 主角干了影响辐射到当前圈子以外的事 → create_story_hook + intermission 切到相关方反应",
+    "  - 任务/事件即将收尾 → create_story_hook + intermission 预设结算后的回望视角",
+    "  - 某NPC的发言信息密度极高（告白/拒绝/说漏嘴/试探失败）→ replay_pov 标记该NPC",
+    "  - 玩家设定了一个大事件背景（灾难/战争/全球事件）→ create_story_hook链 + intermission 从权威/组织视角展现事件规模",
+    "  - 日常闲聊、普通互动、信息量低的对话 → 不需要镜头工具",
     "",
     "分类规则:",
     "  1. 理解玩家真实意图，不要机械匹配关键词",
@@ -255,6 +264,12 @@ export function buildStartupPrompt(playerInput: string): string {
     "   create_story_hook — 催促行动的钩子。转校生→「开学典礼在礼堂举行」。",
     "   外星人→「母星发来紧急通讯：能量核心泄漏」。总统→「幕僚长敲门：紧急会议」。",
     "   引擎自动注入 active_hooks，开局势能拉满。open_quest 等玩家接受后再用，不要同时调。",
+    "",
+    "   如果玩家设定了一个大事件背景（灾难/战争/怪兽/全球疫情）:",
+    "     create_story_hook 挂 intermission 参数——切到权威/组织视角展现事件规模。",
+    "     NOAA局长/气象厅/军方发言人/WHO——这些人不需要角色卡，一个名字+机构名+一句话反应就能构建世界真实感。",
+    "     建 2-4 条钩子 → open_quest → advance_quest 走完 → 幕间自动发射，冷却后玩家看到连续的侧面烘托。",
+    "     这不是序章专有——后续任何时候主角的行为影响到当前圈子以外的人，都可以用同一技法。",
 
     "",
     "最后 settle_scene(summary, elapsed_minutes:0)。",

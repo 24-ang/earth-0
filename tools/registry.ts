@@ -84,6 +84,7 @@ import restockShopTool from "./action/restock_shop.ts";
 import useAbilityTool from "./action/use_ability.ts";
 import debugSexHeatTool from "./action/debug_sex_heat.ts";
 import spawnTempNpcTool from "./action/spawn_temp_npc.ts";
+import replayPovTool from "./action/replay_pov.ts";
 import lookupAbilityTool from "./lookup/lookup_ability.ts";
 import gambleCommand from "./tui/gamble.ts";
 import housingCommand from "./tui/housing.ts";
@@ -126,7 +127,11 @@ function withToolTracking(tool: any) {
     ...tool,
     async execute(id: string, params: any, signal: any, onUpdate: any, ctx: any) {
       // lazy-import to avoid circular deps at module load time
-      const { pushToolCall, saveState } = await import("../engine/state.ts");
+      const { pushToolCall, saveState, gameState } = await import("../engine/state.ts");
+      if (gameState?._toolsLocked === true) {
+        console.warn(`[tool:${tool.name}] blocked: tools are locked during rendering phase`);
+        return { content: [{ type: "text", text: `[引擎已拦截] 渲染/降级阶段禁止调用工具。` }], details: {} };
+      }
       pushToolCall(tool.name);
       try {
         const result = await origExec(id, params, signal, onUpdate, ctx);
@@ -174,7 +179,7 @@ export function registerAll(pi: ExtensionAPI) {
     inflictDamageTool, lookupBodyTool, addMemoryTagTool, setNpcDrivesTool,
     setNpcRelationTool, tableCrudTool, openQuestTool, advanceQuestTool,
     abandonQuestTool, partyManagementTool, addCalendarEventTool, createStoryHookTool, instantiateNpcTool,
-    spawnTempNpcTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
+    spawnTempNpcTool, replayPovTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
     managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
     useAbilityTool,
     travelTool, // P2: 统一旅行（合并 go_to_location + travel_intercity + complete_travel）

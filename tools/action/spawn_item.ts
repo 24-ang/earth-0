@@ -6,21 +6,21 @@ export default {
     parameters: Type.Object({
       target: Type.String({ description: "接收者：'玩家' 或 NPC 名" }),
       item: Type.Object({
-        name: Type.String(),
+        name: Type.String({ description: "物品名。用中文通用名，如'绷带''棒球棍'" }),
         type: Type.String({ description: "weapon / clothing / armor / tool / consumable / furniture" }),
         is_furniture: Type.Optional(Type.Boolean({ description: "是否家具（放入背包但标记为家具，需用 world_interact place 部署）" })),
-        slot: Type.String({ description: "装备槽位" }),
-        weight: Type.Number(),
+        slot: Type.String({ description: "装备槽位: inner_top/inner_bot/top/bottom/shoes/back/right_hand/accessory/head" }),
+        weight: Type.Number({ description: "重量（kg）" }),
         volume: Type.Number({ description: "体积（升）" }),
         damage: Type.Optional(Type.Object({
           dice: Type.String({ description: "如 '1d8'" }),
           damageType: Type.String({ description: "如 '斩击'" }),
         })),
         effects: Type.Optional(Type.Array(Type.Object({
-          type: Type.String(),
-          value: Type.Union([Type.Number(), Type.String()]),
-        }))),
-        flavor: Type.Optional(Type.String({ description: "品质描述" })),
+          type: Type.String({ description: "效果类型: pocket(容器容量)/communication(通讯)/container(可储物)/illumination(照明)/crafting(制作)/narrative(纯叙事)" }),
+          value: Type.Union([Type.Number(), Type.String()], { description: "效果数值 或 说明文本。pocket:升数; container:升数; crafting:配方名; narrative:效果描述" }),
+        }), { description: "物品特殊效果列表。公文包应有[{type:'pocket',value:12}]。不写则引擎默认[narrative]——物品无机械效果但仍可叙事互动" })),
+        flavor: Type.Optional(Type.String({ description: "物品外观描述——颜色、材质、新旧程度、特殊纹路。叙事渲染LLM据此描写物品，缺少则物品在叙事中无存在感。如'黑色皮革公文包，边角略有磨损，内侧夹层印着淡淡的公司logo'" })),
       }),
       source: Type.String({ description: "来源：谁给的/哪来的" }),
       reason: Type.String({ description: "为什么获得，如'静将祖父遗物托付给你'" }),
@@ -87,7 +87,9 @@ export default {
         weight: params.item.weight,
         volume: params.item.volume,
         state: "intact",
-        flavor: params.item.flavor ? `${params.item.flavor}\n${flavorSuffix}` : flavorSuffix,
+        flavor: params.item.flavor
+          ? `${params.item.flavor}\n${flavorSuffix}`
+          : `一件普通的${params.item.name}。${flavorSuffix}`,
         effects: params.item.effects && params.item.effects.length > 0 ? params.item.effects : [{ type: "narrative", value: "纯叙事物品——无预设机械效果，效果由GM自由演绎" }],
       };
       if (params.item.damage) {

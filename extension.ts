@@ -117,6 +117,7 @@ export default function (pi: ExtensionAPI) {
   // ═══════════════════════════════════════════════════════════
   pi.on("before_agent_start", async (_event, ctx) => {
     const { gameState, saveState } = await import("./engine/state.ts");
+    gameState._toolsLocked = false;
     const { runSettlement } = await import("./engine/settlement.ts");
     const { runPhase1 } = await import("./engine/phase1-classifier.ts");
 
@@ -157,6 +158,8 @@ export default function (pi: ExtensionAPI) {
         ctx,
       });
     }
+
+    gameState._toolsLocked = true;
 
     // 保存前值用于 Phase 4 检测
     gameState._prevLocation = gameState.player?.location;
@@ -451,38 +454,36 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
   if (toSpawn.length === 0) return "";
 
   try {
-    const { generateCompletion, getNpcAgentModel, recordNpcAgentAction } = await import("./tools/helpers.ts");
+    const { generateCompletion, getNpcAgentModel, recordNpcAgentAction, buildPresentLine } = await import("./tools/helpers.ts");
     const { findCharacter, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge } = await import("./engine/state.ts");
     const charStages = await import("./data/character_stages.json", { with: { type: "json" } });
 
-    const results: string[] = [];
-    for (const { name } of toSpawn) {
+    const results = await Promise.all(toSpawn.map(async ({ name }) => {
       try {
         const src = findCharacter(name);
-        if (!src) continue;
+        if (!src) return "";
         const npc = getOrCreateNPC(name);
         const rel = gameState.player?.relationships?.[name];
         const affection = rel?.affection ?? 0;
         const stage = rel?.stage ?? "陌生";
         const curAge = getNpcCurrentAge(src.base_age || 16);
+        const body = getBodyForAge(src, curAge);
         const app = getAppearanceForAge(src, curAge);
         const outfit = getNPCOutfitDesc(name);
         const cs = (charStages as any)[name];
         const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
         const personality = cs?.[stageKey] || "";
+        const presentOthers = toSpawn.filter(n => n.name !== name).map(n => n.name);
         const memories = recallRelevantMemories(name, {
           location: loc,
-          presentNPCs: toSpawn.filter(n => n.name !== name).map(n => n.name),
+          presentNPCs: presentOthers,
         });
 
-        const pBody2 = (gameState.player as any).body || {};
-        const pBuild = pBody2.build || "";
-        const pWounds = gameState.player?.wounds || [];
-        const woundNote = pWounds.length > 0 ? `·身上有伤: ${pWounds.map((w: any) => `${w.severity || ''}${w.text || w.desc || w.type}`).filter(Boolean).join("、")}` : "";
+        const presentLine = await buildPresentLine(gameState, body?.height_cm || 160, presentOthers);
 
         const prompt = [
           `你是${name}。你现在正在${loc}。`,
-          `在场人物: 玩家（${[gameState.player?.gender || "", pBuild, woundNote].filter(Boolean).join("·")}）${toSpawn.length > 1 ? "、" + toSpawn.filter(n => n.name !== name).map(n => n.name).join("、") : "（仅你一人）"}。`,
+          presentLine,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,
@@ -496,14 +497,16 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
         const model = await getNpcAgentModel();
         const response = await generateCompletion(prompt, 512, ctx, model);
         if (response) {
-          results.push(`[${name}] ${response}`);
           recordNpcAgentAction(name, response, outfit || "", loc).catch(() => {});
+          return `[${name}] ${response}`;
         }
       } catch (e) {
         console.error(`Phase2: auto-spawn ${name} failed:`, e);
       }
-    }
-    return results.join("\n");
+      return "";
+    }));
+
+    return results.filter(Boolean).join("\n");
   } catch (e) {
     console.error("Phase2: autoSpawnNPCs failed:", e);
     return "";

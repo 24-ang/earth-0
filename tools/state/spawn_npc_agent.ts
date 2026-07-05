@@ -1,5 +1,5 @@
 import { Type } from "typebox";
-import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction } from "../helpers.ts";
+import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction, buildPresentLine } from "../helpers.ts";
 import { getNpcLintPatches } from "../../engine/audit/lint-rules.ts";
 
 export async function buildNpcAgentContext(
@@ -145,6 +145,7 @@ export default {
       };
       const myHeight = body?.height_cm || 160;
       const hDiff = (h: number) => h > myHeight + 8 ? "需仰视" : h > myHeight + 3 ? "稍高" : h < myHeight - 8 ? "需俯视" : h < myHeight - 3 ? "稍矮" : "";
+      const presentLine = await buildPresentLine(gameState, myHeight, otherNPCs);
 
       const charPrompt = [
         `你是${params.npcName}。你现在正在${gameState.player.location}。`,
@@ -176,44 +177,7 @@ export default {
           if (aging) parts.push(`房间状态: ${aging}`);
           return parts.join("。");
         })(),
-        (() => {
-          // 优先用玩家真实身体数据，只有缺失时才按年龄推算
-          const pBody = (gameState.player as any).body
-            || getBodyForAge({ base_age: gameState.player.age || 17 } as any, gameState.player.age || 17);
-          const pBuild = pBody?.build || "普通";
-          const pH = hDiff(pBody?.height_cm || 172);
-          const pEquip = gameState.player.equipment || {};
-          const pTop = (pEquip as any).top || (pEquip as any).inner_top || "";
-          const pBot = (pEquip as any).bottom || (pEquip as any).legs || "";
-          const pOutfit = [pTop, pBot].filter(Boolean).join("+") || "便服";
-          // 伤口和血量
-          const wounds = gameState.player.wounds || [];
-          const woundNote = wounds.length > 0 ? `，身上有伤: ${wounds.map((w: any) => `${w.severity || ''}${w.text || w.desc || w.type}`).filter(Boolean).join("、")}` : "";
-          const pHp = gameState.player.hp || {};
-          const hpNote = pHp.current !== undefined && pHp.max !== undefined
-            && pHp.current < pHp.max ? `，血量${pHp.current}/${pHp.max}` : "";
-          let list = `在场人物: 玩家（${[gameState.player.gender, pBuild, pH, pOutfit + woundNote + hpNote].filter(Boolean).join("·")}）`;
-          const visibleBody = getVisibleBodyDescription();
-          if (visibleBody) list += `\n[玩家身体暴露] ${visibleBody}`;
-          for (const oName of otherNPCs) {
-            const oSrc = findCharacter(oName);
-            if (!oSrc) { list += `、${oName}`; continue; }
-            const oAge = getNpcCurrentAge(oSrc.base_age || 16);
-            const oHeight = getBodyForAge(oSrc, oAge)?.height_cm || 160;
-            const oDesc = describePerson(oName, oSrc, oAge);
-            const oH = hDiff(oHeight);
-            const oBody = getNPCVisibleBodyDescription(oName);
-            const oBodyExtra = oBody ? `，${oBody}` : "";
-            list += `、${oName}（${[oDesc, oH].filter(Boolean).join("·")}${oBodyExtra}）`;
-          }
-          // 路人（引擎随机生成的同场无名NPC——NPC也应感知到他们的存在）
-          const nameless = getNamelessNPCs(gameState.player.location, gameState.turn || 1);
-          if (nameless.length > 0) {
-            const namelessBrief = nameless.map(n => `${n.name}(${n.act})`).join("、");
-            list += `\n[在场路人] ${namelessBrief}`;
-          }
-          return list + "。";
-        })(),
+        presentLine,
         "",
         `性格: ${personality || "（暂无）"}`,
         `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}${app?.hair_accessories ? "，" + app.hair_accessories : ""}`,

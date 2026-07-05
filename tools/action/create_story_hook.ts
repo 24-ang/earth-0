@@ -13,6 +13,15 @@ export default {
       trigger_time_of_day: Type.Optional(Type.Array(Type.String(), { description: "触发时间段限制" })),
       trigger_affection: Type.Optional(Type.Record(Type.String(), Type.Number(), { description: "触发好感度要求 {NPC名: 最低值}" })),
       trigger_flags: Type.Optional(Type.Record(Type.String(), Type.Boolean(), { description: "触发flag要求" })),
+      intermission: Type.Optional(Type.Object({
+        npc: Type.Optional(Type.String({ description: "幕间视角NPC——谁在回顾这件事" })),
+        setting: Type.Optional(Type.String({ description: "幕间场景地点" })),
+        topic: Type.Optional(Type.String({ description: "幕间主题——她这一刻在想什么" })),
+        tone: Type.Optional(Type.String({ description: "幕间基调——温存/冷冽/不安/释然" })),
+        length: Type.Optional(Type.String({ description: "short(200-500字) / long(800-2000字)，默认long" })),
+        must_cover: Type.Optional(Type.Array(Type.String(), { description: "幕间必须写到的要点" })),
+        trigger: Type.Optional(Type.String({ description: "幕间触发缘由简述" })),
+      })),
     }),
     async execute(_id: string, params: any, _s: any, _o: any, _ctx: any) {
       const { injectDynamicEvent } = await import("../../engine/timeline.ts");
@@ -41,6 +50,7 @@ export default {
           hook_text: params.hook_text,
           urgency: (["low", "medium", "high"].includes(params.urgency) ? params.urgency : "medium") as "low" | "medium" | "high",
         },
+        intermission: params.intermission || undefined,
       };
 
       const result = injectDynamicEvent(event);

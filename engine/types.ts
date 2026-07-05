@@ -635,6 +635,17 @@ export interface DynamicEvent {
     hook_text: string;
     urgency: "low" | "medium" | "high";
   };
+  /** 可选：任务完成时触发幕间。LLM建钩子时预设——结算后从委托人视角回顾这件事 */
+  intermission?: {
+    npc?: string;
+    setting?: string;
+    topic?: string;
+    tone?: string;
+    weight?: number;
+    length?: "short" | "long";
+    must_cover?: string[];
+    trigger?: string;
+  };
 }
 
 // --- 回合台账 (Layer 2) ---

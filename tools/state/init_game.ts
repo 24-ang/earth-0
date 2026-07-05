@@ -57,10 +57,12 @@ export function defaultUnderwear(gender: string) {
   const innerTop: any = {
     name: gender === "女" ? "内衣(上)" : "汗衫",
     type: "clothing", slot: "inner_top", weight: 0.1, volume: 0.1, effects: [], state: "intact",
+    flavor: gender === "女" ? "白色棉质内衣，最简单的款式。" : "洗得发白的棉质汗衫，领口微微泛黄，肩线处有两处缝补的痕迹。",
   };
   const innerBot: any = {
     name: "内裤",
     type: "clothing", slot: "inner_bot", weight: 0.1, volume: 0.1, effects: [], state: "intact",
+    flavor: gender === "女" ? "纯白棉质内裤，简洁朴素。" : "深灰色平角内裤，松紧带已经洗得有些松垮了。",
   };
   return { inner_top: innerTop, inner_bot: innerBot };
 }

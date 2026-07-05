@@ -2918,29 +2918,40 @@ export function updateReputation(group: string, delta: number): number {
     for (const [npcName, npc] of Object.entries(gameState.npcs) as [string, any][]) {
       const rel = gameState.player.relationships[npcName];
       const aff = rel?.affection ?? 0;
-      
-      const isStudentGroup = group === "学生" || group === "学校" || group === "总武高";
-      const isNpcStudent = npcName === "由比滨结衣" || npcName === "雪之下雪乃" || npcName === "比企谷八幡" || npcName === "比企谷小町" || npcName === "户塚彩加" || npcName === "绫濑沙季";
-      
-      const isUnderworldGroup = group === "underworld" || group === "地下";
-      const isNpcUnderworld = npcName === "雪之下阳乃" || npcName === "平冢静";
 
-      let belongs = false;
-      if (isStudentGroup && isNpcStudent) belongs = true;
-      if (isUnderworldGroup && isNpcUnderworld) belongs = true;
-      
-      if (belongs && aff > maxAffection) {
+      if (npcBelongsToOrg(npcName, npc, group) && aff > maxAffection) {
         maxAffection = aff;
         bestNpc = npcName;
       }
     }
 
+    const goingUp = newVal > oldVal;
+    const absVal = Math.abs(newVal);
+
+    // ── 基调：声望搞低→负基调，声望搞高→正基调 ──
+    const toneByLevel: Record<number, { up: string; down: string }> = {
+      0: { up: "淡淡的好感，像微风一样轻盈", down: "旁观的淡漠——没人真的在意" },
+      1: { up: "悄悄的关注，偶尔有人在走廊回头看一眼", down: "微妙的距离——敬而远之，但不至于敌意" },
+      2: { up: "轻轻的认可，有人开始主动搭话", down: "明显的警惕，窃窃私语时会在背后压低声量" },
+      3: { up: "真切的仰慕，校园里流传着关于你的传说", down: "公开的排斥，你走过的地方眼神都在躲闪" },
+      4: { up: "炽热的目光追随，你的名字挂在每个人的嘴边", down: "深深的忌惮，有人开始主动绕路避开你所在的走廊" },
+      5: { up: "无声的致敬——你在圈子里的地位已无可撼动", down: "恐惧与敌意的漩涡，传言越滚越大" },
+    };
+    const levelTone = toneByLevel[absVal] || toneByLevel[1]!;
+    const tone = goingUp ? levelTone.up : levelTone.down;
+
     gameState._cutaway_queue ??= [];
     gameState._cutaway_queue.push({
-      type: "上升",
+      type: goingUp ? "上升" : "下降",
       npc: bestNpc,
       weight: 50,
-      trigger: `玩家的${group}声望从${oldVal}变为了${newVal}，在相关圈子内引发了悄悄的关注和讨论`
+      trigger: goingUp
+        ? `玩家的${group}声望升至${newVal}，圈子内开始关注`
+        : `玩家的${group}声望跌至${newVal}，引起了周围人的反应`,
+      tone,
+      topic: goingUp
+        ? `TA怎么会这样看待这个变化？这份关注是欣慰、好奇，还是隐隐的不安？`
+        : `TA对玩家的看法被这件事染上了什么颜色？是失望、警惕，还是一丝幸灾乐祸？`,
     });
   }
 

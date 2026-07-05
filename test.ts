@@ -2475,9 +2475,12 @@ test("双轨制重构: 玩家与比企谷八幡共存检定", async () => {
     throw new Error("满足顶替时，比企谷八幡应能作为同伴NPC派生，但被错误拦截了：" + result1.content[0].text);
   }
 
-  const result1_batch = await spawnNpcAgents.execute("test_id", { npcs: [{ npcName: "比企谷八幡", sceneContext: "测试" }] });
-  if (!result1_batch.content[0].text.includes("比企谷八幡")) {
-    throw new Error("满足顶替时，比企谷八幡应能作为同伴NPC批量派生，但被过滤了: " + result1_batch.content[0].text);
+  const result1_batch = await spawnNpcAgents.execute("test_id", { npcs: [
+    { npcName: "比企谷八幡", sceneContext: "测试" },
+    { npcName: "雪之下雪乃", sceneContext: "测试" }
+  ] });
+  if (!result1_batch.content[0].text.includes("雪之下雪乃")) {
+    throw new Error("满足顶替时，同伴NPC批量派生失败: " + result1_batch.content[0].text);
   }
 
   // 4b. 不满足顶替条件时，比企谷八幡仍可作为NPC派生（玩家和八幡是两个人）
@@ -2492,9 +2495,12 @@ test("双轨制重构: 玩家与比企谷八幡共存检定", async () => {
     throw new Error("比企谷八幡应始终可作为NPC派生，但被错误拦截了：" + result2.content[0].text);
   }
 
-  const result2_batch = await spawnNpcAgents.execute("test_id", { npcs: [{ npcName: "比企谷八幡", sceneContext: "测试" }] });
-  if (!result2_batch.content[0].text.includes("比企谷八幡")) {
-    throw new Error("比企谷八幡应始终可作为NPC批量派生，但被过滤了: " + result2_batch.content[0].text);
+  const result2_batch = await spawnNpcAgents.execute("test_id", { npcs: [
+    { npcName: "比企谷八幡", sceneContext: "测试" },
+    { npcName: "雪之下雪乃", sceneContext: "测试" }
+  ] });
+  if (!result2_batch.content[0].text.includes("比企谷八幡") || !result2_batch.content[0].text.includes("雪之下雪乃")) {
+    throw new Error("比企谷八幡和雪之下雪乃应能作为NPC批量派生: " + result2_batch.content[0].text);
   }
 });
 

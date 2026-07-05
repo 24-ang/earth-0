@@ -1,5 +1,5 @@
 import { Type } from "typebox";
-import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction } from "../helpers.ts";
+import { generateCompletion, getNpcAgentModel, getSocialContextTagsForNPC, NPC_MOTIVATION_PROMPT, recordNpcAgentAction, buildPresentLine } from "../helpers.ts";
 import { getNpcLintPatches } from "../../engine/audit/lint-rules.ts";
 
 export default {
@@ -51,18 +51,7 @@ export default {
         // 社交情境 → 按 NPC 个体生成约束标签
         const socialTags = await getSocialContextTagsForNPC(npcName, params.socialContext);
 
-        const pBody = (gameState.player as any).body || {};
-        const pBuild = pBody.build || "普通";
-        const pWounds = gameState.player.wounds || [];
-        const woundNote = pWounds.length > 0 ? `，身上有伤: ${pWounds.map((w: any) => `${w.severity || ''}${w.text || w.desc || w.type}`).filter(Boolean).join("、")}` : "";
-        const visibleBody = getVisibleBodyDescription();
-        const batchNPCEntries = batchOthers.map((oName: string) => {
-          const oBody = getNPCVisibleBodyDescription(oName);
-          return oBody ? `${oName}（${oBody}）` : oName;
-        });
-        // 路人（引擎随机生成的同场无名NPC）
-        const nameless = getNamelessNPCs(gameState.player.location, gameState.turn || 1);
-        const namelessStr = nameless.length > 0 ? `\n[在场路人] ${nameless.map(n => `${n.name}(${n.act})`).join("、")}` : "";
+        const presentLine = await buildPresentLine(gameState, body?.height_cm || 160, batchOthers);
         const prompt = [
           `你是${npcName}。你现在正在${gameState.player.location}。`,
           // 环境感知（天气/季节/时段）
@@ -93,7 +82,7 @@ export default {
             if (aging) parts.push(`房间状态: ${aging}`);
             return parts.join("。");
           })(),
-          `在场人物: 玩家（${[gameState.player.gender, pBuild].filter(Boolean).join("·")}${woundNote}）${batchOthers.length > 0 ? "、" + batchNPCEntries.join("、") : "（仅你一人）"}。` + (visibleBody ? `\n[玩家身体暴露] ${visibleBody}` : "") + namelessStr,
+          presentLine,
           `性格: ${personality || "（暂无）"}`,
           `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
           `穿着: ${outfit}`,

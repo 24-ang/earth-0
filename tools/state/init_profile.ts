@@ -39,11 +39,12 @@ function normalizeItem(raw: any, where: string): any {
 
   return {
     effects: fromCatalog?.effects || [],
-    flavor: fromCatalog?.flavor || undefined,
+    flavor: undefined,  // 先占位，下面三选一
     ...raw, // 模板显式值优先
     effects: Array.isArray(raw.effects) ? raw.effects
           : (Array.isArray(fromCatalog?.effects) ? [...fromCatalog.effects] : []),
-    flavor: raw.flavor || fromCatalog?.flavor || undefined,
+    // 三级兜底：模板 > catalog > 引擎生成兜底
+    flavor: raw.flavor || fromCatalog?.flavor || `一件普通的${raw.name}`,
     state: raw.state || "intact",
     volume: raw.volume ?? fromCatalog?.volume ?? 0.5,
   };
@@ -184,7 +185,7 @@ function buildGapReport(gs: any, activeWorld: string, appliedProfileId?: string,
 
 export default {
   name: "init_profile", label: "身份模板",
-  description: "应用初始身份模板。装备/资金/技能/关系/联系人/记忆/住宅。",
+  description: "应用初始身份模板。模板给装备骨架(name/type/slot)，引擎自动从items.json补effects/flavor——模板写'公文包'够，引擎补pocket 12L。但模板用通用名(如'商务衬衫')需确认items.json有对应条目。",
   parameters: Type.Object({
     profileId: Type.String({ description: "模板ID，如 千叶市高中生。不传则列出可用模板" }),
   }),

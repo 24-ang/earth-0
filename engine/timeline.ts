@@ -770,11 +770,24 @@ export async function advanceQuest(eventId: string, outcomeKey?: string): Promis
   if (!q) return `未找到任务: ${eventId}`;
 
   const events = loadAllTimelines();
-  const ev = events.find(e => e.id === eventId);
+  let ev: any = events.find(e => e.id === eventId);
+  // 静态事件找不到 → 尝试动态事件注册表
+  if (!ev) {
+    gameState.dynamicEvents ??= [];
+    ev = gameState.dynamicEvents.find((e: any) => e.id === eventId);
+  }
   if (!ev) return `未找到事件定义: ${eventId}`;
 
+  // LLM 动态事件无 beats → 直接完成 + 幕间
+  if (!ev.beats || ev.beats.length === 0) {
+    q.status = "completed";
+    gameState.completed_events.push(eventId);
+    checkAndQueueIntermission(ev);
+    return `任务完成: ${ev.title || eventId}`;
+  }
+
   // 找当前 beat
-  const currentBeat = ev.beats.find(b => b.id === q.current_beat);
+  const currentBeat = ev.beats.find((b: any) => b.id === q.current_beat);
   if (!currentBeat) return `未找到当前节拍: ${q.current_beat}`;
 
   // 记录玩家选择
@@ -787,7 +800,7 @@ export async function advanceQuest(eventId: string, outcomeKey?: string): Promis
 
   // 应用 outcome effects
   if (outcomeKey && currentBeat.outcomes) {
-    const oc = currentBeat.outcomes.find(o => o.pick === outcomeKey);
+    const oc = currentBeat.outcomes.find((o: any) => o.pick === outcomeKey);
     if (oc?.effects) await applyBeatEffects(oc.effects);
     checkAndQueueIntermission(oc);
   }
@@ -797,13 +810,14 @@ export async function advanceQuest(eventId: string, outcomeKey?: string): Promis
   if (currentBeat.expires_quest) {
     q.status = "completed";
     gameState.completed_events.push(eventId);
+    checkAndQueueIntermission(ev);  // event-level intermission fallback
     return `任务完成: ${ev.title}`;
   }
 
   // 找下一个 beat
   let nextBeatId: string | null = null;
   if (outcomeKey && currentBeat.outcomes) {
-    const oc = currentBeat.outcomes.find(o => o.pick === outcomeKey);
+    const oc = currentBeat.outcomes.find((o: any) => o.pick === outcomeKey);
     if (oc?.next_beat) nextBeatId = oc.next_beat;
   }
 
@@ -824,6 +838,7 @@ export async function advanceQuest(eventId: string, outcomeKey?: string): Promis
   // 没有 next_beat → 完成
   q.status = "completed";
   gameState.completed_events.push(eventId);
+  checkAndQueueIntermission(ev);  // event-level intermission fallback
   return `任务完成: ${ev.title}`;
 }
 
