@@ -1,0 +1,10 @@
+[
+  {
+    "name": "雪之下雪乃",
+    "extends": "oregairu",
+    "appearance_brief": "身着未来动力装甲的雪乃，眼神冰冷而警惕。",
+    "attributes": { "力量": 14, "敏捷": 15 },
+    "base_age": 17,
+    "default_location": "平行荒野"
+  }
+]

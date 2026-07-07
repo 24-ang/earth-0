@@ -1,0 +1,55 @@
+{
+  "id": "japan_dentsu_media_nexus",
+  "name": "电通·民放电视台广告复合体",
+  "type": "企业",
+  "scale": "national",
+  "sector": "culture",
+  "parent_org": "japan_keidanren",
+  "capital_type": "媒体资本·广告垄断",
+  "wealth": 95,
+  "influence": 90,
+  "cohesion": 70,
+  "public_legitimacy": 55,
+  "coreLocation": "东京_汐留",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "大资产阶级": 0.8,
+    "小资产阶级": 0.15,
+    "知识分子": 0.05
+  },
+  "organizationalAxes": {
+    "经济立场": 3,
+    "政治立场": 3
+  },
+  "goals": {
+    "macroGoal": "维持以电通为核心的广告代理店寡占体制，控制电视广告投放。通过向民营电视台（日本电视台·富士·TBS·朝日·东京电视台）分配广告费，间接影响节目编排。",
+    "currentPhaseGoal": "网络广告（YouTube·TikTok）正在抢走广告费，电视的「触达力」急需重新证明——正在推动大规模跨媒体广告投放活动。同时筹划行业重组以对抗网络平台的势力扩张。"
+  },
+  "leader": "（电通高管·非出场NPC）",
+  "members": [],
+  "relations": {
+    "japan_keidanren": 80,
+    "japan_ldp_chiba": 60,
+    "japan_tokyo_prosecutors": -10,
+    "chiba_shopping_union": 20,
+    "japan_johnnys_agency": 60
+  },
+  "match_rules": {
+    "schedule_groups": ["广告代理商", "电视台职员", "媒体从业者"],
+    "location_contains": "汐留"
+  },
+  "entries": [
+    {
+      "tag": "电通的电视支配力",
+      "level": "common",
+      "triggers": { "locations": ["东京"], "topics": ["电视", "广告", "媒体", "节目"], "orgs": ["电通"] },
+      "text": "电通是日本电视广告市场占有率约40%的巨型广告代理商。通过批量购买民营电视台的广告时段再转卖给广告主——即「媒体采购」模式——电通拥有事实上的节目编排权。"
+    },
+    {
+      "tag": "经纪公司与电通的权力关系",
+      "level": "industry",
+      "triggers": { "roles": ["艺能从业者", "制作人", "记者"], "topics": ["艺能", "电视", "选角", "广告"], "orgs": ["电通", "民营电视台"] },
+      "text": "电视台的节目制作费来自广告代理店的广告费。也就是说，选角的最终决定权握在电通的广告客户手里。大型经纪公司（杰尼斯·吉本·Burning等）各自与电通保持着「特殊关系」，确保自家艺人的电视曝光率——反过来，没有这层关系的经纪公司，艺人再有才华也上不了黄金档。这个结构才是日本电视艺能界「看不见的天花板」。"
+    }
+  ]
+}

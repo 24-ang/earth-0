@@ -1,0 +1,67 @@
+{
+  "id": "soubu_student_council",
+  "name": "总武高学生会",
+  "type": "学校",
+  "scale": "club",
+  "sector": "politics",
+  "parent_org": "soubu_high",
+  "wealth": 50,
+  "influence": 60,
+  "cohesion": 75,
+  "public_legitimacy": 95,
+  "coreLocation": "教学楼1F_学生会室",
+  "territoryRoomKeys": [
+    "教学楼1F_学生会室"
+  ],
+  "class_base": {
+    "知识分子": 0.9,
+    "小资产阶级": 0.1
+  },
+  "organizationalAxes": {
+    "经济立场": 0,
+    "政治立场": 2
+  },
+  "goals": {
+    "macroGoal": "维持总武高日常校园秩序，筹备并顺利举办各项全校性活动。",
+    "currentPhaseGoal": "筹备即将到来的校园体育祭和大选。"
+  },
+  "leader": "城廻巡",
+  "members": [
+    {
+      "npcName": "城廻巡",
+      "role": "会长",
+      "rank": 10
+    },
+    {
+      "npcName": "一色羽织",
+      "role": "庶务",
+      "rank": 3
+    }
+  ],
+  "relations": {
+    "soubu_service_club": 20
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "总武高学生会"
+    ],
+    "location_contains": "学生会"
+  },
+  "entries": [
+    {
+      "tag": "学生会职责",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "学生会室"
+        ],
+        "topics": [
+          "活动",
+          "预算"
+        ]
+      },
+      "text": "学生会负责策划学校体育祭、文化祭等全校性活动，并代行部分教务审查职能。"
+    }
+  ],
+  "capital_type": "社会資本·生徒自治·行事運営"
+}

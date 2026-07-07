@@ -1,0 +1,54 @@
+{
+  "id": "japan_nhk",
+  "name": "NHK（日本放送协会）",
+  "type": "自治",
+  "scale": "national",
+  "sector": "culture",
+  "parent_org": "japan_ministry_of_education",
+  "capital_type": "媒体资本·公共放送·收视费",
+  "wealth": 85,
+  "influence": 80,
+  "cohesion": 90,
+  "public_legitimacy": 65,
+  "coreLocation": "东京_涩谷",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "知识分子": 0.7,
+    "小资产阶级": 0.25,
+    "大资产阶级": 0.05
+  },
+  "organizationalAxes": {
+    "经济立场": 0,
+    "政治立场": 3
+  },
+  "goals": {
+    "macroGoal": "维持收视费制度，守住公共放送「中立·公正」的招牌。NHK经营委员会的人事由国会批准——实质上执政党掌握着人事权——「政府公告的扩音器」这一面永远不会被官方承认。",
+    "currentPhaseGoal": "网络同步播出的收视费义务化法案的走向备受关注。民营电视台·电通系要求引入加密收费制（这会削弱NHK），而NHK内部则希望维持现状——双方在总务省的角力正在激化。"
+  },
+  "leader": "（NHK会长·非出场NPC）",
+  "members": [],
+  "relations": {
+    "japan_dentsu_media_nexus": -20,
+    "japan_ldp_chiba": 60,
+    "japan_ministry_of_education": 70,
+    "japan_johnnys_agency": 10
+  },
+  "match_rules": {
+    "schedule_groups": ["NHK职员", "放送从业者"],
+    "location_contains": "涩谷"
+  },
+  "entries": [
+    {
+      "tag": "NHK的双面性",
+      "level": "common",
+      "triggers": { "locations": ["日本"], "topics": ["电视", "NHK", "收视费", "媒体", "放送"], "orgs": ["NHK"] },
+      "text": "NHK是日本唯一的公共放送机构。由收视费运营，不受商业广告左右——「中立·公正」的报道是其核心理念。但经营委员会的人事由国会批准，处于执政党影响之下。大灾·国难时的政府发布通过NHK传达给国民——「政府之声」与「公共之声」的边界始终模糊不清。"
+    },
+    {
+      "tag": "民营电视台vsNHK的广告战争",
+      "level": "industry",
+      "triggers": { "roles": ["媒体从业者", "广告代理商"], "topics": ["广告", "电视", "NHK", "民营放送", "网络播出"], "orgs": ["NHK", "电通"] },
+      "text": "NHK推动网络同步播出扩大化，遭到民营电视台和电通的强烈反对。NHK仅凭收视费就有年均约7000亿日元的稳定收入，完全不需要广告——这对广告代理商构成根本性威胁。电通·民放联合会正向总务省施压限制NHK的业务范围，但NHK与自民党有力议员保持着深厚人脉，不会轻易让步。"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "japan_tokyo_prosecutors",
+  "name": "东京地检特搜部",
+  "type": "政治",
+  "scale": "national",
+  "sector": "politics",
+  "wealth": 60,
+  "influence": 85,
+  "cohesion": 95,
+  "public_legitimacy": 80,
+  "coreLocation": "东京_霞关",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "知识分子": 1.0
+  },
+  "organizationalAxes": {
+    "经济立场": 0,
+    "政治立场": 2
+  },
+  "goals": {
+    "macroGoal": "独立行使检察权限，检举政财界的大型贪污案件。维持「检察的正义」作为日本法治国家最后一道防线的公众形象——尽管其侦查对象的选择并非与政治压力绝缘。",
+    "currentPhaseGoal": "对千叶县公共事业发包涉及政商勾结的嫌疑进行预备侦查——重点目标是自民党千叶县连与雪之下建设的资金流转。但侦查的深度取决于政权中枢的「一句话」——法务大臣从未被行使过的「指挥权」这把传家宝刀，存在本身就构成无形威慑。"
+  },
+  "leader": "（特搜部长·非出场NPC）",
+  "members": [],
+  "relations": {
+    "japan_ldp_chiba": -30,
+    "yukinoshita_family": -20,
+    "japan_us_forces": 10,
+    "hayama_legal_alliance": -10,
+    "japan_dentsu_media_nexus": 0,
+    "japan_johnnys_agency": -50
+  },
+  "match_rules": {
+    "schedule_groups": ["检察官", "法务官僚"],
+    "location_contains": "霞关"
+  },
+  "entries": [
+    {
+      "tag": "东京地检特搜部的权力",
+      "level": "common",
+      "triggers": { "locations": ["日本", "东京"], "topics": ["检察", "贪污", "政治", "侦查", "逮捕"], "orgs": ["东京地检特搜部"] },
+      "text": "东京地检特搜部是日本最强的侦查机关，专门追诉政界·财界的大型贪污案件。日本战后几乎所有首相更迭背后都有特搜部的影子，被称为「日本最强的司法权力」。"
+    },
+    {
+      "tag": "特搜部的政治压力",
+      "level": "industry",
+      "triggers": { "roles": ["政治家", "企业高管", "律师"], "topics": ["侦查", "起诉", "贪污", "献金"], "orgs": ["东京地检特搜部", "自民党千叶县连"] },
+      "text": "特搜部在大型案件上的侦查深度受法务大臣「指挥权」的制约——虽然历史上从未有法务大臣真正行使过这一权限，但这把「传家宝刀」的存在本身就对侦查方向形成了无形的政治压力。千叶县公共事业发包嫌疑是否会被正式立案，取决于政权中枢的政治判断，而非单纯的证据充分性。"
+    }
+  ]
+}

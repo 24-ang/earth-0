@@ -1,0 +1,64 @@
+{
+  "id": "soubu_school_board",
+  "name": "总武高理事会与教委会",
+  "type": "学校",
+  "scale": "local",
+  "sector": "politics",
+  "parent_org": "japan_ministry_of_education",
+  "wealth": 70,
+  "influence": 75,
+  "cohesion": 85,
+  "public_legitimacy": 100,
+  "coreLocation": "校门",
+  "territoryRoomKeys": [
+    "校门"
+  ],
+  "class_base": {
+    "知识分子": 1
+  },
+  "organizationalAxes": {
+    "经济立场": 1,
+    "政治立场": 4
+  },
+  "goals": {
+    "macroGoal": "严格执行千叶市教育规范，维护学校的升学率与治安声誉，打压任何违规倾向。",
+    "currentPhaseGoal": "整顿校内闲散风气，严格审查社团及学生会的预算与学分资格。"
+  },
+  "leader": "平冢静",
+  "members": [
+    {
+      "npcName": "平冢静",
+      "role": "教导主任助理",
+      "rank": 7
+    }
+  ],
+  "relations": {
+    "soubu_student_council": 30,
+    "soubu_service_club": -5
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "总武高教师"
+    ],
+    "location_contains": "教职工"
+  },
+  "entries": [
+    {
+      "tag": "教委会整顿政策",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "总武高",
+          "校门"
+        ],
+        "topics": [
+          "纪律",
+          "处分",
+          "教师"
+        ]
+      },
+      "text": "教委会强调教师团队的政治站位与纪律要求，对特立独行、违反教学规范的教职工会严肃处理。"
+    }
+  ],
+  "capital_type": "官僚資本·教育行政·人事"
+}

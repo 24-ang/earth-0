@@ -1,0 +1,79 @@
+{
+  "id": "japan_ministry_of_education",
+  "name": "文部科学省",
+  "type": "政治",
+  "scale": "national",
+  "sector": "politics",
+  "wealth": 90,
+  "influence": 95,
+  "cohesion": 80,
+  "public_legitimacy": 90,
+  "coreLocation": "东京_霞关",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "知识分子": 0.6,
+    "大资产阶级": 0.3,
+    "小资产阶级": 0.1
+  },
+  "organizationalAxes": {
+    "经济立场": 0,
+    "政治立场": 3
+  },
+  "goals": {
+    "macroGoal": "维护全国教育体系的秩序与质量，推进学习指导要领改革，确保公立学校的偏差值竞争力与道德教育的政治正确性。",
+    "currentPhaseGoal": "针对全国公立高中发布新一期「生徒指導提要」修订案，强化校园纪律与不純異性交遊的取缔标准。"
+  },
+  "leader": "（文部科学大臣·非出场NPC）",
+  "members": [],
+  "relations": {
+    "soubu_school_board": 60,
+    "chiba_prefectural_govt": 40
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "文部科学省官僚"
+    ],
+    "location_contains": "霞关"
+  },
+  "entries": [
+    {
+      "tag": "文部科学省的教育方针",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "日本"
+        ],
+        "topics": [
+          "教育",
+          "学校",
+          "校规",
+          "偏差值"
+        ],
+        "orgs": [
+          "文部科学省"
+        ]
+      },
+      "text": "文部科学省通过学習指導要領和生徒指導提要两条线控制全国公立学校。近年强调「生きる力」与「道徳教育」并重，对校园纪律问题持高压态度。"
+    },
+    {
+      "tag": "校园风纪整顿令",
+      "level": "industry",
+      "triggers": {
+        "roles": [
+          "教师"
+        ],
+        "topics": [
+          "校规",
+          "处分",
+          "恋爱"
+        ],
+        "orgs": [
+          "文部科学省",
+          "总武高"
+        ]
+      },
+      "text": "文部科学省近期向下属教委下发《关于公立高中校内风纪强化指导的通知》，要求各校严格取缔不純異性交遊行为，并定期上报处分数据。这给了千叶教委会极大的行政压力。"
+    }
+  ],
+  "capital_type": "官僚資本·教育行政"
+}

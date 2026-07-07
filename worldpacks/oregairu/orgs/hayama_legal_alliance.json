@@ -1,0 +1,65 @@
+{
+  "id": "hayama_legal_alliance",
+  "name": "叶山家族与法务精英同盟",
+  "type": "家族",
+  "scale": "regional",
+  "sector": "politics",
+  "wealth": 80,
+  "influence": 75,
+  "cohesion": 80,
+  "public_legitimacy": 95,
+  "coreLocation": "千叶駅前",
+  "territoryRoomKeys": [
+    "千叶駅前"
+  ],
+  "class_base": {
+    "大资产阶级": 0.7,
+    "知识分子": 0.3
+  },
+  "organizationalAxes": {
+    "经济立场": 3,
+    "政治立场": 2
+  },
+  "goals": {
+    "macroGoal": "维护叶山家族在千叶县及东京都大型企业法律顾问及法务联盟的声誉与业务。",
+    "currentPhaseGoal": "解决千叶大型商业开发案的法律合规性审计，降低法务纠纷。"
+  },
+  "leader": "叶山隼人",
+  "members": [
+    {
+      "npcName": "叶山隼人",
+      "role": "继承人",
+      "rank": 8
+    }
+  ],
+  "relations": {
+    "yukinoshita_family": 30,
+    "chiba_prefectural_govt": 40,
+    "japan_keidanren": 30
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "叶山家族"
+    ],
+    "location_contains": "叶山"
+  },
+  "entries": [
+    {
+      "tag": "叶山法务同盟声誉",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "千叶駅前"
+        ],
+        "topics": [
+          "法律",
+          "顾问",
+          "官司"
+        ]
+      },
+      "text": "叶山家主导的法务同盟是东京都及千叶县多间大型企业集团的常年法律顾问，人脉深广。"
+    }
+  ],
+  "parent_org": "chiba_prefectural_govt",
+  "capital_type": "法務資本·弁護士·契約仲裁"
+}

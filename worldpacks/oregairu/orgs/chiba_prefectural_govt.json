@@ -1,0 +1,89 @@
+{
+  "id": "chiba_prefectural_govt",
+  "name": "千叶县厅与县议会",
+  "type": "政治",
+  "scale": "regional",
+  "sector": "politics",
+  "parent_org": "japan_ministry_of_education",
+  "wealth": 80,
+  "influence": 85,
+  "cohesion": 70,
+  "public_legitimacy": 85,
+  "coreLocation": "千叶_县厅",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "大资产阶级": 0.4,
+    "知识分子": 0.3,
+    "小资产阶级": 0.3
+  },
+  "organizationalAxes": {
+    "经济立场": 2,
+    "政治立场": 2
+  },
+  "goals": {
+    "macroGoal": "维持千叶县的财政平衡与基建投资节奏，平衡东京湾岸开发与内陆农业区的利益分配，确保自民党千叶县连在下次统一地方选举中的议席数。",
+    "currentPhaseGoal": "推进千叶新城区道路建设二期工程的竞标审核，协调幕张副都心开发与稻毛海岸老区翻新的预算分配。"
+  },
+  "leader": "（千叶县知事·非出场NPC）",
+  "members": [
+    {
+      "npcName": "雪之下阳乃",
+      "role": "县厅建设局·外部顾问（通过雪之下建设）",
+      "rank": 5
+    }
+  ],
+  "relations": {
+    "yukinoshita_family": 60,
+    "chiba_shopping_union": 30,
+    "soubu_school_board": 50,
+    "hayama_legal_alliance": 40
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "千叶县公务员"
+    ],
+    "location_contains": "千叶"
+  },
+  "entries": [
+    {
+      "tag": "千叶县政结构",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "千叶"
+        ],
+        "topics": [
+          "县政",
+          "选举",
+          "税金",
+          "开发"
+        ],
+        "orgs": [
+          "千叶县厅"
+        ]
+      },
+      "text": "千叶县政由自民党千叶县连长期主导。县厅位于千叶中央区，与JR千叶站步行5分钟。县知事由公选产生，县议会负责预算审议与条例制定。"
+    },
+    {
+      "tag": "雪之下建设与县政关系",
+      "level": "industry",
+      "triggers": {
+        "roles": [
+          "县议员",
+          "企业高管"
+        ],
+        "topics": [
+          "竞标",
+          "建设",
+          "政治献金"
+        ],
+        "orgs": [
+          "千叶县厅",
+          "雪之下建设与政商同盟"
+        ]
+      },
+      "text": "雪之下建设是千叶县公共工程招标的常任中标企业之一，与县厅建设局保持着长期合作关系。这种政商旋转门关系在千叶政界是公开的秘密，但从未被正式调查。"
+    }
+  ],
+  "capital_type": "官僚資本·地方行政·公共事業"
+}

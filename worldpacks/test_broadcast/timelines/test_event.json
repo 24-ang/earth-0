@@ -1,0 +1,53 @@
+{
+  "id": "test_broadcast_event",
+  "title": "测试平行时空冒险",
+  "source": "test_broadcast",
+  "trigger": {
+    "min_day": 0,
+    "location": "平行荒野",
+    "time_of_day": ["morning", "lunch", "afternoon", "evening", "night"]
+  },
+  "expires_days": 10,
+  "repeatable": true,
+  "hook": {
+    "source_npc": "雪之下雪乃",
+    "hook_text": "你张开眼睛，发现自己置身于平行宇宙的荒原上。雪之下雪乃正背对你，调试着她那身沉重的动力装甲。",
+    "urgency": "high"
+  },
+  "beats": [
+    {
+      "id": "wilderness_start",
+      "label": "荒原行军",
+      "prompt": "风沙在你们脚下呼啸。雪之下雪乃指着远处的微光，指出那里有测试水源。她提醒你抓紧武器，因为这里潜伏着变异生物。突然，荒野深处传来一声巨兽的吼叫，一只怪兽朝你们冲了过来！雪乃熟练地架起武器进行射击。",
+      "outcomes": [
+        {
+          "pick": "上前与雪乃并肩作战",
+          "effects": {
+            "affection": { "雪之下雪乃": 10 }
+          },
+          "next_beat": "wilderness_end"
+        },
+        {
+          "pick": "躲在雪乃身后，让她掩护你",
+          "effects": {
+            "affection": { "雪之下雪乃": -5 }
+          },
+          "next_beat": "wilderness_end"
+        }
+      ]
+    },
+    {
+      "id": "wilderness_end",
+      "label": "荒原落幕",
+      "prompt": "在你们的配合下，危机终于解除。雪之下收起武器，虽然语气依旧平淡冷淡，但看你的眼神少了一丝警惕。她说：'看来你和平行世界的那个懦夫比企谷有些不同，维。' 此时，天空出现了一道巨大的极光，正在撕裂这个虚构的空间。",
+      "outcomes": [
+        {
+          "pick": "拉起雪乃的手走向极光（结束观影）",
+          "effects": {
+            "flags": { "test_broadcast_finished": true }
+          }
+        }
+      ]
+    }
+  ]
+}

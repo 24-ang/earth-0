@@ -1,0 +1,10 @@
+[
+  {
+    "id": 999,
+    "name": "未知荒野",
+    "keys": ["未知荒野", "平行荒野"],
+    "location_hints": ["平行荒野"],
+    "character_count": 1,
+    "characters": ["雪之下雪乃"]
+  }
+]

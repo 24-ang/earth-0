@@ -1,0 +1,18 @@
+{
+  "平行荒野": {
+    "name": "平行荒野",
+    "width": 2,
+    "height": 1,
+    "cellSize": 1,
+    "floor": 0,
+    "origin": [0, 0],
+    "region": "未知荒野",
+    "atmosphere": "死一般的寂静，风沙在耳边低鸣。",
+    "cells": [
+      [
+        { "type": "floor", "furniture": "营火", "label": "CF" },
+        { "type": "floor", "label": "  " }
+      ]
+    ]
+  }
+}

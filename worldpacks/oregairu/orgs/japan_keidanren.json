@@ -1,0 +1,92 @@
+{
+  "id": "japan_keidanren",
+  "name": "日本经济团体联合会（经团连）",
+  "type": "企业",
+  "scale": "national",
+  "sector": "economy",
+  "wealth": 95,
+  "influence": 90,
+  "cohesion": 85,
+  "public_legitimacy": 75,
+  "coreLocation": "东京_大手町",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "大资产阶级": 0.95,
+    "小资产阶级": 0.05
+  },
+  "organizationalAxes": {
+    "经济立场": 4,
+    "政治立场": 3
+  },
+  "goals": {
+    "macroGoal": "维护日本財界整体利益，通过政治献金与政策建言左右国家经济议程。核心诉求：维持法人税低税率、压制劳动者团体的话语权、确保公共事业预算的持续扩张。",
+    "currentPhaseGoal": "游说国会在下一期补正予算中追加地方基建投资配额——这对千叶新城区开发和东海道新干线延伸工程是决定性的。"
+  },
+  "leader": "（经团连会长·非出场NPC）",
+  "members": [
+    {
+      "npcName": "雪之下阳乃",
+      "role": "经团连千叶地方委员·雪之下建设代表",
+      "rank": 4
+    }
+  ],
+  "relations": {
+    "yukinoshita_family": 70,
+    "hayama_legal_alliance": 40,
+    "chiba_prefectural_govt": 50,
+    "chiba_shopping_union": 10,
+    "japan_dentsu_media_nexus": 80,
+    "japan_johnnys_agency": 50
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "经团连会员企业"
+    ],
+    "location_contains": "大手町"
+  },
+  "entries": [
+    {
+      "tag": "经团连的政治影响力",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "日本",
+          "东京"
+        ],
+        "topics": [
+          "经济",
+          "政治",
+          "企业",
+          "财阀"
+        ],
+        "orgs": [
+          "经团连"
+        ]
+      },
+      "text": "日本经济团体联合会（经团连）是日本最具影响力的財界压力团体，会员包括丰田、三菱、日立等几乎所有大企业。经团连通过「政治献金斡旋」和「政策建言」两条渠道深度影响国政。"
+    },
+    {
+      "tag": "千叶基建游说",
+      "level": "industry",
+      "triggers": {
+        "roles": [
+          "企业高管",
+          "县议员"
+        ],
+        "topics": [
+          "竞标",
+          "基建",
+          "预算",
+          "政治献金"
+        ],
+        "orgs": [
+          "经团连",
+          "千叶县厅",
+          "雪之下建设与政商同盟"
+        ]
+      },
+      "text": "经团连正在推动国会追加地方基建投资。雪之下建设作为经团连千叶县地方委员，正在积极游说千叶县议会将新城区道路建设纳入优先项目——这对雪之下建设未来五年的业绩至关重要，也是阳乃以代理董事身份在经团连立足的关键表现。"
+    }
+  ],
+  "capital_type": "金融資本·財界寡占"
+}

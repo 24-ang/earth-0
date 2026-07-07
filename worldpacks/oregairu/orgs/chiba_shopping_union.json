@@ -1,0 +1,63 @@
+{
+  "id": "chiba_shopping_union",
+  "name": "千叶商业街商户联盟",
+  "type": "自治",
+  "scale": "local",
+  "sector": "economy",
+  "wealth": 40,
+  "influence": 30,
+  "cohesion": 70,
+  "public_legitimacy": 85,
+  "coreLocation": "商店街",
+  "territoryRoomKeys": [
+    "商店街"
+  ],
+  "class_base": {
+    "小资产阶级": 0.8,
+    "无产阶级": 0.2
+  },
+  "organizationalAxes": {
+    "经济立场": 2,
+    "政治立场": 1
+  },
+  "goals": {
+    "macroGoal": "维护千叶本地零售商户、餐饮店与老街铺的经营利益，促进地方商贸活跃度。",
+    "currentPhaseGoal": "举办社区夏日祭美食街，争取总武高学生客流以改善近期不景气的零售收入。"
+  },
+  "leader": "由比滨结衣",
+  "members": [
+    {
+      "npcName": "由比滨结衣",
+      "role": "商联志愿者",
+      "rank": 4
+    }
+  ],
+  "relations": {
+    "soubu_student_council": 15
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "商业街商户"
+    ],
+    "location_contains": "商店街"
+  },
+  "entries": [
+    {
+      "tag": "商户联盟不景气",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "商店街"
+        ],
+        "topics": [
+          "夏日祭",
+          "客流",
+          "赤字"
+        ]
+      },
+      "text": "千叶老街区商户近年来饱受大型新城商超冲击，正面临经营赤字，极度渴望通过社区活动刺激客流。"
+    }
+  ],
+  "parent_org": "chiba_prefectural_govt",
+  "capital_type": "商業資本·小売·地域流通"
+}

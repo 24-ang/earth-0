@@ -1,0 +1,53 @@
+{
+  "id": "chiba_prefectural_police",
+  "name": "千叶县警察本部",
+  "type": "自治",
+  "scale": "regional",
+  "sector": "military",
+  "parent_org": "chiba_prefectural_govt",
+  "capital_type": "暴力装置·警察执行",
+  "wealth": 75,
+  "influence": 85,
+  "cohesion": 90,
+  "public_legitimacy": 85,
+  "coreLocation": "千叶_县警本部",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "小资产阶级": 0.5,
+    "无产阶级": 0.3,
+    "知识分子": 0.2
+  },
+  "organizationalAxes": {
+    "经济立场": 1,
+    "政治立场": 4
+  },
+  "goals": {
+    "macroGoal": "维持千叶县全域治安，打击暴力团与少年非行，确保幕张国际会展期间的安全勤务不出重大纰漏。",
+    "currentPhaseGoal": "加强美滨区海岸沿线的夜间巡逻——稻毛海岸一带近期发生了多起针对夜间独行女性的跟踪骚扰事件，县警本部受到了来自县厅的治安问责压力。"
+  },
+  "leader": "（县警本部长·非出场NPC）",
+  "members": [],
+  "relations": {
+    "chiba_prefectural_govt": 70,
+    "yukinoshita_family": 10,
+    "chiba_shopping_union": 20
+  },
+  "match_rules": {
+    "schedule_groups": ["警察"],
+    "location_contains": "千叶"
+  },
+  "entries": [
+    {
+      "tag": "千叶县警的日常",
+      "level": "common",
+      "triggers": { "locations": ["千叶", "美滨区", "稻毛"], "topics": ["治安", "警察", "巡逻", "犯罪"] },
+      "text": "千叶县警本部位于千叶中央区。辖区范围广大，从幕张的会展安保到稻毛海岸的夜间治安巡逻均属其职责。县警对少年非行（如深夜徘徊、吸烟）的盘问非常严格。"
+    },
+    {
+      "tag": "稻毛海岸治安恶化",
+      "level": "industry",
+      "triggers": { "locations": ["稻毛海岸", "美滨区"], "topics": ["治安", "事件", "夜间"], "orgs": ["千叶县警"] },
+      "text": "近期稻毛海岸一带发生多起针对夜间独行女性的跟踪骚扰事件。县警本部已增派便衣巡逻，并在JR稻毛海岸站出口张贴「夜间请结伴通行」警示。平冢静私下建议女学生放学后不要独自走海岸路线。"
+    }
+  ]
+}

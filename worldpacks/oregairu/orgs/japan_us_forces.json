@@ -1,0 +1,51 @@
+{
+  "id": "japan_us_forces",
+  "name": "驻日美军与外交压力",
+  "type": "军事",
+  "scale": "national",
+  "sector": "military",
+  "capital_type": "暴力装置·军事·治外法权",
+  "wealth": 100,
+  "influence": 100,
+  "cohesion": 95,
+  "public_legitimacy": 30,
+  "coreLocation": "东京_横田基地",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "大资产阶级": 0.3,
+    "小资产阶级": 0.1,
+    "无产阶级": 0.1
+  },
+  "organizationalAxes": {
+    "经济立场": 5,
+    "政治立场": 5
+  },
+  "goals": {
+    "macroGoal": "维持日美安全保障体制的绝对优先级。确保冲绳基地负担延续与驻日美军的法理优先地位（日美地位协定）不受日本国内政治变动影响。",
+    "currentPhaseGoal": "监视东京地检特搜部对政界要人的侦查动向——防止侦查波及到美军采购契约或涉及安全保障的日美合意事项。"
+  },
+  "leader": "（驻日美军司令官·非出场NPC）",
+  "members": [],
+  "relations": {
+    "japan_tokyo_prosecutors": 10,
+    "japan_ldp_chiba": -10
+  },
+  "match_rules": {
+    "schedule_groups": ["美军关系者"],
+    "location_contains": "横田"
+  },
+  "entries": [
+    {
+      "tag": "日美地位协定",
+      "level": "common",
+      "triggers": { "locations": ["日本"], "topics": ["军事", "安保", "美军", "冲绳", "基地"], "orgs": ["驻日美军"] },
+      "text": "日美地位协定（SOFA）规定驻日美军及其军属在日本享有治外法权。美军基地内的犯罪由美方军事法庭审理，日本警方和检方无权介入。这是日美安保体制下日本主权最大的灰色地带。"
+    },
+    {
+      "tag": "横田空域限制",
+      "level": "industry",
+      "triggers": { "locations": ["东京", "千叶"], "topics": ["航空", "管制", "美军"], "orgs": ["驻日美军"] },
+      "text": "横田空域（横田RAPCON）以横田基地为中心半径约90海里的圆形空域由美军管制，涵盖东京都、千叶县、埼玉县等大部分上空。日本民航机在该空域内需获得美军许可。这是日本民间乃至政治人物鲜少公开讨论的隐形主权丧失。"
+    }
+  ]
+}

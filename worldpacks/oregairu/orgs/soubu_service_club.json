@@ -1,0 +1,73 @@
+{
+  "id": "soubu_service_club",
+  "name": "侍奉部",
+  "type": "社团",
+  "scale": "club",
+  "sector": "social",
+  "parent_org": "soubu_high",
+  "wealth": 10,
+  "influence": 20,
+  "cohesion": 80,
+  "public_legitimacy": 80,
+  "coreLocation": "特别大楼3F_特别教室",
+  "territoryRoomKeys": [
+    "特别大楼3F_特别教室"
+  ],
+  "class_base": {
+    "知识分子": 0.8,
+    "小资产阶级": 0.2
+  },
+  "organizationalAxes": {
+    "经济立场": -1,
+    "政治立场": -2
+  },
+  "goals": {
+    "macroGoal": "通过解决全校学生的困难，实现个人能力的成长与改变。",
+    "currentPhaseGoal": "解决川崎沙希或材木座的委托，积累社团名气。"
+  },
+  "leader": "雪之下雪乃",
+  "members": [
+    {
+      "npcName": "雪之下雪乃",
+      "role": "部长",
+      "rank": 10
+    },
+    {
+      "npcName": "由比滨结衣",
+      "role": "部员",
+      "rank": 5
+    },
+    {
+      "npcName": "比企谷八幡",
+      "role": "部员",
+      "rank": 5
+    }
+  ],
+  "relations": {
+    "soubu_student_council": 20,
+    "yukinoshita_family": -10
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "社团部员"
+    ],
+    "location_contains": "特别教室"
+  },
+  "entries": [
+    {
+      "tag": "侍奉部守则",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "特别教室"
+        ],
+        "topics": [
+          "委托",
+          "入部"
+        ]
+      },
+      "text": "侍奉部以帮助他人、矫正他人软弱面为宗旨。接受全校学生的各种疑难委托。"
+    }
+  ],
+  "capital_type": "社会資本·相互扶助·生徒自治"
+}

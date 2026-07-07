@@ -1,0 +1,98 @@
+{
+  "id": "japan_ldp_chiba",
+  "name": "自由民主党千叶县连",
+  "type": "政治",
+  "scale": "national",
+  "sector": "politics",
+  "wealth": 90,
+  "influence": 95,
+  "cohesion": 75,
+  "public_legitimacy": 70,
+  "coreLocation": "千叶_县厅",
+  "territoryRoomKeys": [],
+  "class_base": {
+    "大资产阶级": 0.6,
+    "小资产阶级": 0.3,
+    "知识分子": 0.1
+  },
+  "organizationalAxes": {
+    "经济立场": 3,
+    "政治立场": 4
+  },
+  "goals": {
+    "macroGoal": "维持自民党在千叶县的地方执政优势，确保国会选举中千叶选区的议席数不流失。通过公共事业预算分配巩固与地方建设企业（雪之下建设等）的互惠关系。",
+    "currentPhaseGoal": "为下一期统一地方选举做准备——协调千叶新城区道路建设预算案在县议会过关，同时压制在野党对「政商勾结」的舆论攻击。"
+  },
+  "leader": "（自民党千叶县连会长·非出场NPC）",
+  "members": [
+    {
+      "npcName": "雪之下阳乃",
+      "role": "县连·经济对策委员会·企业代表干事",
+      "rank": 5
+    },
+    {
+      "npcName": "狮童正义",
+      "role": "众议院议员·内阁官房副长官候补·文教族",
+      "rank": 8
+    }
+  ],
+  "relations": {
+    "japan_keidanren": 80,
+    "chiba_prefectural_govt": 70,
+    "yukinoshita_family": 60,
+    "japan_ministry_of_education": 40,
+    "japan_tokyo_prosecutors": -30,
+    "japan_dentsu_media_nexus": 70,
+    "japan_johnnys_agency": 85
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "自民党籍议员",
+      "县议会议员"
+    ],
+    "location_contains": "千叶"
+  },
+  "entries": [
+    {
+      "tag": "自民党千叶县连的政治生态",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "千叶",
+          "千叶市"
+        ],
+        "topics": [
+          "政治",
+          "选举",
+          "县政",
+          "自民党"
+        ],
+        "orgs": [
+          "自民党千叶县连"
+        ]
+      },
+      "text": "自民党千叶县连长期把持千叶县议会多数席位。县连核心政策方向：推进东京湾岸开发（幕张副都心·京叶工业带）、维持农协票仓（房总半岛）、控制县内公共事业发注流向。"
+    },
+    {
+      "tag": "雪之下建设与自民党的关系",
+      "level": "industry",
+      "triggers": {
+        "roles": [
+          "企业高管",
+          "县议员"
+        ],
+        "topics": [
+          "竞标",
+          "献金",
+          "公共事业",
+          "派阀"
+        ],
+        "orgs": [
+          "自民党千叶县连",
+          "雪之下建设与政商同盟"
+        ]
+      },
+      "text": "雪之下建设是自民党千叶县连最大的企业献金来源之一。阳乃作为县连经济对策委员会干事，在公共工程发注的「指名競争入札」中充当协调角色——这是千叶县厅建设局与县连之间的默认规则，从未被正式文件记录。"
+    }
+  ]
+}

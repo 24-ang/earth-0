@@ -1,0 +1,72 @@
+{
+  "id": "yukinoshita_family",
+  "name": "雪之下建设与政商同盟",
+  "type": "家族",
+  "scale": "regional",
+  "sector": "economy",
+  "wealth": 85,
+  "influence": 80,
+  "cohesion": 75,
+  "public_legitimacy": 90,
+  "coreLocation": "雪之下大宅",
+  "territoryRoomKeys": [
+    "雪之下大宅"
+  ],
+  "class_base": {
+    "大资产阶级": 0.9,
+    "小资产阶级": 0.1
+  },
+  "organizationalAxes": {
+    "经济立场": 4,
+    "政治立场": 3
+  },
+  "goals": {
+    "macroGoal": "在千叶当地稳固雪之下建设的工程项目，并维持与县议会议政盟友的合作关系。",
+    "currentPhaseGoal": "协调千叶新城区道路建设的竞标项目，争取县议员支持。"
+  },
+  "leader": "雪之下阳乃",
+  "members": [
+    {
+      "npcName": "雪之下阳乃",
+      "role": "代理董事",
+      "rank": 10
+    },
+    {
+      "npcName": "雪之下雪乃",
+      "role": "次女",
+      "rank": 5
+    }
+  ],
+  "relations": {
+    "soubu_service_club": -10,
+    "hayama_legal_alliance": 30,
+    "japan_keidanren": 70,
+    "chiba_prefectural_govt": 60
+  },
+  "match_rules": {
+    "schedule_groups": [
+      "雪之下家族"
+    ],
+    "location_contains": "雪之下"
+  },
+  "entries": [
+    {
+      "tag": "雪之下建设影响力",
+      "level": "common",
+      "triggers": {
+        "locations": [
+          "千叶",
+          "雪之下"
+        ],
+        "topics": [
+          "竞标",
+          "家族",
+          "政商"
+        ]
+      },
+      "text": "雪之下建设掌控着千叶县多处新城区开发和公共工程竞标，是当地政商联合的核心支柱。"
+    }
+  ],
+  "parent_org": "japan_keidanren",
+  "capital_type": "産業資本·建設·不動産"
+}
