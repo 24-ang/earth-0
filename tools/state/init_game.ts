@@ -171,7 +171,7 @@ export default {
     gender: Type.String({ description: "玩家性别，男/女" }),
     age: Type.Number({ description: "起始年龄，例如16" }),
     year: Type.Optional(Type.Number({ description: "起始年份，默认2018" })),
-    location: Type.Optional(Type.String({ description: "起始地点，默认千叶_住宅区。高中生→千叶_住宅区，独居→千叶_住宅区或千叶市街，外国人/外星人→自行指定" })),
+    location: Type.Optional(Type.String({ description: "起始地点，默认千葉駅前。高中生→千葉駅前，独居→千葉駅前或千叶市街，外国人/外星人→自行指定" })),
   }),
   async execute(_id, params, _signal, _onUpdate, _ctx) {
     const stateMod = await import("../../engine/state.ts");
@@ -242,7 +242,12 @@ export default {
     }
 
     // ── 位置 ──
-    const startLocation = params.location || "千叶_住宅区";
+    // 玩家未指定起始地点时，从千叶真实住宅区中随机分配（和117个NPC一样）
+    const DEFAULT_HOMES = [
+      "海浜幕張", "稲毛海岸", "千葉駅前", "西千葉", "検見川浜",
+      "蘇我", "千葉みなと", "本千葉", "稲毛"
+    ];
+    const startLocation = params.location || DEFAULT_HOMES[Math.floor(Math.random() * DEFAULT_HOMES.length)];
     setPlayerLocation(startLocation);
     gs.player.known_locations = [startLocation];
 
