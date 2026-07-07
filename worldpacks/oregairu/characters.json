@@ -10290,5 +10290,1357 @@
         }
       }
     }
+  },
+  {
+    "name": "黑川纱月",
+    "source": "原创",
+    "base_age": 28,
+    "gender": "female",
+    "appearance_brief": "黑色微卷中短发、戴红框眼镜、身材极度丰满。常穿白大褂或紧身衬衫，搭配黑色吊带袜。",
+    "hair_color": "黑色",
+    "hair_style": "微卷中短发",
+    "eye_color": "深蓝色",
+    "hair_accessories": "",
+    "outfits": {
+      "work": {
+        "top": "白大褂",
+        "bottom": "深蓝色包臀裙",
+        "legs": "黑色吊带丝袜",
+        "feet": "黑色高跟鞋",
+        "inner_top": "黑色蕾丝胸罩",
+        "inner_bot": "黑色蕾丝内裤",
+        "shirt": "紫色无袖高领针织衫"
+      },
+      "casual": {
+        "top": "灰色西装外套",
+        "bottom": "黑色紧身裙",
+        "legs": "黑色透肉丝袜",
+        "feet": "细跟高跟鞋",
+        "inner_top": "黑色蕾丝胸罩",
+        "inner_bot": "黑色丁字裤",
+        "shirt": "白色紧身衬衫（领口常敞开）"
+      },
+      "sleep": {
+        "shirt": "黑色丝绸睡袍"
+      }
+    },
+    "body": {
+      "height_cm": 168,
+      "weight_kg": 62,
+      "build": "丰满",
+      "measurements": {
+        "bust": 102,
+        "waist": 62,
+        "hips": 98
+      },
+      "cup": "J",
+      "leg_type": "肉感",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 118,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 152,
+        "weight_kg": 42,
+        "build": "标准",
+        "measurements": {
+          "bust": 78,
+          "waist": 55,
+          "hips": 80
+        },
+        "cup": "B",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 53,
+        "build": "丰满",
+        "measurements": {
+          "bust": 92,
+          "waist": 59,
+          "hips": 90
+        },
+        "cup": "F",
+        "leg_type": "肉感",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 3,
+          "texture": "细腻"
+        }
+      },
+      "28": {
+        "height_cm": 168,
+        "weight_kg": 62,
+        "build": "丰满",
+        "measurements": {
+          "bust": 102,
+          "waist": 62,
+          "hips": 98
+        },
+        "cup": "J",
+        "leg_type": "肉感",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 8,
+      "体质": 9,
+      "智力": 16,
+      "感知": 15,
+      "魅力": 17
+    },
+    "skills": {
+      "医疗": 9,
+      "艺术": 10,
+      "心理学": 8,
+      "人际": 7
+    },
+    "hp": {
+      "current": 18,
+      "max": 18
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "白大褂",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "深蓝包臀裙",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "legs": {
+        "name": "黑色吊带网纱袜",
+        "type": "clothing",
+        "slot": "legs",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      },
+      "feet": {
+        "name": "细跟高跟鞋",
+        "type": "clothing",
+        "slot": "feet",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "inner_top": {
+        "name": "黑色蕾丝内衣",
+        "type": "clothing",
+        "slot": "inner_top",
+        "weight": 0.1,
+        "effects": [],
+        "state": "intact"
+      },
+      "inner_bot": {
+        "name": "黑色蕾丝内裤",
+        "type": "clothing",
+        "slot": "inner_bot",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "智能手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "速写本",
+        "type": "tool",
+        "weight": 0.5,
+        "volume": 0.5,
+        "effects": [],
+        "state": "intact",
+        "flavor": "一本装订精美的黑色速写本，里面画满了人体素描和未完成的画作。"
+      }
+    ],
+    "default_location": "稲毛海岸",
+    "default_location_by_age": {
+      "6": "東京",
+      "12": "東京",
+      "15": "東京",
+      "18": "東京",
+      "28": "稲毛海岸"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "24": "自由人",
+      "28": "总武高教师"
+    },
+    "funds": 200000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "中长直发",
+        "hair_color": "黑色"
+      },
+      "15": {
+        "hair_style": "锁骨发",
+        "hair_color": "黑色"
+      },
+      "28": {
+        "hair_style": "微卷中短发",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "慵懒知性的成熟女性。平时在保健室总是显得没睡醒，比起看病更喜欢在速写本上画画。穿着大胆性感却毫不在意男生的目光，充满神秘感。",
+    "personality_stages": {
+      "12": "内向安静的少女，喜欢独自待在画室里画画，不善交际。",
+      "15": "开始发育后因为身材过于丰满而感到困扰，有些自卑，习惯驼背掩饰身材。",
+      "28": "完全接纳了自己的身体，并将其视为一种美的展现。行事随性慵懒，对待学生有着大人的从容与包容。"
+    },
+    "speech_style": "语速较慢，语气慵懒且带着一点磁性。对学生的烦恼会给出理智又略带挑逗的成熟建议，偶尔会把男生逗得面红耳赤。",
+    "likes": [
+      "人体素描",
+      "红酒",
+      "在保健室睡午觉",
+      "收集各种款式的吊带袜"
+    ],
+    "dislikes": [
+      "早起",
+      "古板的教条",
+      "打扰她画画的人"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的保健医兼美术老师，拥有极其夸张惹火的身材，是全校男生私下公认的性感女神。",
+        "level": "common"
+      },
+      {
+        "text": "因为胸部太大，穿紧身衬衫时偶尔会有扣子崩开的危险。经常能看到她穿着白大褂配吊带黑丝在走廊漫步。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "她其实是一位小有名气的隐藏天才画家，来学校当校医和美术老师纯粹是为了寻找创作灵感——以及享受宁静的午睡时间。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "28": {
+        "drives": [
+          "寻找完美的人体之美",
+          "过上不被打扰的慵懒生活"
+        ],
+        "goal": "完成自己心目中的终极画作，顺便开导迷茫的青春期学生。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -3
+    }
+  },
+  {
+    "name": "黑崎弥生",
+    "source": "原创/同人",
+    "base_age": 24,
+    "gender": "female",
+    "appearance_brief": "艳丽的长黑发、端正贤淑的面容，以及105公分极其引人注目的惊人巨乳。经常穿着会被胸部撑出缝隙的白衬衫。",
+    "hair_color": "黑色",
+    "hair_style": "长直发",
+    "eye_color": "黑色",
+    "hair_accessories": "",
+    "outfits": {
+      "work": {
+        "top": "白色紧身衬衫",
+        "bottom": "黑色包臀长裙",
+        "legs": "黑色丝袜",
+        "feet": "黑色中跟鞋",
+        "inner_top": "大尺寸特制胸罩",
+        "inner_bot": "纯棉内裤"
+      },
+      "casual": {
+        "top": "宽松居家服",
+        "bottom": "长裙",
+        "feet": "拖鞋",
+        "shirt": "围裙（常做家务时穿）"
+      },
+      "sleep": {
+        "shirt": "丝质吊带睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 166,
+      "weight_kg": 60,
+      "build": "丰满",
+      "measurements": {
+        "bust": 105,
+        "waist": 62,
+        "hips": 95
+      },
+      "cup": "K",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 19,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 40,
+        "build": "标准",
+        "measurements": {
+          "bust": 82,
+          "waist": 56,
+          "hips": 82
+        },
+        "cup": "D",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 162,
+        "weight_kg": 54,
+        "build": "丰满",
+        "measurements": {
+          "bust": 95,
+          "waist": 60,
+          "hips": 90
+        },
+        "cup": "H",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 3,
+          "texture": "细腻"
+        }
+      },
+      "24": {
+        "height_cm": 166,
+        "weight_kg": 60,
+        "build": "丰满",
+        "measurements": {
+          "bust": 105,
+          "waist": 62,
+          "hips": 95
+        },
+        "cup": "K",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 7,
+      "体质": 8,
+      "智力": 14,
+      "感知": 15,
+      "魅力": 16
+    },
+    "skills": {
+      "文学": 9,
+      "教学": 8,
+      "烹饪": 10,
+      "家政": 10
+    },
+    "hp": {
+      "current": 16,
+      "max": 16
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "白色紧身衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "西千葉",
+    "default_location_by_age": {
+      "6": "西千葉",
+      "12": "西千葉",
+      "15": "西千葉",
+      "18": "東京",
+      "24": "西千葉"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "24": "总武高教师"
+    },
+    "funds": 150000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "黑长直",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "表面端正贤淑的国文老师，其实是个闷骚好色、个性好强不服输的贤妻良母型角色。对自己的巨乳感到纠结。",
+    "personality_stages": {
+      "12": "文静乖巧的优等生。",
+      "15": "因为胸部发育过快而感到极度害羞和困扰，变得更加内向。",
+      "24": "表面上是端庄的国文老师，私底下其实有些闷骚，负责家里的料理和打扫，是个傲娇的贤妻。"
+    },
+    "speech_style": "平时说话文静礼貌，但在亲密关系中会暴露出闷骚好色的一面，生气时会变成抖S。",
+    "likes": [
+      "下厨",
+      "打扫卫生",
+      "和真纪在一起",
+      "被恋人关注"
+    ],
+    "dislikes": [
+      "自己过于显眼的胸部",
+      "被别人当面调侃身材"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高深受学生欢迎的国文老师，因为端正的面容和惊人的胸围，常常成为男学生的话题。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "实际上是个闷骚好色的人，表面上是M，但生气时会展现出S的一面。包办了家里所有的家务。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "24": {
+        "drives": [
+          "教导好学生",
+          "维护和爱人的日常生活"
+        ],
+        "goal": "在学校维持端庄的形象，在家享受温馨且充满情趣的生活。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "白滨真纪",
+    "source": "原创/同人",
+    "base_age": 24,
+    "gender": "female",
+    "appearance_brief": "浅色短发、笑容开朗的英文老师，身材姣好，给人一种阳光大姐姐的感觉。",
+    "hair_color": "浅金色",
+    "hair_style": "短发",
+    "eye_color": "浅蓝色",
+    "hair_accessories": "",
+    "outfits": {
+      "work": {
+        "top": "浅色衬衫配西装外套",
+        "bottom": "西装裙",
+        "legs": "肉色丝袜",
+        "feet": "高跟鞋",
+        "inner_top": "舒适型胸罩",
+        "inner_bot": "纯棉内裤"
+      },
+      "casual": {
+        "top": "一字肩针织衫",
+        "bottom": "紧身牛仔裤",
+        "feet": "帆布鞋"
+      },
+      "sleep": {
+        "shirt": "宽松T恤（下半身经常只穿内裤）"
+      }
+    },
+    "body": {
+      "height_cm": 163,
+      "weight_kg": 54,
+      "build": "丰满",
+      "measurements": {
+        "bust": 91,
+        "waist": 58,
+        "hips": 89
+      },
+      "cup": "F",
+      "leg_type": "结实",
+      "body_shape": {
+        "chest": "半球",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 116,
+        "weight_kg": 20,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 152,
+        "weight_kg": 43,
+        "build": "标准",
+        "measurements": {
+          "bust": 76,
+          "waist": 56,
+          "hips": 80
+        },
+        "cup": "B",
+        "leg_type": "结实",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 158,
+        "weight_kg": 49,
+        "build": "丰满",
+        "measurements": {
+          "bust": 86,
+          "waist": 57,
+          "hips": 85
+        },
+        "cup": "D",
+        "leg_type": "结实",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "24": {
+        "height_cm": 163,
+        "weight_kg": 54,
+        "build": "丰满",
+        "measurements": {
+          "bust": 91,
+          "waist": 58,
+          "hips": 89
+        },
+        "cup": "F",
+        "leg_type": "结实",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 8,
+      "敏捷": 9,
+      "体质": 9,
+      "智力": 13,
+      "感知": 12,
+      "魅力": 16
+    },
+    "skills": {
+      "英语": 10,
+      "教学": 8,
+      "人际": 9,
+      "运动": 7
+    },
+    "hp": {
+      "current": 18,
+      "max": 18
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "浅色衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "西千葉",
+    "default_location_by_age": {
+      "6": "西千葉",
+      "12": "西千葉",
+      "15": "西千葉",
+      "18": "東京",
+      "24": "西千葉"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "24": "总武高教师"
+    },
+    "funds": 150000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "浅金色"
+      }
+    },
+    "personality_brief": "个性开朗阳光、无懈可击的大姐姐，是弥生的青梅竹马与保护者。私下其实很随性、爱耍废。",
+    "personality_stages": {
+      "12": "活泼好动的假小子，总是保护内向的弥生。",
+      "15": "开朗的阳光少女，在学校里人缘极佳。",
+      "24": "表面上是稳重开朗的英文老师大姐姐，但在家里喜欢耍废，家务几乎全丢给弥生做。"
+    },
+    "speech_style": "开朗热情，像个大姐姐一样照顾人，说话直接毫不做作。遇到突发事件会不知所措。",
+    "likes": [
+      "耍废",
+      "性爱",
+      "弥生做的饭"
+    ],
+    "dislikes": [
+      "做家务",
+      "处理复杂突发的问题"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的英文老师，性格开朗大方，和文静的黑崎老师是形成强烈对比的好朋友，两人都极受欢迎。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "是个S属性（S70M30）的肉食系大姐姐，但在生活上是个白痴，过得太爽每天都在耍废，家事打混爱做不做。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "24": {
+        "drives": [
+          "享受快乐的人生",
+          "保护弥生"
+        ],
+        "goal": "每天能吃到弥生做的饭，舒舒服服地过日子。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
+  },
+  {
+    "name": "御堂咲子",
+    "source": "(C76) [MTSP (Jin)] 御堂咲子さんノ男性事情",
+    "base_age": 27,
+    "gender": "female",
+    "appearance_brief": "黑色长发盘起，戴着眼镜。外表端庄严肃，身材极好。总是一副认真的表情。",
+    "hair_color": "黑色",
+    "hair_style": "长发盘起",
+    "eye_color": "黑色",
+    "hair_accessories": "发圈",
+    "outfits": {
+      "work": {
+        "top": "白色衬衫",
+        "bottom": "深蓝色包臀长裙",
+        "legs": "黑色肉丝袜",
+        "feet": "黑色低跟鞋",
+        "inner_top": "白色胸罩",
+        "inner_bot": "白色内裤"
+      },
+      "casual": {
+        "top": "高领毛衣",
+        "bottom": "长裤",
+        "feet": "平底鞋",
+        "shirt": "围裙"
+      },
+      "sleep": {
+        "shirt": "普通睡裙"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 52,
+      "build": "标准",
+      "measurements": {
+        "bust": 89,
+        "waist": 57,
+        "hips": 86
+      },
+      "cup": "E",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 110,
+        "weight_kg": 18,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 145,
+        "weight_kg": 38,
+        "build": "标准",
+        "measurements": {
+          "bust": 74,
+          "waist": 54,
+          "hips": 78
+        },
+        "cup": "A",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 158,
+        "weight_kg": 46,
+        "build": "标准",
+        "measurements": {
+          "bust": 82,
+          "waist": 56,
+          "hips": 82
+        },
+        "cup": "C",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 4,
+          "texture": "细腻"
+        }
+      },
+      "27": {
+        "height_cm": 162,
+        "weight_kg": 52,
+        "build": "标准",
+        "measurements": {
+          "bust": 89,
+          "waist": 57,
+          "hips": 86
+        },
+        "cup": "E",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 7,
+      "体质": 7,
+      "智力": 14,
+      "感知": 14,
+      "魅力": 15
+    },
+    "skills": {
+      "教学": 8,
+      "人际": 6,
+      "家政": 9
+    },
+    "hp": {
+      "current": 14,
+      "max": 14
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "白色衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛海岸",
+    "default_location_by_age": {
+      "6": "東京",
+      "12": "東京",
+      "15": "東京",
+      "18": "東京",
+      "27": "稲毛海岸"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "24": "总武高教师",
+      "27": "总武高教师"
+    },
+    "funds": 200000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "马尾",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "极其正经死板的女教师。丈夫过世后独自抚养继子，对继子有着极其复杂的感情，表面上像个严厉的母亲。",
+    "personality_stages": {
+      "12": "认真听话的好学生。",
+      "15": "严肃认真的班长类型。",
+      "27": "失去丈夫的寡妇，独自抚养继子。看似对男性失去了兴趣，其实内心压抑着极大的压力。"
+    },
+    "speech_style": "总是用敬语或严肃的语气说话。在陷入困境时会表现出极度的动摇和屈辱。",
+    "likes": [
+      "看着继子成长",
+      "做家务"
+    ],
+    "dislikes": [
+      "年级主任的骚扰",
+      "违背伦理道德的事情"
+    ],
+    "public_facts": [
+      {
+        "text": "学校里出了名严肃认真的女教师，是单亲妈妈。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "因为继子在学校里的某些把柄被年级主任抓住，遭到了威胁，被迫与其发生肉体关系。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "27": {
+        "drives": [
+          "保护继子不受伤害",
+          "维持现在的家庭生活"
+        ],
+        "goal": "让继子顺利毕业。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 2
+    }
+  },
+  {
+    "name": "御堂诚",
+    "source": "原创 (MTSP衍生)",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "普通的男高中生，常常带着忧郁的神情。",
+    "hair_color": "深蓝色",
+    "hair_style": "短发",
+    "eye_color": "深蓝色",
+    "hair_accessories": "",
+    "outfits": {
+      "school": {
+        "top": "总武高制服上衣",
+        "bottom": "西裤",
+        "feet": "皮鞋"
+      },
+      "casual": {
+        "top": "T恤",
+        "bottom": "牛仔裤",
+        "feet": "运动鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 58,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 22,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 40,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "16": {
+        "height_cm": 170,
+        "weight_kg": 58,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 8,
+      "敏捷": 8,
+      "体质": 8,
+      "智力": 10,
+      "感知": 12,
+      "魅力": 10
+    },
+    "skills": {
+      "运动": 5
+    },
+    "hp": {
+      "current": 16,
+      "max": 16
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "制服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛海岸",
+    "default_location_by_age": {
+      "6": "東京",
+      "12": "東京",
+      "16": "稲毛海岸"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "16": "高校生"
+    },
+    "funds": 2000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "深蓝色"
+      }
+    },
+    "personality_brief": "多愁善感的青春期少年。把继母当成女性看待，内心情感非常复杂，因此叫不出“妈妈”。",
+    "personality_stages": {
+      "12": "失去亲生母亲，开始依赖继母。",
+      "16": "进入青春期，对继母产生了超越母子的女性情愫，同时感到深深的背德感和苦恼。"
+    },
+    "speech_style": "有些闷葫芦，面对咲子时总是欲言又止。",
+    "likes": [
+      "咲子"
+    ],
+    "dislikes": [
+      "年级主任"
+    ],
+    "public_facts": [
+      {
+        "text": "御堂老师的继子，和御堂老师一起生活。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "被年级主任抓住了把柄，成了年级主任威胁咲子的筹码。",
+        "level": "close"
+      }
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    },
+    "drives_by_age": {
+      "16": {
+        "drives": [
+          "对继母产生了超越母子的感情，为此感到罪恶和迷茫",
+          "不想让任何人发现自己的秘密"
+        ],
+        "goal": "保护继母不被山田主任伤害——但不知道该怎么面对她"
+      }
+    }
+  },
+  {
+    "name": "山田主任",
+    "source": "原创 (MTSP衍生)",
+    "base_age": 48,
+    "gender": "male",
+    "appearance_brief": "戴着眼镜、头发灰白的中年男教师。总是挂着虚伪而阴险的笑容。",
+    "hair_color": "灰白",
+    "hair_style": "三七分",
+    "eye_color": "黑色",
+    "hair_accessories": "",
+    "outfits": {
+      "work": {
+        "top": "灰色西装",
+        "bottom": "西裤",
+        "feet": "皮鞋"
+      },
+      "casual": {
+        "top": "Polo衫",
+        "bottom": "休闲裤",
+        "feet": "皮鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 168,
+      "weight_kg": 75,
+      "build": "丰满",
+      "leg_type": "结实",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "久坐"
+    },
+    "body_by_age": {
+      "12": {
+        "height_cm": 140,
+        "weight_kg": 35,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "18": {
+        "height_cm": 168,
+        "weight_kg": 65,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "48": {
+        "height_cm": 168,
+        "weight_kg": 75,
+        "build": "丰满",
+        "leg_type": "结实",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 6,
+      "体质": 7,
+      "智力": 12,
+      "感知": 14,
+      "魅力": 5
+    },
+    "skills": {
+      "人际": 8,
+      "谎言": 9
+    },
+    "hp": {
+      "current": 14,
+      "max": 14
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "千葉駅前",
+    "default_location_by_age": {
+      "12": "東京",
+      "18": "東京",
+      "48": "千葉駅前"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "18": "大学生",
+      "25": "总武高教师",
+      "48": "总武高教师"
+    },
+    "funds": 500000,
+    "appearance_by_age": {
+      "18": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "风评极差的老色狼。道貌岸然，擅长利用权力进行潜规则和要挟。",
+    "personality_stages": {
+      "18": "普通的大学生。",
+      "48": "在职场混成老油条，利用职权骚扰女教师和女学生。"
+    },
+    "speech_style": "总是带着一种高高在上、阴阳怪气的语调。喜欢用冠冕堂皇的理由掩饰下流的目的。",
+    "likes": [
+      "女教师",
+      "女学生",
+      "权力"
+    ],
+    "dislikes": [
+      "反抗他的人"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的年级主任，风评不佳，被传为老色狼。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "抓住了御堂诚的把柄，以此要挟御堂咲子和他发生关系。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "48": {
+        "drives": [
+          "满足私欲"
+        ],
+        "goal": "彻底掌控御堂咲子。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 1
+    }
   }
 ]

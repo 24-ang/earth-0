@@ -1,0 +1,126 @@
+{
+  "id": "midou_sakiko_blackmail",
+  "title": "年级主任的要挟 (咲子NTR线)",
+  "source": "(C76) [MTSP (Jin)] 御堂咲子さんノ男性事情",
+  "trigger": {
+    "min_day": 10,
+    "max_day": 300,
+    "location": "特别大楼",
+    "time_of_day": ["afternoon"],
+    "flags": {
+      "met_sakiko": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 7,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "御堂咲子",
+    "hook_text": "{{player.surname}}经过特别大楼的空教室时，听到里面传来年级主任山田和女教师御堂咲子的争执声。从门缝望去，山田主任正拿着一沓照片，带着淫靡的笑容逼迫着满脸屈辱的咲子老师……{{player.surname}}决定：",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "blackmail_discovery",
+      "label": "屈辱的契约",
+      "prompt": "山田主任得意洋洋地说：‘如果不想你继子退学的事被公开，你应该知道该怎么做吧？’咲子老师咬着嘴唇，眼含泪光地褪下了裙子。山田主任直接将她按在课桌上，开始了粗暴的侵犯。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "悄悄拿出手机录下这一幕作为日后的把柄，然后离开",
+          "effects": {
+            "flags": {
+              "sakiko_blackmail_recorded": true,
+              "met_sakiko": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "装作没看见，迅速离开这是非之地",
+          "effects": {
+            "flags": {
+              "sakiko_blackmail_ignored": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "直接推门进去，打断山田主任的暴行",
+          "effects": {
+            "affection": {
+              "御堂咲子": 10,
+              "山田主任": -20
+            },
+            "flags": {
+              "sakiko_rescued": true,
+              "met_sakiko": true
+            }
+          },
+          "next_beat": "blackmail_rescue"
+        }
+      ]
+    },
+    {
+      "id": "blackmail_rescue",
+      "label": "英雄救美？",
+      "prompt": "山田主任被你突然闯入吓了一跳，慌忙提起裤子，恶狠狠地瞪着你：‘你这家伙是哪个班的！？少管闲事！’咲子老师则衣衫不整地躲在角落里，羞愧得不敢抬头。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "威胁山田主任，说自己已经录音了，逼他离开",
+          "effects": {
+            "affection": {
+              "御堂咲子": 20
+            },
+            "flags": {
+              "sakiko_saved_by_player": true,
+              "route_pure": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "冷笑一声，对山田主任说：‘主任，见者有份，不如让我也加入？’",
+          "effects": {
+            "affection": {
+              "御堂咲子": -30
+            },
+            "flags": {
+              "sakiko_route_ntr": true
+            }
+          },
+          "next_beat": "blackmail_join"
+        }
+      ]
+    },
+    {
+      "id": "blackmail_join",
+      "label": "共犯的狂宴",
+      "prompt": "山田主任愣了一下，随后露出更加下流的笑容：‘现在的年轻人都这么上道吗？好，那就一起好好疼爱一下咲子老师吧。’咲子绝望地闭上了眼睛。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "走上前，和山田主任一起对咲子老师进行侵犯",
+          "effects": {
+            "flags": {
+              "sakiko_route_ntr_gang": true
+            },
+            "sex": {
+              "npc": "御堂咲子",
+              "partner": "维与山田",
+              "touched_parts": ["秘部", "胸部", "唇"],
+              "thoughts": ["没想到不仅是主任，连学生也...我已经没有退路了...诚，对不起..."],
+              "duration": 45
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "effects": {
+      "flags": {
+        "sakiko_blackmail_missed": true
+      }
+    }
+  }
+}
