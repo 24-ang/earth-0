@@ -1157,7 +1157,7 @@ export function buildTodayContext(gs: any, npcName: string, npc: any, src: any):
     lines.push("你应该根据对方的组织身份决定对他的态度——同组织成员视他为同伴，敌对组织成员视他为威胁。你自己的组织立场(organizationalAxes)与他不同时，你在与他互动时可能有内心挣扎。");
   }
 
-  const group = npc.scheduleGroupconst group = npc.scheduleGroup || src?.schedule_group || "";
+  const group = npc.scheduleGroup || src?.schedule_group || "";
   const isStudent = group.includes("学生") || group.includes("高校生") || group.includes("部员") || group.includes("大学");
   const refPlaces = isStudent
     ? "自宅, 商店街, 千葉駅前, 稲毛海岸, カラオケ, 図書館, 本屋, ゲームセンター, ファミレス, コンビニ, 塾, 公園"

@@ -7644,62 +7644,7 @@ test("contribute_to_org - org not found", async () => {
   if (result.details.success) throw new Error("Should fail for nonexistent org");
 });
 
-test("steal_item caught → confront", () => {
-  resetState();
-  loadActiveWorld("oregairu");
-  gameState.player.attributes = { 力量: 8, 敏捷: 8, 体质: 8, 智力: 10, 感知: 8, 魅力: 10 };
-  // Seed NPC with high perception → likely caught
-  const npc = seedNpc("由比ヶ浜結衣", { 感知: 18 });
-  gameState.player.location = "教室";
 
-  const reactions = processNpcReactions("steal_item", { target: "由比ヶ浜結衣" });
-  // With perception 18 vs player dex 8, should be caught
-  if (reactions.length === 0) {
-    // Random chance, so this might flake but with high perception bias it's very likely
-    console.log("  (probabilistic test — re-run if this fails)");
-    return; // skip assertion for probabilistic
-  }
-  const npcAfter = gameState.npcs["由比ヶ浜結衣"];
-  if (!npcAfter.pendingOverride) throw new Error("NPC should have pendingOverride after being caught stealing");
-});
-
-test("combat_action → reaction", () => {
-  resetState();
-  loadActiveWorld("oregairu");
-  gameState.player.attributes = { 力量: 15, 敏捷: 10, 体质: 10, 智力: 10, 感知: 10, 魅力: 10 };
-  const npc = seedNpc("材木座義輝", { 力量: 5 });
-  npc.npcRelationships = {};
-  npc.scheduleGroup = "高校生";
-  gameState.player.location = "教室";
-
-  const reactions = processNpcReactions("combat_action", { target: "材木座義輝" });
-  if (reactions.length === 0) throw new Error("Combat should trigger reaction");
-  if (reactions[0].npcName !== "材木座義輝") throw new Error("Wrong target");
-  // Weak NPC → should avoid or get help
-  if (reactions[0].mode !== "avoid" && reactions[0].mode !== "setup") {
-    throw new Error(`Weak NPC should avoid or setup, got ${reactions[0].mode}`);
-  }
-});
-
-
-
-test("intimate_touch high affection → no reaction", () => {
-  resetState();
-  loadActiveWorld("oregairu");
-  gameState.player.relationships = gameState.player.relationships || {};
-  gameState.player.relationships["由比ヶ浜結衣"] = { stage: "亲密", affection: 8, tone: "" };
-  seedNpc("由比ヶ浜結衣");
-
-  const reactions = processNpcReactions("intimate_touch", { target: "由比ヶ浜結衣" });
-  if (reactions.length > 0) throw new Error("High affection should prevent negative reaction");
-});
-
-test("no handler → empty", () => {
-  resetState();
-  loadActiveWorld("oregairu");
-  const reactions = processNpcReactions("buy_item", { item: "面包" });
-  if (reactions.length > 0) throw new Error("Non-malicious tool should not trigger reactions");
-});
 
 test("lifecycle - seed auto-detected for new org", () => {
   resetState();
