@@ -183,7 +183,8 @@ async function buildRenderStateContext(gs: any): Promise<string> {
     if (activeOrgs.length > 0) {
       const icons: Record<string, string> = { "大本营": "🏠", "控制": "🔒", "主导": "★", "在场": "👤", "参与": "●", "旁観": "○" };
       const orgLines = activeOrgs.map(o => {
-        let line = "  " + (icons[o.relevance] || "·") + " " + o.name + " (" + o.sector + ") — 声望:" + o.playerRep + " [" + o.relevance + "]";
+                const lcEmoji = { "萌芽": "🌱", "初创": "🌿", "成长": "🌳", "成熟": "🏛️", "衰退": "🥀", "消亡": "💀" }[o.lifecycle_stage || "初创"] || "❓";
+        let line = "  " + (icons[o.relevance] || "·") + " " + o.name + " [" + (o.scale || "?") + "] " + lcEmoji + (o.lifecycle_stage || "?") + " (" + o.sector + ") — 声望:" + o.playerRep + " [" + o.relevance + "]";
         if ((o as any).rivalries && (o as any).rivalries.length > 0) {
           const rivals = (o as any).rivalries.filter((r: any) => r.relation < 0);
           const allies = (o as any).rivalries.filter((r: any) => r.relation > 0);
@@ -202,6 +203,16 @@ async function buildRenderStateContext(gs: any): Promise<string> {
 		const reactionSummary = getReactionSummary();
 		if (reactionSummary) parts.push(reactionSummary);
 	} catch (_) { /* npc-reactions best-effort */ }
+  // ── 组织生命周期告警（引擎自转产生的过渡/崩溃信号） ──
+  try {
+    if ((gs as any)._lastOrgAlerts && (gs as any)._lastOrgAlerts.length > 0) {
+      const alertLines = (gs as any)._lastOrgAlerts.map((a: any) => "• " + a.alert);
+      parts.push("[势力动态]
+" + alertLines.join("
+"));
+    }
+  } catch (_) { /* best-effort */ }
+
 
   // ── 玩家装备 ──
   const p = gs.player;

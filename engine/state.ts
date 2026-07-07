@@ -3051,6 +3051,7 @@ export function getActiveOrgsForLocation(location: string): {
   orgId: string; name: string;
   relevance: "大本营" | "控制" | "主导" | "在场" | "参与" | "旁観";
   sector: string; playerRep: number; tier: string;
+  scale?: string; lifecycle_stage?: string;
   rivalries?: { orgId: string; name: string; relation: number; cause: string }[];
 }[] {
   const tier = getLocationTier(location);
@@ -3102,7 +3103,7 @@ export function getActiveOrgsForLocation(location: string): {
       relevance = "旁観";
     }
 
-    result.push({ orgId: id, name: org.name, relevance, sector: org.sector || "unknown", playerRep: rep, tier: org.scale || "club" });
+    result.push({ orgId: id, name: org.name, relevance, sector: org.sector || "unknown", playerRep: rep, tier: org.scale || "club", scale: org.scale, lifecycle_stage: org.lifecycle_stage || "初创" });
   }
 
   // ── 2. 同级同 sector 竞争检测 ──

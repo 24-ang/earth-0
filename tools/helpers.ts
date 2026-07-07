@@ -1120,7 +1120,8 @@ export function buildTodayContext(gs: any, npcName: string, npc: any, src: any):
           else if (rep >= 1) repStr = `友好(声望:${rep})`;
           else if (rep === -1) repStr = `疏离/警惕(声望:${rep})`;
           
-          let orgLine = `• 【${org.name}】(你的角色/职位: ${org.members.find((m: any) => m.npcName === npcName)?.role || "成员"}) | 玩家与该势力的声望关系: ${repStr}`;
+          const lcIcons: Record<string, string> = { "萌芽": "🌱", "初创": "🌿", "成长": "🌳", "成熟": "🏛️", "衰退": "🥀", "消亡": "💀" };
+          let orgLine = `• 【${org.name}】[${org.scale || "?"}] ${lcIcons[org.lifecycle_stage || "初创"] || ""}${org.lifecycle_stage || "?"}期 (你的角色: ${org.members.find((m: any) => m.npcName === npcName)?.role || "成员"}) | 玩家声望: ${repStr}`;
           if (org.goals?.currentPhaseGoal) {
             orgLine += ` | 势力当前阶段目标: ${org.goals.currentPhaseGoal}`;
           }
@@ -1152,6 +1153,8 @@ export function buildTodayContext(gs: any, npcName: string, npc: any, src: any):
 
   lines.push(`如果你的性格或今天状态让你有不同于预设日程的真实去向，请在输出末尾加一段 JSON（选填）:
 {"schedule_intent": {"location": "地点名", "action": "在做什么", "reason": "为什么去"}}
+另外，如果你发现玩家做了令你不安/愤怒/警惕的事，你可以声明反制意图（选填）:
+{"intent": {"type": "avoid_player"|"confront_player"|"inform_teacher"|"hire_help"|"none", "target": "NPC或地点", "reason": "理由", "cost": 金额(仅hire_help)}}
 可参考地点: ${refPlaces}`);
 
   return lines.join("\n");
