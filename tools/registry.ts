@@ -138,7 +138,7 @@ function withToolTracking(tool: any) {
     async execute(id: string, params: any, signal: any, onUpdate: any, ctx: any) {
       // lazy-import to avoid circular deps at module load time
       const { pushToolCall, saveState, gameState } = await import("../engine/state.ts");
-      if (gameState?._toolsLocked === true) {
+      if (gameState?._toolsLocked === true && tool.name !== "init_game" && tool.name !== "settle_scene") {
         console.warn(`[tool:${tool.name}] blocked: tools are locked during rendering phase`);
         return { content: [{ type: "text", text: `[引擎已拦截] 渲染/降级阶段禁止调用工具。` }], details: {} };
       }
