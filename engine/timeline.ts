@@ -789,9 +789,9 @@ export async function openQuest(eventId: string): Promise<string | null> {
 
   gameState.quests[eventId] = {
     id: eventId,
-    title: ev.title,
+    title: ev.title || ev.hook?.hook_text || eventId,
     status: "active",
-    current_beat: ev.beats[0]?.id ?? null,
+    current_beat: ev.beats?.[0]?.id ?? null,
     started_day: currentDay(),
     outcomes: {},
   };
