@@ -178,6 +178,7 @@ export default {
     const { resetState, saveState, setPlayerLocation, initPlayerGrid, calcMaxHP, calcAC } = stateMod;
     resetState();
     const gs = stateMod.gameState;
+    gs._toolsLocked = false; // 防御：上次会话异常退出可能残留锁定
 
     // ── 引擎骨架 ──
     gs.player.relationships = {};
