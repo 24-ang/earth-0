@@ -638,11 +638,20 @@ function getPresentNPCNames(gs: any): string[] {
   const loc = gs.player?.location;
   if (!loc) return [];
   // 简单字符串匹配：Phase 1 分类器的 NPC 在场提示不需要精确到子房间
-  return Object.entries(gs.npcs)
+  const allNPCs = Object.entries(gs.npcs)
     .filter(([_, npc]: [string, any]) => {
       if (npc.alive === false) return false;
-      // isSameLocation 语义：支持层级位置匹配
       return npc.currentRoom === loc || npc.currentRoom?.startsWith(loc + ",") || loc.startsWith(npc.currentRoom + ",");
     })
     .map(([name]) => name);
+  // ⚠️ 同地点最多 6 个有名字的 NPC，其余归入路人系统。防止教室同时显示 91 人。
+  const MAX_NAMED = 6;
+  if (allNPCs.length <= MAX_NAMED) return allNPCs;
+  // 优先关系最深的（好感度最高的），增强叙事连贯性
+  const scored = allNPCs.map(name => ({
+    name,
+    aff: gs.player?.relationships?.[name]?.affection ?? 0
+  }));
+  scored.sort((a, b) => b.aff - a.aff);
+  return scored.slice(0, MAX_NAMED).map(n => n.name);
 }

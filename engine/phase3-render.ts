@@ -276,11 +276,20 @@ async function buildRenderStateContext(gs: any): Promise<string> {
   // ── 在场 NPC（含当前动作） ──
   const loc = gs.player?.location;
   if (loc && gs.npcs) {
-    const inRoom = Object.entries(gs.npcs)
+    const allInRoom = Object.entries(gs.npcs)
       .filter(([_, n]: [string, any]) => isSameLocation(n.currentRoom, loc))
-      .map(([name, n]: [string, any]) => `${name}${(n as any).action ? "(" + (n as any).action + ")" : ""}`);
-    if (inRoom.length > 0) {
-      parts.push(`[在场NPC] ${inRoom.join("、")}`);
+      .map(([name, n]: [string, any]) => ({ name, label: `${name}${(n as any).action ? "(" + (n as any).action + ")" : ""}`, aff: gs.player?.relationships?.[name]?.affection ?? 0 }));
+    const MAX_NAMED = 6;
+    if (allInRoom.length > 0) {
+      if (allInRoom.length <= MAX_NAMED) {
+        parts.push(`[在场NPC] ${allInRoom.map(n => n.label).join("、")}`);
+      } else {
+        // 优先关系最深的前 6 个，其余归入路人
+        allInRoom.sort((a, b) => b.aff - a.aff);
+        const shown = allInRoom.slice(0, MAX_NAMED).map(n => n.label).join("、");
+        const restCount = allInRoom.length - MAX_NAMED;
+        parts.push(`[在场NPC] ${shown} 及另外 ${restCount} 人（可spawn_temp_npc创建其具体存在）`);
+      }
     } else {
       parts.push(`[在场NPC] 无`);
     }
