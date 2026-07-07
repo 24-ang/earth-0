@@ -156,23 +156,18 @@ export function lookupRegion(location: string): RouterResult {
   let allChars = [...new Set(matched.flatMap(r => r.characters))];
   let filterHint = "";
 
-  // 班级过滤：用 character_roster + academic_year_offset 动态算年级
-  const classMatch = location.match(/(\d+)年([A-Z0-9])[班组]?/);
+  // 班级过滤：直接从 characters.json 读取 grade/homeroom，不用手动 roster
+  const classMatch = location.match(/(d+)年([A-Z0-9])[班组]?/);
   if (classMatch) {
     const targetGrade = parseInt(classMatch[1]);
     const targetLetter = classMatch[2];
     const classChars: string[] = [];
-    for (const region of matched) {
-      const roster = (region as any).character_roster as Record<string, CharRoster> | undefined;
-      if (!roster) continue;
-      for (const [name, info] of Object.entries(roster)) {
-        if (info.role === "teacher" || info.role === "staff") {
-          classChars.push(name); // 老师在所有班级都出现
-        } else if (info.grade !== undefined) {
-          const actualGrade = info.grade + academicYearOffset;
-          if (actualGrade === targetGrade && (info.class === targetLetter || info.class === "?")) {
-            classChars.push(name);
-          }
+    for (const ch of (characters as any[])) {
+      if (!ch.grade && ch.schedule_group === "总武高教师") {
+        classChars.push(ch.name); // 教师出现在所有班级
+      } else if (ch.grade !== undefined && ch.homeroom !== undefined) {
+        if (ch.grade === targetGrade && ch.homeroom === targetLetter) {
+          classChars.push(ch.name);
         }
       }
     }

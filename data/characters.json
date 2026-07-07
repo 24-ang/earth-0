@@ -293,7 +293,7 @@
       3,
       5
     ],
-    "schedule_group": "总武高学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -364,7 +364,9 @@
     "personal_axes": {
       "经济立场": -1,
       "政治立场": -2
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "由比滨结衣",
@@ -593,7 +595,9 @@
     "personal_axes": {
       "经济立场": 1,
       "政治立场": -1
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "比企谷八幡",
@@ -719,7 +723,9 @@
     "personal_axes": {
       "经济立场": -2,
       "政治立场": -3
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "喜多川海梦",
@@ -898,7 +904,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": -2
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "椎名詩織",
@@ -1229,7 +1237,9 @@
     "personal_axes": {
       "经济立场": -1,
       "政治立场": -1
-    }
+    },
+    "grade": null,
+    "homeroom": "C"
   },
   {
     "name": "户冢彩加",
@@ -1311,7 +1321,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": 0
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "如月真绫",
@@ -1476,7 +1488,7 @@
     },
     "inventory": [],
     "default_location": "稲毛海岸",
-    "schedule_group": "总武高学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "7": "小学生",
       "12": "中学生",
@@ -1584,7 +1596,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": -1
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "如月翔太",
@@ -1996,7 +2010,9 @@
     "personal_axes": {
       "经济立场": 3,
       "政治立场": 2
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "雪之下大志",
@@ -2052,7 +2068,9 @@
     "personal_axes": {
       "经济立场": 4,
       "政治立场": 3
-    }
+    },
+    "grade": 3,
+    "homeroom": "G"
   },
   {
     "name": "橘京香",
@@ -2635,7 +2653,9 @@
     },
     "default_location_by_age": {
       "16": "东京_圣迹樱丘"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "浅仓透",
@@ -2814,7 +2834,9 @@
     },
     "default_location_by_age": {
       "16": "东京_圣迹樱丘"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "平冢静",
@@ -3091,7 +3113,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "天乃莉莉纱",
@@ -3180,7 +3204,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "橘美花莉",
@@ -3269,7 +3295,9 @@
     },
     "default_location_by_age": {
       "16": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "绫濑沙季",
@@ -3354,7 +3382,9 @@
     },
     "default_location_by_age": {
       "17": "千叶"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "羽生真由梨",
@@ -3529,7 +3559,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "喜咲亚理亚",
@@ -3614,7 +3646,9 @@
     },
     "default_location_by_age": {
       "16": "本千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "A"
   },
   {
     "name": "和泉幽希",
@@ -3695,7 +3729,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "城廻巡",
@@ -3771,7 +3807,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛海岸"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "户部翔",
@@ -3847,7 +3885,9 @@
     },
     "default_location_by_age": {
       "17": "海浜幕張"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "折本香织",
@@ -3912,7 +3952,9 @@
     },
     "default_location_by_age": {
       "17": "千葉駅前"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "黑川茜",
@@ -3990,7 +4032,9 @@
     },
     "default_location_by_age": {
       "17": "阳东高中"
-    }
+    },
+    "grade": 3,
+    "homeroom": "H"
   },
   {
     "name": "星野瑠美衣",
@@ -4070,7 +4114,9 @@
     },
     "default_location_by_age": {
       "16": "阳东高中"
-    }
+    },
+    "grade": 2,
+    "homeroom": "E"
   },
   {
     "name": "矶野上多绪",
@@ -4147,7 +4193,9 @@
     },
     "default_location_by_age": {
       "17": "千葉みなと"
-    }
+    },
+    "grade": 3,
+    "homeroom": "F"
   },
   {
     "name": "寻峰洋子",
@@ -4222,7 +4270,9 @@
     },
     "default_location_by_age": {
       "18": "千叶"
-    }
+    },
+    "grade": 3,
+    "homeroom": "D"
   },
   {
     "name": "宝多六花",
@@ -4299,7 +4349,9 @@
     },
     "default_location_by_age": {
       "16": "东京"
-    }
+    },
+    "grade": 1,
+    "homeroom": "E"
   },
   {
     "name": "南梦芽",
@@ -4375,7 +4427,9 @@
     },
     "default_location_by_age": {
       "16": "东京"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "樱岛麻衣",
@@ -4451,7 +4505,9 @@
     },
     "default_location_by_age": {
       "18": "神奈川"
-    }
+    },
+    "grade": 3,
+    "homeroom": "1"
   },
   {
     "name": "高木",
@@ -4524,7 +4580,9 @@
     },
     "default_location_by_age": {
       "14": "小豆岛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "指宿凛凛澄",
@@ -4596,7 +4654,9 @@
     },
     "default_location_by_age": {
       "15": "千叶"
-    }
+    },
+    "grade": 1,
+    "homeroom": "J"
   },
   {
     "name": "不知火舞",
@@ -4853,7 +4913,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": -1
-    }
+    },
+    "grade": 2,
+    "homeroom": "C"
   },
   {
     "name": "叶山隼人",
@@ -4932,7 +4994,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "三浦优美子",
@@ -5011,7 +5075,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛海岸"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "海老名姬菜",
@@ -5090,7 +5156,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "川崎沙希",
@@ -5169,7 +5237,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "一色彩羽",
@@ -5248,7 +5318,9 @@
     },
     "default_location_by_age": {
       "15": "本千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "相模南",
@@ -5326,7 +5398,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "大和",
@@ -5403,7 +5477,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "大冈",
@@ -5479,7 +5555,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "仲町千佳",
@@ -5555,7 +5633,9 @@
     },
     "default_location_by_age": {
       "16": "千叶市街"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "鹤见留美",
@@ -5633,7 +5713,9 @@
       "6": "稲毛",
       "11": "稲毛",
       "15": "海浜幕張"
-    }
+    },
+    "grade": null,
+    "homeroom": "C"
   },
   {
     "name": "五条新菜",
@@ -5703,7 +5785,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "乾纱寿叶",
@@ -5770,7 +5854,9 @@
     },
     "default_location_by_age": {
       "17": "千葉みなと"
-    }
+    },
+    "grade": 3,
+    "homeroom": "D"
   },
   {
     "name": "乾心寿",
@@ -5837,7 +5923,9 @@
     },
     "default_location_by_age": {
       "14": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "I"
   },
   {
     "name": "唯我成幸",
@@ -5907,7 +5995,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "B"
   },
   {
     "name": "古桥文乃",
@@ -5976,7 +6066,9 @@
     },
     "default_location_by_age": {
       "17": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "A"
   },
   {
     "name": "武元润香",
@@ -6045,7 +6137,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "绪方理珠",
@@ -6114,7 +6208,9 @@
     },
     "default_location_by_age": {
       "17": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "桐须真冬",
@@ -6248,7 +6344,9 @@
     },
     "default_location_by_age": {
       "18": "千葉駅前"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "和泉正宗",
@@ -6315,7 +6413,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "和泉纱雾",
@@ -6381,7 +6481,9 @@
     },
     "default_location_by_age": {
       "12": "本千葉"
-    }
+    },
+    "grade": 6,
+    "homeroom": "B"
   },
   {
     "name": "山田妖精",
@@ -6447,7 +6549,9 @@
     },
     "default_location_by_age": {
       "15": "稲毛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "E"
   },
   {
     "name": "千寿村征",
@@ -6513,7 +6617,9 @@
     },
     "default_location_by_age": {
       "15": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "神野惠",
@@ -6579,7 +6685,9 @@
     },
     "default_location_by_age": {
       "12": "検見川浜"
-    }
+    },
+    "grade": 6,
+    "homeroom": "B"
   },
   {
     "name": "如月雨露",
@@ -6646,7 +6754,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛海岸"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "三色院堇子",
@@ -6713,7 +6823,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "日向葵",
@@ -6780,7 +6892,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "秋野樱",
@@ -6847,7 +6961,9 @@
     },
     "default_location_by_age": {
       "17": "千葉駅前"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "大贺太阳",
@@ -6914,7 +7030,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "羽立桧菜",
@@ -6981,7 +7099,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 1,
+    "homeroom": "B"
   },
   {
     "name": "洋木茅春",
@@ -7048,7 +7168,9 @@
     },
     "default_location_by_age": {
       "16": "本千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "C"
   },
   {
     "name": "蒲田公英",
@@ -7114,7 +7236,9 @@
     },
     "default_location_by_age": {
       "15": "西千葉"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "葉月保雄",
@@ -7181,7 +7305,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "B"
   },
   {
     "name": "桐谷和人",
@@ -7250,7 +7376,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "结城明日奈",
@@ -7317,7 +7445,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "克莱因",
@@ -7518,7 +7648,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "C"
   },
   {
     "name": "西莉卡",
@@ -7585,7 +7717,9 @@
     },
     "default_location_by_age": {
       "14": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "长瀞早濑",
@@ -7651,7 +7785,9 @@
     },
     "default_location_by_age": {
       "15": "本千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "八王子直人",
@@ -7718,7 +7854,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "A"
   },
   {
     "name": "小鸭",
@@ -7785,7 +7923,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "小吉",
@@ -7851,7 +7991,9 @@
     },
     "default_location_by_age": {
       "15": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "樱",
@@ -7918,7 +8060,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "伊理户水斗",
@@ -7985,7 +8129,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "伊理户结女",
@@ -8052,7 +8198,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "南晓月",
@@ -8119,7 +8267,9 @@
     },
     "default_location_by_age": {
       "16": "本千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "川波小暮",
@@ -8186,7 +8336,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "东头伊佐奈",
@@ -8253,7 +8405,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "狼谷",
@@ -8320,7 +8474,9 @@
     },
     "default_location_by_age": {
       "16": "海浜幕張"
-    }
+    },
+    "grade": 3,
+    "homeroom": "A"
   },
   {
     "name": "浅村悠太",
@@ -8387,7 +8543,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "奈良坂真绫",
@@ -8454,7 +8612,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "丸友和",
@@ -8521,7 +8681,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "新庄圭介",
@@ -8588,7 +8750,9 @@
     },
     "default_location_by_age": {
       "17": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "读卖栞",
@@ -8646,7 +8810,7 @@
       "15": "高校生",
       "19": "总武高学生"
     },
-    "schedule_group": "总武高学生",
+    "schedule_group": "高校生",
     "funds": 2000,
     "social_class": "小资产阶级",
     "personal_axes": {
@@ -8722,7 +8886,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "八满结",
@@ -8789,7 +8955,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "犬束秀",
@@ -8856,7 +9024,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "永井圭",
@@ -8923,7 +9093,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛海岸"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "海斗",
@@ -8990,7 +9162,9 @@
     },
     "default_location_by_age": {
       "17": "西千葉"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "佐藤",
@@ -9192,7 +9366,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "才川晴香",
@@ -9259,7 +9435,9 @@
     },
     "default_location_by_age": {
       "17": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "佐藤时雨",
@@ -9326,7 +9504,9 @@
     },
     "default_location_by_age": {
       "17": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "佐条涉",
@@ -9392,7 +9572,9 @@
     },
     "default_location_by_age": {
       "15": "稲毛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "夏川爱华",
@@ -9458,7 +9640,9 @@
     },
     "default_location_by_age": {
       "15": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "H"
   },
   {
     "name": "羽生真由梨／真由罗",
@@ -9592,7 +9776,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "E"
   },
   {
     "name": "秋月孝三",
@@ -9726,7 +9912,9 @@
     },
     "default_location_by_age": {
       "14": "稲毛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "G"
   },
   {
     "name": "秋月真理奈",
@@ -9793,7 +9981,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "G"
   },
   {
     "name": "秋月加代子",
@@ -9928,7 +10118,9 @@
       "6": "千葉駅前",
       "12": "西千葉",
       "15": "蘇我"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "牧野",
@@ -10595,5 +10787,1213 @@
       "经济立场": -1,
       "政治立场": -3
     }
+  },
+  {
+    "name": "黑崎弥生",
+    "source": "原创/同人",
+    "base_age": 24,
+    "gender": "female",
+    "appearance_brief": "艳丽的长黑发、端正贤淑的面容，以及105公分极其引人注目的惊人巨乳。经常穿着会被胸部撑出缝隙的白衬衫。",
+    "hair_color": "黑色",
+    "hair_style": "长直发",
+    "eye_color": "黑色",
+    "hair_accessories": "",
+    "outfits": {
+      "work": {
+        "top": "白色紧身衬衫",
+        "bottom": "黑色包臀长裙",
+        "legs": "黑色丝袜",
+        "feet": "黑色中跟鞋",
+        "inner_top": "大尺寸特制胸罩",
+        "inner_bot": "纯棉内裤"
+      },
+      "casual": {
+        "top": "宽松居家服",
+        "bottom": "长裙",
+        "feet": "拖鞋",
+        "shirt": "围裙（常做家务时穿）"
+      },
+      "sleep": {
+        "shirt": "丝质吊带睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 166,
+      "weight_kg": 60,
+      "build": "丰满",
+      "measurements": {
+        "bust": 105,
+        "waist": 62,
+        "hips": 95
+      },
+      "cup": "K",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 19,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 40,
+        "build": "标准",
+        "measurements": {
+          "bust": 82,
+          "waist": 56,
+          "hips": 82
+        },
+        "cup": "D",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 162,
+        "weight_kg": 54,
+        "build": "丰满",
+        "measurements": {
+          "bust": 95,
+          "waist": 60,
+          "hips": 90
+        },
+        "cup": "H",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 3,
+          "texture": "细腻"
+        }
+      },
+      "24": {
+        "height_cm": 166,
+        "weight_kg": 60,
+        "build": "丰满",
+        "measurements": {
+          "bust": 105,
+          "waist": 62,
+          "hips": 95
+        },
+        "cup": "K",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 7,
+      "体质": 8,
+      "智力": 14,
+      "感知": 15,
+      "魅力": 16
+    },
+    "skills": {
+      "文学": 9,
+      "教学": 8,
+      "烹饪": 10,
+      "家政": 10
+    },
+    "hp": {
+      "current": 16,
+      "max": 16
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "白色紧身衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "西千葉",
+    "default_location_by_age": {
+      "6": "西千葉",
+      "12": "西千葉",
+      "15": "西千葉",
+      "18": "東京",
+      "24": "西千葉"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "24": "总武高教师"
+    },
+    "funds": 150000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "黑长直",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "表面端正贤淑的国文老师，其实是个闷骚好色、个性好强不服输的贤妻良母型角色。对自己的巨乳感到纠结。",
+    "personality_stages": {
+      "12": "文静乖巧的优等生。",
+      "15": "因为胸部发育过快而感到极度害羞和困扰，变得更加内向。",
+      "24": "表面上是端庄的国文老师，私底下其实有些闷骚，负责家里的料理和打扫，是个傲娇的贤妻。"
+    },
+    "speech_style": "平时说话文静礼貌，但在亲密关系中会暴露出闷骚好色的一面，生气时会变成抖S。",
+    "likes": [
+      "下厨",
+      "打扫卫生",
+      "和真纪在一起",
+      "被恋人关注"
+    ],
+    "dislikes": [
+      "自己过于显眼的胸部",
+      "被别人当面调侃身材"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高深受学生欢迎的国文老师，因为端正的面容和惊人的胸围，常常成为男学生的话题。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "实际上是个闷骚好色的人，表面上是M，但生气时会展现出S的一面。包办了家里所有的家务。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "24": {
+        "drives": [
+          "教导好学生",
+          "维护和爱人的日常生活"
+        ],
+        "goal": "在学校维持端庄的形象，在家享受温馨且充满情趣的生活。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "白滨真纪",
+    "source": "原创/同人",
+    "base_age": 24,
+    "gender": "female",
+    "appearance_brief": "浅色短发、笑容开朗的英文老师，身材姣好，给人一种阳光大姐姐的感觉。",
+    "hair_color": "浅金色",
+    "hair_style": "短发",
+    "eye_color": "浅蓝色",
+    "hair_accessories": "",
+    "outfits": {
+      "work": {
+        "top": "浅色衬衫配西装外套",
+        "bottom": "西装裙",
+        "legs": "肉色丝袜",
+        "feet": "高跟鞋",
+        "inner_top": "舒适型胸罩",
+        "inner_bot": "纯棉内裤"
+      },
+      "casual": {
+        "top": "一字肩针织衫",
+        "bottom": "紧身牛仔裤",
+        "feet": "帆布鞋"
+      },
+      "sleep": {
+        "shirt": "宽松T恤（下半身经常只穿内裤）"
+      }
+    },
+    "body": {
+      "height_cm": 163,
+      "weight_kg": 54,
+      "build": "丰满",
+      "measurements": {
+        "bust": 91,
+        "waist": 58,
+        "hips": 89
+      },
+      "cup": "F",
+      "leg_type": "结实",
+      "body_shape": {
+        "chest": "半球",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 116,
+        "weight_kg": 20,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 152,
+        "weight_kg": 43,
+        "build": "标准",
+        "measurements": {
+          "bust": 76,
+          "waist": 56,
+          "hips": 80
+        },
+        "cup": "B",
+        "leg_type": "结实",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 158,
+        "weight_kg": 49,
+        "build": "丰满",
+        "measurements": {
+          "bust": 86,
+          "waist": 57,
+          "hips": 85
+        },
+        "cup": "D",
+        "leg_type": "结实",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "24": {
+        "height_cm": 163,
+        "weight_kg": 54,
+        "build": "丰满",
+        "measurements": {
+          "bust": 91,
+          "waist": 58,
+          "hips": 89
+        },
+        "cup": "F",
+        "leg_type": "结实",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 8,
+      "敏捷": 9,
+      "体质": 9,
+      "智力": 13,
+      "感知": 12,
+      "魅力": 16
+    },
+    "skills": {
+      "英语": 10,
+      "教学": 8,
+      "人际": 9,
+      "运动": 7
+    },
+    "hp": {
+      "current": 18,
+      "max": 18
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "浅色衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "西千葉",
+    "default_location_by_age": {
+      "6": "西千葉",
+      "12": "西千葉",
+      "15": "西千葉",
+      "18": "東京",
+      "24": "西千葉"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "24": "总武高教师"
+    },
+    "funds": 150000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "浅金色"
+      }
+    },
+    "personality_brief": "个性开朗阳光、无懈可击的大姐姐，是弥生的青梅竹马与保护者。私下其实很随性、爱耍废。",
+    "personality_stages": {
+      "12": "活泼好动的假小子，总是保护内向的弥生。",
+      "15": "开朗的阳光少女，在学校里人缘极佳。",
+      "24": "表面上是稳重开朗的英文老师大姐姐，但在家里喜欢耍废，家务几乎全丢给弥生做。"
+    },
+    "speech_style": "开朗热情，像个大姐姐一样照顾人，说话直接毫不做作。遇到突发事件会不知所措。",
+    "likes": [
+      "耍废",
+      "性爱",
+      "弥生做的饭"
+    ],
+    "dislikes": [
+      "做家务",
+      "处理复杂突发的问题"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的英文老师，性格开朗大方，和文静的黑崎老师是形成强烈对比的好朋友，两人都极受欢迎。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "是个S属性（S70M30）的肉食系大姐姐，但在生活上是个白痴，过得太爽每天都在耍废，家事打混爱做不做。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "24": {
+        "drives": [
+          "享受快乐的人生",
+          "保护弥生"
+        ],
+        "goal": "每天能吃到弥生做的饭，舒舒服服地过日子。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
+  },
+  {
+    "name": "御堂咲子",
+    "source": "(C76) [MTSP (Jin)] 御堂咲子さんノ男性事情",
+    "base_age": 27,
+    "gender": "female",
+    "appearance_brief": "黑色长发盘起，戴着眼镜。外表端庄严肃，身材极好。总是一副认真的表情。",
+    "hair_color": "黑色",
+    "hair_style": "长发盘起",
+    "eye_color": "黑色",
+    "hair_accessories": "发圈",
+    "outfits": {
+      "work": {
+        "top": "白色衬衫",
+        "bottom": "深蓝色包臀长裙",
+        "legs": "黑色肉丝袜",
+        "feet": "黑色低跟鞋",
+        "inner_top": "白色胸罩",
+        "inner_bot": "白色内裤"
+      },
+      "casual": {
+        "top": "高领毛衣",
+        "bottom": "长裤",
+        "feet": "平底鞋",
+        "shirt": "围裙"
+      },
+      "sleep": {
+        "shirt": "普通睡裙"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 52,
+      "build": "标准",
+      "measurements": {
+        "bust": 89,
+        "waist": 57,
+        "hips": 86
+      },
+      "cup": "E",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 110,
+        "weight_kg": 18,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 145,
+        "weight_kg": 38,
+        "build": "标准",
+        "measurements": {
+          "bust": 74,
+          "waist": 54,
+          "hips": 78
+        },
+        "cup": "A",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 158,
+        "weight_kg": 46,
+        "build": "标准",
+        "measurements": {
+          "bust": 82,
+          "waist": 56,
+          "hips": 82
+        },
+        "cup": "C",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 4,
+          "texture": "细腻"
+        }
+      },
+      "27": {
+        "height_cm": 162,
+        "weight_kg": 52,
+        "build": "标准",
+        "measurements": {
+          "bust": 89,
+          "waist": 57,
+          "hips": 86
+        },
+        "cup": "E",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 7,
+      "体质": 7,
+      "智力": 14,
+      "感知": 14,
+      "魅力": 15
+    },
+    "skills": {
+      "教学": 8,
+      "人际": 6,
+      "家政": 9
+    },
+    "hp": {
+      "current": 14,
+      "max": 14
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "白色衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛海岸",
+    "default_location_by_age": {
+      "6": "東京",
+      "12": "東京",
+      "15": "東京",
+      "18": "東京",
+      "27": "稲毛海岸"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "24": "总武高教师",
+      "27": "总武高教师"
+    },
+    "funds": 200000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "马尾",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "极其正经死板的女教师。丈夫过世后独自抚养继子，对继子有着极其复杂的感情，表面上像个严厉的母亲。",
+    "personality_stages": {
+      "12": "认真听话的好学生。",
+      "15": "严肃认真的班长类型。",
+      "27": "失去丈夫的寡妇，独自抚养继子。看似对男性失去了兴趣，其实内心压抑着极大的压力。"
+    },
+    "speech_style": "总是用敬语或严肃的语气说话。在陷入困境时会表现出极度的动摇和屈辱。",
+    "likes": [
+      "看着继子成长",
+      "做家务"
+    ],
+    "dislikes": [
+      "年级主任的骚扰",
+      "违背伦理道德的事情"
+    ],
+    "public_facts": [
+      {
+        "text": "学校里出了名严肃认真的女教师，是单亲妈妈。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "因为继子在学校里的某些把柄被年级主任抓住，遭到了威胁，被迫与其发生肉体关系。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "27": {
+        "drives": [
+          "保护继子不受伤害",
+          "维持现在的家庭生活"
+        ],
+        "goal": "让继子顺利毕业。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 2
+    }
+  },
+  {
+    "name": "御堂诚",
+    "source": "原创 (MTSP衍生)",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "普通的男高中生，常常带着忧郁的神情。",
+    "hair_color": "深蓝色",
+    "hair_style": "短发",
+    "eye_color": "深蓝色",
+    "hair_accessories": "",
+    "outfits": {
+      "school": {
+        "top": "总武高制服上衣",
+        "bottom": "西裤",
+        "feet": "皮鞋"
+      },
+      "casual": {
+        "top": "T恤",
+        "bottom": "牛仔裤",
+        "feet": "运动鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 58,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 22,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 40,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "16": {
+        "height_cm": 170,
+        "weight_kg": 58,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 8,
+      "敏捷": 8,
+      "体质": 8,
+      "智力": 10,
+      "感知": 12,
+      "魅力": 10
+    },
+    "skills": {
+      "运动": 5
+    },
+    "hp": {
+      "current": 16,
+      "max": 16
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "制服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛海岸",
+    "default_location_by_age": {
+      "6": "東京",
+      "12": "東京",
+      "16": "稲毛海岸"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "16": "高校生"
+    },
+    "funds": 2000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "深蓝色"
+      }
+    },
+    "personality_brief": "多愁善感的青春期少年。把继母当成女性看待，内心情感非常复杂，因此叫不出“妈妈”。",
+    "personality_stages": {
+      "12": "失去亲生母亲，开始依赖继母。",
+      "16": "进入青春期，对继母产生了超越母子的女性情愫，同时感到深深的背德感和苦恼。"
+    },
+    "speech_style": "有些闷葫芦，面对咲子时总是欲言又止。",
+    "likes": [
+      "咲子"
+    ],
+    "dislikes": [
+      "年级主任"
+    ],
+    "public_facts": [
+      {
+        "text": "御堂老师的继子，和御堂老师一起生活。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "被年级主任抓住了把柄，成了年级主任威胁咲子的筹码。",
+        "level": "close"
+      }
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    },
+    "drives_by_age": {
+      "16": {
+        "drives": [
+          "对继母产生了超越母子的感情，为此感到罪恶和迷茫",
+          "不想让任何人发现自己的秘密"
+        ],
+        "goal": "保护继母不被山田主任伤害——但不知道该怎么面对她"
+      }
+    },
+    "grade": 2,
+    "homeroom": "C"
+  },
+  {
+    "name": "山田主任",
+    "source": "原创 (MTSP衍生)",
+    "base_age": 48,
+    "gender": "male",
+    "appearance_brief": "戴着眼镜、头发灰白的中年男教师。总是挂着虚伪而阴险的笑容。",
+    "hair_color": "灰白",
+    "hair_style": "三七分",
+    "eye_color": "黑色",
+    "hair_accessories": "",
+    "outfits": {
+      "work": {
+        "top": "灰色西装",
+        "bottom": "西裤",
+        "feet": "皮鞋"
+      },
+      "casual": {
+        "top": "Polo衫",
+        "bottom": "休闲裤",
+        "feet": "皮鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 168,
+      "weight_kg": 75,
+      "build": "丰满",
+      "leg_type": "结实",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "久坐"
+    },
+    "body_by_age": {
+      "12": {
+        "height_cm": 140,
+        "weight_kg": 35,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "18": {
+        "height_cm": 168,
+        "weight_kg": 65,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "48": {
+        "height_cm": 168,
+        "weight_kg": 75,
+        "build": "丰满",
+        "leg_type": "结实",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 6,
+      "体质": 7,
+      "智力": 12,
+      "感知": 14,
+      "魅力": 5
+    },
+    "skills": {
+      "人际": 8,
+      "谎言": 9
+    },
+    "hp": {
+      "current": 14,
+      "max": 14
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "千葉駅前",
+    "default_location_by_age": {
+      "12": "東京",
+      "18": "東京",
+      "48": "千葉駅前"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "18": "大学生",
+      "25": "总武高教师",
+      "48": "总武高教师"
+    },
+    "funds": 500000,
+    "appearance_by_age": {
+      "18": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "风评极差的老色狼。道貌岸然，擅长利用权力进行潜规则和要挟。",
+    "personality_stages": {
+      "18": "普通的大学生。",
+      "48": "在职场混成老油条，利用职权骚扰女教师和女学生。"
+    },
+    "speech_style": "总是带着一种高高在上、阴阳怪气的语调。喜欢用冠冕堂皇的理由掩饰下流的目的。",
+    "likes": [
+      "女教师",
+      "女学生",
+      "权力"
+    ],
+    "dislikes": [
+      "反抗他的人"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的年级主任，风评不佳，被传为老色狼。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "抓住了御堂诚的把柄，以此要挟御堂咲子和他发生关系。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "48": {
+        "drives": [
+          "满足私欲"
+        ],
+        "goal": "彻底掌控御堂咲子。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "青山悠希",
+    "source": "原创/同人 (选择教华)",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "外表普通的男高中生，留着褐色的短发，看起来有些随和且容易被欺负的样子。",
+    "hair_color": "褐色",
+    "hair_style": "短发",
+    "eye_color": "褐色",
+    "hair_accessories": "",
+    "outfits": {
+      "school": {
+        "top": "总武高制服上衣",
+        "bottom": "西裤",
+        "feet": "皮鞋"
+      },
+      "casual": {
+        "top": "T恤或卫衣",
+        "bottom": "休闲裤",
+        "feet": "运动鞋"
+      },
+      "sleep": {
+        "shirt": "宽松T恤",
+        "bottom": "短裤"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 62,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 42,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "17": {
+        "height_cm": 172,
+        "weight_kg": 62,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 8,
+      "体质": 8,
+      "智力": 11,
+      "感知": 10,
+      "魅力": 9
+    },
+    "skills": {
+      "学习": 8,
+      "家政": 8,
+      "跑腿": 9
+    },
+    "hp": {
+      "current": 16,
+      "max": 16
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "制服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "总武高",
+    "default_location_by_age": {
+      "12": "東京",
+      "17": "总武高"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "17": "高校生"
+    },
+    "funds": 5000,
+    "appearance_by_age": {
+      "17": {
+        "hair_style": "短发",
+        "hair_color": "褐色"
+      }
+    },
+    "personality_brief": "性格随和、有点老好人的男生。因为家离学校远想租房，结果差点被两位年长的女教师拉去合租。做家事很利索。",
+    "personality_stages": {
+      "17": "常常被年长女性耍得团团转，性格优柔寡断但在学习和做家事上很靠谱。"
+    },
+    "speech_style": "礼貌但常常带着无奈和害羞的语气，经常被强势的女性牵着鼻子走。",
+    "likes": [
+      "平稳的生活",
+      "学习"
+    ],
+    "dislikes": [
+      "难以抉择的修罗场"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的二年级学生，成绩中上，看起来是个老实人。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "家离学校很远，正到处寻找可以便宜合租的公寓。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "17": {
+        "drives": [
+          "找房子",
+          "维持成绩"
+        ],
+        "goal": "在学校附近找到合适的住处。"
+      }
+    },
+    "social_class": "学生",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    },
+    "grade": 3,
+    "homeroom": "I"
   }
 ]

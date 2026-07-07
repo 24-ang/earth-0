@@ -293,7 +293,7 @@
       3,
       5
     ],
-    "schedule_group": "总武高学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -364,7 +364,9 @@
     "personal_axes": {
       "经济立场": -1,
       "政治立场": -2
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "由比滨结衣",
@@ -593,7 +595,9 @@
     "personal_axes": {
       "经济立场": 1,
       "政治立场": -1
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "比企谷八幡",
@@ -719,7 +723,9 @@
     "personal_axes": {
       "经济立场": -2,
       "政治立场": -3
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "喜多川海梦",
@@ -898,7 +904,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": -2
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "椎名詩織",
@@ -1229,7 +1237,9 @@
     "personal_axes": {
       "经济立场": -1,
       "政治立场": -1
-    }
+    },
+    "grade": null,
+    "homeroom": "C"
   },
   {
     "name": "户冢彩加",
@@ -1311,7 +1321,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": 0
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "如月真绫",
@@ -1476,7 +1488,7 @@
     },
     "inventory": [],
     "default_location": "稲毛海岸",
-    "schedule_group": "总武高学生",
+    "schedule_group": "高校生",
     "schedule_group_by_age": {
       "7": "小学生",
       "12": "中学生",
@@ -1584,7 +1596,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": -1
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "如月翔太",
@@ -1996,7 +2010,9 @@
     "personal_axes": {
       "经济立场": 3,
       "政治立场": 2
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "雪之下大志",
@@ -2052,7 +2068,9 @@
     "personal_axes": {
       "经济立场": 4,
       "政治立场": 3
-    }
+    },
+    "grade": 3,
+    "homeroom": "G"
   },
   {
     "name": "橘京香",
@@ -2635,7 +2653,9 @@
     },
     "default_location_by_age": {
       "16": "东京_圣迹樱丘"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "浅仓透",
@@ -2814,7 +2834,9 @@
     },
     "default_location_by_age": {
       "16": "东京_圣迹樱丘"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "平冢静",
@@ -3091,7 +3113,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "天乃莉莉纱",
@@ -3180,7 +3204,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "橘美花莉",
@@ -3269,7 +3295,9 @@
     },
     "default_location_by_age": {
       "16": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "绫濑沙季",
@@ -3354,7 +3382,9 @@
     },
     "default_location_by_age": {
       "17": "千叶"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "羽生真由梨",
@@ -3529,7 +3559,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "喜咲亚理亚",
@@ -3614,7 +3646,9 @@
     },
     "default_location_by_age": {
       "16": "本千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "A"
   },
   {
     "name": "和泉幽希",
@@ -3695,7 +3729,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "城廻巡",
@@ -3771,7 +3807,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛海岸"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "户部翔",
@@ -3847,7 +3885,9 @@
     },
     "default_location_by_age": {
       "17": "海浜幕張"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "折本香织",
@@ -3912,7 +3952,9 @@
     },
     "default_location_by_age": {
       "17": "千葉駅前"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "黑川茜",
@@ -3990,7 +4032,9 @@
     },
     "default_location_by_age": {
       "17": "阳东高中"
-    }
+    },
+    "grade": 3,
+    "homeroom": "H"
   },
   {
     "name": "星野瑠美衣",
@@ -4070,7 +4114,9 @@
     },
     "default_location_by_age": {
       "16": "阳东高中"
-    }
+    },
+    "grade": 2,
+    "homeroom": "E"
   },
   {
     "name": "矶野上多绪",
@@ -4147,7 +4193,9 @@
     },
     "default_location_by_age": {
       "17": "千葉みなと"
-    }
+    },
+    "grade": 3,
+    "homeroom": "F"
   },
   {
     "name": "寻峰洋子",
@@ -4222,7 +4270,9 @@
     },
     "default_location_by_age": {
       "18": "千叶"
-    }
+    },
+    "grade": 3,
+    "homeroom": "D"
   },
   {
     "name": "宝多六花",
@@ -4299,7 +4349,9 @@
     },
     "default_location_by_age": {
       "16": "东京"
-    }
+    },
+    "grade": 1,
+    "homeroom": "E"
   },
   {
     "name": "南梦芽",
@@ -4375,7 +4427,9 @@
     },
     "default_location_by_age": {
       "16": "东京"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "樱岛麻衣",
@@ -4451,7 +4505,9 @@
     },
     "default_location_by_age": {
       "18": "神奈川"
-    }
+    },
+    "grade": 3,
+    "homeroom": "1"
   },
   {
     "name": "高木",
@@ -4524,7 +4580,9 @@
     },
     "default_location_by_age": {
       "14": "小豆岛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "指宿凛凛澄",
@@ -4596,7 +4654,9 @@
     },
     "default_location_by_age": {
       "15": "千叶"
-    }
+    },
+    "grade": 1,
+    "homeroom": "J"
   },
   {
     "name": "不知火舞",
@@ -4853,7 +4913,9 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": -1
-    }
+    },
+    "grade": 2,
+    "homeroom": "C"
   },
   {
     "name": "叶山隼人",
@@ -4932,7 +4994,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "三浦优美子",
@@ -5011,7 +5075,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛海岸"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "海老名姬菜",
@@ -5090,7 +5156,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "川崎沙希",
@@ -5169,7 +5237,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "一色彩羽",
@@ -5248,7 +5318,9 @@
     },
     "default_location_by_age": {
       "15": "本千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "相模南",
@@ -5326,7 +5398,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "大和",
@@ -5403,7 +5477,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "大冈",
@@ -5479,7 +5555,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "仲町千佳",
@@ -5555,7 +5633,9 @@
     },
     "default_location_by_age": {
       "16": "千叶市街"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "鹤见留美",
@@ -5633,7 +5713,9 @@
       "6": "稲毛",
       "11": "稲毛",
       "15": "海浜幕張"
-    }
+    },
+    "grade": null,
+    "homeroom": "C"
   },
   {
     "name": "五条新菜",
@@ -5703,7 +5785,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "乾纱寿叶",
@@ -5770,7 +5854,9 @@
     },
     "default_location_by_age": {
       "17": "千葉みなと"
-    }
+    },
+    "grade": 3,
+    "homeroom": "D"
   },
   {
     "name": "乾心寿",
@@ -5837,7 +5923,9 @@
     },
     "default_location_by_age": {
       "14": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "I"
   },
   {
     "name": "唯我成幸",
@@ -5907,7 +5995,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "B"
   },
   {
     "name": "古桥文乃",
@@ -5976,7 +6066,9 @@
     },
     "default_location_by_age": {
       "17": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "A"
   },
   {
     "name": "武元润香",
@@ -6045,7 +6137,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "绪方理珠",
@@ -6114,7 +6208,9 @@
     },
     "default_location_by_age": {
       "17": "海浜幕張"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "桐须真冬",
@@ -6248,7 +6344,9 @@
     },
     "default_location_by_age": {
       "18": "千葉駅前"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "和泉正宗",
@@ -6315,7 +6413,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "和泉纱雾",
@@ -6381,7 +6481,9 @@
     },
     "default_location_by_age": {
       "12": "本千葉"
-    }
+    },
+    "grade": 6,
+    "homeroom": "B"
   },
   {
     "name": "山田妖精",
@@ -6447,7 +6549,9 @@
     },
     "default_location_by_age": {
       "15": "稲毛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "E"
   },
   {
     "name": "千寿村征",
@@ -6513,7 +6617,9 @@
     },
     "default_location_by_age": {
       "15": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "神野惠",
@@ -6579,7 +6685,9 @@
     },
     "default_location_by_age": {
       "12": "検見川浜"
-    }
+    },
+    "grade": 6,
+    "homeroom": "B"
   },
   {
     "name": "如月雨露",
@@ -6646,7 +6754,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛海岸"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "三色院堇子",
@@ -6713,7 +6823,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "日向葵",
@@ -6780,7 +6892,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "秋野樱",
@@ -6847,7 +6961,9 @@
     },
     "default_location_by_age": {
       "17": "千葉駅前"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "大贺太阳",
@@ -6914,7 +7030,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "羽立桧菜",
@@ -6981,7 +7099,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 1,
+    "homeroom": "B"
   },
   {
     "name": "洋木茅春",
@@ -7048,7 +7168,9 @@
     },
     "default_location_by_age": {
       "16": "本千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "C"
   },
   {
     "name": "蒲田公英",
@@ -7114,7 +7236,9 @@
     },
     "default_location_by_age": {
       "15": "西千葉"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "葉月保雄",
@@ -7181,7 +7305,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "B"
   },
   {
     "name": "桐谷和人",
@@ -7250,7 +7376,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "B"
   },
   {
     "name": "结城明日奈",
@@ -7317,7 +7445,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "F"
   },
   {
     "name": "克莱因",
@@ -7518,7 +7648,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "C"
   },
   {
     "name": "西莉卡",
@@ -7585,7 +7717,9 @@
     },
     "default_location_by_age": {
       "14": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "长瀞早濑",
@@ -7651,7 +7785,9 @@
     },
     "default_location_by_age": {
       "15": "本千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "八王子直人",
@@ -7718,7 +7854,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "A"
   },
   {
     "name": "小鸭",
@@ -7785,7 +7923,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "小吉",
@@ -7851,7 +7991,9 @@
     },
     "default_location_by_age": {
       "15": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "樱",
@@ -7918,7 +8060,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "伊理户水斗",
@@ -7985,7 +8129,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "伊理户结女",
@@ -8052,7 +8198,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "南晓月",
@@ -8119,7 +8267,9 @@
     },
     "default_location_by_age": {
       "16": "本千葉"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "川波小暮",
@@ -8186,7 +8336,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "东头伊佐奈",
@@ -8253,7 +8405,9 @@
     },
     "default_location_by_age": {
       "16": "千葉みなと"
-    }
+    },
+    "grade": 1,
+    "homeroom": "C"
   },
   {
     "name": "狼谷",
@@ -8320,7 +8474,9 @@
     },
     "default_location_by_age": {
       "16": "海浜幕張"
-    }
+    },
+    "grade": 3,
+    "homeroom": "A"
   },
   {
     "name": "浅村悠太",
@@ -8387,7 +8543,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "奈良坂真绫",
@@ -8454,7 +8612,9 @@
     },
     "default_location_by_age": {
       "17": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "丸友和",
@@ -8521,7 +8681,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "新庄圭介",
@@ -8588,7 +8750,9 @@
     },
     "default_location_by_age": {
       "17": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "读卖栞",
@@ -8646,7 +8810,7 @@
       "15": "高校生",
       "19": "总武高学生"
     },
-    "schedule_group": "总武高学生",
+    "schedule_group": "高校生",
     "funds": 2000,
     "social_class": "小资产阶级",
     "personal_axes": {
@@ -8722,7 +8886,9 @@
     },
     "default_location_by_age": {
       "16": "検見川浜"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "八满结",
@@ -8789,7 +8955,9 @@
     },
     "default_location_by_age": {
       "16": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "犬束秀",
@@ -8856,7 +9024,9 @@
     },
     "default_location_by_age": {
       "16": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "D"
   },
   {
     "name": "永井圭",
@@ -8923,7 +9093,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛海岸"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "海斗",
@@ -8990,7 +9162,9 @@
     },
     "default_location_by_age": {
       "17": "西千葉"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "佐藤",
@@ -9192,7 +9366,9 @@
     },
     "default_location_by_age": {
       "17": "稲毛"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "才川晴香",
@@ -9259,7 +9435,9 @@
     },
     "default_location_by_age": {
       "17": "千葉駅前"
-    }
+    },
+    "grade": 2,
+    "homeroom": "J"
   },
   {
     "name": "佐藤时雨",
@@ -9326,7 +9504,9 @@
     },
     "default_location_by_age": {
       "17": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "D"
   },
   {
     "name": "佐条涉",
@@ -9392,7 +9572,9 @@
     },
     "default_location_by_age": {
       "15": "稲毛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "F"
   },
   {
     "name": "夏川爱华",
@@ -9458,7 +9640,9 @@
     },
     "default_location_by_age": {
       "15": "検見川浜"
-    }
+    },
+    "grade": 1,
+    "homeroom": "H"
   },
   {
     "name": "羽生真由梨／真由罗",
@@ -9592,7 +9776,9 @@
     },
     "default_location_by_age": {
       "16": "蘇我"
-    }
+    },
+    "grade": 2,
+    "homeroom": "E"
   },
   {
     "name": "秋月孝三",
@@ -9726,7 +9912,9 @@
     },
     "default_location_by_age": {
       "14": "稲毛"
-    }
+    },
+    "grade": 1,
+    "homeroom": "G"
   },
   {
     "name": "秋月真理奈",
@@ -9793,7 +9981,9 @@
     },
     "default_location_by_age": {
       "16": "西千葉"
-    }
+    },
+    "grade": 2,
+    "homeroom": "G"
   },
   {
     "name": "秋月加代子",
@@ -9928,7 +10118,9 @@
       "6": "千葉駅前",
       "12": "西千葉",
       "15": "蘇我"
-    }
+    },
+    "grade": 3,
+    "homeroom": "B"
   },
   {
     "name": "牧野",
@@ -11471,7 +11663,9 @@
         ],
         "goal": "保护继母不被山田主任伤害——但不知道该怎么面对她"
       }
-    }
+    },
+    "grade": 2,
+    "homeroom": "C"
   },
   {
     "name": "山田主任",
@@ -11642,5 +11836,164 @@
       "经济立场": 1,
       "政治立场": 1
     }
+  },
+  {
+    "name": "青山悠希",
+    "source": "原创/同人 (选择教华)",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "外表普通的男高中生，留着褐色的短发，看起来有些随和且容易被欺负的样子。",
+    "hair_color": "褐色",
+    "hair_style": "短发",
+    "eye_color": "褐色",
+    "hair_accessories": "",
+    "outfits": {
+      "school": {
+        "top": "总武高制服上衣",
+        "bottom": "西裤",
+        "feet": "皮鞋"
+      },
+      "casual": {
+        "top": "T恤或卫衣",
+        "bottom": "休闲裤",
+        "feet": "运动鞋"
+      },
+      "sleep": {
+        "shirt": "宽松T恤",
+        "bottom": "短裤"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 62,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 42,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "17": {
+        "height_cm": 172,
+        "weight_kg": 62,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 8,
+      "体质": 8,
+      "智力": 11,
+      "感知": 10,
+      "魅力": 9
+    },
+    "skills": {
+      "学习": 8,
+      "家政": 8,
+      "跑腿": 9
+    },
+    "hp": {
+      "current": 16,
+      "max": 16
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "制服",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "总武高",
+    "default_location_by_age": {
+      "12": "東京",
+      "17": "总武高"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "12": "中学生",
+      "17": "高校生"
+    },
+    "funds": 5000,
+    "appearance_by_age": {
+      "17": {
+        "hair_style": "短发",
+        "hair_color": "褐色"
+      }
+    },
+    "personality_brief": "性格随和、有点老好人的男生。因为家离学校远想租房，结果差点被两位年长的女教师拉去合租。做家事很利索。",
+    "personality_stages": {
+      "17": "常常被年长女性耍得团团转，性格优柔寡断但在学习和做家事上很靠谱。"
+    },
+    "speech_style": "礼貌但常常带着无奈和害羞的语气，经常被强势的女性牵着鼻子走。",
+    "likes": [
+      "平稳的生活",
+      "学习"
+    ],
+    "dislikes": [
+      "难以抉择的修罗场"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的二年级学生，成绩中上，看起来是个老实人。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "家离学校很远，正到处寻找可以便宜合租的公寓。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "17": {
+        "drives": [
+          "找房子",
+          "维持成绩"
+        ],
+        "goal": "在学校附近找到合适的住处。"
+      }
+    },
+    "social_class": "学生",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    },
+    "grade": 3,
+    "homeroom": "I"
   }
 ]
