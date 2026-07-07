@@ -13438,191 +13438,128 @@
     }
   },
   {
-    "name": "蓝泽芽衣",
+    "name": "城户优斗",
     "source": "ぼくだけがセックスできない家 / 紅村かる",
-    "base_age": 17,
-    "gender": "female",
-    "appearance_brief": "短金发，戴耳环和choker，麦色肌肤，惹眼的丰满身材，田径部出身的辣妹风女生。",
-    "hair_color": "金色（漂染）",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "个子矮，长相普通，脸上有雀斑，戴眼镜的内向阴角男生。",
+    "hair_color": "黑色",
     "hair_style": "短发",
-    "eye_color": "琥珀色",
-    "hair_accessories": "耳环（珍珠耳钉）",
+    "eye_color": "黑色",
+    "hair_accessories": "",
     "grade": 2,
-    "homeroom": "A",
+    "homeroom": "C",
     "outfits": {
       "school": {
-        "top": "白色衬衫（领口略敞）",
-        "bottom": "深灰百褶裙",
-        "legs": "短袜",
-        "feet": "乐福鞋",
-        "inner_top": "黑色蕾丝bra",
-        "inner_bot": "黑色内裤",
-        "shirt": "红色蝴蝶结领带"
+        "top": "白色衬衫",
+        "bottom": "深灰西裤",
+        "feet": "皮鞋",
+        "inner_top": "白色T恤",
+        "inner_bot": "四角内裤",
+        "shirt": "校服外套"
       },
       "casual": {
-        "top": "黑色低胸tank top",
-        "bottom": "牛仔热裤",
+        "top": "普通T恤",
+        "bottom": "休闲裤",
         "feet": "运动鞋",
-        "inner_top": "黑色bra",
-        "inner_bot": "黑色内裤",
-        "shirt": "白色开衫（披着）"
+        "inner_top": "白色T恤",
+        "inner_bot": "四角内裤"
       },
       "sleep": {
-        "shirt": "宽松运动T恤（下面只穿内裤）"
+        "shirt": "宽松T恤配短裤"
       }
     },
     "body": {
-      "height_cm": 160,
+      "height_cm": 162,
       "weight_kg": 52,
-      "build": "丰满",
-      "measurements": {
-        "bust": 88,
-        "waist": 58,
-        "hips": 86
-      },
-      "cup": "E",
-      "leg_type": "运动型",
-      "body_shape": {
-        "chest": "半球",
-        "hips": "蜜桃",
-        "waist": "细腰"
-      },
+      "build": "标准",
+      "leg_type": "普通",
       "skin": {
-        "base_tone": "小麦",
-        "tan": 15,
-        "texture": "细腻"
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
       },
       "diet": "正常",
-      "exercise": "规律运动"
+      "exercise": "日常活动"
     },
     "body_by_age": {
       "6": {
         "height_cm": 112,
-        "weight_kg": 18,
-        "build": "纤细",
+        "weight_kg": 20,
+        "build": "标准",
         "leg_type": "普通",
         "skin": {
           "base_tone": "普通",
-          "tan": 8,
-          "texture": "细腻"
+          "tan": 5,
+          "texture": "普通"
         }
       },
       "12": {
-        "height_cm": 152,
-        "weight_kg": 42,
+        "height_cm": 146,
+        "weight_kg": 38,
         "build": "标准",
-        "measurements": {
-          "bust": 76,
-          "waist": 56,
-          "hips": 78
-        },
-        "cup": "B",
-        "leg_type": "运动型",
-        "body_shape": {
-          "chest": "半球",
-          "hips": "蜜桃",
-          "waist": "细腰"
-        },
+        "leg_type": "普通",
         "skin": {
-          "base_tone": "小麦",
-          "tan": 18,
-          "texture": "细腻"
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
         }
       },
       "15": {
         "height_cm": 158,
         "weight_kg": 48,
-        "build": "丰满",
-        "measurements": {
-          "bust": 84,
-          "waist": 57,
-          "hips": 83
-        },
-        "cup": "D",
-        "leg_type": "运动型",
-        "body_shape": {
-          "chest": "半球",
-          "hips": "蜜桃",
-          "waist": "细腰"
-        },
+        "build": "纤细",
+        "leg_type": "普通",
         "skin": {
-          "base_tone": "小麦",
-          "tan": 16,
-          "texture": "细腻"
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
         }
       },
-      "17": {
-        "height_cm": 160,
+      "16": {
+        "height_cm": 162,
         "weight_kg": 52,
-        "build": "丰满",
-        "measurements": {
-          "bust": 88,
-          "waist": 58,
-          "hips": 86
-        },
-        "cup": "E",
-        "leg_type": "运动型",
-        "body_shape": {
-          "chest": "半球",
-          "hips": "蜜桃",
-          "waist": "细腰"
-        },
+        "build": "标准",
+        "leg_type": "普通",
         "skin": {
-          "base_tone": "小麦",
-          "tan": 15,
-          "texture": "细腻"
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
         }
       }
     },
     "attributes": {
-      "力量": 10,
-      "敏捷": 13,
-      "体质": 12,
-      "智力": 9,
-      "感知": 11,
-      "魅力": 16
+      "力量": 7,
+      "敏捷": 8,
+      "体质": 8,
+      "智力": 11,
+      "感知": 13,
+      "魅力": 7
     },
     "skills": {
-      "运动": 10,
-      "田径": 9,
-      "人际": 8,
-      "诱惑": 9
+      "学习": 7,
+      "观察": 8,
+      "忍耐": 10
     },
     "hp": {
-      "current": 24,
-      "max": 24
+      "current": 16,
+      "max": 16
     },
-    "ac": 11,
+    "ac": 10,
     "equipment": {
       "top": {
-        "name": "白色衬衫",
+        "name": "校服外套",
         "type": "clothing",
         "slot": "top",
-        "weight": 0.3,
+        "weight": 0.5,
         "effects": [],
         "state": "intact"
       },
       "bottom": {
-        "name": "深灰百褶裙",
+        "name": "深灰西裤",
         "type": "clothing",
         "slot": "bottom",
         "weight": 0.3,
-        "effects": [],
-        "state": "intact"
-      },
-      "inner_top": {
-        "name": "黑色蕾丝bra",
-        "type": "clothing",
-        "slot": "inner_top",
-        "weight": 0.05,
-        "effects": [],
-        "state": "intact"
-      },
-      "inner_bot": {
-        "name": "黑色内裤",
-        "type": "clothing",
-        "slot": "inner_bot",
-        "weight": 0.02,
         "effects": [],
         "state": "intact"
       }
@@ -13643,97 +13580,527 @@
         "volume": 0.1,
         "effects": [],
         "state": "intact",
-        "flavor": "亮色皮质小钱包，里面有几张便利店优惠券和零钱"
-      },
-      {
-        "name": "耳机",
-        "type": "tool",
-        "weight": 0.05,
-        "effects": [],
-        "state": "intact"
+        "flavor": "普通黑色钱包"
       }
     ],
-    "default_location": "稲毛海岸",
+    "default_location": "稲毛",
     "default_location_by_age": {
-      "6": "稲毛海岸",
-      "12": "稲毛海岸",
-      "15": "稲毛海岸",
-      "17": "稲毛海岸"
+      "6": "稲毛",
+      "12": "稲毛",
+      "15": "稲毛",
+      "16": "稲毛"
     },
     "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
       "15": "高校生",
-      "17": "高校生"
+      "16": "高校生"
     },
-    "funds": 8000,
+    "funds": 2000,
     "appearance_by_age": {
+      "6": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
+      },
       "12": {
-        "hair_style": "马尾",
-        "hair_color": "深棕色（天然色）"
+        "hair_style": "短发",
+        "hair_color": "黑色"
       },
       "15": {
         "hair_style": "短发",
-        "hair_color": "金色（开始漂染）"
+        "hair_color": "黑色"
+      },
+      "16": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
       }
     },
-    "personality_brief": "外表豪放、浑身辣妹气场，看似对感情随便，实则内心很容易受伤。私下里在和年长男生约会，对班上的城戸存在一种说不清楚的情绪。",
+    "personality_brief": "自卑、畏缩、缺乏行动力。暗恋朝阳并邀请她来家里，但性格过于被动。",
     "personality_stages": {
-      "12": "田径部的刻苦少女，直率开朗，对感情懵懂。",
-      "15": "开始漂染头发、穿耳孔，逐渐形成辣妹风格，感情上也变得大胆。",
-      "17": "表面上洒脱随性，私下里和校外的年长男生有来往。对同学城戸有某种复杂的关注，但自己也说不清楚是什么。"
+      "6": "有些胆小内向的普通孩子。",
+      "12": "在班级角落里默默无闻的中学生，不善交际。",
+      "15": "进入青春期，自卑感加重，面对喜欢的女生本田朝阳极度害羞。",
+      "16": "缺乏行动力，在情感上非常被动，总是寄希望于他人，结果导致了在家庭中的边缘化。"
     },
-    "speech_style": "讲话直接、用语随意，偶尔带关西腔的语气词。对感兴趣的人会主动搭话，对无聊的人直接无视。",
+    "speech_style": "声音很小，经常结巴和使用退缩的词汇。在强势的人面前几乎不敢表达自己的意见。",
     "likes": [
-      "田径",
-      "夏天",
-      "辣食",
-      "被人关注"
+      "本田朝阳",
+      "电子游戏",
+      "戴耳机听歌"
     ],
     "dislikes": [
-      "认真讲道理的人",
-      "被人看穿"
+      "吵闹的聚会",
+      "现充",
+      "被当成透明人"
     ],
     "public_facts": [
       {
-        "text": "总武高二年级田径部员，染着金发，是班上最引人注目的女生之一。",
+        "text": "总武高二年级C班的普通男生，性格阴暗，存在感很低。",
         "level": "common"
       }
     ],
     "private_facts": [
       {
-        "text": "私下在和校外的年长男生交往，学校里的同学都不知道，已经有过性经验。",
+        "text": "和哥哥、弟弟同住在独栋住宅，但因为两个兄弟过于优秀，他在家里也是边缘人。",
         "level": "close"
       }
     ],
     "drives_by_age": {
-      "17": {
+      "16": {
         "drives": [
-          "维持自由洒脱的形象",
-          "弄清楚自己对城戸的感情"
+          "接近本田朝阳",
+          "在家庭中获得一点存在感"
         ],
-        "goal": "搞清楚自己到底想要什么。"
+        "goal": "向本田朝阳告白。"
       }
     },
     "social_class": "小资产阶级",
     "personal_axes": {
       "经济立场": -1,
-      "政治立场": -2
-    }
+      "政治立场": -1
+    },
+    "sex_profile": "城户优斗"
+  },
+  {
+    "name": "城户树",
+    "source": "ぼくだけ加セックスできない家 / 紅村かる",
+    "base_age": 18,
+    "gender": "male",
+    "appearance_brief": "戴眼镜，身材高大，长相帅气，优秀且成熟自信的总武高学生会副会长。",
+    "hair_color": "黑色",
+    "hair_style": "短发偏分",
+    "eye_color": "黑色",
+    "hair_accessories": "",
+    "grade": 3,
+    "homeroom": "A",
+    "outfits": {
+      "school": {
+        "top": "白色衬衫",
+        "bottom": "深灰西裤",
+        "feet": "皮鞋",
+        "inner_top": "白色T恤",
+        "inner_bot": "四角内裤",
+        "shirt": "学生会制服外套"
+      },
+      "casual": {
+        "top": "修身衬衫",
+        "bottom": "休闲裤",
+        "feet": "皮鞋",
+        "inner_top": "白色T恤",
+        "inner_bot": "四角内裤"
+      },
+      "sleep": {
+        "shirt": "高档棉质睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 182,
+      "weight_kg": 70,
+      "build": "结实",
+      "leg_type": "修长",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "规律运动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 118,
+        "weight_kg": 21,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "普通"
+        }
+      },
+      "12": {
+        "height_cm": 154,
+        "weight_kg": 45,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 174,
+        "weight_kg": 62,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "普通"
+        }
+      },
+      "18": {
+        "height_cm": 182,
+        "weight_kg": 70,
+        "build": "结实",
+        "leg_type": "修长",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 11,
+      "敏捷": 10,
+      "体质": 11,
+      "智力": 16,
+      "感知": 14,
+      "魅力": 16
+    },
+    "skills": {
+      "学习": 12,
+      "演讲": 10,
+      "管理": 10,
+      "社交": 9
+    },
+    "hp": {
+      "current": 22,
+      "max": 22
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "学生会制服外套",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "深灰西裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "学生会日志",
+        "type": "tool",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛",
+    "default_location_by_age": {
+      "6": "稲毛",
+      "12": "稲毛",
+      "15": "稲毛",
+      "18": "稲毛"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "高校生"
+    },
+    "funds": 15000,
+    "appearance_by_age": {
+      "6": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
+      },
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
+      },
+      "15": {
+        "hair_style": "短发偏分",
+        "hair_color": "黑色"
+      },
+      "18": {
+        "hair_style": "短发偏分",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "成熟、极其自信。学习优秀，但在男女关系上是‘来者不拒’的利己主义者。",
+    "personality_stages": {
+      "6": "聪明伶俐、受老师喜欢的孩子。",
+      "12": "成绩名列前茅的模范中学生，担任班干部。",
+      "15": "展现出非凡的社交和管理才能，受女生欢迎，但内心开始变得冷酷和利己。",
+      "18": "极度理性而自信，认为自己配得上最好的一切。在男女关系上顺水推舟，不在乎道德束缚。"
+    },
+    "speech_style": "谈吐高雅，幽默风趣，声音磁性且极具说服力。对人温和但带有居高临下的掌控感。",
+    "likes": [
+      "掌控局势",
+      "优秀的女生",
+      "红茶"
+    ],
+    "dislikes": [
+      "懦弱无能的人",
+      "不体面的争执"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高三年级学生，学生会副会长，学校里的风云人物。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "私底下对异性关系来者不拒，甚至同意了三弟提出的交换伴侣的离奇提议。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "18": {
+        "drives": [
+          "维持完美的精英形象",
+          "享受欲望的满足"
+        ],
+        "goal": "维持对身边事物的绝对掌控。"
+      }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 2,
+      "政治立场": 2
+    },
+    "sex_profile": "城户树"
+  },
+  {
+    "name": "城户状真",
+    "source": "ぼくだけがセックスできない家 / 紅村かる",
+    "base_age": 15,
+    "gender": "male",
+    "appearance_brief": "金发/茶发，体格健壮高大，开朗活泼的チャラ系帅哥。",
+    "hair_color": "金色",
+    "hair_style": "短碎发",
+    "eye_color": "褐色",
+    "hair_accessories": "",
+    "grade": 3,
+    "homeroom": "B",
+    "outfits": {
+      "school": {
+        "top": "白色衬衫",
+        "bottom": "黑色制服裤",
+        "feet": "运动鞋",
+        "inner_top": "黑色背心",
+        "inner_bot": "运动内裤",
+        "shirt": "中学校徽外套"
+      },
+      "casual": {
+        "top": "潮牌T恤",
+        "bottom": "工装短裤",
+        "feet": "潮流球鞋",
+        "inner_top": "黑色背心",
+        "inner_bot": "运动内裤"
+      },
+      "sleep": {
+        "shirt": "大短裤"
+      }
+    },
+    "body": {
+      "height_cm": 176,
+      "weight_kg": 68,
+      "build": "结实",
+      "leg_type": "运动型",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 8,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "规律运动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 116,
+        "weight_kg": 22,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      },
+      "12": {
+        "height_cm": 152,
+        "weight_kg": 46,
+        "build": "结实",
+        "leg_type": "运动型",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 7,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 176,
+        "weight_kg": 68,
+        "build": "结实",
+        "leg_type": "运动型",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 12,
+      "敏捷": 11,
+      "体质": 12,
+      "智力": 9,
+      "感知": 10,
+      "魅力": 13
+    },
+    "skills": {
+      "运动": 10,
+      "社交": 9,
+      "搭讪": 10
+    },
+    "hp": {
+      "current": 24,
+      "max": 24
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "中学校徽外套",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.4,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "黑色制服裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "运动发带",
+        "type": "tool",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛",
+    "default_location_by_age": {
+      "6": "稲毛",
+      "12": "稲毛",
+      "15": "稲毛"
+    },
+    "schedule_group": "中学生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "中学生"
+    },
+    "funds": 3000,
+    "appearance_by_age": {
+      "6": {
+        "hair_style": "短发",
+        "hair_color": "深棕色"
+      },
+      "12": {
+        "hair_style": "短碎发",
+        "hair_color": "深棕色"
+      },
+      "15": {
+        "hair_style": "短碎发",
+        "hair_color": "金色"
+      }
+    },
+    "personality_brief": "积极主动，信奉‘机会是自己创造的’。性格轻浮好动，对异性关系态度极其开放。",
+    "personality_stages": {
+      "6": "活泼好动、顽皮的男孩子。",
+      "12": "精力旺盛的运动型男生，开始在女生中变得很有人气。",
+      "15": "染了金发，走チャラ男（痞帅）路线，搭讪技术高超。敢想敢做，是兄弟交换提案的最初发起者。"
+    },
+    "speech_style": "说话随意、使用大量的流行用语和轻浮的搭讪词，非常能讨女孩子欢心。",
+    "likes": [
+      "运动",
+      "搭讪女生",
+      "聚会"
+    ],
+    "dislikes": [
+      "闷在房间学习",
+      "无趣的规矩"
+    ],
+    "public_facts": [
+      {
+        "text": "千叶市立稻毛中学校3年级学生，是个性格外向的金发帅哥，跟比企谷小町同校。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "行事毫无底线，在二哥家里直接对二哥带来的女生下手，并主导了交换伴侣的提议。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "15": {
+        "drives": [
+          "猎艳",
+          "享受当下的刺激"
+        ],
+        "goal": "尝试更多刺激好玩的异性关系。"
+      }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    },
+    "sex_profile": "城户状真"
   },
   {
     "name": "本田朝阳",
     "source": "ぼくだけがセックスできない家 / 紅村かる",
-    "base_age": 17,
+    "base_age": 16,
     "gender": "female",
-    "appearance_brief": "黑色长直发，戴红框眼镜，学生会长候选，外表清纯端庄，身材出人意料地丰满。",
+    "appearance_brief": "黑长直、戴眼镜（后改隐形）的清纯优等生，身材高挑，A-B杯。",
     "hair_color": "黑色",
     "hair_style": "长直发",
-    "eye_color": "深棕色",
+    "eye_color": "深褐色",
     "hair_accessories": "",
     "grade": 2,
-    "homeroom": "A",
+    "homeroom": "C",
     "outfits": {
       "school": {
         "top": "白色衬衫",
@@ -13742,7 +14109,7 @@
         "feet": "黑色皮鞋",
         "inner_top": "白色棉质bra",
         "inner_bot": "白色内裤",
-        "shirt": "米色毛衣马甲（外穿）"
+        "shirt": "校服外套"
       },
       "casual": {
         "top": "高领细针织衫",
@@ -13750,25 +14117,25 @@
         "feet": "平底鞋",
         "inner_top": "白色bra",
         "inner_bot": "白色内裤",
-        "shirt": "薄外套"
+        "shirt": "针织开衫"
       },
       "sleep": {
-        "shirt": "浅蓝色睡衣套装"
+        "shirt": "宽松睡衣套"
       }
     },
     "body": {
       "height_cm": 163,
-      "weight_kg": 53,
-      "build": "丰满",
+      "weight_kg": 49,
+      "build": "纤细",
       "measurements": {
-        "bust": 87,
-        "waist": 58,
-        "hips": 85
+        "bust": 79,
+        "waist": 57,
+        "hips": 82
       },
-      "cup": "E",
+      "cup": "B",
       "leg_type": "修长",
       "body_shape": {
-        "chest": "水滴",
+        "chest": "扁平",
         "hips": "圆润",
         "waist": "细腰"
       },
@@ -13788,8 +14155,8 @@
         "leg_type": "普通",
         "skin": {
           "base_tone": "白皙",
-          "tan": 3,
-          "texture": "细腻"
+          "tan": 2,
+          "texture": "普通"
         }
       },
       "12": {
@@ -13797,9 +14164,31 @@
         "weight_kg": 40,
         "build": "标准",
         "measurements": {
-          "bust": 72,
+          "bust": 70,
           "waist": 55,
-          "hips": 76
+          "hips": 74
+        },
+        "cup": "AA",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "扁平",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 159,
+        "weight_kg": 46,
+        "build": "纤细",
+        "measurements": {
+          "bust": 76,
+          "waist": 56,
+          "hips": 79
         },
         "cup": "A",
         "leg_type": "修长",
@@ -13814,41 +14203,19 @@
           "texture": "细腻"
         }
       },
-      "15": {
-        "height_cm": 159,
-        "weight_kg": 48,
-        "build": "丰满",
+      "16": {
+        "height_cm": 163,
+        "weight_kg": 49,
+        "build": "纤细",
         "measurements": {
-          "bust": 82,
+          "bust": 79,
           "waist": 57,
           "hips": 82
         },
-        "cup": "C",
+        "cup": "B",
         "leg_type": "修长",
         "body_shape": {
-          "chest": "水滴",
-          "hips": "圆润",
-          "waist": "细腰"
-        },
-        "skin": {
-          "base_tone": "白皙",
-          "tan": 2,
-          "texture": "细腻"
-        }
-      },
-      "17": {
-        "height_cm": 163,
-        "weight_kg": 53,
-        "build": "丰满",
-        "measurements": {
-          "bust": 87,
-          "waist": 58,
-          "hips": 85
-        },
-        "cup": "E",
-        "leg_type": "修长",
-        "body_shape": {
-          "chest": "水滴",
+          "chest": "扁平",
           "hips": "圆润",
           "waist": "细腰"
         },
@@ -13861,17 +14228,16 @@
     },
     "attributes": {
       "力量": 7,
-      "敏捷": 8,
+      "敏捷": 9,
       "体质": 8,
-      "智力": 15,
-      "感知": 13,
-      "魅力": 14
+      "智力": 14,
+      "感知": 12,
+      "魅力": 13
     },
     "skills": {
       "学习": 11,
       "演讲": 9,
-      "人际": 8,
-      "组织": 9
+      "交际": 8
     },
     "hp": {
       "current": 16,
@@ -13902,30 +14268,6 @@
         "weight": 0.05,
         "effects": [],
         "state": "intact"
-      },
-      "inner_top": {
-        "name": "白色棉质bra",
-        "type": "clothing",
-        "slot": "inner_top",
-        "weight": 0.05,
-        "effects": [],
-        "state": "intact"
-      },
-      "inner_bot": {
-        "name": "白色内裤",
-        "type": "clothing",
-        "slot": "inner_bot",
-        "weight": 0.02,
-        "effects": [],
-        "state": "intact"
-      },
-      "shirt": {
-        "name": "米色毛衣马甲",
-        "type": "clothing",
-        "slot": "shirt",
-        "weight": 0.2,
-        "effects": [],
-        "state": "intact"
       }
     },
     "inventory": [
@@ -13938,18 +14280,9 @@
         "state": "intact"
       },
       {
-        "name": "钱包",
+        "name": "眼镜",
         "type": "tool",
         "weight": 0.05,
-        "volume": 0.1,
-        "effects": [],
-        "state": "intact",
-        "flavor": "深蓝色皮质钱包，里面整齐地放着学生证和少量现金"
-      },
-      {
-        "name": "笔记本",
-        "type": "tool",
-        "weight": 0.3,
         "effects": [],
         "state": "intact"
       }
@@ -13959,17 +14292,21 @@
       "6": "西千葉",
       "12": "西千葉",
       "15": "西千葉",
-      "17": "西千葉"
+      "16": "西千葉"
     },
     "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
       "15": "高校生",
-      "17": "高校生"
+      "16": "高校生"
     },
     "funds": 5000,
     "appearance_by_age": {
+      "6": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
+      },
       "12": {
         "hair_style": "双马尾",
         "hair_color": "黑色"
@@ -13977,520 +14314,119 @@
       "15": {
         "hair_style": "长直发",
         "hair_color": "黑色"
-      }
-    },
-    "personality_brief": "典型的优等生学生会长气质，做事认真负责。但这副清纯外表的背后，隐藏着一段班上同学都不知道的秘密关系。",
-    "personality_stages": {
-      "12": "认真努力的好学生，是老师眼中的模范生。",
-      "15": "升入高中后开始竞选学生会，做事越来越有主见，表面依然清纯。",
-      "17": "学生会长候选，成绩优秀，在班上受人敬重。私下里与某个男性有着班上无人知晓的特殊关系。表面的清纯和私下的落差极大。"
-    },
-    "speech_style": "说话有礼貌、一板一眼，常用敬语。在学生会相关事务上非常有主导性。私下里在亲密关系中会表现出截然不同的一面。",
-    "likes": [
-      "阅读",
-      "整理笔记",
-      "学校活动"
-    ],
-    "dislikes": [
-      "乱糟糟的事情",
-      "被人打乱计划"
-    ],
-    "public_facts": [
-      {
-        "text": "总武高二年A班的学习委员兼学生会长候选，成绩优秀，在班上很有声望。",
-        "level": "common"
-      }
-    ],
-    "private_facts": [
-      {
-        "text": "正和一个班级以外的男性保持着秘密的性关系，班上没有任何人知道。清纯外表和私下行为之间存在巨大落差。",
-        "level": "close"
-      }
-    ],
-    "drives_by_age": {
-      "17": {
-        "drives": [
-          "维护自己在学校里的形象",
-          "维持那段秘密关系"
-        ],
-        "goal": "当上学生会长，同时守住自己的秘密。"
-      }
-    },
-    "social_class": "小资产阶级",
-    "personal_axes": {
-      "经济立场": 0,
-      "政治立场": 2
-    }
-  },
-  {
-    "name": "城戸优斗",
-    "source": "ぼくだけがセックスできない家 / 紅村かる",
-    "base_age": 17,
-    "gender": "male",
-    "appearance_brief": "深棕色短发，普通男高中生外表，性格有些被动，是这个家里唯一什么都没有的人。",
-    "hair_color": "深棕色",
-    "hair_style": "短发",
-    "eye_color": "深棕色",
-    "hair_accessories": "",
-    "grade": 2,
-    "homeroom": "A",
-    "outfits": {
-      "school": {
-        "top": "白色衬衫",
-        "bottom": "深灰西裤",
-        "feet": "皮鞋",
-        "inner_top": "白色T恤",
-        "inner_bot": "四角内裤",
-        "shirt": "校服外套"
       },
-      "casual": {
-        "top": "简单T恤或衬衫",
-        "bottom": "休闲裤",
-        "feet": "运动鞋",
-        "inner_top": "白色T恤",
-        "inner_bot": "四角内裤"
-      },
-      "sleep": {
-        "shirt": "宽松T恤配短裤"
-      }
-    },
-    "body": {
-      "height_cm": 173,
-      "weight_kg": 62,
-      "build": "标准",
-      "leg_type": "普通",
-      "skin": {
-        "base_tone": "普通",
-        "tan": 8,
-        "texture": "普通"
-      },
-      "diet": "正常",
-      "exercise": "日常活动"
-    },
-    "body_by_age": {
-      "6": {
-        "height_cm": 116,
-        "weight_kg": 21,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 8,
-          "texture": "普通"
-        }
-      },
-      "12": {
-        "height_cm": 151,
-        "weight_kg": 42,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 8,
-          "texture": "普通"
-        }
-      },
-      "15": {
-        "height_cm": 167,
-        "weight_kg": 56,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 8,
-          "texture": "普通"
-        }
-      },
-      "17": {
-        "height_cm": 173,
-        "weight_kg": 62,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 8,
-          "texture": "普通"
-        }
-      }
-    },
-    "attributes": {
-      "力量": 8,
-      "敏捷": 9,
-      "体质": 9,
-      "智力": 11,
-      "感知": 13,
-      "魅力": 9
-    },
-    "skills": {
-      "学习": 7,
-      "观察": 8,
-      "忍耐": 10
-    },
-    "hp": {
-      "current": 18,
-      "max": 18
-    },
-    "ac": 10,
-    "equipment": {
-      "top": {
-        "name": "校服外套",
-        "type": "clothing",
-        "slot": "top",
-        "weight": 0.5,
-        "effects": [],
-        "state": "intact"
-      },
-      "bottom": {
-        "name": "深灰西裤",
-        "type": "clothing",
-        "slot": "bottom",
-        "weight": 0.3,
-        "effects": [],
-        "state": "intact"
-      },
-      "feet": {
-        "name": "皮鞋",
-        "type": "clothing",
-        "slot": "feet",
-        "weight": 0.4,
-        "effects": [],
-        "state": "intact"
-      }
-    },
-    "inventory": [
-      {
-        "name": "手机",
-        "type": "tool",
-        "slot": "back",
-        "weight": 0.2,
-        "effects": [],
-        "state": "intact"
-      },
-      {
-        "name": "钱包",
-        "type": "tool",
-        "weight": 0.05,
-        "volume": 0.1,
-        "effects": [],
-        "state": "intact",
-        "flavor": "普通黑色钱包，里面只有学生证和零花钱"
-      }
-    ],
-    "default_location": "稲毛海岸",
-    "default_location_by_age": {
-      "6": "稲毛海岸",
-      "12": "稲毛海岸",
-      "15": "稲毛海岸",
-      "17": "稲毛海岸"
-    },
-    "schedule_group": "高校生",
-    "schedule_group_by_age": {
-      "6": "小学生",
-      "12": "中学生",
-      "15": "高校生",
-      "17": "高校生"
-    },
-    "funds": 5000,
-    "appearance_by_age": {
-      "12": {
-        "hair_style": "短发",
-        "hair_color": "深棕色"
-      }
-    },
-    "personality_brief": "普通老实的男高中生，不擅长主动出击，感知力比较强。和芽衣、朝阳同住，对两人都有感情，却是家里唯一什么都没有的那个人。",
-    "personality_stages": {
-      "12": "老实平凡的中学生，没什么特别出挑的地方。",
-      "15": "升入高中后开始意识到自己对异性的在意，但依然被动。",
-      "17": "和蓝泽芽衣、本田朝阳成为同班同学，因小组课题走近，最终意外住到了同一屋檐下。明明离两个女生那么近，却是这个屋子里唯一什么都没有的人，这种尴尬和煎熬每天折磨着他。"
-    },
-    "speech_style": "说话平实直接，不会花言巧语。面对芽衣会有些手足无措，面对朝阳则有点紧张，但面对外人时是个正常的普通男生。",
-    "likes": [
-      "安静",
-      "游戏",
-      "芽衣和朝阳"
-    ],
-    "dislikes": [
-      "被晾在外面的感觉",
-      "不知道该怎么办的时候"
-    ],
-    "public_facts": [
-      {
-        "text": "总武高二年A班的普通男生，和蓝泽芽衣、本田朝阳是同班同学。",
-        "level": "common"
-      }
-    ],
-    "private_facts": [
-      {
-        "text": "和芽衣、朝阳住在同一个屋檐下，对两人都有感情。同住的三个人中，只有他一个人什么都没有。",
-        "level": "close"
-      }
-    ],
-    "drives_by_age": {
-      "17": {
-        "drives": [
-          "弄清楚自己对芽衣和朝阳各自的感情",
-          "改变自己被动的状态"
-        ],
-        "goal": "在这个家里，不再只是那个被晾在外面的人。"
-      }
-    },
-    "social_class": "小资产阶级",
-    "personal_axes": {
-      "经济立场": 0,
-      "政治立场": 0
-    }
-  },
-  {
-    "name": "渡边拓海",
-    "source": "ぼくだけがセックスできない家 / 紅村かる",
-    "base_age": 17,
-    "gender": "male",
-    "appearance_brief": "戴黑框眼镜、留黑色短发的清秀男生，看起来像个老实学生。",
-    "hair_color": "黑色",
-    "hair_style": "短发偏分",
-    "eye_color": "黑色",
-    "hair_accessories": "",
-    "grade": 2,
-    "homeroom": "A",
-    "outfits": {
-      "school": {
-        "top": "白色衬衫",
-        "bottom": "深灰西裤",
-        "feet": "皮鞋",
-        "inner_top": "白色短袖",
-        "inner_bot": "四角内裤",
-        "shirt": "制服西装外套"
-      },
-      "casual": {
-        "top": "深色短袖衬衫",
-        "bottom": "休闲长裤",
-        "feet": "运动鞋",
-        "inner_top": "白色短袖",
-        "inner_bot": "四角内裤"
-      },
-      "sleep": {
-        "shirt": "休闲睡衣裤"
-      }
-    },
-    "body": {
-      "height_cm": 175,
-      "weight_kg": 64,
-      "build": "标准",
-      "leg_type": "普通",
-      "skin": {
-        "base_tone": "普通",
-        "tan": 2,
-        "texture": "普通"
-      },
-      "diet": "正常",
-      "exercise": "日常活动"
-    },
-    "body_by_age": {
-      "6": {
-        "height_cm": 115,
-        "weight_kg": 20,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 3,
-          "texture": "普通"
-        }
-      },
-      "12": {
-        "height_cm": 150,
-        "weight_kg": 40,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 2,
-          "texture": "普通"
-        }
-      },
-      "15": {
-        "height_cm": 169,
-        "weight_kg": 58,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 2,
-          "texture": "普通"
-        }
-      },
-      "17": {
-        "height_cm": 175,
-        "weight_kg": 64,
-        "build": "标准",
-        "leg_type": "普通",
-        "skin": {
-          "base_tone": "普通",
-          "tan": 2,
-          "texture": "普通"
-        }
-      }
-    },
-    "attributes": {
-      "力量": 8,
-      "敏捷": 8,
-      "体质": 9,
-      "智力": 13,
-      "感知": 11,
-      "魅力": 10
-    },
-    "skills": {
-      "学习": 9,
-      "交际": 8,
-      "观察": 7
-    },
-    "hp": {
-      "current": 18,
-      "max": 18
-    },
-    "ac": 10,
-    "equipment": {
-      "top": {
-        "name": "制服西装外套",
-        "type": "clothing",
-        "slot": "top",
-        "weight": 0.5,
-        "effects": [],
-        "state": "intact"
-      },
-      "bottom": {
-        "name": "深灰西裤",
-        "type": "clothing",
-        "slot": "bottom",
-        "weight": 0.3,
-        "effects": [],
-        "state": "intact"
-      }
-    },
-    "inventory": [
-      {
-        "name": "手机",
-        "type": "tool",
-        "slot": "back",
-        "weight": 0.2,
-        "effects": [],
-        "state": "intact"
-      }
-    ],
-    "default_location": "西千葉",
-    "default_location_by_age": {
-      "6": "西千葉",
-      "12": "西千葉",
-      "15": "西千葉",
-      "17": "西千葉"
-    },
-    "schedule_group": "高校生",
-    "schedule_group_by_age": {
-      "6": "小学生",
-      "12": "中学生",
-      "15": "高校生",
-      "17": "高校生"
-    },
-    "funds": 7000,
-    "appearance_by_age": {
-      "12": {
-        "hair_style": "短发",
+      "16": {
+        "hair_style": "长直发",
         "hair_color": "黑色"
       }
     },
-    "personality_brief": "表面是个戴着眼镜、老老实实的学生，但内心极具掌控欲和欲望。盯上了同班的清纯会长候选本田朝阳。",
+    "personality_brief": "表面认真清纯，内心其实憧憬会长城户树。被会长开发后蜕变为自信的女性。",
     "personality_stages": {
-      "12": "听话的优等生，在班级里默默无闻。",
-      "15": "青春期后开始隐藏自己的色欲，善于利用温柔老实的面具接近心仪的女生。",
-      "17": "在班上表现出斯文的一面，但对本田朝阳抱有强烈的占有欲，一直在寻找攻破她防线的机会。"
+      "6": "听话、内向乖巧的小女孩。",
+      "12": "认真的好学生，戴红框眼镜，比较拘谨。",
+      "15": "成绩优秀，做事规规矩矩的清纯学生，对异性充满憧憬但不敢表达。",
+      "16": "表面上是清纯认真的学习委员，内心却极度渴望会长的关爱。与会长交往后被彻底开发，改戴隐形眼镜，变得成熟且在性观念上极为开放。"
     },
-    "speech_style": "语气斯文客气，偶尔会流露出有些轻浮或者势在必得的态度。",
+    "speech_style": "说话严谨礼貌，经常使用敬语。对次男优斗保持着客气但疏离的同学态度。",
     "likes": [
-      "本田朝阳",
+      "城户树",
       "阅读",
-      "做计划"
+      "整理笔记"
     ],
     "dislikes": [
-      "被打乱节奏",
-      "被忽视"
+      "被粗暴对待",
+      "打破平稳的异质"
     ],
     "public_facts": [
       {
-        "text": "总武高二年级学生，成绩中上，性格温和老实。",
+        "text": "总武高二年级C班学习委员，非常清纯的优秀学生。",
         "level": "common"
       }
     ],
     "private_facts": [
       {
-        "text": "私底下其实玩得非常开，并且一直计划着夺走清纯会长本田朝阳的身体。",
+        "text": "疯狂迷恋上会长城户树，不仅改戴隐形，甚至不介意与他弟弟交换伴侣。",
         "level": "close"
       }
     ],
     "drives_by_age": {
-      "17": {
+      "16": {
         "drives": [
-          "彻底占有本田朝阳",
-          "维持老实学生的人设"
+          "留在大哥身边",
+          "追求自己喜欢的快乐"
         ],
-        "goal": "让本田朝阳成为只属于自己的女人。"
+        "goal": "获得心仪的大哥的完全爱意。"
       }
     },
-    "social_class": "知识分子",
+    "social_class": "小资产阶级",
     "personal_axes": {
       "经济立场": 0,
       "政治立场": 1
-    }
+    },
+    "sex_profile": "本田朝阳"
   },
   {
-    "name": "小林大介",
+    "name": "蓝泽芽衣",
     "source": "ぼくだけがセックスできない家 / 紅村かる",
-    "base_age": 17,
-    "gender": "male",
-    "appearance_brief": "寸头、小麦色皮肤的健壮男生，性格外向粗犷，田径部出身。",
-    "hair_color": "深棕色",
-    "hair_style": "寸头",
-    "eye_color": "深褐色",
-    "hair_accessories": "",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "金发，身材丰满，妆容精致，经常化浓妆的辣妹风女生。",
+    "hair_color": "金色",
+    "hair_style": "短发",
+    "eye_color": "琥珀色",
+    "hair_accessories": "耳环",
     "grade": 2,
-    "homeroom": "A",
+    "homeroom": "C",
     "outfits": {
       "school": {
-        "top": "白色衬衫",
-        "bottom": "深灰西裤",
-        "feet": "运动鞋",
-        "inner_top": "无袖背心",
-        "inner_bot": "运动内裤",
-        "shirt": "运动外套"
+        "top": "白色衬衫（解开两个纽扣）",
+        "bottom": "深灰百褶裙",
+        "legs": "短袜",
+        "feet": "乐福鞋",
+        "inner_top": "黑色内衣",
+        "inner_bot": "黑色内裤",
+        "shirt": "红色领结"
       },
       "casual": {
-        "top": "运动短袖T恤",
-        "bottom": "运动短裤",
-        "feet": "运动鞋",
-        "inner_top": "无袖背心",
-        "inner_bot": "运动内裤"
+        "top": "低胸紧身衣",
+        "bottom": "牛仔热裤",
+        "feet": "高帮帆布鞋",
+        "inner_top": "黑色内衣",
+        "inner_bot": "黑色内裤"
       },
       "sleep": {
-        "shirt": "大裤衩"
+        "shirt": "宽松男士衬衫（内衣不穿）"
       }
     },
     "body": {
-      "height_cm": 178,
-      "weight_kg": 70,
-      "build": "结实",
+      "height_cm": 160,
+      "weight_kg": 52,
+      "build": "丰满",
+      "measurements": {
+        "bust": 88,
+        "waist": 58,
+        "hips": 86
+      },
+      "cup": "E",
       "leg_type": "运动型",
+      "body_shape": {
+        "chest": "半球",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
       "skin": {
         "base_tone": "小麦",
-        "tan": 12,
-        "texture": "普通"
+        "tan": 10,
+        "texture": "细腻"
       },
-      "diet": "多肉",
+      "diet": "正常",
       "exercise": "规律运动"
     },
     "body_by_age": {
       "6": {
-        "height_cm": 118,
-        "weight_kg": 22,
-        "build": "标准",
+        "height_cm": 112,
+        "weight_kg": 18,
+        "build": "纤细",
         "leg_type": "普通",
         "skin": {
           "base_tone": "普通",
@@ -14499,68 +14435,101 @@
         }
       },
       "12": {
-        "height_cm": 153,
-        "weight_kg": 44,
-        "build": "结实",
+        "height_cm": 152,
+        "weight_kg": 42,
+        "build": "标准",
+        "measurements": {
+          "bust": 76,
+          "waist": 56,
+          "hips": 78
+        },
+        "cup": "B",
         "leg_type": "运动型",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "小麦",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 158,
+        "weight_kg": 48,
+        "build": "丰满",
+        "measurements": {
+          "bust": 84,
+          "waist": 57,
+          "hips": 83
+        },
+        "cup": "D",
+        "leg_type": "运动型",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
         "skin": {
           "base_tone": "小麦",
           "tan": 10,
           "texture": "普通"
         }
       },
-      "15": {
-        "height_cm": 172,
-        "weight_kg": 64,
-        "build": "结实",
+      "16": {
+        "height_cm": 160,
+        "weight_kg": 52,
+        "build": "丰满",
+        "measurements": {
+          "bust": 88,
+          "waist": 58,
+          "hips": 86
+        },
+        "cup": "E",
         "leg_type": "运动型",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
         "skin": {
           "base_tone": "小麦",
-          "tan": 12,
-          "texture": "普通"
-        }
-      },
-      "17": {
-        "height_cm": 178,
-        "weight_kg": 70,
-        "build": "结实",
-        "leg_type": "运动型",
-        "skin": {
-          "base_tone": "小麦",
-          "tan": 12,
-          "texture": "普通"
+          "tan": 10,
+          "texture": "细腻"
         }
       }
     },
     "attributes": {
-      "力量": 12,
-      "敏捷": 11,
-      "体质": 12,
-      "智力": 8,
-      "感知": 9,
-      "魅力": 11
+      "力量": 9,
+      "敏捷": 12,
+      "体质": 11,
+      "智力": 9,
+      "感知": 10,
+      "魅力": 15
     },
     "skills": {
-      "运动": 10,
-      "交际": 8,
-      "调情": 7
+      "运动": 9,
+      "人际": 8,
+      "化妆": 9
     },
     "hp": {
-      "current": 24,
-      "max": 24
+      "current": 22,
+      "max": 22
     },
-    "ac": 10,
+    "ac": 11,
     "equipment": {
       "top": {
-        "name": "运动外套",
+        "name": "白色衬衫",
         "type": "clothing",
         "slot": "top",
-        "weight": 0.4,
+        "weight": 0.3,
         "effects": [],
         "state": "intact"
       },
       "bottom": {
-        "name": "深灰西裤",
+        "name": "深灰百褶裙",
         "type": "clothing",
         "slot": "bottom",
         "weight": 0.3,
@@ -14578,75 +14547,89 @@
         "state": "intact"
       },
       {
-        "name": "运动水壶",
+        "name": "化妆包",
         "type": "tool",
-        "weight": 0.3,
+        "weight": 0.4,
         "effects": [],
         "state": "intact"
       }
     ],
-    "default_location": "稲毛",
+    "default_location": "稲毛海岸",
     "default_location_by_age": {
-      "6": "稲毛",
-      "12": "稲毛",
-      "15": "稲毛",
-      "17": "稲毛"
+      "6": "稲毛海岸",
+      "12": "稲毛海岸",
+      "15": "稲毛海岸",
+      "16": "稲毛海岸"
     },
     "schedule_group": "高校生",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
       "15": "高校生",
-      "17": "高校生"
+      "16": "高校生"
     },
-    "funds": 3000,
+    "funds": 8000,
     "appearance_by_age": {
+      "6": {
+        "hair_style": "短发",
+        "hair_color": "褐色"
+      },
       "12": {
-        "hair_style": "寸头",
-        "hair_color": "深棕色"
+        "hair_style": "马尾",
+        "hair_color": "褐色"
+      },
+      "15": {
+        "hair_style": "短发",
+        "hair_color": "金色"
+      },
+      "16": {
+        "hair_style": "短发",
+        "hair_color": "金色"
       }
     },
-    "personality_brief": "典型的运动系单细胞男生，性格粗鲁直接，崇尚力量和性冲动。对辣妹风的蓝泽芽衣垂涎已久。",
+    "personality_brief": "表面开放随便，实则曾坚信‘只跟喜欢的人做’。告白被拒后被渋谷前辈夺走处女，开始自暴自弃。",
     "personality_stages": {
-      "12": "田径社主力，精力过剩的小伙子。",
-      "15": "喜欢和哥们聚在一起聊女生，性格口无遮拦。",
-      "17": "性格粗放、精力旺盛。对异性有着非常直接的生理冲动，认为蓝泽芽衣这样的辣妹正合他的胃口。"
+      "6": "活泼开朗的小女孩。",
+      "12": "田径社的普通中学生，直率开朗，感情单纯。",
+      "15": "曾认真向会长告白被拒，之后失落时被渋谷前辈趁虚而入夺走处女，由此变轻浮。",
+      "16": "表面上是到处和人搞的轻浮辣妹，其实很缺爱，是三兄弟里少数认真安慰和鼓励过优斗的人。"
     },
-    "speech_style": "说话大嗓门，常带有一些粗俗或者挑逗性质的词汇，语气自信大方。",
+    "speech_style": "语气大喇喇，用词时髦。对男生爱开玩笑，但被拆穿内心痛处时会变得沉默和刻薄。",
     "likes": [
-      "运动",
-      "蓝泽芽衣",
-      "快餐"
+      "化妆",
+      "流行饰品",
+      "被温柔对待"
     ],
     "dislikes": [
-      "繁琐的规定",
-      "学习"
+      "高高在上的精英",
+      "只把她当泄欲工具的男生"
     ],
     "public_facts": [
       {
-        "text": "总武高田径部成员，性格开朗外向，爱开玩笑。",
+        "text": "总武高二年级C班的辣妹，金发丰满，十分引人注目。",
         "level": "common"
       }
     ],
     "private_facts": [
       {
-        "text": "一直想找机会和蓝泽芽衣发生关系，甚至不介意在集体聚会时下手。",
+        "text": "曾真挚喜欢过会长城户树，告白被无情拒绝后自暴自弃走上了放浪生活。",
         "level": "close"
       }
     ],
     "drives_by_age": {
-      "17": {
+      "16": {
         "drives": [
-          "在运动社团中拿到好成绩",
-          "彻底攻占蓝泽芽衣"
+          "用放浪麻痹被拒绝的痛苦",
+          "在同居生活中寻找安宁"
         ],
-        "goal": "找机会和蓝泽芽衣发生关系。"
+        "goal": "摆脱内心对于自己‘轻浮’形象的自嫌。"
       }
     },
-    "social_class": "无产阶级",
+    "social_class": "小资产阶级",
     "personal_axes": {
-      "经济立场": -1,
+      "経済立场": 0,
       "政治立场": -1
-    }
+    },
+    "sex_profile": "蓝泽芽衣"
   }
 ]
