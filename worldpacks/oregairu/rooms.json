@@ -4950,5 +4950,893 @@
         }
       ]
     ]
+  },
+  "海浜幕張": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "海浜幕張——幕张新都心的高级住宅区。宽阔的街道两侧是玻璃幕墙的高层公寓，大堂铺着冷色调大理石。远处是永旺梦乐城的轮廓，空气中带着海风。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
+  },
+  "稲毛海岸": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "稲毛海岸——海风穿过坡道上的老式团地与一户建。便利店的白光映在柏油路面，远处传来京叶线电车的轰鸣。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
+  },
+  "西千葉": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "西千葉——安静的学区住宅区。千叶大学附近的街道绿树成荫，老旧公寓与新建独栋混杂。学生们骑着自行车穿过窄巷。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
+  },
+  "検見川浜": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "検見川浜——JR京叶线沿线住宅区。中小户型公寓与独栋住宅交错，车站前的超市和药店是居民日常聚集地。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
+  },
+  "蘇我": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "蘇我——京叶工业带边缘的工人住宅区。与幕张的繁华形成对比，这里的街道更接地气——小型工厂、町工場、便宜定食屋。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
+  },
+  "千葉みなと": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "千葉みなと——千叶港附近的港町住宅区。空气中偶尔飘来海产市场的咸腥味，港口起重机在远处缓缓转动。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
+  },
+  "本千葉": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "本千葉——千叶老城区。狭窄的巷子里藏着昭和年代留下的木造公寓和钱汤，转角处总有家开了几十年的煎饼店。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
+  },
+  "稲毛": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "稲毛——安静的住宅区，坡道多。小公园里老人在下将棋，主妇们在超市收银台前交换补习班情报。海风偶尔吹过来，带着淡淡咸味。",
+    "capacity": 20,
+    "cells": [
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千葉駅前",
+          "exitTo": "千葉駅前"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电线杆",
+          "label": ""
+        }
+      ]
+    ]
   }
 }

@@ -100,6 +100,22 @@ export default {
         }
       }
 
+      // ── 自动生成：如果目的地存在于 location 设定中但无房间网格，自动建一个 ──
+      if (!destIsKnown) {
+        try {
+          const { _regionContexts, createDynamicLocation } = await import("../../engine/state.ts");
+          if (_regionContexts) {
+            for (const [rk, data] of Object.entries(_regionContexts)) {
+              if (data?.keys?.some(k => dest.includes(k) || k.includes(dest))) {
+                createDynamicLocation(rk, dest);
+                destIsKnown = true;
+                break;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
       if (destIsKnown) {
         // 判断交通方式：同建筑内房间→秒级
         const { getRoom } = await import("../../engine/state.ts");
