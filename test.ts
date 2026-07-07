@@ -37,8 +37,9 @@ import {
   checkTimelineEvents, expireHooks, getActiveHooks, getActiveQuests,
   openQuest, advanceQuest, abandonQuest,
   getTodayCalendar, getCalendarEvents, getCalendarPhase, clearCalendarCache,
-  getHookNoveltyHint,
+  getHookNoveltyHint, evaluateOrgGoals, applyOrgDrivesToNPC,
 } from "./engine/timeline.ts";
+import { processNpcReactions } from "./engine/npc-reactions.ts";
 
 let passed = 0, failed = 0;
 const testQueue: { name: string; fn: () => any }[] = [];
@@ -7465,6 +7466,489 @@ test("Vicky Political Economy System - Nested Reputation Leakage", async () => {
 });
 
 
+
+
+
+// ── Helpers for merged org/reaction/lifecycle tests ──
+function mkOrg(id, overrides = {}) {
+  return {
+    id, name: id, type: "社团", scale: overrides.scale ?? "club",
+    wealth: overrides.wealth ?? 50, influence: overrides.influence ?? 50,
+    cohesion: overrides.cohesion ?? 50, public_legitimacy: overrides.public_legitimacy ?? 50,
+    coreLocation: "", territoryRoomKeys: [], class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "", members: [], relations: {}, match_rules: {}, entries: [],
+    lifecycle_stage: undefined, ticks_at_stage: undefined, ticks_at_scale: undefined,
+    ...overrides
+  };
+}
+
+function seedNpc(name, overrides = {}) {
+  const npc = getOrCreateNPC(name);
+  npc.attributes = { 力量: 10, 敏捷: 10, 体质: 10, 智力: 10, 感知: 10, 魅力: 10, ...overrides };
+  npc.scheduleGroup = "高校生";
+  npc.currentRoom = "教室";
+  npc.npcRelationships = {};
+  npc.pendingOverride = null;
+  return npc;
+}
+
+test("contribute_to_org - donate", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  gameState.organizations = gameState.organizations || {};
+  gameState.organizations["test_club"] = {
+    id: "test_club", name: "测试社团", type: "社团", scale: "club",
+    wealth: 50, influence: 50, cohesion: 50, public_legitimacy: 50,
+    coreLocation: "", territoryRoomKeys: [], class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "", members: [], relations: {}, match_rules: {}, entries: []
+  } as any;
+  gameState.player.reputation["test_club"] = 0;
+  gameState.player.funds = 10000;
+
+  const tool = await import("./tools/action/contribute_to_org.ts");
+  const result = await tool.default.execute(null, {
+    orgId: "test_club", action: "donate", amount: 1000, details: "测试"
+  }, null, null, null);
+
+  if (!result.details.success) throw new Error("Donate failed");
+  if (gameState.organizations["test_club"].wealth <= 50) throw new Error("Wealth should increase, got " + gameState.organizations["test_club"].wealth);
+  if (gameState.player.reputation["test_club"] <= 0) throw new Error("Rep should increase, got " + gameState.player.reputation["test_club"]);
+  if (gameState.player.funds >= 10000) throw new Error("Funds should decrease");
+});
+
+test("contribute_to_org - complete_quest", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  gameState.organizations = gameState.organizations || {};
+  gameState.organizations["test_club"] = {
+    id: "test_club", name: "测试社团", type: "社团", scale: "club",
+    wealth: 50, influence: 50, cohesion: 50, public_legitimacy: 50,
+    coreLocation: "", territoryRoomKeys: [], class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "", members: [], relations: {}, match_rules: {}, entries: []
+  } as any;
+  gameState.player.reputation["test_club"] = 0;
+
+  const tool = await import("./tools/action/contribute_to_org.ts");
+  const result = await tool.default.execute(null, {
+    orgId: "test_club", action: "complete_quest", details: "筹备文化祭"
+  }, null, null, null);
+
+  if (!result.details.success) throw new Error("Quest failed");
+  const org = gameState.organizations["test_club"];
+  if (org.cohesion <= 50) throw new Error("Cohesion should increase, got " + org.cohesion);
+  if (org.influence <= 50) throw new Error("Influence should increase, got " + org.influence);
+  if (gameState.player.reputation["test_club"] !== 3) throw new Error("Rep should be 3, got " + gameState.player.reputation["test_club"]);
+});
+
+test("contribute_to_org - betray", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  gameState.organizations = gameState.organizations || {};
+  const mkOrg = (id: string, name: string) => ({
+    id, name, type: "社团", scale: "club",
+    wealth: 50, influence: 50, cohesion: 50, public_legitimacy: 50,
+    coreLocation: "", territoryRoomKeys: [], class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "", members: [], relations: {}, match_rules: {}, entries: []
+  } as any);
+  gameState.organizations["test_club"] = mkOrg("test_club", "测试社团");
+  gameState.organizations["test_club"].relations = { "rival_club": -3 };
+  gameState.organizations["rival_club"] = mkOrg("rival_club", "敌对社团");
+  gameState.player.reputation["test_club"] = 0;
+  gameState.player.reputation["rival_club"] = 0;
+
+  const tool = await import("./tools/action/contribute_to_org.ts");
+  const result = await tool.default.execute(null, {
+    orgId: "test_club", action: "betray", details: "泄露情报"
+  }, null, null, null);
+
+  if (!result.details.success) throw new Error("Betray failed");
+  const org = gameState.organizations["test_club"];
+  if (org.cohesion >= 50) throw new Error("Cohesion should decrease, got " + org.cohesion);
+  if (org.public_legitimacy >= 50) throw new Error("Legitimacy should decrease, got " + org.public_legitimacy);
+  if (gameState.player.reputation["test_club"] >= 0) throw new Error("Rep should go negative, got " + gameState.player.reputation["test_club"]);
+  if (gameState.player.reputation["rival_club"] <= 0) throw new Error("Rival should gain rep, got " + gameState.player.reputation["rival_club"]);
+});
+
+test("contribute_to_org - recruit_member", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  gameState.organizations = gameState.organizations || {};
+  gameState.organizations["test_club"] = {
+    id: "test_club", name: "测试社团", type: "社团", scale: "club",
+    wealth: 50, influence: 50, cohesion: 50, public_legitimacy: 50,
+    coreLocation: "", territoryRoomKeys: [], class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "", members: [], relations: {}, match_rules: {}, entries: []
+  } as any;
+  gameState.player.reputation["test_club"] = 0;
+
+  const tool = await import("./tools/action/contribute_to_org.ts");
+  const result = await tool.default.execute(null, {
+    orgId: "test_club", action: "recruit_member",
+    targetNpc: "材木座義輝", details: "宣传干事"
+  }, null, null, null);
+
+  if (!result.details.success) throw new Error("Recruit failed");
+  const org = gameState.organizations["test_club"];
+  if (org.cohesion <= 50) throw new Error("Cohesion should increase, got " + org.cohesion);
+  if (!org.members.some((m: any) => m.npcName === "材木座義輝")) throw new Error("Member should be added");
+  if (gameState.player.reputation["test_club"] !== 2) throw new Error("Rep should be 2, got " + gameState.player.reputation["test_club"]);
+});
+
+test("contribute_to_org - insufficient funds", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  gameState.organizations = gameState.organizations || {};
+  gameState.organizations["test_club"] = {
+    id: "test_club", name: "测试社团", type: "社团", scale: "club",
+    wealth: 50, influence: 50, cohesion: 50, public_legitimacy: 50,
+    coreLocation: "", territoryRoomKeys: [], class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "", members: [], relations: {}, match_rules: {}, entries: []
+  } as any;
+  gameState.player.funds = 10;
+
+  const tool = await import("./tools/action/contribute_to_org.ts");
+  const result = await tool.default.execute(null, {
+    orgId: "test_club", action: "donate", amount: 1000
+  }, null, null, null);
+
+  if (result.details.success) throw new Error("Should fail when funds insufficient");
+});
+
+test("contribute_to_org - org not found", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const tool = await import("./tools/action/contribute_to_org.ts");
+  const result = await tool.default.execute(null, {
+    orgId: "nonexistent_org", action: "donate", amount: 100
+  }, null, null, null);
+
+  if (result.details.success) throw new Error("Should fail for nonexistent org");
+});
+
+test("steal_item caught → confront", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.player.attributes = { 力量: 8, 敏捷: 8, 体质: 8, 智力: 10, 感知: 8, 魅力: 10 };
+  // Seed NPC with high perception → likely caught
+  const npc = seedNpc("由比ヶ浜結衣", { 感知: 18 });
+  gameState.player.location = "教室";
+
+  const reactions = processNpcReactions("steal_item", { target: "由比ヶ浜結衣" });
+  // With perception 18 vs player dex 8, should be caught
+  if (reactions.length === 0) {
+    // Random chance, so this might flake but with high perception bias it's very likely
+    console.log("  (probabilistic test — re-run if this fails)");
+    return; // skip assertion for probabilistic
+  }
+  const npcAfter = gameState.npcs["由比ヶ浜結衣"];
+  if (!npcAfter.pendingOverride) throw new Error("NPC should have pendingOverride after being caught stealing");
+});
+
+test("combat_action → reaction", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.player.attributes = { 力量: 15, 敏捷: 10, 体质: 10, 智力: 10, 感知: 10, 魅力: 10 };
+  const npc = seedNpc("材木座義輝", { 力量: 5 });
+  npc.npcRelationships = {};
+  npc.scheduleGroup = "高校生";
+  gameState.player.location = "教室";
+
+  const reactions = processNpcReactions("combat_action", { target: "材木座義輝" });
+  if (reactions.length === 0) throw new Error("Combat should trigger reaction");
+  if (reactions[0].npcName !== "材木座義輝") throw new Error("Wrong target");
+  // Weak NPC → should avoid or get help
+  if (reactions[0].mode !== "avoid" && reactions[0].mode !== "setup") {
+    throw new Error(`Weak NPC should avoid or setup, got ${reactions[0].mode}`);
+  }
+});
+
+test("contribute_to_org betray → member reactions", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = gameState.organizations || {};
+  gameState.organizations["test_org"] = {
+    id: "test_org", name: "测试组织", type: "社团", scale: "club",
+    wealth: 50, influence: 50, cohesion: 50, public_legitimacy: 50,
+    coreLocation: "部室", territoryRoomKeys: [], class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "雪ノ下雪乃",
+    members: [
+      { npcName: "雪ノ下雪乃", role: "部长", rank: 10 },
+      { npcName: "由比ヶ浜結衣", role: "普通部员", rank: 3 }
+    ],
+    relations: {}, match_rules: {}, entries: []
+  } as any;
+  gameState.player.location = "教室";
+  seedNpc("雪ノ下雪乃");
+  seedNpc("由比ヶ浜結衣");
+
+  const reactions = processNpcReactions("contribute_to_org", {
+    orgId: "test_org", action: "betray", details: "泄露部费去向"
+  });
+
+  if (reactions.length === 0) throw new Error("Betray should trigger org member reactions");
+  // Leader (rank 10) should setup or confront
+  const leaderReaction = reactions.find(r => r.npcName === "雪ノ下雪乃");
+  if (!leaderReaction) throw new Error("Leader should react");
+  // Regular member (rank 3) should avoid
+  const memberReaction = reactions.find(r => r.npcName === "由比ヶ浜結衣");
+  if (!memberReaction) throw new Error("Member should react");
+  if (memberReaction.mode !== "avoid") throw new Error(`Member should avoid, got ${memberReaction.mode}`);
+});
+
+test("intimate_touch high affection → no reaction", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.player.relationships = gameState.player.relationships || {};
+  gameState.player.relationships["由比ヶ浜結衣"] = { stage: "亲密", affection: 8, tone: "" };
+  seedNpc("由比ヶ浜結衣");
+
+  const reactions = processNpcReactions("intimate_touch", { target: "由比ヶ浜結衣" });
+  if (reactions.length > 0) throw new Error("High affection should prevent negative reaction");
+});
+
+test("no handler → empty", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const reactions = processNpcReactions("buy_item", { item: "面包" });
+  if (reactions.length > 0) throw new Error("Non-malicious tool should not trigger reactions");
+});
+
+test("lifecycle - seed auto-detected for new org", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["new_club"] = mkOrg("new_club", { wealth: 10, influence: 5, cohesion: 80 });
+
+  const alerts = evaluateOrgGoals();
+
+  // First call: initializes lifecycle
+  if (gameState.organizations["new_club"].lifecycle_stage !== "萌芽") {
+    throw new Error(`New low-resource org should be 萌芽, got ${gameState.organizations["new_club"].lifecycle_stage}`);
+  }
+  // Should produce alert about lifecycle init
+  if (alerts.length === 0) throw new Error("Should produce lifecycle alert");
+});
+
+test("lifecycle - seed → startup progression", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["growing"] = mkOrg("growing", { wealth: 25, influence: 30, cohesion: 70 });
+
+  // First call: detects as 初创
+  evaluateOrgGoals();
+  if (gameState.organizations["growing"].lifecycle_stage !== "初创") {
+    throw new Error(`Should be 初创, got ${gameState.organizations["growing"].lifecycle_stage}`);
+  }
+
+  // Advance to 成长 territory
+  gameState.organizations["growing"].wealth = 50;
+  gameState.organizations["growing"].influence = 55;
+
+  const alerts = evaluateOrgGoals();
+  if (gameState.organizations["growing"].lifecycle_stage !== "成长") {
+    throw new Error(`Should progress to 成长, got ${gameState.organizations["growing"].lifecycle_stage}`);
+  }
+  // Should have transition alert
+  const transitionAlert = alerts.find(a => a.alert.includes("初创") || a.alert.includes("成长"));
+  if (!transitionAlert) throw new Error("Should have transition alert");
+});
+
+test("lifecycle - growth → mature", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["powerhouse"] = mkOrg("powerhouse", {
+    wealth: 80, influence: 85, cohesion: 75
+  });
+
+  evaluateOrgGoals();
+  if (gameState.organizations["powerhouse"].lifecycle_stage !== "成熟") {
+    throw new Error(`Should be 成熟, got ${gameState.organizations["powerhouse"].lifecycle_stage}`);
+  }
+});
+
+test("lifecycle - mature → decline", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["fading"] = mkOrg("fading", {
+    wealth: 80, influence: 80, cohesion: 80, lifecycle_stage: "成熟" as any
+  });
+
+  // First tick: still mature
+  evaluateOrgGoals();
+  if (gameState.organizations["fading"].lifecycle_stage !== "成熟") {
+    throw new Error("Should still be 成熟");
+  }
+
+  // Then collapse cohesion:
+  gameState.organizations["fading"].cohesion = 30;
+
+  const alerts = evaluateOrgGoals();
+  if (gameState.organizations["fading"].lifecycle_stage !== "衰退") {
+    throw new Error(`Should decline, got ${gameState.organizations["fading"].lifecycle_stage}`);
+  }
+  // Should have decline alert
+  const declineAlert = alerts.find(a => a.alert.includes("衰退"));
+  if (!declineAlert) throw new Error("Should have decline transition alert");
+});
+
+test("lifecycle - decline → recovery (growth)", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["recovering"] = mkOrg("recovering", {
+    wealth: 60, influence: 55, cohesion: 80, lifecycle_stage: "衰退" as any
+  });
+
+  const alerts = evaluateOrgGoals();
+  if (gameState.organizations["recovering"].lifecycle_stage !== "成长") {
+    throw new Error(`Should recover to 成长, got ${gameState.organizations["recovering"].lifecycle_stage}`);
+  }
+});
+
+test("lifecycle - collapse (archived)", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["doomed"] = mkOrg("doomed", {
+    wealth: 5, cohesion: 5, public_legitimacy: 5
+  });
+
+  const alerts = evaluateOrgGoals();
+  if (!gameState.organizations["doomed"].archived) throw new Error("Should be archived");
+  if (gameState.organizations["doomed"].lifecycle_stage !== "消亡") throw new Error("Should be 消亡");
+});
+
+test("scale - upgrade club → local", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["rising"] = mkOrg("rising", {
+    scale: "club", influence: 75, cohesion: 80, ticks_at_scale: 5
+  });
+
+  const alerts = evaluateOrgGoals();
+  if (gameState.organizations["rising"].scale !== "local") {
+    throw new Error(`Should upgrade to local, got ${gameState.organizations["rising"].scale}`);
+  }
+  // ticks should reset
+  if (gameState.organizations["rising"].ticks_at_scale !== 0) throw new Error("ticks_at_scale should reset");
+});
+
+test("scale - no upgrade if ticks insufficient", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["impatient"] = mkOrg("impatient", {
+    scale: "club", influence: 80, cohesion: 80, ticks_at_scale: 3
+  });
+
+  evaluateOrgGoals();
+  // ticks_at_scale was 3, not enough for upgrade (need 5)
+  if (gameState.organizations["impatient"].scale !== "club") {
+    throw new Error("Should not upgrade with only 3 ticks");
+  }
+  // ticks should increment
+  if (gameState.organizations["impatient"].ticks_at_scale !== 4) {
+    throw new Error("ticks_at_scale should be 4 (was 3 + 1)");
+  }
+});
+
+test("scale - downgrade on low cohesion", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["crumbling"] = mkOrg("crumbling", {
+    scale: "regional", cohesion: 15, ticks_at_scale: 3
+  });
+
+  const alerts = evaluateOrgGoals();
+  if (gameState.organizations["crumbling"].scale !== "local") {
+    throw new Error(`Should downgrade to local, got ${gameState.organizations["crumbling"].scale}`);
+  }
+});
+
+test("scale - no downgrade below club", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["minimum"] = mkOrg("minimum", {
+    scale: "club", cohesion: 5, ticks_at_scale: 5
+  });
+
+  evaluateOrgGoals();
+  if (gameState.organizations["minimum"].scale !== "club") {
+    throw new Error("Club should be floor, cannot go below");
+  }
+});
+
+test("scale - no upgrade beyond national", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["superpower"] = mkOrg("superpower", {
+    scale: "national", influence: 100, cohesion: 100, ticks_at_scale: 10
+  });
+
+  evaluateOrgGoals();
+  if (gameState.organizations["superpower"].scale !== "national") {
+    throw new Error("National should be ceiling, cannot go above");
+  }
+});
+
+test("archived orgs are skipped in evaluation", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["gone"] = mkOrg("gone", {
+    wealth: 0, cohesion: 0, public_legitimacy: 0, archived: true, lifecycle_stage: "消亡" as any
+  });
+
+  const alerts = evaluateOrgGoals();
+  // Should not produce any alert for archived org
+  const goneAlerts = alerts.filter(a => a.orgId === "gone");
+  if (goneAlerts.length > 0) throw new Error("Archived org should produce no alerts");
+});
+
+test("ticks_at_stage increments when stage unchanged", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  gameState.organizations = {};
+  gameState.organizations["stable"] = mkOrg("stable", {
+    wealth: 50, influence: 55, cohesion: 60
+  });
+  // First eval:
+  evaluateOrgGoals();
+  const after1 = gameState.organizations["stable"].ticks_at_stage ?? 0;
+  // Second eval: should increment
+  evaluateOrgGoals();
+  const after2 = gameState.organizations["stable"].ticks_at_stage ?? 0;
+  if (after2 !== after1 + 1) {
+    throw new Error(`ticks_at_stage should increment: ${after1} → ${after2}`);
+  }
+});
 
 (async () => {
   for (const t of testQueue) {

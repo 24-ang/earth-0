@@ -340,6 +340,13 @@ export default {
         } catch (e) {
           console.error("spawn_npc_agent parseScheduleIntent failed:", e);
         }
+        // 解析 NPC intent（Phase 2.5 反制意图 → 物理效果）
+        try {
+          const { parseNpcIntent } = await import("../helpers.ts");
+          await parseNpcIntent(params.npcName, response);
+        } catch (e) {
+          console.error("spawn_npc_agent parseNpcIntent failed:", e);
+        }
         return { content: [{ type: "text", text: response }], details: {} };
       } catch (err) {
         console.error("generateCompletion error in spawn_npc_agent:", err);

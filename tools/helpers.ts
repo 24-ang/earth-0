@@ -1187,3 +1187,88 @@ export async function parseScheduleIntent(npcName: string, text: string): Promis
     console.error(`parseScheduleIntent JSON parse failed for ${npcName}:`, e);
   }
 }
+
+/** 从 NPC 回应中提取 intent JSON（avoid_player / confront_player / inform_teacher / hire_help）
+ *  并转换为物理效果（pendingOverride / 记忆 / 资金操作） */
+export async function parseNpcIntent(npcName: string, text: string): Promise<void> {
+  const idx = text.lastIndexOf('{"intent"');
+  if (idx < 0) return;
+  const snippet = text.slice(idx);
+  let depth = 0, end = -1;
+  for (let i = 0; i < snippet.length; i++) {
+    if (snippet[i] === '{') depth++;
+    if (snippet[i] === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+  }
+  if (end < 0) return;
+  try {
+    const intent = JSON.parse(snippet.slice(0, end)).intent;
+    if (!intent?.type || intent.type === "none") return;
+
+    const { gameState, getOrCreateNPC, saveState } = await import("../engine/state.ts");
+    const npc = getOrCreateNPC(npcName);
+    const playerLoc = gameState.player.location;
+    const now = new Date(gameState.time.game_date);
+
+    switch (intent.type) {
+      case "avoid_player": {
+        now.setHours(now.getHours() + 8);
+        npc.pendingOverride = {
+          location: intent.target || "自宅",
+          action: "避开玩家",
+          reason: intent.reason || "自主决定远离玩家",
+          expiresAt: now.toISOString().slice(0, 10)
+        };
+        break;
+      }
+      case "confront_player": {
+        now.setHours(now.getHours() + 4);
+        npc.pendingOverride = {
+          location: playerLoc,
+          action: "找玩家对质",
+          reason: intent.reason || "需要当面问清楚",
+          expiresAt: now.toISOString().slice(0, 10)
+        };
+        break;
+      }
+      case "inform_teacher": {
+        const teacher = intent.target || "平塚静";
+        now.setHours(now.getHours() + 6);
+        npc.pendingOverride = {
+          location: "職員室",
+          action: `向${teacher}报告玩家行为`,
+          reason: intent.reason || "报告违规行为",
+          expiresAt: now.toISOString().slice(0, 10)
+        };
+        // 给老师写一条记忆
+        const teacherNpc = getOrCreateNPC(teacher);
+        if (teacherNpc) {
+          teacherNpc.memoryTags ??= [];
+          teacherNpc.memoryTags.push({
+            tag: `[口信-${npcName}] ${intent.reason || "学生举报"}`,
+            timestamp: gameState.time.game_date,
+            importance: 7
+          } as any);
+        }
+        break;
+      }
+      case "hire_help": {
+        // NPC 花钱雇帮手（扣 NPC 资金，spawn 临时 NPC）
+        const cost = intent.cost || 500;
+        if (npc.funds >= cost) {
+          npc.funds -= cost;
+          now.setHours(now.getHours() + 12);
+          npc.pendingOverride = {
+            location: intent.target || playerLoc,
+            action: "雇人处理玩家问题",
+            reason: intent.reason || "需要外部帮手",
+            expiresAt: now.toISOString().slice(0, 10)
+          };
+        }
+        break;
+      }
+    }
+    saveState();
+  } catch (e) {
+    console.error(`parseNpcIntent JSON parse failed for ${npcName}:`, e);
+  }
+}

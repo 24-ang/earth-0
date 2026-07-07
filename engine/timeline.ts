@@ -1392,21 +1392,48 @@ export function applyOrgDrivesToNPC(): void {
   const orgs = gameState.organizations;
   if (!orgs) return;
 
+  // 生命周期阶段 → 成员叙事驱动力
+  const LIFECYCLE_DRIVES: Record<string, string[]> = {
+    "萌芽": ["招兵买马，扩大基本盘", "寻找可靠的根据地", "低调发育，避免过早曝光"],
+    "初创": ["争取第一个关键资源或盟友", "在同类势力中打出差异化", "抵御外围压力，巩固初步成果"],
+    "成长": ["加速扩张，抢占势力范围", "拉拢摇摆势力，孤立对手", "将阶段性胜利转化为制度化的力量"],
+    "成熟": ["维护现有秩序与既得利益", "压制新兴挑战者", "将势力影响力转化为长期遗产"],
+    "衰退": ["力挽狂澜，削减开支度过寒冬", "寻找外部盟友以挽救颓势", "清理内部不稳定因素，重整旗鼓"],
+    "消亡": ["做好善后，保护残余成员", "将遗产移交至友方势力", "体面退场或最后一搏"]
+  };
+
   for (const [orgId, org] of Object.entries(orgs)) {
+    if (org.archived) continue;
     if (!org.goals?.currentPhaseGoal) continue;
-    const orgDrive = `[${org.name}]${org.goals.currentPhaseGoal}`;
+
+    const stage: string = org.lifecycle_stage || "初创";
+    const stageDrives = LIFECYCLE_DRIVES[stage] || LIFECYCLE_DRIVES["初创"]!;
 
     for (const member of org.members || []) {
       const npc = gameState.npcs[member.npcName];
       if (!npc) continue;
-      
+
       npc.current_drives ??= [];
-      // 避免重复注入同一组织的目标
+
+      // 注入组织目标
+      const orgDrive = `[${org.name}]${org.goals.currentPhaseGoal}`;
       const existing = npc.current_drives.findIndex(d => d.startsWith(`[${org.name}]`));
       if (existing >= 0) {
         npc.current_drives[existing] = orgDrive;
       } else {
         npc.current_drives.push(orgDrive);
+      }
+
+      // 根据生命周期阶段注入角色对应的叙事驱动力
+      const roleDriveIdx = npc.current_drives.findIndex(d => d.startsWith(`[${org.name}-role]`));
+      const roleContext = member.role || "成员";
+      // 对每个成员选契合其 rank 的驱动：高层用战略视角，基层用执行视角
+      const driveIdx = member.rank >= 5 ? 0 : (member.rank >= 3 ? 1 : 2);
+      const drive = `[${org.name}-role] 作为${roleContext}(${stage}期): ${stageDrives[driveIdx] || stageDrives[2]!}`;
+      if (roleDriveIdx >= 0) {
+        npc.current_drives[roleDriveIdx] = drive;
+      } else {
+        npc.current_drives.push(drive);
       }
     }
   }

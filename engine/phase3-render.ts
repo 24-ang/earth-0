@@ -196,6 +196,13 @@ async function buildRenderStateContext(gs: any): Promise<string> {
     }
   } catch (e) { console.error("getActiveOrgsForLocation failed:", e); }
 
+	// ── NPC 反应日志（恶意行为触发的日程越权） ──
+	try {
+		const { getReactionSummary } = await import("./npc-reactions.ts");
+		const reactionSummary = getReactionSummary();
+		if (reactionSummary) parts.push(reactionSummary);
+	} catch (_) { /* npc-reactions best-effort */ }
+
   // ── 玩家装备 ──
   const p = gs.player;
   if (p) {
