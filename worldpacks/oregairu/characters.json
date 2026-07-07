@@ -9996,5 +9996,299 @@
     "default_location_by_age": {
       "35": "検見川浜"
     }
+  },
+  {
+    "name": "藤崎穗成美",
+    "source": "我的青春恋爱物语果然有问题。",
+    "base_age": 24,
+    "gender": "female",
+    "appearance_brief": "棕色单马尾、身材丰满惹火的保健体育老师兼游泳部顾问。常穿深蓝色竞技连体泳衣，吹着哨子。",
+    "hair_color": "棕色",
+    "hair_style": "单马尾",
+    "outfits": {
+      "work": {
+        "top": "运动外套",
+        "bottom": "运动长裤",
+        "feet": "运动鞋",
+        "inner_top": "运动内衣",
+        "inner_bot": "运动内裤",
+        "shirt": "短袖T恤"
+      },
+      "swim": {
+        "feet": "拖鞋",
+        "shirt": "深蓝色竞技连体泳衣",
+        "acc": "哨子"
+      },
+      "casual": {
+        "bottom": "牛仔裤",
+        "feet": "平底鞋",
+        "inner_top": "黑色蕾丝胸罩",
+        "inner_bot": "黑色蕾丝内裤",
+        "shirt": "宽松针织衫"
+      }
+    },
+    "body": {
+      "height_cm": 161,
+      "weight_kg": 56,
+      "build": "丰满",
+      "measurements": {
+        "bust": 98,
+        "waist": 61,
+        "hips": 95
+      },
+      "cup": "I",
+      "leg_type": "肉感",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "普通",
+        "tan": 15,
+        "texture": "光滑"
+      },
+      "diet": "高蛋白",
+      "exercise": "规律运动"
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 8,
+      "体质": 8,
+      "智力": 10,
+      "感知": 12,
+      "魅力": 16
+    },
+    "skills": {
+      "运动": 9,
+      "游泳": 10,
+      "教学": 8,
+      "急救": 7
+    },
+    "hp": {
+      "current": 15,
+      "max": 15
+    },
+    "equipment": {
+      "shirt": {
+        "name": "深蓝色竞技连体泳衣",
+        "type": "clothing",
+        "slot": "shirt",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      "acc": {
+        "name": "哨子",
+        "type": "tool",
+        "slot": "acc",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "智能手机",
+        "type": "tool",
+        "slot": "right_hand",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "保健室钥匙",
+        "type": "tool",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "社团记录本",
+        "type": "tool",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "海浜幕張",
+    "grid_pos": [
+      8,
+      2
+    ],
+    "schedule_group": "总武高教师",
+    "funds": 350000,
+    "personality_brief": "成熟稳重的保健体育老师兼游泳部顾问。性格一丝不苟，指导时十分严厉，但富有人情味，对勤奋认真的学生非常有亲切感。因其极度丰满惹火的身材，经常在不经意间吸引男学生的目光。",
+    "speech_style": "语气成熟、认真，带有一种包容的年长女性感。指导时会比较严厉，但私下交流时很温和。",
+    "likes": [
+      "游泳",
+      "勤奋认真的学生",
+      "健康的饮食",
+      "放松的泡澡"
+    ],
+    "dislikes": [
+      "偷懒的人",
+      "毫无理由的缺席",
+      "不礼貌的视线"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高游泳部顾问，同时身兼保健体育的职务。生日是7月16日，血型O型。",
+        "level": "common"
+      },
+      {
+        "text": "虽然性格一丝不苟指导十分严厉，但富有人情味，因此对勤奋认真的学生来说非常有亲切感。",
+        "level": "common"
+      },
+      {
+        "text": "身材非常丰满，穿上竞技泳衣时极具视觉冲击力，是许多男学生私下讨论的焦点。",
+        "level": "familiar"
+      }
+    ],
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    },
+    "default_location_by_age": {
+      "6": "千葉駅前",
+      "12": "千葉駅前",
+      "15": "千葉みなと",
+      "18": "西千葉",
+      "24": "海浜幕張"
+    },
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "22": "总武高教师",
+      "24": "总武高教师"
+    },
+    "personality_stages": {
+      "15": "活泼好动的运动少女，在校游泳队已经崭露头角",
+      "18": "考上体育大学，专攻游泳教学和运动医学",
+      "24": "毕业后回到千叶，在母校总武高担任保健体育教师兼游泳部顾问"
+    },
+    "drives_by_age": {
+      "24": {
+        "drives": [
+          "培养出能在全国高中游泳大赛上获奖的学生",
+          "让害怕水的学生克服恐惧"
+        ],
+        "goal": "在三年内带领游泳部打进关东大赛"
+      }
+    },
+    "private_facts": [
+      {
+        "text": "虽然身材惹火常被男学生偷看，但其实恋爱经验极少——大学四年全泡在游泳池和运动医学教室里。",
+        "level": "close"
+      },
+      {
+        "text": "游泳部训练结束后的晚上，会一个人浮在泳池上看星空——这是她每天最放松的时刻。",
+        "level": "close"
+      }
+    ],
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "棕色"
+      },
+      "18": {
+        "hair_style": "中长发单马尾",
+        "hair_color": "棕色"
+      }
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 118,
+        "weight_kg": 22,
+        "build": "纤细",
+        "leg_type": "纤细",
+        "diet": "正常",
+        "exercise": "多动",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 149,
+        "weight_kg": 38,
+        "build": "纤细",
+        "cup": "B",
+        "measurements": {
+          "bust": 72,
+          "waist": 55,
+          "hips": 78
+        },
+        "leg_type": "结实",
+        "diet": "正常",
+        "exercise": "规律运动",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 20,
+          "texture": "光滑"
+        }
+      },
+      "15": {
+        "height_cm": 157,
+        "weight_kg": 48,
+        "build": "匀称",
+        "cup": "F",
+        "measurements": {
+          "bust": 88,
+          "waist": 58,
+          "hips": 90
+        },
+        "leg_type": "结实",
+        "diet": "高蛋白",
+        "exercise": "高强度训练",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 20,
+          "texture": "光滑"
+        }
+      },
+      "18": {
+        "height_cm": 161,
+        "weight_kg": 54,
+        "build": "丰满",
+        "cup": "H",
+        "measurements": {
+          "bust": 95,
+          "waist": 60,
+          "hips": 93
+        },
+        "leg_type": "结实",
+        "diet": "高蛋白",
+        "exercise": "高强度训练",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 15,
+          "texture": "光滑"
+        }
+      },
+      "24": {
+        "height_cm": 161,
+        "weight_kg": 56,
+        "build": "丰满",
+        "cup": "I",
+        "measurements": {
+          "bust": 98,
+          "waist": 61,
+          "hips": 95
+        },
+        "leg_type": "肉感",
+        "diet": "高蛋白",
+        "exercise": "规律运动",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 15,
+          "texture": "光滑"
+        }
+      }
+    }
   }
 ]
