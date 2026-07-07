@@ -255,6 +255,7 @@ function createInitialState(): GameState {
     interactionMode: "novel",
     turnsSinceLastNPCInteraction: 2,
     turnsInConversation: 0,
+    _toolsLocked: false,
     _cutaway_queue: [],
     _cutaway_cooldown: 0,
     _npc_last_responses: {},
@@ -469,6 +470,7 @@ export function loadState(filepath?: string): boolean {
     delete gameState.npcs[gameState.player.name];
   }
   setAcademicYearOffset(gameState.academic_year_offset ?? 0);
+  gameState._toolsLocked = false; // 绝不让存档中的锁标志复活
   if (gameState.player && gameState.player.attributes) {
     gameState.player.attributes.幸运 ??= 10;
   }
