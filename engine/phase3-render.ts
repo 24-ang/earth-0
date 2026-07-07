@@ -207,9 +207,7 @@ async function buildRenderStateContext(gs: any): Promise<string> {
   try {
     if ((gs as any)._lastOrgAlerts && (gs as any)._lastOrgAlerts.length > 0) {
       const alertLines = (gs as any)._lastOrgAlerts.map((a: any) => "• " + a.alert);
-      parts.push("[势力动态]
-" + alertLines.join("
-"));
+      parts.push("[势力动态]\n" + alertLines.join("\n"));;
     }
   } catch (_) { /* best-effort */ }
 
