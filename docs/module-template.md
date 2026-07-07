@@ -97,7 +97,7 @@ if (gameState.xxxCondition) {
 
 ```bash
 # 每加一个新模块，测试数只增不减
-npx tsx test.ts  # 当前基准：304 passed, 0 failed（+ npx tsx e2e-init-test.ts 57 = 361 total）
+npx tsx test.ts  # 当前基准：346 passed, 0 failed
 
 # 新模块至少 2 个测试：
 # - 正常路径
@@ -177,7 +177,7 @@ gamble: ["place_bet", "dice_roll"],
 - [ ] 所有参数有 description
 - [ ] 引擎函数在 `engine/` + 数据在 `data/`
 - [ ] 场景映射已添加
-- [ ] `npx tsx test.ts` 测试数 ≥ 304（+ e2e-init-test.ts 57 = 361 total，在原有基准上只增不减）
+- [ ] `npx tsx test.ts` 测试数 ≥ 346（在原有基准上只增不减）
 - [ ] 不包含任何硬编码的题材特定内容（人物名、地名、作品名）
 - [ ] 如有世界设定，放入 `worldpacks/{世界}/` 对应子目录，`data/` 仅兜底。sync 两份
 - [ ] **工具 description 不手写会过时的枚举值**。值多或来源在 JSON 文件 → 点 LLM 去 `lookup_xxx` 查。值少（≤10）且稳定 → 直接列
@@ -185,3 +185,74 @@ gamble: ["place_bet", "dice_roll"],
 - [ ] **引擎函数不用 `require()` 用 `await import()`**。ESM 模式下 `require()` 抛 ReferenceError
 - [ ] **静默 catch 必打日志**：`catch (e) { console.error("函数名: 描述", e); }`
 - [ ] **叙事注入优先于物理拦截**。如通勤偶遇——不建房间+不移NPC+不拦流程，纯 prompt 注入比物理机制更轻更灵活
+
+---
+
+## 引擎级模块模式（如 Vicky 政治经济学系统）
+
+上面的模板适用于加单个工具。当新模块涉及引擎层面的模拟逻辑时，需额外处理：
+
+### 模式 A：引擎自转函数（在 settlement tick 中调用）
+
+```ts
+// engine/timeline.ts — 或新建 engine/new-system.ts
+export function applyNewSystemEffect(): void {
+  // 遍历 gameState.xxx，根据 worldState 或时间推进自动调整数值
+}
+
+export function evaluateNewSystem(): { orgId: string; alert: string }[] {
+  // 根据阈值判定状态转换 → 返回叙事告警
+  // 存储告警到 (gameState as any)._lastXxxAlerts 供 Phase 3 注入
+}
+
+export function applyNewSystemDrivesToNPC(): void {
+  // 将系统状态转换为 NPC 的 current_drives
+}
+```
+
+**调用链**：settlement tick → `applyWorldStateToOrgs` → `evaluateOrgGoals` → `applyOrgDrivesToNPC`（均为同步，不需要 await）
+
+### 模式 B：lookup table 反应系统（不调 LLM）
+
+```ts
+// engine/npc-reactions.ts
+const REACTION_TABLE: Record<string, (params: any) => ReactionEntry[]> = {
+  tool_name: (params) => { /* lookup → decide mode → return entries */ },
+};
+
+export function processNpcReactions(toolName: string, params: any): ReactionEntry[] {
+  // 查表 → 写 pendingOverride → saveState()
+}
+```
+
+**注入点**：`tools/registry.ts` 的 `withToolTracking` wrapper（工具执行成功后自动调用）
+
+### 模式 C：Phase 2 / Phase 3 注入
+
+| 注入位置 | 文件 | 方法 |
+|---------|------|------|
+| Phase 2 NPC context | `tools/helpers.ts` `buildTodayContext` | 读取 gameState 字段 → 拼 strings 注入 NPC prompt |
+| Phase 2 NPC intent | `tools/helpers.ts` `parseNpcIntent` / `parseScheduleIntent` | 从 NPC 回应末尾提取 JSON → 写 gameState |
+| Phase 3 render | `engine/phase3-render.ts` `buildRenderSystemPrompt` | 读 gameState 字段 → 拼 parts[] → 注入渲染 prompt |
+| Phase 1 classifier | `engine/phase1-classifier.ts` | ACTION_WHITELIST + prompt 行 + toolPaths |
+
+### 模式 D：类型扩展
+
+新引擎字段添加到 `engine/types.ts` 的对应 interface（Organization / GameState / NPCRuntimeState）。运行时加载时在 `engine/state.ts` 的对应加载函数中自动初始化缺失字段（`.??=` 或 `??`）。
+
+**示例**：`lifecycle_stage` / `ticks_at_stage` / `ticks_at_scale` / `archived` 添加到 `Organization`，在 `loadActiveWorld` 中自动推断。
+
+### 模式 E：注册 Phase 1 工具（三步）
+
+```ts
+// 1. engine/phase1-classifier.ts — ACTION_WHITELIST 数组
+"contribute_to_org",
+
+// 2. engine/phase1-classifier.ts — buildClassificationPrompt 的提示词
+"  🏛️ 组织/势力: contribute_to_org（向势力捐款|完成任务|背叛|招募成员）",
+
+// 3. engine/phase1-classifier.ts — loadTool 的 toolPaths
+contribute_to_org: "../tools/action/contribute_to_org.ts",
+```
+
+**缺失任何一步 → LLM 不知道该工具存在 → 永远不会调用。**

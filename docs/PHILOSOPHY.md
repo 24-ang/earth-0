@@ -402,4 +402,91 @@ LLM 不输出 intent → 走现有模板。**模板是兜底，LLM 是增强。*
 
 ---
 
-> 最后更新：2026-07-06。新设计决策追加到 `docs/decisions.md`，大方向变化更新本文。
+## 十三、Vicky 政治经济学系统：让世界"自转"
+
+> Vicky 系统是 earth-0 的宏观模拟层。它不依赖 LLM —— 所有组织的行为、阶级关系、势力消长都由确定性引擎计算。LLM 拿数据做叙事，引擎拿规则做自转。
+
+### 13.1 四个层次
+
+```
+数据层 (17 orgs × 5-tier location skybox × 42 characters with class)
+    ↓
+查询层 (getActiveOrgsForLocation / canOrgActAtTier / resolveOrgIdForGroup)
+    ↓
+渲染层 (Phase 3 活跃势力注入 + lifecycle_stage/scale 显示 + _lastOrgAlerts)
+    ↓
+LLM 层 (Phase 2 NPC Agent 注入所属组织/阶级立场/内心冲突)
+    ↓
+交互层 (contribute_to_org: donate | complete_quest | betray | recruit_member)
+    ↓
+反应层 (NPC reactive schedule override: avoid | tail | confront | setup)
+    ↓
+生命周期层 (org lifecycle 六阶段 + scale 升降级 + 崩溃解散)
+```
+
+- 数据→查询→渲染→LLM 在上一轮已完成（HANDOFF-2026-07-07 之前）。
+- 交互→反应→生命周期在本轮（2026-07-07）完成。
+
+### 13.2 引擎自转 vs LLM 叙事
+
+Vicky 系统的核心哲学："引擎算账，LLM 写故事"。
+
+- ✅ 引擎计算：`applyWorldStateToOrgs` 根据繁荣度/稳定度/紧张度自动调整所有组织的财力/凝聚力/影响力
+- ✅ 引擎判定：`evaluateOrgGoals` 根据阈值判断生命周期阶段过渡和规模升降级
+- ✅ 引擎注入：Phase 3 拿到 `_lastOrgAlerts` 后注入叙事信号（"XX社从成长进入成熟"）
+- ✅ 引擎反制：NPC 被偷/被打/被背叛 → `processNpcReactions` 自动写 `pendingOverride`
+- ❌ 引擎不替 LLM 写：引擎只给 "凝聚力-10" 和 stage transition message，LLM 决定角色怎么反应
+
+### 13.3 生命周期六阶段：确定性推断
+
+引擎根据 `wealth / influence / cohesion` 自动推断 `lifecycle_stage`，不依赖 LLM 判断：
+
+| 阶段 | 条件 | 典型规模 | 成员叙事驱动 |
+|------|------|---------|-------------|
+| 萌芽 | wealth<20 & influence<20 | club | 招兵买马、找根据地 |
+| 初创 | wealth<40 & influence<40 | club→local | 争取资源、差异化 |
+| 成长 | wealth<70 & influence<70 | local→regional | 加速扩张、拉拢盟友 |
+| 成熟 | wealth≥70 & influence≥70 & cohesion≥60 | regional→national | 维护秩序、压制挑战者 |
+| 衰退 | cohesion<40 或 wealth<30 | 任意→降级 | 力挽狂澜、寻求外援 |
+| 消亡 | wealth+cohesion+legitimacy 三重枯竭 | archived | 善后、移交遗产 |
+
+衰退可逆（条件恢复后回到成长），消亡不可逆（标记 `archived: true`，所有引擎函数跳过）。
+
+### 13.4 NPC 反应式日程：物理反馈而非台词宣泄
+
+设计文档：`npc_reaction_schedule_design.md`
+
+传统 LLM 叙事中，NPC 被偷了只会在对话里骂你。Vicky 系统让 NPC 在物理空间上反制：
+
+- `steal_item` 被抓 → NPC 去职员室报官（confront）
+- `combat_action` 战力不足 → NPC 找靠山帮忙（setup + callAllies）
+- `intimate_touch` 好感低 → NPC 避让或对抗（avoid/confront）
+- `contribute_to_org` betray → 全体成员 react（高层 setup，基层 avoid）
+
+实现方式：`withToolTracking` 在每次工具执行后调 `processNpcReactions`，查 lookup table 决定反应模式 → 写入 `pendingOverride`。**LLM 不参与判定——这是引擎层的事。**
+
+### 13.5 为什么不让 LLM 管组织演化
+
+如果让 LLM 决定哪个组织该升级、哪个该崩溃：
+- LLM 会基于"故事好不好看"而非"数值该不该"做决策 → 演化为戏剧而非模拟
+- 不同会话之间组织状态不一致 → 存档加载后势力格局突变
+- LLM 会忘记上次的判定 → 反复升降级
+
+确定性引擎：每次 tick 同样的输入 → 同样的输出。玩家可以通过 `contribute_to_org` 加速或逆转趋势，但不能绕过数值。
+
+### 13.6 相关文件
+
+| 文件 | 职责 |
+|------|------|
+| `engine/timeline.ts` | `applyWorldStateToOrgs` + `evaluateOrgGoals` + `applyOrgDrivesToNPC` |
+| `engine/npc-reactions.ts` | `processNpcReactions` + `getReactionSummary` |
+| `engine/state.ts` | `getActiveOrgsForLocation` + org 加载 + lifecycle 初始化 |
+| `engine/types.ts` | `Organization` 类型 + `LifecycleStage` + `SCALE_LADDER` |
+| `tools/action/contribute_to_org.ts` | 玩家→org 四种互动 |
+| `tools/helpers.ts` | `buildTodayContext` Phase 2 注入 + `parseNpcIntent` Phase 2.5 |
+| `engine/phase3-render.ts` | Phase 3 显示 lifecycle_stage + scale + `_lastOrgAlerts` |
+| `worldpacks/oregairu/orgs/` | 17 个组织 JSON 数据 |
+
+---
+
+> 最后更新：2026-07-07。新设计决策追加到 `docs/decisions.md`，大方向变化更新本文。

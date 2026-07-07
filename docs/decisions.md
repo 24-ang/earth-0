@@ -561,3 +561,84 @@
 **不要做**：❌ 给所有组×所有天写满 key（只写有差异的天）。❌ 引擎硬编码"水曜=短缩"（数据层决定）。
 
 **相关代码**：`engine/state.ts:3288-3304` (slotMap+dayKey+timeKey resolution), `worldpacks/oregairu/schedule_templates.json`
+
+---
+
+## 26. Org 生命周期 + 规模升降级：引擎推断，LLM 不参与
+
+**是什么**：`evaluateOrgGoals()` 每 tick 根据 wealth/influence/cohesion 自动推断 `lifecycle_stage`（萌芽→初创→成长→成熟→衰退→消亡）和 scale 升降级。`applyOrgDrivesToNPC()` 根据 `lifecycle_stage` 自动注入不同的成员叙事驱动力。
+
+**为什么**：
+- 让 LLM 决定哪个组织该升级/崩溃 → LLM 会基于"故事好不好看"而非"数值该不该"做决策
+- 不同会话之间组织状态不一致 → 存档加载后势力格局突变
+- LLM 会忘记上次的判定 → 同一个组织反复升降级，叙事不稳定
+- 确定性引擎：每次 tick 同样的输入 → 同样的输出。玩家可以通过 `contribute_to_org` 加速或逆转趋势，但不能绕过数值
+
+**升级条件**：`influence≥60 & cohesion≥70 & 持续≥5 ticks` → scale 升一级（club→local→regional→national）
+
+**降级条件**：`cohesion<20 & 持续≥3 ticks` → scale 降一级（不低于 club）
+
+**消亡条件**：wealth+cohesion+legitimacy 三重 <10 → archived
+
+**放弃了什么**：LLM 无法"戏剧化"地为某个组织安排突然的崛起或崩溃——必须经过数值门槛和持续时间。但如果 LLM 想叙事推动，可以通过 calendar events 的 `org_effects` 或让玩家多做 `contribute_to_org` 来间接影响。
+
+**不要做**：❌ 让 LLM 直接设置 `lifecycle_stage`。❌ 跳过 ticks 门槛直接升降级。❌ 在 Phase 1/3 里硬编码生命周期逻辑（只在 timeline.ts 里）。
+
+**相关代码**：`engine/timeline.ts`（evaluateOrgGoals, evaluateScaleChange, applyOrgDrivesToNPC）, `engine/types.ts`（LifecycleStage, SCALE_LADDER）, `engine/state.ts`（org 加载时 lifecycle 初始化）
+
+---
+
+## 27. NPC 反应式日程越权：lookup table，不调 LLM
+
+**是什么**：`engine/npc-reactions.ts` 给 7 种恶意工具（steal_item / combat_action / intimate_touch / contribute_to_org(betray) / reveal_secret / identity_check / schedule_override）预定义了 NPC 反制模式。`withToolTracking` 在每次工具执行成功后自动调用 `processNpcReactions`。
+
+**为什么（不调 LLM）**：
+- 反制逻辑应该快、确定、零 token 消耗。调一次 LLM 判断 NPC 反应模式 ≈ 加一轮 API 调用，不划算。
+- 确定性意味着存档可复现。玩家偷东西被抓 → 同一存档同一 NPC 同一反应。
+- Phase 2 NPC Agent 已经可以用 `{"intent": {"type": "avoid_player"|...}}` 自主声明反制意图 → LLM 层有发言权，但不是必须发言。
+
+**四种模式**：avoid（避让）、tail（尾随/反跟踪）、confront（对质/报官）、setup（摇人/设局）
+
+**助手函数**：`callAlliesForNpc` → 高关系 NPC 自动设置 `pendingOverride` 来支援。
+
+**Phase 2.5 intent 解析**：`parseNpcIntent` 从 NPC Agent 输出中提取 `{"intent": {"type": "avoid_player"|"confront_player"|"inform_teacher"|"hire_help"|"none", ...}}`，转换为 `pendingOverride` + 记忆/资金操作。这是 LLM 参与的入口——但引擎 lookup table 是兜底。
+
+**放弃了什么**：lookup table 没有穷尽所有恶意行为——新工具需要手动加映射。如果 LLM 发现了 table 里没有覆盖的恶意行为，只能靠 Phase 2.5 intent 声明来弥补。
+
+**不要做**：❌ 让 NPC reactions 调 LLM 做判定。❌ 在 reaction table 里硬编码角色名（只按属性/关系/rank 判定）。
+
+**相关代码**：`engine/npc-reactions.ts`, `tools/registry.ts`（withToolTracking 注入点）, `tools/helpers.ts`（parseNpcIntent）
+
+---
+
+## 28. contribute_to_org 是单工具 + action enum，不是四个独立工具
+
+**是什么**：`tools/action/contribute_to_org.ts` 用一个 `action` 枚举（donate|complete_quest|betray|recruit_member）承载四种玩家→组织互动。
+
+**为什么**：
+- 四个独立工具 → Phase 1 分类器需要学会区分 donate/betray/quest/recruit → 分类错误率高
+- 四种操作共享相同的 org 校验逻辑（org 存在、reputation 存在、saveState）
+- 一个工具 + 清晰的 action 枚举 → LLM 选 action 比选工具名容易
+- 符合` world_interact` 的先例——一个工具承载建造/放置/移除/开关门，引擎根据 params 分发
+
+**不要做**：❌ 拆成四个工具。❌ 在 tool description 里省略 action 的具体效果（当前 description 里列了四种）。
+
+**相关代码**：`tools/action/contribute_to_org.ts`, `engine/phase1-classifier.ts`（白名单+prompt+toolPath）
+
+---
+
+## 29. Org 数据用纯 JSON 文件 + engine 加载时 hydration，不用数据库
+
+**是什么**：17 个组织定义在 `worldpacks/oregairu/orgs/*.json`，引擎 `loadActiveWorld` 时扫描目录加载到 `gameState.organizations`，并自动初始化 `lifecycle_stage`/`ticks_at_stage`/`ticks_at_scale`。
+
+**为什么**：
+- LLM 可以读写 JSON → 未来可以让 `create_organization` 自动生成新的 org JSON 文件
+- 不需要 ORM、migration、schema version——JSON 文件直接 git 追踪
+- 组织在存档里是运行时状态（可修改），在 JSON 文件里是初始模板（不可修改）
+- 加载时自动补全缺失字段 → `archived`、`lifecycle_stage` 等新字段不需要改所有 JSON 文件
+
+**放弃了什么**：JSON 文件加载是 O(n) 扫描，但 17 个文件太少了，不值得做缓存。
+
+**不要做**：❌ 把运行时修改写回 JSON 文件（存档走 state/ 保存）。❌ 新增 org 字段后不改 hydration 逻辑。
+
+**相关代码**：`engine/state.ts`（org 加载+h injection）, `worldpacks/oregairu/orgs/`（数据文件）
