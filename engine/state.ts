@@ -372,7 +372,7 @@ function createDefaultPlayer(): PlayerState {
     name: "维",
     gender: "男",
     age: 16,
-    location: "千叶_住宅区",
+    location: "千葉駅前",
     body: {
       height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
       skin: { base_tone: "普通", tan: 0, texture: "普通" },
@@ -393,7 +393,7 @@ function createDefaultPlayer(): PlayerState {
     party: [],
     gridPos: null,
     reputation: {},
-    known_locations: ["千叶_住宅区"],
+    known_locations: ["千葉駅前"],
     titles: [],
     properties: {},
     social_class: "小资产阶级",
@@ -757,6 +757,15 @@ export function resetState(): void {
   const roomsDeltaPath = path.join(STATE_DIR, "rooms_delta.json");
   if (fs.existsSync(roomsDeltaPath)) {
     try { fs.unlinkSync(roomsDeltaPath); } catch (_) {}
+  }
+  // 删除 theater_session.json 和 theater_rooms_delta.json
+  const theaterPath = path.join(STATE_DIR, "theater_session.json");
+  if (fs.existsSync(theaterPath)) {
+    try { fs.unlinkSync(theaterPath); } catch (_) {}
+  }
+  const theaterRoomsDeltaPath = path.join(STATE_DIR, "theater_rooms_delta.json");
+  if (fs.existsSync(theaterRoomsDeltaPath)) {
+    try { fs.unlinkSync(theaterRoomsDeltaPath); } catch (_) {}
   }
   // 删除 locations_delta.json 并重置内存
   LOCATIONS_DELTA = {};

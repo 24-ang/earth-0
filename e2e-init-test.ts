@@ -96,8 +96,8 @@ async function main() {
     check("住宅房间已展开(getRoom 非空)", getRoom(p.location) !== null);
 
     // 联系人
-    check("known_locations 含 千叶_住宅区",
-      Array.isArray(p.known_locations) && p.known_locations.some((l: string) => l.includes("千叶_住宅区")));
+    check("known_locations 含 千葉駅前",
+      Array.isArray(p.known_locations) && p.known_locations.some((l: string) => l.includes("千葉駅前")));
   }
 
   // 校验器全绿

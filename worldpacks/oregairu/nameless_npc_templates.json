@@ -1,6 +1,6 @@
 {
   "_note": "路人模板 — traits按zones(适用地点)和times(时段)分类。引擎根据当前位置区域类型和游戏时间自动过滤。zones: school=学校, street=街道/商业区, residential=住宅区, station=车站, park=公园",
-  "public_rooms": ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前", "操场", "校门", "自行车棚", "便利店街", "商店街", "住宅区", "千叶_住宅区", "千叶市街", "稲毛海岸通り"],
+  "public_rooms": ["中庭", "1F南走廊", "2F南走廊-J班前", "2F南走廊-F班前", "操场", "校门", "自行车棚", "便利店街", "商店街", "住宅区", "千葉駅前", "千叶市街", "稲毛海岸通り"],
   "traits": [
     { "name": "路人(学生)", "act": "背着书包急匆匆赶路", "height": "162cm", "zones": ["school"], "times": ["weekday_morning","weekday_lunch","weekday_afternoon"] },
     { "name": "路人(学生)", "act": "和朋友边走边聊", "height": "160cm", "zones": ["school"], "times": ["weekday_lunch","weekday_afternoon"] },

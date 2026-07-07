@@ -32,8 +32,8 @@ export default {
     }
 
     // Resolve location (must be at hospital to do this)
-    const loc = actor.location || "千叶_住宅区";
-    if (!loc.includes("医院") && !loc.includes("诊所") && loc !== "千叶_住宅区") {
+    const loc = actor.location || "千葉駅前";
+    if (!loc.includes("医院") && !loc.includes("诊所") && loc !== "千葉駅前") {
       return { content: [{ type: "text", text: `${params.charName}目前不在医院或诊所，无法进行手术。请先前往医院。` }], details: {} };
     }
 

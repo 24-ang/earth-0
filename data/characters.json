@@ -265,9 +265,18 @@
         "weight": 0.1,
         "effects": [],
         "state": "intact"
+      },
+      {
+        "name": "钱包",
+        "type": "tool",
+        "weight": 0.05,
+        "volume": 0.1,
+        "effects": [],
+        "state": "intact",
+        "flavor": "黑色皮革对折钱包，里面夹着一张总武高的学生证和几张千元钞票"
       }
     ],
-    "default_location": "千叶市立稻毛小学校",
+    "default_location": "海浜幕張",
     "sex_profile": "雪之下雪乃",
     "anchors": {
       "emotional": "外表冰冷的美人，私下很会撒娇。毒舌是防御也是试探——当她开始用毒舌调情时说明已经信赖你。高好感后争吵在外人看来就是打情骂俏。会逐渐放下戒备做出亲密举动。喝醉变超级黏人。发烧时冰山融化像小猫蜷在怀里。怕热，路痴，不擅长电子机械。反差是核心魅力。",
@@ -346,7 +355,16 @@
         "text": "小学时全班以她太优秀为由孤立她——从此不信任集体。",
         "level": "close"
       }
-    ]
+    ],
+    "default_location_by_age": {
+      "6": "千葉_雪之下邸",
+      "15": "海浜幕張"
+    },
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -2
+    }
   },
   {
     "name": "由比滨结衣",
@@ -516,7 +534,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule": {
       "weekday_morning": "总武高_2年F班",
       "weekday_afternoon": "总武高_侍奉部",
@@ -570,7 +588,12 @@
         "text": "家里养了一只叫萨布雷的萨摩耶。经常去KTV和朋友唱歌。",
         "level": "familiar"
       }
-    ]
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": -1
+    }
   },
   {
     "name": "比企谷八幡",
@@ -662,7 +685,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "schedule": {
       "weekday_morning": "总武高_2年F班",
       "weekday_afternoon": "总武高_侍奉部",
@@ -691,7 +714,12 @@
         "text": "注册了侍奉部，被平冢静以'矫正孤僻性格'为由强制入部。",
         "level": "familiar"
       }
-    ]
+    ],
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -2,
+      "政治立场": -3
+    }
   },
   {
     "name": "喜多川海梦",
@@ -826,7 +854,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "sex_profile": "喜多川海梦",
     "grid_pos": [
       3,
@@ -865,7 +893,12 @@
       "侮辱他人爱好的人",
       "逆来顺受的性格",
       "游泳（不会）"
-    ]
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -2
+    }
   },
   {
     "name": "椎名詩織",
@@ -1063,7 +1096,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "sex_profile": "椎名詩織",
     "anchors": {
       "emotional": "温柔贤惠的完美妻子形象，对外总是带着治愈微笑。但对自己的魅力有清晰认识——在丈夫面前会特意展现大胆一面。稍微有天然呆属性，反差萌十足。",
@@ -1105,6 +1138,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "自由人"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -1169,7 +1207,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
@@ -1181,7 +1219,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 1000
+    "funds": 1000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
   },
   {
     "name": "户冢彩加",
@@ -1246,7 +1289,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "西千葉",
     "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
@@ -1258,7 +1301,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 1500
+    "funds": 1500,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "如月真绫",
@@ -1422,7 +1470,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule_group": "总武高学生",
     "schedule_group_by_age": {
       "7": "小学生",
@@ -1446,6 +1494,11 @@
       "12": {
         "hair_style": "中长发"
       }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -1509,7 +1562,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
@@ -1521,7 +1574,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 2000
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "如月翔太",
@@ -1574,6 +1632,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "上班族"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -1626,7 +1689,7 @@
     },
     "equipment": {},
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule_group": "自由人",
     "grid_pos": null,
     "anchors": {
@@ -1638,6 +1701,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "自由人"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
     }
   },
   {
@@ -1753,6 +1821,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "自由人"
+    },
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 4,
+      "政治立场": 4
     }
   },
   {
@@ -1913,6 +1986,11 @@
       "12": {
         "hair_style": "中长发"
       }
+    },
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 3,
+      "政治立场": 2
     }
   },
   {
@@ -1964,7 +2042,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 6000
+    "funds": 6000,
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 4,
+      "政治立场": 3
+    }
   },
   {
     "name": "橘京香",
@@ -2078,6 +2161,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "上班族"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 0
     }
   },
   {
@@ -2211,6 +2299,11 @@
       "10": {
         "hair_accessories": ""
       }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -2361,6 +2454,11 @@
       "10": {
         "hair_style": "中长发"
       }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -2523,7 +2621,12 @@
       "被人比较",
       "被评价",
       "无意义的社交"
-    ]
+    ],
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "浅仓透",
@@ -2693,7 +2796,12 @@
       "一成不变的日常",
       "太复杂的说明",
       "忘记重要的事"
-    ]
+    ],
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "平冢静",
@@ -2851,7 +2959,7 @@
       {
         "start": "20:00",
         "end": "24:00",
-        "location": "千叶_住宅区",
+        "location": "千葉駅前",
         "activity": "喝啤酒、看漫画"
       }
     ],
@@ -2871,7 +2979,12 @@
       "18": "大学生",
       "22": "总武高教师"
     },
-    "default_location": "职员室"
+    "default_location": "検見川浜",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -2
+    }
   },
   {
     "name": "式守都",
@@ -2956,7 +3069,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "式守都"
+    "sex_profile": "式守都",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
   },
   {
     "name": "天乃莉莉纱",
@@ -3036,7 +3154,12 @@
     },
     "schedule_group": "高校生",
     "funds": 5000,
-    "sex_profile": "天乃莉莉纱"
+    "sex_profile": "天乃莉莉纱",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "橘美花莉",
@@ -3116,7 +3239,12 @@
     },
     "schedule_group": "高校生",
     "funds": 8000,
-    "sex_profile": "橘美花莉"
+    "sex_profile": "橘美花莉",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "绫濑沙季",
@@ -3192,7 +3320,12 @@
     },
     "schedule_group": "高校生",
     "funds": 4000,
-    "sex_profile": "绫濑沙季"
+    "sex_profile": "绫濑沙季",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "羽生真由梨",
@@ -3272,7 +3405,12 @@
     },
     "schedule_group": "社会人",
     "funds": 15000,
-    "sex_profile": "羽生真由梨"
+    "sex_profile": "羽生真由梨",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "诺诺亚",
@@ -3301,7 +3439,8 @@
         "base_tone": "苍白",
         "tan": 2,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 43
     },
     "attributes": {
       "力量": 2,
@@ -3349,7 +3488,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "诺诺亚"
+    "sex_profile": "诺诺亚",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "喜咲亚理亚",
@@ -3376,7 +3520,8 @@
         "base_tone": "健康小麦",
         "tan": 8,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 42
     },
     "attributes": {
       "力量": 3,
@@ -3424,7 +3569,12 @@
     },
     "schedule_group": "高校生",
     "funds": 2000,
-    "sex_profile": "喜咲亚理亚"
+    "sex_profile": "喜咲亚理亚",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "和泉幽希",
@@ -3449,7 +3599,8 @@
         "base_tone": "普通",
         "tan": 5,
         "texture": "普通"
-      }
+      },
+      "weight_kg": 50
     },
     "attributes": {
       "力量": 2,
@@ -3495,7 +3646,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 2000
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "城廻巡",
@@ -3520,7 +3676,8 @@
         "base_tone": "白皙",
         "tan": 5,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 50
     },
     "attributes": {
       "力量": 3,
@@ -3561,7 +3718,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 5000
+    "funds": 5000,
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
   },
   {
     "name": "户部翔",
@@ -3586,7 +3748,8 @@
         "base_tone": "普通",
         "tan": 8,
         "texture": "普通"
-      }
+      },
+      "weight_kg": 62
     },
     "attributes": {
       "力量": 5,
@@ -3627,7 +3790,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 3000
+    "funds": 3000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 1
+    }
   },
   {
     "name": "折本香织",
@@ -3645,7 +3813,8 @@
         "base_tone": "普通",
         "tan": 8,
         "texture": "普通"
-      }
+      },
+      "weight_kg": 48
     },
     "attributes": {
       "力量": 3,
@@ -3682,7 +3851,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 3000
+    "funds": 3000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 1
+    }
   },
   {
     "name": "黑川茜",
@@ -3702,7 +3876,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 47
     },
     "attributes": {
       "力量": 3,
@@ -3750,7 +3925,12 @@
     },
     "schedule_group": "高校生",
     "funds": 5000,
-    "sex_profile": "黑川茜"
+    "sex_profile": "黑川茜",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
   },
   {
     "name": "星野瑠美衣",
@@ -3770,7 +3950,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 44
     },
     "attributes": {
       "力量": 3,
@@ -3820,7 +4001,12 @@
     },
     "schedule_group": "高校生",
     "funds": 8000,
-    "sex_profile": "星野瑠美衣"
+    "sex_profile": "星野瑠美衣",
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -2,
+      "政治立场": -1
+    }
   },
   {
     "name": "矶野上多绪",
@@ -3888,7 +4074,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "矶野上多绪"
+    "sex_profile": "矶野上多绪",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "寻峰洋子",
@@ -3955,7 +4146,12 @@
     },
     "schedule_group": "高校生",
     "funds": 4000,
-    "sex_profile": "寻峰洋子"
+    "sex_profile": "寻峰洋子",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "宝多六花",
@@ -4023,7 +4219,12 @@
     },
     "schedule_group": "高校生",
     "funds": 4000,
-    "sex_profile": "宝多六花"
+    "sex_profile": "宝多六花",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "南梦芽",
@@ -4042,7 +4243,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 51
     },
     "attributes": {
       "力量": 4,
@@ -4089,7 +4291,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "南梦芽"
+    "sex_profile": "南梦芽",
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
   },
   {
     "name": "樱岛麻衣",
@@ -4109,7 +4316,8 @@
         "base_tone": "白皙",
         "tan": 2,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 49
     },
     "attributes": {
       "力量": 3,
@@ -4156,7 +4364,12 @@
     },
     "schedule_group": "高校生",
     "funds": 20000,
-    "sex_profile": "樱岛麻衣"
+    "sex_profile": "樱岛麻衣",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "高木",
@@ -4175,7 +4388,8 @@
         "base_tone": "普通",
         "tan": 5,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 42
     },
     "attributes": {
       "力量": 2,
@@ -4220,7 +4434,12 @@
     },
     "schedule_group": "中学生",
     "funds": 1500,
-    "sex_profile": "高木"
+    "sex_profile": "高木",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "指宿凛凛澄",
@@ -4239,7 +4458,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 47
     },
     "attributes": {
       "力量": 4,
@@ -4283,7 +4503,12 @@
     },
     "schedule_group": "高校生",
     "funds": 5000,
-    "sex_profile": "指宿凛凛澄"
+    "sex_profile": "指宿凛凛澄",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "不知火舞",
@@ -4304,7 +4529,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 55
     },
     "attributes": {
       "力量": 8,
@@ -4374,7 +4600,12 @@
       }
     ],
     "funds": 10000,
-    "sex_profile": "不知火舞"
+    "sex_profile": "不知火舞",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "材木座义辉",
@@ -4479,7 +4710,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "蘇我",
     "schedule": {
       "weekday_morning": "总武高_2年C班",
       "weekday_afternoon": "总武高_游戏部",
@@ -4526,7 +4757,12 @@
         "text": "材木座关于写作是认真的。浮夸的中二病台词和战国武将架势是他面对真实世界时的铠甲。摘下眼镜坐在电脑前时只是个害怕失败的高中生。",
         "level": "industry"
       }
-    ]
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "叶山隼人",
@@ -4546,6 +4782,7 @@
     },
     "body": {
       "height_cm": 178,
+      "weight_kg": 68,
       "build": "挺拔",
       "skin": {
         "base_tone": "健康",
@@ -4574,7 +4811,7 @@
     },
     "speech_style": "温和有礼，滴水不漏。对所有人使用客气的平辈称呼，尽量避免冲突性的言论。",
     "anchors": {
-      "emotional": "追求虚假和谐的温柔面具——足球社和金发是他的社交名片。极度厌恶冲突，为了维持小圈子平衡而宁可委屈自己或掩盖矛盾。",
+      "emotional": "追求虚假和谐的温柔面具——足球社 and 金发是他的社交名片。极度厌恶冲突，为了维持小圈子平衡而宁可委屈自己或掩盖矛盾。",
       "intimate": "对雪之下雪乃怀有深深的愧疚与特殊的关注。虽然欣赏由比滨和三浦的依赖，但内心深处最羡慕和抗拒的是八幡的决绝。"
     },
     "likes": [
@@ -4621,6 +4858,7 @@
     },
     "body": {
       "height_cm": 163,
+      "weight_kg": 48,
       "build": "丰满",
       "skin": {
         "base_tone": "白皙",
@@ -4696,6 +4934,7 @@
     },
     "body": {
       "height_cm": 158,
+      "weight_kg": 45,
       "build": "普通",
       "skin": {
         "base_tone": "白皙",
@@ -4771,6 +5010,7 @@
     },
     "body": {
       "height_cm": 168,
+      "weight_kg": 52,
       "build": "高挑",
       "skin": {
         "base_tone": "白皙",
@@ -4814,7 +5054,7 @@
       "夜间打工被抓",
       "花哨的打扮"
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
@@ -4846,6 +5086,7 @@
     },
     "body": {
       "height_cm": 156,
+      "weight_kg": 44,
       "build": "娇小",
       "skin": {
         "base_tone": "白皙",
@@ -4921,6 +5162,7 @@
     },
     "body": {
       "height_cm": 162,
+      "weight_kg": 47,
       "build": "普通",
       "skin": {
         "base_tone": "健康",
@@ -4995,6 +5237,7 @@
     },
     "body": {
       "height_cm": 182,
+      "weight_kg": 78,
       "build": "粗壮",
       "skin": {
         "base_tone": "健康",
@@ -5048,6 +5291,4333 @@
     "personal_axes": {
       "经济立场": 0,
       "政治立场": 0
+    }
+  },
+  {
+    "name": "大冈",
+    "source": "我的青春恋爱物语果然有问题。",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "留着圆寸头、身材结实的棒球部成员。常附和户部。",
+    "hair_color": "黑色",
+    "hair_style": "圆寸",
+    "outfits": {
+      "school": {
+        "top": "总武高制服外套",
+        "shirt": "白色校服衬衫",
+        "bottom": "深蓝色制服长裤",
+        "feet": "室内鞋"
+      }
+    },
+    "body": {
+      "height_cm": 175,
+      "weight_kg": 70,
+      "build": "结实",
+      "skin": {
+        "base_tone": "健康",
+        "tan": 4,
+        "texture": "普通"
+      }
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 7,
+      "体质": 7,
+      "智力": 7,
+      "感知": 7,
+      "魅力": 9
+    },
+    "skills": {
+      "运动": 5,
+      "格斗": 2
+    },
+    "personality_brief": "性格大大咧咧的棒球社团学生，叶山集团的边缘人物。听话踏实，缺乏主见，喜欢和男生们吃喝哄笑。",
+    "personality_stages": {
+      "6": "好动的体育男童。",
+      "12": "加入少棒队，专注于棒球运动。",
+      "16": "总武高2年F班学生，棒球部成员。跟班定位，和户部、大和是损友。"
+    },
+    "speech_style": "大嗓门，说话直接，经常跟着户部起哄或者大笑，句式简单。",
+    "anchors": {
+      "emotional": "单纯大条的体育生，棒球是唯一的执念，在现充小团体里安于跟班地位。"
+    },
+    "likes": [
+      "棒球",
+      "健身",
+      "烤肉",
+      "起哄"
+    ],
+    "dislikes": [
+      "动脑筋",
+      "严肃的谈话",
+      "下雨天"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "16": "总武高学生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 1500,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "仲町千佳",
+    "source": "我的青春恋爱物语果然有问题。",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "黑发双马尾，海滨高中的女高中生。常与折本香织在一起。",
+    "hair_color": "黑色",
+    "hair_style": "双马尾",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "百褶裙",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 158,
+      "weight_kg": 46,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 5,
+      "体质": 5,
+      "智力": 9,
+      "感知": 9,
+      "魅力": 11
+    },
+    "skills": {
+      "社交": 5,
+      "时尚": 6
+    },
+    "personality_brief": "性格活泼、带点轻浮和随大流的女高中生。喜欢聊八卦和帅哥，是折本香织的好友与随从，对阴郁的人有排斥心理。",
+    "personality_stages": {
+      "6": "普通小学生。",
+      "12": "初中时追随现充潮流，喜欢看时尚杂志。",
+      "16": "海滨综合高中学生。常与折本香织结伴聊天，喜欢对男生的现充度评头论足。"
+    },
+    "speech_style": "轻佻、使用大量的流行缩写和拟声词（如「超——」「真的假的」），喜欢咯咯发笑。",
+    "anchors": {
+      "emotional": "标准的平庸辣妹模仿者，对潮流极度敏感，说话不经大脑，容易给老实人带来尴尬伤害。"
+    },
+    "likes": [
+      "聊八卦",
+      "逛街买衣服",
+      "卡拉OK",
+      "帅哥"
+    ],
+    "dislikes": [
+      "阴沉的气氛",
+      "死鱼眼",
+      "学习"
+    ],
+    "default_location": "千叶市街",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "16": "高校生"
+    },
+    "schedule_group": "高校生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "鹤见留美",
+    "source": "我的青春恋爱物语果然有问题。",
+    "base_age": 11,
+    "gender": "female",
+    "appearance_brief": "黑色中短发、身形瘦小、眼神中带着与年龄不符的冷漠与戒备。",
+    "hair_color": "黑色",
+    "hair_style": "中短发",
+    "outfits": {
+      "school": {
+        "top": "小学生服",
+        "bottom": "裙子",
+        "feet": "运动鞋"
+      }
+    },
+    "body": {
+      "height_cm": 142,
+      "weight_kg": 32,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 3,
+      "敏捷": 5,
+      "体质": 4,
+      "智力": 11,
+      "感知": 13,
+      "魅力": 12
+    },
+    "skills": {
+      "观察": 6,
+      "观察人心": 5
+    },
+    "personality_brief": "由于遭遇同龄人排挤而自我封闭的小女孩。眼神冷漠倔强，有着超越同龄人的早熟与虚无感，不信任所谓的“朋友”关系。",
+    "personality_stages": {
+      "6": "天真开朗的女孩。",
+      "11": "林间学校的小学生。因为太懂事或不合群遭遇女生圈子的冷暴力排挤，被八幡以“破坏人际平衡”的残酷方式解围。"
+    },
+    "speech_style": "早熟而冷淡，说话带着戒备。句式简短，不爱表达内心，常以漠视回应同龄人的无聊话语。",
+    "anchors": {
+      "emotional": "被社交冷暴力伤害的刺猬女孩——孤独和戒备是她的硬壳。内心深处看穿了塑料友情的脆弱，宁可忍受孤独也不妥协谄媚。",
+      "intimate": "对用残酷方式拯救她的八幡以及温柔的雪乃、结衣有特殊的认同与倾慕。"
+    },
+    "likes": [
+      "画画",
+      "安静的角落",
+      "熊猫潘先生",
+      "看书"
+    ],
+    "dislikes": [
+      "虚伪的集体生活",
+      "强迫搞好关系",
+      "冷暴力",
+      "大声喧哗"
+    ],
+    "default_location": "千葉駅前",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "11": "小学生"
+    },
+    "schedule_group": "小学生",
+    "funds": 500,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "五条新菜",
+    "source": "更衣人偶坠入爱河",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 180cm。来自《更衣人偶坠入爱河》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 180,
+      "weight_kg": 70,
+      "build": "高大",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {
+      "手工": 9,
+      "家政": 7
+    },
+    "personality_brief": "来自《更衣人偶坠入爱河》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《更衣人偶坠入爱河》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "乾纱寿叶",
+    "source": "更衣人偶坠入爱河",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "女生，身高 152cm。来自《更衣人偶坠入爱河》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 152,
+      "weight_kg": 42,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《更衣人偶坠入爱河》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《更衣人偶坠入爱河》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "乾心寿",
+    "source": "更衣人偶坠入爱河",
+    "base_age": 14,
+    "gender": "female",
+    "appearance_brief": "女生，身高 178cm。来自《更衣人偶坠入爱河》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 178,
+      "weight_kg": 58,
+      "build": "高挑",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《更衣人偶坠入爱河》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《更衣人偶坠入爱河》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "唯我成幸",
+    "source": "我们无法一起学习",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 165cm。来自《我们无法一起学习》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 165,
+      "weight_kg": 55,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {
+      "学习": 8,
+      "家政": 6
+    },
+    "personality_brief": "来自《我们无法一起学习》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《我们无法一起学习》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
+  },
+  {
+    "name": "古桥文乃",
+    "source": "我们无法一起学习",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "女生，身高 162cm。来自《我们无法一起学习》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 46,
+      "build": "纤细",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {
+      "学习": 8
+    },
+    "personality_brief": "来自《我们无法一起学习》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《我们无法一起学习》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "武元润香",
+    "source": "我们无法一起学习",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《我们无法一起学习》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 48,
+      "build": "健康",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {
+      "运动": 8
+    },
+    "personality_brief": "来自《我们无法一起学习》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《我们无法一起学习》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "绪方理珠",
+    "source": "我们无法一起学习",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "女生，身高 143cm。来自《我们无法一起学习》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 143,
+      "weight_kg": 40,
+      "build": "矮小且丰满",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {
+      "学习": 8
+    },
+    "personality_brief": "来自《我们无法一起学习》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《我们无法一起学习》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "桐须真冬",
+    "source": "我们无法一起学习",
+    "base_age": 24,
+    "gender": "female",
+    "appearance_brief": "女生，身高 165cm。来自《我们无法一起学习》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 165,
+      "weight_kg": 50,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《我们无法一起学习》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《我们无法一起学习》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "职员室",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "小美浪爱澄",
+    "source": "我们无法一起学习",
+    "base_age": 18,
+    "gender": "female",
+    "appearance_brief": "女生，身高 140cm。来自《我们无法一起学习》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 140,
+      "weight_kg": 37,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《我们无法一起学习》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《我们无法一起学习》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "和泉正宗",
+    "source": "埃罗芒阿老师",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 168cm。来自《埃罗芒阿老师》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 168,
+      "weight_kg": 56,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《埃罗芒阿老师》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《埃罗芒阿老师》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "和泉纱雾",
+    "source": "埃罗芒阿老师",
+    "base_age": 12,
+    "gender": "female",
+    "appearance_brief": "女生，身高 151cm。来自《埃罗芒阿老师》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 151,
+      "weight_kg": 38,
+      "build": "纤细",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《埃罗芒阿老师》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《埃罗芒阿老师》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "山田妖精",
+    "source": "埃罗芒阿老师",
+    "base_age": 15,
+    "gender": "female",
+    "appearance_brief": "女生，身高 150cm。来自《埃罗芒阿老师》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 150,
+      "weight_kg": 40,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《埃罗芒阿老师》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《埃罗芒阿老师》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 2,
+      "政治立场": -1
+    }
+  },
+  {
+    "name": "千寿村征",
+    "source": "埃罗芒阿老师",
+    "base_age": 15,
+    "gender": "female",
+    "appearance_brief": "女生，身高 145cm。来自《埃罗芒阿老师》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 145,
+      "weight_kg": 36,
+      "build": "矮小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《埃罗芒阿老师》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《埃罗芒阿老师》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "神野惠",
+    "source": "埃罗芒阿老师",
+    "base_age": 12,
+    "gender": "female",
+    "appearance_brief": "女生，身高 155cm。来自《埃罗芒阿老师》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 155,
+      "weight_kg": 42,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《埃罗芒阿老师》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《埃罗芒阿老师》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "如月雨露",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 170cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 58,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "三色院堇子",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 47,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "日向葵",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 158cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 158,
+      "weight_kg": 46,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "秋野樱",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "女生，身高 165cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 165,
+      "weight_kg": 50,
+      "build": "高挑",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "大贺太阳",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 175cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 175,
+      "weight_kg": 65,
+      "build": "结实",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "羽立桧菜",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 48,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "洋木茅春",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 162cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 49,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "蒲田公英",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 15,
+    "gender": "female",
+    "appearance_brief": "女生，身高 155cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 155,
+      "weight_kg": 44,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "葉月保雄",
+    "source": "喜欢本大爷的竟然只有你一个？",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 172cm。来自《喜欢本大爷的竟然只有你一个？》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 60,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "桐谷和人",
+    "source": "刀剑神域",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 172cm。来自《刀剑神域》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 59,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {
+      "格斗": 8
+    },
+    "personality_brief": "来自《刀剑神域》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《刀剑神域》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
+  },
+  {
+    "name": "结城明日奈",
+    "source": "刀剑神域",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 168cm。来自《刀剑神域》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 168,
+      "weight_kg": 53,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《刀剑神域》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《刀剑神域》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 2,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "克莱因",
+    "source": "刀剑神域",
+    "base_age": 24,
+    "gender": "male",
+    "appearance_brief": "男生，身高 177cm。来自《刀剑神域》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 177,
+      "weight_kg": 68,
+      "build": "结实",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《刀剑神域》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《刀剑神域》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "艾基尔",
+    "source": "刀剑神域",
+    "base_age": 28,
+    "gender": "male",
+    "appearance_brief": "男生，身高 185cm。来自《刀剑神域》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 185,
+      "weight_kg": 85,
+      "build": "粗壮",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《刀剑神域》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《刀剑神域》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "莉兹贝特",
+    "source": "刀剑神域",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 162cm。来自《刀剑神域》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 48,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《刀剑神域》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《刀剑神域》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "西莉卡",
+    "source": "刀剑神域",
+    "base_age": 14,
+    "gender": "female",
+    "appearance_brief": "女生，身高 150cm。来自《刀剑神域》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 150,
+      "weight_kg": 41,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《刀剑神域》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《刀剑神域》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "长瀞早濑",
+    "source": "长瀞同学",
+    "base_age": 15,
+    "gender": "female",
+    "appearance_brief": "女生，身高 150cm。来自《长瀞同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 150,
+      "weight_kg": 42,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《长瀞同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《长瀞同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
+  },
+  {
+    "name": "八王子直人",
+    "source": "长瀞同学",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 172cm。来自《长瀞同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 58,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《长瀞同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《长瀞同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "小鸭",
+    "source": "长瀞同学",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 165cm。来自《长瀞同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 165,
+      "weight_kg": 51,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《长瀞同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《长瀞同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "小吉",
+    "source": "长瀞同学",
+    "base_age": 15,
+    "gender": "female",
+    "appearance_brief": "女生，身高 155cm。来自《长瀞同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 155,
+      "weight_kg": 45,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《长瀞同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《长瀞同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "樱",
+    "source": "长瀞同学",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《长瀞同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 47,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《长瀞同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《长瀞同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "伊理户水斗",
+    "source": "拖油瓶妹妹",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 170cm。来自《拖油瓶妹妹》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 57,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《拖油瓶妹妹》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《拖油瓶妹妹》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "伊理户结女",
+    "source": "拖油瓶妹妹",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 162cm。来自《拖油瓶妹妹》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 48,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《拖油瓶妹妹》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《拖油瓶妹妹》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "南晓月",
+    "source": "拖油瓶妹妹",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 150cm。来自《拖油瓶妹妹》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 150,
+      "weight_kg": 42,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《拖油瓶妹妹》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《拖油瓶妹妹》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "川波小暮",
+    "source": "拖油瓶妹妹",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 175cm。来自《拖油瓶妹妹》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 175,
+      "weight_kg": 62,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《拖油瓶妹妹》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《拖油瓶妹妹》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "东头伊佐奈",
+    "source": "拖油瓶妹妹",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 156cm。来自《拖油瓶妹妹》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 156,
+      "weight_kg": 45,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《拖油瓶妹妹》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《拖油瓶妹妹》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "狼谷",
+    "source": "拖油瓶妹妹",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《拖油瓶妹妹》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 48,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《拖油瓶妹妹》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《拖油瓶妹妹》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "浅村悠太",
+    "source": "义妹生活",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 172cm。来自《义妹生活》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 60,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《义妹生活》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《义妹生活》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "奈良坂真绫",
+    "source": "义妹生活",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "女生，身高 162cm。来自《义妹生活》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 48,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《义妹生活》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《义妹生活》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "丸友和",
+    "source": "义妹生活",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 170cm。来自《义妹生活》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 61,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《义妹生活》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《义妹生活》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "新庄圭介",
+    "source": "义妹生活",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 174cm。来自《义妹生活》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 174,
+      "weight_kg": 63,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《义妹生活》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《义妹生活》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "读卖栞",
+    "source": "义妹生活",
+    "base_age": 19,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《义妹生活》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 47,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《义妹生活》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《义妹生活》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "猫崎享",
+    "source": "式守同学",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 166cm。来自《式守同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 166,
+      "weight_kg": 51,
+      "build": "健康",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《式守同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《式守同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "八满结",
+    "source": "式守同学",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 148cm。来自《式守同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 148,
+      "weight_kg": 39,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《式守同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《式守同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "犬束秀",
+    "source": "式守同学",
+    "base_age": 16,
+    "gender": "male",
+    "appearance_brief": "男生，身高 174cm。来自《式守同学》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 174,
+      "weight_kg": 62,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《式守同学》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《式守同学》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "永井圭",
+    "source": "亚人",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 170cm。来自《亚人》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 58,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《亚人》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《亚人》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "海斗",
+    "source": "亚人",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 174cm。来自《亚人》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 174,
+      "weight_kg": 63,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《亚人》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《亚人》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "佐藤",
+    "source": "亚人",
+    "base_age": 58,
+    "gender": "male",
+    "appearance_brief": "男生，身高 172cm。来自《亚人》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 65,
+      "build": "结实",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《亚人》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《亚人》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "流氓无产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -3
+    }
+  },
+  {
+    "name": "户崎优",
+    "source": "亚人",
+    "base_age": 32,
+    "gender": "male",
+    "appearance_brief": "男生，身高 178cm。来自《亚人》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 178,
+      "weight_kg": 66,
+      "build": "高挑",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《亚人》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《亚人》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 2
+    }
+  },
+  {
+    "name": "佐藤博道",
+    "source": "亚人",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 170cm。来自《亚人》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 60,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《亚人》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《亚人》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "才川晴香",
+    "source": "亚人",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "女生，身高 158cm。来自《亚人》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 158,
+      "weight_kg": 47,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《亚人》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《亚人》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "佐藤时雨",
+    "source": "亚人",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 172cm。来自《亚人》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 61,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《亚人》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《亚人》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "佐条涉",
+    "source": "喜欢的孩子忘记戴眼镜了",
+    "base_age": 15,
+    "gender": "male",
+    "appearance_brief": "男生，身高 165cm。来自《喜欢的孩子忘记戴眼镜了》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 165,
+      "weight_kg": 54,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢的孩子忘记戴眼镜了》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢的孩子忘记戴眼镜了》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "夏川爱华",
+    "source": "喜欢的孩子忘记戴眼镜了",
+    "base_age": 15,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《喜欢的孩子忘记戴眼镜了》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 46,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《喜欢的孩子忘记戴眼镜了》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《喜欢的孩子忘记戴眼镜了》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "羽生真由梨／真由罗",
+    "source": "圣诞之吻",
+    "base_age": 28,
+    "gender": "female",
+    "appearance_brief": "女生，身高 161cm。来自《圣诞之吻》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 161,
+      "weight_kg": 49,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《圣诞之吻》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《圣诞之吻》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "更衣人偶",
+    "source": "更衣人偶坠入爱河",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 164cm。来自《更衣人偶坠入爱河》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 164,
+      "weight_kg": 48,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《更衣人偶坠入爱河》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《更衣人偶坠入爱河》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
+  },
+  {
+    "name": "秋月孝三",
+    "source": "鬼父",
+    "base_age": 45,
+    "gender": "male",
+    "appearance_brief": "男生，身高 175cm。来自《鬼父》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 175,
+      "weight_kg": 68,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《鬼父》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《鬼父》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "职员室",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 2
+    }
+  },
+  {
+    "name": "秋月爱莉",
+    "source": "鬼父",
+    "base_age": 14,
+    "gender": "female",
+    "appearance_brief": "女生，身高 148cm。来自《鬼父》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 148,
+      "weight_kg": 38,
+      "build": "娇小",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《鬼父》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《鬼父》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "秋月真理奈",
+    "source": "鬼父",
+    "base_age": 16,
+    "gender": "female",
+    "appearance_brief": "女生，身高 162cm。来自《鬼父》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 162,
+      "weight_kg": 48,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《鬼父》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《鬼父》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "秋月加代子",
+    "source": "鬼父",
+    "base_age": 40,
+    "gender": "female",
+    "appearance_brief": "女生，身高 160cm。来自《鬼父》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "裙子",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 51,
+      "build": "苗条",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《鬼父》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《鬼父》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "律茂真人",
+    "source": "鬼父",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "男生，身高 170cm。来自《鬼父》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 58,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《鬼父》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《鬼父》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "总武高",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "总武高学生",
+    "funds": 2000,
+    "social_class": "流氓无产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "牧野",
+    "source": "鬼父",
+    "base_age": 35,
+    "gender": "male",
+    "appearance_brief": "男生，身高 172cm。来自《鬼父》。",
+    "hair_color": "棕色",
+    "hair_style": "短发",
+    "outfits": {
+      "school": {
+        "top": "制服外套",
+        "shirt": "校服衬衫",
+        "bottom": "长裤",
+        "feet": "皮鞋"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 64,
+      "build": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 10,
+      "感知": 10,
+      "魅力": 11
+    },
+    "skills": {},
+    "personality_brief": "来自《鬼父》的角色。",
+    "personality_stages": {
+      "6": "普通的成长童年。"
+    },
+    "speech_style": "礼貌温和的平辈语气。",
+    "anchors": {
+      "emotional": "来自《鬼父》的登场人物。"
+    },
+    "likes": [
+      "日常"
+    ],
+    "dislikes": [
+      "麻烦"
+    ],
+    "default_location": "职员室",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生"
+    },
+    "schedule_group": "自由人",
+    "funds": 2000,
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
     }
   }
 ]

@@ -862,7 +862,7 @@
         },
         {
           "type": "exit",
-          "exitTo": "千叶_住宅区",
+          "exitTo": "千葉駅前",
           "block": false,
           "label": "DR"
         },
@@ -1966,9 +1966,10 @@
           "label": "WL"
         },
         {
-          "type": "wall",
-          "block": true,
-          "label": "WL"
+          "type": "exit",
+          "block": false,
+          "exitTo": "校门",
+          "label": "DR"
         },
         {
           "type": "wall",
@@ -3126,7 +3127,7 @@
     "atmosphere": "总武高正门。门柱上刻着校名，旁边是自行车棚。门外是通往千叶市街的坡道",
     "origin": [
       1,
-      2
+      0
     ],
     "cells": [
       [
@@ -3144,7 +3145,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "操场",
+          "exitTo": "1F南走廊",
           "label": "DR"
         },
         {
@@ -3160,16 +3161,14 @@
           "label": "WL"
         },
         {
-          "type": "exit",
+          "type": "floor",
           "block": false,
-          "exitTo": "千叶_住宅区",
-          "label": "DR"
+          "label": "  "
         },
         {
-          "type": "exit",
+          "type": "floor",
           "block": false,
-          "exitTo": "千叶_住宅区",
-          "label": "DR"
+          "label": "  "
         },
         {
           "type": "wall",
@@ -3317,6 +3316,7 @@
     "height": 9,
     "cellSize": 1,
     "floor": 2,
+    "controlled_by": "soubu_service_club",
     "atmosphere": "空置教室改造的社团活动室。几张旧桌子拼在一起，地上堆着没拆封的纸箱。窗外的光线很柔和",
     "origin": [
       4,
@@ -3734,7 +3734,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶_住宅区",
+          "exitTo": "千葉駅前",
           "label": "DR"
         },
         {
@@ -3826,7 +3826,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶_住宅区",
+          "exitTo": "千葉駅前",
           "label": "DR"
         },
         {
@@ -4059,7 +4059,7 @@
       ]
     ]
   },
-  "千叶_住宅区": {
+  "千葉駅前": {
     "width": 30,
     "height": 5,
     "cellSize": 10,
@@ -4072,7 +4072,7 @@
       "audio": "远处车辆驶过的声音",
       "visual": "两旁是住宅和店铺，路面上偶尔有汽车经过"
     },
-    "atmosphere": "千叶_住宅区——连接住宅区和商业街的主干道。坡道起伏，两侧电线杆上挂着竞选海报",
+    "atmosphere": "千葉駅前——连接住宅区和商业街的主干道。坡道起伏，两侧电线杆上挂着竞选海报",
     "capacity": 50,
     "cells": [
       [
@@ -4381,9 +4381,10 @@
       ],
       [
         {
-          "type": "floor",
+          "type": "exit",
           "block": false,
-          "label": "  "
+          "exitTo": "校门",
+          "label": "EX"
         },
         {
           "type": "floor",
@@ -4526,9 +4527,10 @@
           "label": "  "
         },
         {
-          "type": "floor",
+          "type": "exit",
           "block": false,
-          "label": "  "
+          "exitTo": "商店街",
+          "label": "EX"
         }
       ],
       [
@@ -4755,9 +4757,10 @@
           "label": "  "
         },
         {
-          "type": "floor",
+          "type": "exit",
           "block": false,
-          "label": "  "
+          "exitTo": "千叶站",
+          "label": "EX"
         },
         {
           "type": "floor",

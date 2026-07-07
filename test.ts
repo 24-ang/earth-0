@@ -325,8 +325,8 @@ test("lookupRegion 侍奉部", () => {
   if (!r.matched_regions || r.matched_regions.length === 0) throw new Error("侍奉部应匹配地区");
 });
 
-test("lookupRegion 千叶_住宅区", () => {
-  const r = lookupRegion("千叶_住宅区");
+test("lookupRegion 千葉駅前", () => {
+  const r = lookupRegion("千葉駅前");
   if (!r.all_characters) throw new Error("应返回角色列表");
 });
 
@@ -494,8 +494,8 @@ test("Layer1: affection to desire, body language injection, and masturbate", asy
 
 test("getNamelessNPCs helper and LLM prompt integration", async () => {
   const { getNamelessNPCs } = await import("./engine/state.ts");
-  setPlayerLocation("千叶_住宅区");
-  const list = getNamelessNPCs("千叶_住宅区", gameState.turn);
+  setPlayerLocation("千葉駅前");
+  const list = getNamelessNPCs("千葉駅前", gameState.turn);
   if (list.length === 0) throw new Error("Should seed nameless NPCs in public areas");
   
   const prompt = await buildStatePrompt();
@@ -634,7 +634,7 @@ test("checkAndGrantTitles 无达成条件不授予", () => {
   gameState.player.attributes.力量 = 8;
   gameState.player.funds = 500;
   gameState.player.reputation = {};
-  gameState.player.location = "千叶_住宅区";
+  gameState.player.location = "千葉駅前";
   checkAndGrantTitles();
   if (gameState.player.titles.length !== 0) throw new Error(`不应有称号，但得到: ${gameState.player.titles}`);
 });
@@ -678,7 +678,7 @@ console.log("\n── 叙事旅行 ──");
 test("pendingTravel 注入 prompt", async () => {
   resetState();
   gameState.pendingTravel = {
-    from: "千叶_住宅区",
+    from: "千葉駅前",
     to: "千叶_市中心",
     route: "京叶线/公交",
     minutes: 30,
@@ -692,7 +692,7 @@ test("pendingTravel 注入 prompt", async () => {
 test("pendingTravel 序列化正常", () => {
   resetState();
   gameState.pendingTravel = {
-    from: "千叶_住宅区",
+    from: "千葉駅前",
     to: "侍奉部",
     route: "步行",
     minutes: 15,
@@ -1781,7 +1781,7 @@ test("疲劳: use_item energy 减少疲劳", () => {
 test("疲劳: buildStatePrompt 高疲劳注入状态", async () => {
   resetState();
   gameState.player.fatigue = 85;
-  gameState.player.location = "千叶_住宅区";
+  gameState.player.location = "千葉駅前";
   const prompt = await buildStatePrompt();
   if (!prompt.includes("筋疲力尽")) throw new Error("应包含疲劳状态");
 });
@@ -2513,12 +2513,12 @@ test("双轨制重构: 入学式车祸干涉剧情走向", async () => {
   gameState.player.name = "维";
   gameState.player.age = 16;
   gameState.time.player_stage = "高中";
-  gameState.player.location = "千叶_住宅区";
+  gameState.player.location = "千葉駅前";
   gameState.time.game_date = "2018-04-07";
   gameState.time.time_of_day = "morning";
 
   // 1. 验证日历中包含车祸干涉机制规则
-  const calendarEvents = getCalendarEvents("2018-04-07", "千叶_住宅区");
+  const calendarEvents = getCalendarEvents("2018-04-07", "千葉駅前");
   const accidentEvent = calendarEvents.find(e => e.text.includes("player_accident"));
   if (!accidentEvent) {
     throw new Error("日历中应该包含车祸的干涉机制规则说明");
@@ -6584,7 +6584,7 @@ test("Step6: 通勤偶遇检测 — 上学方向同路NPC", async () => {
   const origRandom = Math.random;
   Math.random = () => 0.1; // Low enough to trigger encounter
 
-  const result = await detectCommuteEncounter("千叶_住宅区", "千叶市立总武高等学校", "电车", 10, gameState as any);
+  const result = await detectCommuteEncounter("千葉駅前", "千叶市立总武高等学校", "电车", 10, gameState as any);
 
   Math.random = origRandom;
 
@@ -6612,7 +6612,7 @@ test("Step6: 通勤偶遇检测 — 放学方向同路NPC", async () => {
   const origRandom = Math.random;
   Math.random = () => 0.1;
 
-  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千叶_住宅区", "电车", 10, gameState as any);
+  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千葉駅前", "电车", 10, gameState as any);
 
   Math.random = origRandom;
 
@@ -6638,7 +6638,7 @@ test("Step6: 载具感知 — 汽车不应出现在通勤偶遇叙事中", async
   const origRandom = Math.random;
   Math.random = () => 0.5; // 0.5 > 0.03(car probability) → should skip
 
-  const result = await detectCommuteEncounter("千叶_住宅区", "千叶市立总武高等学校", "步行", 10, gameState as any);
+  const result = await detectCommuteEncounter("千葉駅前", "千叶市立总武高等学校", "步行", 10, gameState as any);
   Math.random = origRandom;
 
   // With Math.random=0.5 and car probability=0.03, encounter should be skipped
@@ -6662,7 +6662,7 @@ test("Step6: 载具感知 — 自行车偶遇文案正确", async () => {
   const origRandom = Math.random;
   Math.random = () => 0.1; // 0.1 < 0.18(bicycle probability) → encounter
 
-  const result = await detectCommuteEncounter("千叶_住宅区", "千叶市立总武高等学校", "步行", 10, gameState as any);
+  const result = await detectCommuteEncounter("千葉駅前", "千叶市立总武高等学校", "步行", 10, gameState as any);
 
   Math.random = origRandom;
 
@@ -6691,7 +6691,7 @@ test("Step6: 社团分流 — 运动部员傍晚才放学", async () => {
   const origRandom = Math.random;
   Math.random = () => 0.1;
 
-  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千叶_住宅区", "步行", 10, gameState as any);
+  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千葉駅前", "步行", 10, gameState as any);
 
   Math.random = origRandom;
 
@@ -6720,7 +6720,7 @@ test("Step6: 社团分流 — evening时段社团学生放学", async () => {
   const origRandom = Math.random;
   Math.random = () => 0.1;
 
-  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千叶_住宅区", "步行", 10, gameState as any);
+  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千葉駅前", "步行", 10, gameState as any);
 
   Math.random = origRandom;
 

@@ -223,7 +223,7 @@ export function triggerBirth(motherName: string, fatherName: string, nameConfig?
     base_age: 0, // baby
     appearance_brief: `${surname}家新生儿，长相可爱稚嫩。`,
     attributes: childAttributes,
-    default_location: mother.currentRoom || "千叶_住宅区",
+    default_location: mother.currentRoom || "千葉駅前",
     schedule_group: "自由人"
   });
 
@@ -232,7 +232,7 @@ export function triggerBirth(motherName: string, fatherName: string, nameConfig?
     name: childName,
     gender,
     age: 0,
-    currentRoom: mother.currentRoom || "千叶_住宅区",
+    currentRoom: mother.currentRoom || "千葉駅前",
     gridPos: mother.gridPos ? [...mother.gridPos] : null,
     attributes: childAttributes,
     skills: {},
@@ -245,7 +245,7 @@ export function triggerBirth(motherName: string, fatherName: string, nameConfig?
     alive: true,
     fatigue: 0,
     action: "熟睡中",
-    known_locations: [mother.currentRoom || "千叶_住宅区"],
+    known_locations: [mother.currentRoom || "千葉駅前"],
     npcRelationships: {
       [motherName]: { stage: "亲子", affection: 100, tone: "和", notes: "母亲" },
       [fatherName]: { stage: "亲子", affection: 100, tone: "和", notes: "父亲" }

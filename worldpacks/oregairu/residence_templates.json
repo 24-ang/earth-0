@@ -2,10 +2,10 @@
   "_note": "住宅模板 — 一组互连房间的蓝图。init_game 时自动实例化。instantiate_residence 工具免费用调用。",
   "独栋_2F_4人家庭": {
     "label": "日本典型2階建て一戸建て",
-    "region": "千叶_住宅区",
+    "region": "千葉駅前",
     "rooms": [
       { "key": "玄关",   "name": "{prefix}玄关",   "w": 3, "h": 2, "floor": 0,
-        "exitTo": "千叶_住宅区", "role": "entrance",
+        "exitTo": "千葉駅前", "role": "entrance",
         "atmosphere": "狭小的玄关。鞋柜靠墙，地面比室内低一阶。门边挂着雨伞。门铃响时整栋房子都听得见",
         "directions": { "北": "上框 (通往室内的木框台阶)", "南": "防盗门 (厚重的灰色铁门，通往公寓走廊)", "东": "鞋柜墙 (摆着几双拖鞋和运动鞋)", "西": "墙壁" }
       },
@@ -78,9 +78,9 @@
   },
   "公寓_3F_单身": {
     "label": "1Kマンション",
-    "region": "千叶_住宅区",
+    "region": "千葉駅前",
     "rooms": [
-      { "key": "玄关","name": "{prefix}玄关","w":2,"h":2,"floor":0,"exitTo":"千叶_住宅区","role":"entrance",
+      { "key": "玄关","name": "{prefix}玄关","w":2,"h":2,"floor":0,"exitTo":"千葉駅前","role":"entrance",
         "atmosphere": "窄小的玄关。一把折叠伞靠在墙角",
         "directions": { "北": "上框", "南": "防盗门", "东": "鞋柜", "西": "墙壁" }
       },

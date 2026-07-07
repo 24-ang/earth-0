@@ -862,7 +862,7 @@
         },
         {
           "type": "exit",
-          "exitTo": "千叶_住宅区",
+          "exitTo": "千葉駅前",
           "block": false,
           "label": "DR"
         },
@@ -3734,7 +3734,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶_住宅区",
+          "exitTo": "千葉駅前",
           "label": "DR"
         },
         {
@@ -3826,7 +3826,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶_住宅区",
+          "exitTo": "千葉駅前",
           "label": "DR"
         },
         {
@@ -4059,7 +4059,7 @@
       ]
     ]
   },
-  "千叶_住宅区": {
+  "千葉駅前": {
     "width": 30,
     "height": 5,
     "cellSize": 10,
@@ -4072,7 +4072,7 @@
       "audio": "远处车辆驶过的声音",
       "visual": "两旁是住宅和店铺，路面上偶尔有汽车经过"
     },
-    "atmosphere": "千叶_住宅区——连接住宅区和商业街的主干道。坡道起伏，两侧电线杆上挂着竞选海报",
+    "atmosphere": "千葉駅前——连接住宅区和商业街的主干道。坡道起伏，两侧电线杆上挂着竞选海报",
     "capacity": 50,
     "cells": [
       [
