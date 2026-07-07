@@ -5,7 +5,7 @@
   "trigger": {
     "min_day": 10,
     "max_day": 300,
-    "location": "特别大楼",
+    "location": "社团楼",
     "time_of_day": ["afternoon"],
     "flags": {
       "met_sakiko": false
@@ -16,7 +16,7 @@
   "repeatable": false,
   "hook": {
     "source_npc": "御堂咲子",
-    "hook_text": "{{player.surname}}经过特别大楼的空教室时，听到里面传来年级主任山田和女教师御堂咲子的争执声。从门缝望去，山田主任正拿着一沓照片，带着淫靡的笑容逼迫着满脸屈辱的咲子老师……{{player.surname}}决定：",
+    "hook_text": "{{player.surname}}经过社团楼的走廊时，听到空教室里传来年级主任山田和女教师御堂咲子的争执声。从门缝望去，山田主任正拿着一沓照片，带着淫靡的笑容逼迫着满脸屈辱的咲子老师……{{player.surname}}决定：",
     "urgency": "medium"
   },
   "beats": [
