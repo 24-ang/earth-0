@@ -25,8 +25,10 @@ export default {
     const isFriendly = rep >= 1;
 
     let output = `# ${org.name} (声望: ${rep})\n`;
-    output += `规模: ${org.scale} | 类型: ${org.type}\n`;
-    output += `核心控制区: ${org.coreLocation || "未知"}\n\n`;
+    output += `规模: ${org.scale} | 类型: ${org.type} | 阶段: ${org.lifecycle_stage || "未知"}\n`;
+    output += `核心控制区: ${org.coreLocation || "未知"}\n`;
+    if (org.archived) output += `⚠️ 该组织已解体消亡\n`;
+    output += `\n`;
 
     // 1. Expose wealth/influence/cohesion
     if (isCore) {

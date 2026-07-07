@@ -265,6 +265,15 @@
         "weight": 0.1,
         "effects": [],
         "state": "intact"
+      },
+      {
+        "name": "钱包",
+        "type": "tool",
+        "weight": 0.05,
+        "volume": 0.1,
+        "effects": [],
+        "state": "intact",
+        "flavor": "黑色皮革对折钱包，里面夹着一张总武高的学生证和几张千元钞票"
       }
     ],
     "default_location": "海浜幕張",
