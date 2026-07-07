@@ -97,7 +97,7 @@ if (gameState.xxxCondition) {
 
 ```bash
 # 每加一个新模块，测试数只增不减
-npx tsx test.ts  # 当前基准：281 passed, 0 failed（+ npx tsx e2e-test.ts 45 + npx tsx e2e-init-test.ts 57 = 383 total）
+npx tsx test.ts  # 当前基准：304 passed, 0 failed（+ npx tsx e2e-init-test.ts 57 = 361 total）
 
 # 新模块至少 2 个测试：
 # - 正常路径
@@ -177,8 +177,11 @@ gamble: ["place_bet", "dice_roll"],
 - [ ] 所有参数有 description
 - [ ] 引擎函数在 `engine/` + 数据在 `data/`
 - [ ] 场景映射已添加
-- [ ] `npx tsx test.ts` 测试数 ≥ 281（+ e2e-test.ts 45 + e2e-init-test.ts 57，在原有基准上只增不减）
+- [ ] `npx tsx test.ts` 测试数 ≥ 304（+ e2e-init-test.ts 57 = 361 total，在原有基准上只增不减）
 - [ ] 不包含任何硬编码的题材特定内容（人物名、地名、作品名）
 - [ ] 如有世界设定，放入 `worldpacks/{世界}/` 对应子目录，`data/` 仅兜底。sync 两份
 - [ ] **工具 description 不手写会过时的枚举值**。值多或来源在 JSON 文件 → 点 LLM 去 `lookup_xxx` 查。值少（≤10）且稳定 → 直接列
 - [ ] Phase 1 需加 `spawn_temp_npc` 白名单（如果工具与场景填充相关）
+- [ ] **引擎函数不用 `require()` 用 `await import()`**。ESM 模式下 `require()` 抛 ReferenceError
+- [ ] **静默 catch 必打日志**：`catch (e) { console.error("函数名: 描述", e); }`
+- [ ] **叙事注入优先于物理拦截**。如通勤偶遇——不建房间+不移NPC+不拦流程，纯 prompt 注入比物理机制更轻更灵活

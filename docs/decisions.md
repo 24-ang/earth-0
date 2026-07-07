@@ -481,3 +481,83 @@
 **不要做**：❌ 把现有 6 个能力的 name 改掉（测试依赖）。
 
 **相关代码**：`engine/abilities.ts:18-36` (AbilityDef), `engine/abilities.ts:79-103` (skill tree), `data/abilities/abilities.json`
+
+---
+
+## 26. FF Switch — Player↔NPC 双向实体置换
+
+**是什么**：`switch_character` 工具：深拷贝原玩家→`_playerSnapshot`→原玩家降级为临时 NPC→目标 NPC 覆盖 player→关系网镜像→NPC 从 npcs 删除。还原时逆向写回。Timeline beat 直接驱动（`applyBeatEffects` 支持 `switchPlayer`/`restorePlayer`）。
+
+**为什么**：沙盒 RPG 核心诉求——体验其他角色视角。双向嵌入比新建 player 更安全（引用恒定）。`_npcSnapshot` 防止往返后 NPC 数据洗白（memoryTags/outfit/lifeEvents）。
+
+**不要做**：❌ `abandonQuest` 中 `require()` 代替 `await import()`。❌ restore 不 await。
+
+**相关代码**：`tools/action/switch_character.ts`, `engine/timeline.ts:abandonQuest`, `engine/types.ts:_playerSnapshot/_npcSnapshot`
+
+---
+
+## 27. 日历多日假期覆盖 — `schedule_override` + `duration_days`
+
+**是什么**：`CalendarEntry` 新增 `schedule_override: {组名→目标}` + `duration_days`。`getActiveScheduleOverrides()` 扫描日期窗口→合并覆盖→`updateNPCSchedules` 模板决议后覆写 targetRoom。
+
+**为什么**：`org_effects` 只支持单日。暑假42天不能用 daily pendingOverride。引擎不内置"暑假"——数据层定义覆盖表，引擎只做日期窗口比较。老存档完全兼容。
+
+**不要做**：❌ 引擎硬编码假期列表。❌ 用 pendingOverride 实现多日覆盖。
+
+**相关代码**：`engine/state.ts:getActiveScheduleOverrides()`, `engine/types.ts:CalendarEntry`, `calendar.json`
+
+---
+
+## 28. NPC 自主日程 — Intent-Driven Schedule
+
+**是什么**：NPC Agent prompt 注入 `buildTodayContext()`（星期+天气+性格+记忆+参考地点）→ NPC 可选输出 `{"schedule_intent": {...}}` → `parseScheduleIntent()` 提取→写入 `pendingOverride`→`updateNPCSchedules` 执行。无 intent 则走模板兜底。
+
+**为什么**：引擎不知道由比滨金曜为何去卡拉OK——这是角色内在驱动力。手动写 20人×7天×5时段=700行数据地狱。LLM 写 3 行 JSON→当日有效→自然过期。
+
+**不要做**：❌ 手动写星期×时段矩阵。❌ 强制 NPC 必须输出 intent。
+
+**相关代码**：`tools/helpers.ts:buildTodayContext()+parseScheduleIntent()`, `spawn_npc_agent.ts`
+
+---
+
+## 29. 真实住址 + 通勤偶遇叙事注入
+
+**是什么**：`default_location_by_age` 引擎查表（6岁→雪之下邸, 15岁→海浜幕張）。17 角色分配 JR 沿线真实住址，"千叶_住宅区"清零。`detectCommuteEncounter()` 纯叙事注入——正常到达后追加途中偶遇倒叙到 Phase 3。载具感知（bicycle×0.6/car×0.1）+社团分流（普通15:30-17:00/社团17:00-18:30）+路线加成（京葉線/総武線 ×1.5）。
+
+**为什么**："千叶_住宅区"像村→真实 JR 站名自带叙事。物理拦截太重（4 个新房间+40% NPC 移动+下车收口）→叙事注入零基础设施。地名是方向的代理变量——不需铁路数据库。社团分流对齐日本高中现实。
+
+**放弃**：不通勤 NPC 实际位置（纯叙事）。不同线偶遇概率低但不为 0。
+
+**不要做**：❌ 建物理通勤房间。❌ 强制移动 NPC 到通勤空间。❌ 引擎硬编码铁路线名。
+
+**相关代码**：`engine/commute.ts`, `engine/state.ts:default_location_by_age lookup`, `characters.json`, `city_map.json`
+
+---
+
+## 30. 受孕引擎 + 社交检定 D20
+
+**是什么**：`settleAfterSex` 受孕计算（排卵期35%×避孕系数×幸运系数）。`touchBodyPart` D20 骰子（套套破损 DC18+幸运/持久度 DC10+体质）。`triggerBirth` 遗传融合（父母均值+[-1,+2]突变+亲子双向绑定）。`social_check` 3动作×3风格×D20（性格/好感/幸运修正+自动门卫死敌拒绝+恋人免检）。
+
+**为什么**：怀孕是沙盒时间推移的核心动力之一（子代 NPC→关系网→长期叙事）。社交检定让日常互动有骰子张力而非纯文字。遗嘱/避孕药/堕胎覆盖三条路径（避孕→失败→补救→终止），每条有代价和期限。
+
+**不要做**：❌ `settleAfterSex` 在 engine 里用 `require()`（已改 async+`await import()`）。❌ 受孕不写入 NPC 的 lifeEvents。
+
+**相关代码**：`engine/sex.ts:settleAfterSex+touchBodyPart`, `engine/life-events.ts:triggerBirth`, `tools/action/social_check.ts`, `tools/action/take_contraceptive_pill.ts`, `tools/action/perform_abortion.ts`
+
+---
+
+## 31. 星期模板区分 — `dayKey` 优先 `timeKey` 回退
+
+**是什么**：`updateNPCSchedules` 的 `slotMap` 从输出 `weekday_*` 改为输出裸时段名（`morning`/`afternoon`/`evening`）。新增 `dayKey = month_of_day + "_" + slot`（如 `水_afternoon`、`金_evening`）。模板查表优先 `dayKey`，不存在则回退 `timeKey`（如 `weekday_afternoon`）。weather_overrides/seasonal_overrides 同样优先 `dayKey`。
+
+**为什么**：
+- 日本高中水曜短缩早放学、金曜社交高峰——这些时间规律是角色行为的基础语境
+- 纯靠 LLM schedule_intent 自主声明不够——引擎需要把星期语境融入模板层级，让 NPC 即使不输出 intent 也有符合星期规律的基础行为
+- 向后兼容：不写星期 key 的组自动回退 `weekday_*`，行为不变
+- 不改引擎架构：`dayKey` 是引擎动态拼接的（`星期_时段`），引擎不内置任何星期名
+
+**数据**：高校生/总武高学生/运动部员/社团部员/总武高教师 的 `水_afternoon` 和 `金_evening` 已写入 schedule_templates.json。
+
+**不要做**：❌ 给所有组×所有天写满 key（只写有差异的天）。❌ 引擎硬编码"水曜=短缩"（数据层决定）。
+
+**相关代码**：`engine/state.ts:3288-3304` (slotMap+dayKey+timeKey resolution), `worldpacks/oregairu/schedule_templates.json`

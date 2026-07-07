@@ -499,7 +499,7 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
         const model = await getNpcAgentModel();
         const response = await generateCompletion(prompt, 512, ctx, model);
         if (response) {
-          recordNpcAgentAction(name, response, outfit || "", loc).catch(() => {});
+          await recordNpcAgentAction(name, response, outfit || "", loc);
           return `[${name}] ${response}`;
         }
       } catch (e) {

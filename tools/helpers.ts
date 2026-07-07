@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { Type } from "typebox";
-import { gameState, getNamelessNPCs, getCurrency, normalizeLocationName } from "../engine/state.ts";
+import { gameState, getNamelessNPCs, getCurrency, normalizeLocationName, getMergedWorldState, translateWorldState } from "../engine/state.ts";
 import { getNPCContext } from "../engine/scenario-tables.ts";
 
 /** 提取文本第一句话（到第一个句号/换行），用于 NPC agent 输出摘要 */
@@ -96,7 +96,15 @@ export function wrapLine(text: string, maxW: number): string[] {
   return res;
 }
 
+export let generateCompletionOverride: ((promptText: string, maxTokens: number, ctx: any, flagModel?: string, systemPrompt?: string) => Promise<string>) | null = null;
+export function setGenerateCompletionOverride(fn: typeof generateCompletionOverride) {
+  generateCompletionOverride = fn;
+}
+
 export async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string, systemPrompt?: string): Promise<string> {
+  if (generateCompletionOverride) {
+    return generateCompletionOverride(promptText, maxTokens, ctx, flagModel, systemPrompt);
+  }
   // Try pi streamSimple first
   try {
     const { streamSimple } = await import("@earendil-works/pi-ai");
@@ -1049,4 +1057,133 @@ export async function buildPresentLine(gs: any, npcHeight: number, otherNPCs: st
   }
 
   return list + "。";
+}
+
+/** NPC Agent 今天的生活上下文：星期、天气、性格、参考地点 */
+export function buildTodayContext(gs: any, npcName: string, npc: any, src: any): string {
+  const dayNames: Record<string, string> = {
+    "月": "月曜日", "火": "火曜日", "水": "水曜日",
+    "木": "木曜日", "金": "金曜日", "土": "土曜日", "日": "日曜日"
+  };
+  const todayInfo = dayNames[gs.time.day_of_week] || gs.time.day_of_week;
+  const weather = `${gs.weather?.type || "晴"} ${gs.weather?.temp ?? 18}°C`;
+  const season = (() => {
+    const m = parseInt((gs.time.game_date || "").split("-")[1]) || 4;
+    if (m >= 3 && m <= 5) return "春";
+    if (m >= 6 && m <= 8) return "夏";
+    if (m >= 9 && m <= 11) return "秋";
+    return "冬";
+  })();
+
+  const lines = [`今天是${todayInfo}，${weather}，${season}。`];
+
+  if (gs.time.day_of_week === "金") lines.push("今天是金曜日——周末前夕，放学后是社交高峰。");
+  if (gs.time.day_of_week === "水") lines.push("水曜日是短缩授课日，下午很早放学。");
+  if (gs.time.day_of_week === "月") lines.push("月曜日——新一周的开始。");
+
+  const personality = src?.personality_brief || "";
+  if (personality) lines.push(`你的性格: ${personality.slice(0, 80)}`);
+
+  const recentMemories = (npc.memoryTags || []).slice(-3).map((m: any) => m.tag).join("；");
+  if (recentMemories) lines.push(`最近记得: ${recentMemories}`);
+
+  if (npc.pendingOverride) {
+    lines.push(`你已有安排: ${npc.pendingOverride.action || ""}，去 ${npc.pendingOverride.location || ""}`);
+  }
+
+  const rel = gs.player?.relationships?.[npcName];
+  if (rel && rel.stage !== "陌生") {
+    lines.push(`与 ${gs.player.name || "玩家"} 的关系: ${rel.stage}（好感${rel.affection ?? 0}）`);
+  }
+
+  // 注入组织/势力立场与阶级内心冲突上下文 (实现 NPC "挣扎与撕裂" 的心智感知基础)
+  try {
+    const localWs = getMergedWorldState(npc.currentRoom || "");
+    const wsText = translateWorldState(localWs);
+    if (wsText) {
+      lines.push(wsText);
+    }
+
+    const orgs = gs.organizations;
+    const socialClass = src?.social_class || npc?.social_class || "普通市民";
+    const personalAxes = src?.personal_axes || npc?.personal_axes || { "经济立场": 0, "政治立场": 0 };
+    lines.push(`你的阶级基本盘: ${socialClass} | 个人理念轴: 经济立场:${personalAxes["经济立场"]}, 政治立场:${personalAxes["政治立场"]}`);
+
+    if (orgs) {
+      const npcOrgs: string[] = [];
+      for (const [id, org] of Object.entries(orgs) as [string, any][]) {
+        if (org.members?.some((m: any) => m.npcName === npcName)) {
+          const rep = gs.player?.reputation?.[id] ?? 0;
+          let repStr = "中立";
+          if (rep <= -2) repStr = `敌对(声望:${rep})`;
+          else if (rep >= 4) repStr = `掌权/核心(声望:${rep})`;
+          else if (rep >= 1) repStr = `友好(声望:${rep})`;
+          else if (rep === -1) repStr = `疏离/警惕(声望:${rep})`;
+          
+          let orgLine = `• 【${org.name}】(你的角色/职位: ${org.members.find((m: any) => m.npcName === npcName)?.role || "成员"}) | 玩家与该势力的声望关系: ${repStr}`;
+          if (org.goals?.currentPhaseGoal) {
+            orgLine += ` | 势力当前阶段目标: ${org.goals.currentPhaseGoal}`;
+          }
+
+          // 核心观念冲突校验
+          const econDiff = Math.abs((personalAxes["经济立场"] ?? 0) - (org.organizationalAxes?.["经济立场"] ?? 0));
+          const polDiff = Math.abs((personalAxes["政治立场"] ?? 0) - (org.organizationalAxes?.["政治立场"] ?? 0));
+          if (econDiff >= 3 || polDiff >= 3) {
+            if (localWs.prosperity < 0 || localWs.stability < 0) {
+              orgLine += `\n  ⚠️ [内心冲突] 由于当前环境萧条动荡（繁荣度:${localWs.prosperity},稳定度:${localWs.stability}），作为【${socialClass}】且个人理念偏向【经济立场:${personalAxes["经济立场"]}, 政治立场:${personalAxes["政治立场"]}】的你，执行组织【${org.name}】（其理念为经济立场:${org.organizationalAxes?.["经济立场"]}, 政治立场:${org.organizationalAxes?.["政治立场"]}）的任务时，内心产生了强烈的挣扎与良心动摇。请在行动和言语中真实展现这种抗拒与心理撕裂感。`;
+            }
+          }
+          npcOrgs.push(orgLine);
+        }
+      }
+      if (npcOrgs.length > 0) {
+        lines.push(`你所属的势力/组织及玩家的声望立场:\n${npcOrgs.join("\n")}`);
+      }
+    }
+  } catch (e) {
+    console.error("buildTodayContext organizations injection failed:", e);
+  }
+
+  const group = npc.scheduleGroup || src?.schedule_group || "";
+  const isStudent = group.includes("学生") || group.includes("高校生") || group.includes("部员") || group.includes("大学");
+  const refPlaces = isStudent
+    ? "自宅, 商店街, 千葉駅前, 稲毛海岸, カラオケ, 図書館, 本屋, ゲームセンター, ファミレス, コンビニ, 塾, 公園"
+    : "自宅, 商店街, 千葉駅前, 居酒屋, ラーメン屋, ファミレス, 本屋, 公園";
+
+  lines.push(`如果你的性格或今天状态让你有不同于预设日程的真实去向，请在输出末尾加一段 JSON（选填）:
+{"schedule_intent": {"location": "地点名", "action": "在做什么", "reason": "为什么去"}}
+可参考地点: ${refPlaces}`);
+
+  return lines.join("\n");
+}
+
+/** 从 NPC 回应文本中提取 schedule_intent JSON → 写入 pendingOverride */
+export async function parseScheduleIntent(npcName: string, text: string): Promise<void> {
+  // Find schedule_intent JSON — extract from last { to next } at end
+  const idx = text.lastIndexOf('{"schedule_intent"');
+  if (idx < 0) return;
+  const snippet = text.slice(idx);
+  // Match balanced braces: fast-n-dirty — find the matching closing brace
+  let depth = 0, end = -1;
+  for (let i = 0; i < snippet.length; i++) {
+    if (snippet[i] === '{') depth++;
+    if (snippet[i] === '}') { depth--; if (depth === 0) { end = i + 1; break; } }
+  }
+  if (end < 0) return;
+  try {
+    const intent = JSON.parse(snippet.slice(0, end)).schedule_intent;
+    if (!intent?.location) return;
+
+    const { gameState, getOrCreateNPC, saveState } = await import("../engine/state.ts");
+    const npc = getOrCreateNPC(npcName);
+    npc.pendingOverride = {
+      location: intent.location,
+      action: intent.action || "自由行动",
+      reason: intent.reason || "自主决定",
+      expiresAt: gameState.time.game_date,
+    };
+    saveState();
+  } catch (e) {
+    console.error(`parseScheduleIntent JSON parse failed for ${npcName}:`, e);
+  }
 }

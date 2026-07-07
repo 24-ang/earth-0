@@ -92,6 +92,35 @@ export default {
         minutes = route === "电车" ? 8 : route === "公交" ? 15 : 15; // 同区更短
       }
 
+      // ── 势力核心区准入拦截 ──
+      const { getOrgForTerritory } = await import("../../engine/state.ts");
+      const controllingOrgId = getOrgForTerritory(dest);
+      if (controllingOrgId) {
+        const playerRep = gameState.player.reputation?.[controllingOrgId] ?? 0;
+        const orgObj = gameState.organizations?.[controllingOrgId];
+        const orgName = orgObj?.name || controllingOrgId;
+        
+        // 判定拦截权能 (Sovereignty Guard): 只有 scale >= local 或特定强力组织会硬阻拦
+        const scale = orgObj?.scale || "club";
+        const type = orgObj?.type || "社团";
+        const isSovereign = scale !== "club" || ["军事", "犯罪", "家族", "企业"].includes(type);
+        
+        if (playerRep <= -2) {
+          if (isSovereign) {
+            return {
+              content: [{ type: "text", text: `⛔ 你与「${orgName}」的关系过于敌对（声望: ${playerRep}），无法进入其核心控制区「${dest}」。对方势力成员挡住了你的去路。` }],
+              details: { blocked: true, orgId: controllingOrgId, reputation: playerRep }
+            };
+          } else {
+            // 普通社团：敌对也只发出警告
+            gameState._locationMismatchWarning = `你进入了敌对组织「${orgName}」的活动区域「${dest}」，四周弥漫着尴尬而紧张的低气压。`;
+          }
+        } else if (playerRep <= 0) {
+          // 中立声望：允许进入但发出叙事警告
+          gameState._locationMismatchWarning = `你进入了「${orgName}」的势力范围，但由于你的声望不高（${playerRep}），周围的人投来了警惕的目光。`;
+        }
+      }
+
       gameState.pendingTravel = {
         from: currentLoc,
         to: dest,

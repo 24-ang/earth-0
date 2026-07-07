@@ -30,6 +30,7 @@ export interface Attributes {
   智力: number;
   感知: number;
   魅力: number;
+  幸运?: number;
 }
 
 export type AttrKey = keyof Attributes;
@@ -194,6 +195,7 @@ export interface SettlementReport {
   rating: "SSS" | "SS" | "S" | "A" | "B" | "C";
   thoughts: Thought[];
   milestonesChanged?: string[];  // 本次结算触发的里程碑变化描述
+  conceived?: boolean;
 }
 
 export interface SexState {
@@ -207,6 +209,9 @@ export interface SexState {
   squirtCount: number;
   thoughts: Thought[];  // 心里话历史
   milestones?: SexualMilestones;  // 初体验追踪
+  stamina?: number;       // 0-100 (男方持久度)
+  contraceptionUsed?: "condom" | "pill" | "none";
+  condomBroken?: boolean;
 }
 
 // --- 装备槽 ---
@@ -258,6 +263,8 @@ export interface PlayerState {
   titles: string[];                    // 引擎自动授予的称号（只加不删）
   public_identity?: string;            // 伪装身份/公开身份
   properties: Record<string, PropertyState>; // 拥有的房产
+  social_class?: string;
+  personal_axes?: Record<string, number>;
   vehicle?: {                          // 当前载具
     type: "bicycle" | "motorcycle" | "car";
     name: string;                      // 物品名
@@ -300,11 +307,14 @@ export interface StaticCharacter {
   schedule_group?: string;
   schedule_overrides?: Record<string, string>;
   schedule_group_by_age?: Record<string, string>;
+  default_location_by_age?: Record<string, string>;  // 住址随年龄变化（如 6岁→千葉_雪之下邸, 15岁→海浜幕張）
   funds?: number;
   drives_by_age?: Record<string, { drives: string[]; goal: string }>;  // 自主意图（按年龄段）
   // P3 新增
   public_facts?: CharacterFact[];
   private_facts?: CharacterFact[];
+  social_class?: string;
+  personal_axes?: Record<string, number>;
 }
 
 // --- NPC运行时状态（lazy init，只存被修改过的NPC） ---
@@ -405,6 +415,7 @@ export interface RoomGrid {
   horizon?: Record<string, string>;
   ambient?: { audio?: string; visual?: string };  // 外部环境渗透
   capacity?: number;      // 房间最大承载NPC容量，超出分流
+  controlled_by?: string; // 控制该地点的组织 ID
 }
 
 export interface MoveResult {
@@ -539,6 +550,9 @@ export interface CalendarEntry {
   advance_hook?: string;
   aftermath_text?: string;
   org_effects?: OrgEffect[];
+  // 多日假期: 覆盖某段时间内特定日程组的模板
+  schedule_override?: Record<string, string>;
+  duration_days?: number;
 }
 
 // ── P1: 事件驱动日历扩展 ──
@@ -698,6 +712,10 @@ export interface WorldState {
   tech: number;       // 0~5
   stability: number;  // -3~3
   tension: number;    // 0~5
+  prosperity: number; // -5~5
+  regime?: string;
+  economy_type?: string;
+  diplomacy_stance?: string;
   globalFlags: Record<string, boolean>;
 }
 
@@ -750,6 +768,67 @@ export interface GameState {
   _turnAtLastCheck?: number;
   _locationMismatchWarning?: string | null;
   _prevMode?: "rpg" | "gal" | "sex";
+  _toolsLocked?: boolean;
+  _playerSnapshot?: any | null;
+  _npcSnapshot?: any | null;
+  _originalPlayerName?: string | null;
+  _lastCommuteEncounter?: string;
+
+  // Step 4: 观影替换与广播时空
+  _theaterActive?: boolean;
+  _theaterBackup?: string;
+  _theaterScriptId?: string;
+  _theaterPhase?: "adaptation" | "immersion" | "climax" | "exit";
+  _danmakuCooldown?: number;
+  _commentaryCooldown?: number;
+  _theaterActions?: string[];
+
+  // Step 7: 势力与组织系统
+  organizations?: Record<string, Organization>;
+}
+
+export interface Organization {
+  id: string;                     // e.g., "soubu_service_club"
+  name: string;                   // e.g., "侍奉部"
+  type: "学校" | "社团" | "企业" | "政治" | "宗教" | "犯罪" | "家族" | "自治" | "自定义" | string;
+  scale: "club" | "local" | "regional" | "national";
+  sector: "politics" | "economy" | "culture" | "military" | "social";
+  parent_org?: string;            // 上级组织 ID，用于嵌套与级联干涉
+  
+  // ── 核心资源与属性 ──
+  wealth: number;                 // 0-100
+  influence: number;              // 0-100
+  cohesion: number;               // 0-100
+  public_legitimacy: number;      // 社会公信力/合法性 (0-100)
+  coreLocation: string;           // 大本营
+  territoryRoomKeys: string[];    // 控制范围 (roomKey 数组)
+  
+  // ── 阶级基本盘 ──
+  class_base: Record<string, number>; // { "无产阶级": 0.8, ... }
+  
+  // ── 政治/经济双轴 ──
+  organizationalAxes: {
+    "经济立场": number;           // -5 (左派) 至 +5 (右派)
+    "政治立场": number;           // -5 (自由进步) 至 +5 (保守秩序)
+  };
+  
+  // ── 组织自转与驱动力 ──
+  goals: {
+    macroGoal: string;
+    currentPhaseGoal: string;
+    requiredResources?: { type: string; value: number }[];
+  };
+  
+  // ── 成员与阶层（扁平化） ──
+  leader: string;                 // rank 最高者快捷引用
+  members: { npcName: string; role: string; rank: number }[];
+  
+  relations: Record<string, number>; // 组织间关系
+  match_rules?: {
+    schedule_groups?: string[];
+    location_contains?: string;
+  };
+  entries?: any[];                // facts entries
 }
 
 // ── 手机数据（存储在 Item.phoneData）──

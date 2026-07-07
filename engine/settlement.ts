@@ -12,6 +12,7 @@
 
 export interface SettlementParams {
   elapsed_minutes: number;
+  summary?: string; // Step 4: 场景描述/行动摘要
   memory_tags?: Array<{
     target: string;
     tag: string;
@@ -44,6 +45,12 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
 
   const mins = params.elapsed_minutes;
   const autoSettled = params._autoSettled ?? false;
+
+  // Step 4: 记录观影时空内的玩家行动，用于最后的记忆结算
+  if (gameState._theaterActive && params.summary) {
+    gameState._theaterActions ??= [];
+    gameState._theaterActions.push(params.summary);
+  }
 
   // --- 0. 收口工具调用记录 ---
   gameState._lastTurnToolsCalled = drainToolCalls();
@@ -174,13 +181,31 @@ export async function runSettlement(params: SettlementParams): Promise<Settlemen
   const dayInfo = result.daysAdvanced > 0 ? ` 跨${result.daysAdvanced}天` : "";
   const cleanupText = cleanupMsgs.length > 0 ? cleanupMsgs.join("\n") + "\n" : "";
   const autoTag = autoSettled ? "[引擎自动结算] " : "";
-  const textResult =
+  let textResult =
     autoTag + cleanupText +
     `场景结束推进了 ${mins}分钟 → ${result.newDate} ${result.dayOfWeek}曜日 ${result.timeOfDay}${dayInfo}。\n` +
     `日程更新: ${events.length > 0 ? events.join("; ") : "无特殊事件"}\n` +
     `写入记忆: ${params.memory_tags && params.memory_tags.length > 0
       ? params.memory_tags.map(m => `${m.target}(${m.tag})`).join(", ")
       : "无"}`;
+
+  // Step 4: 观影替换模式下追加弹幕吐槽内容到最终文本中
+  if (gameState._theaterActive) {
+    const lastNarrative = params.summary || "";
+    // 1. 生成匿名弹幕轨道
+    const { generateBroadcastDanmaku } = await import("./broadcast-track.ts");
+    const danmakus = generateBroadcastDanmaku(gameState, lastNarrative);
+    if (danmakus.length > 0) {
+      textResult += `\n【屏幕上滑过的弹幕】：\n` + danmakus.map(d => `  ${d}`).join("\n");
+    }
+
+    // 2. 生成具名 NPC 观众吐槽轨道
+    const { generateNPCCommentary } = await import("./broadcast-track.ts");
+    const commentary = await generateNPCCommentary(gameState, lastNarrative, params.ctx);
+    if (commentary) {
+      textResult += `\n【放映厅传来的吐槽】：\n  ${commentary}`;
+    }
+  }
 
   return { resultText: textResult, events, autoSettled, time: gameState.time };
 }

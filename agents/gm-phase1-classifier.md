@@ -60,6 +60,10 @@
 - `table_crud`: 数据表操作。
 - `add_calendar_event`: 添加日历事件。
 
+### 组织/势力
+- `create_organization`: 创建新组织（社团/势力/圈子）。id(英文ID), name(名称), type(学校|社团|企业|政治|宗教|犯罪|家族|自治|自定义), scale(club|local|regional|national), coreLocation(大本营房间名)。可选: sector(politics|economy|culture|military|social), leader(领袖NPC名), macroGoal(宏观目标), currentPhaseGoal(阶段目标), economicAxis(-5~5经济立场), politicalAxis(-5~5政治立场), parentOrg(上级组织ID)。
+- `lookup_org`: 查询组织详情。orgId(组织ID)。玩家在该组织的声望决定可见信息量——声望越高看到越多。
+
 ## 读取工具（只读 — 引擎自动执行）
 
 以下工具**你不需要在 actions 中列出**，引擎会根据上下文自动调用：
@@ -67,6 +71,7 @@
 - `lookup_character`: 需要角色详情时引擎自动查
 - `dice_roll`: 检定由引擎决定是否执行（不在 Phase 1 白名单）
 - `lookup_lore`: 世界常识引擎自动注入
+- `lookup_org`: 玩家询问组织信息时调此工具
 
 ## 输出格式
 

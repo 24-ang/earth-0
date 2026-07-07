@@ -148,7 +148,7 @@ function buildSceneBrief(gs: any): string {
 // 不含：工具提示/剧情钩子/任务机制（Phase 3 不需要）
 
 async function buildRenderStateContext(gs: any): Promise<string> {
-  const { getGridContext, getRegionContext, getRoomAgingLine, getPlayerStatusNarrative, hasEquipmentEffect, isSameLocation, getVisibleBodyDescription, translateWorldState } = await import("./state.ts");
+  const { getGridContext, getRegionContext, getRoomAgingLine, getPlayerStatusNarrative, hasEquipmentEffect, isSameLocation, getVisibleBodyDescription, translateWorldState, getMergedWorldState, getActiveOrgsForLocation } = await import("./state.ts");
   const parts: string[] = [];
 
   // ── 空间网格上下文（墙/家具/门窗/出口/四周） ──
@@ -172,9 +172,29 @@ async function buildRenderStateContext(gs: any): Promise<string> {
   const agingLine = getRoomAgingLine(gs.player?.location);
   if (agingLine) parts.push(`[场景氛围] ${agingLine}`);
 
-  // ── 全球大势 ──
-  const wsLine = translateWorldState(gs.worldState);
+  // ── 全球与地域大势 (天空盒级联) ──
+  const localWs = getMergedWorldState(gs.player?.location || "");
+  const wsLine = translateWorldState(localWs);
   if (wsLine) parts.push(`[全球大势] ${wsLine}`);
+
+  // ── 本地活跃势力（多重判定：大本营/控制/主导/在场/参与/旁観） ──
+  try {
+    const activeOrgs = getActiveOrgsForLocation(gs.player?.location || "");
+    if (activeOrgs.length > 0) {
+      const icons: Record<string, string> = { "大本营": "🏠", "控制": "🔒", "主导": "★", "在场": "👤", "参与": "●", "旁観": "○" };
+      const orgLines = activeOrgs.map(o => {
+        let line = "  " + (icons[o.relevance] || "·") + " " + o.name + " (" + o.sector + ") — 声望:" + o.playerRep + " [" + o.relevance + "]";
+        if ((o as any).rivalries && (o as any).rivalries.length > 0) {
+          const rivals = (o as any).rivalries.filter((r: any) => r.relation < 0);
+          const allies = (o as any).rivalries.filter((r: any) => r.relation > 0);
+          if (rivals.length > 0) line += "  ⚔️ 竞争: " + rivals.map((r: any) => r.name).join("、");
+          if (allies.length > 0) line += "  🤝 合作: " + allies.map((r: any) => r.name).join("、");
+        }
+        return line;
+      });
+      parts.push("[本地活跃势力]\n" + orgLines.join("\n") + "\n引擎层级限制已生效——低tier组织无法直接参与高tier事务。同级同sector组织之间的竞争/合作关系已注入。请自然融入叙事。");
+    }
+  } catch (e) { console.error("getActiveOrgsForLocation failed:", e); }
 
   // ── 玩家装备 ──
   const p = gs.player;
@@ -257,6 +277,17 @@ async function buildRenderStateContext(gs: any): Promise<string> {
     parts.push(`[在场NPC] 无`);
   }
 
+  // ── 队友 ──
+  if (gs.player?.party && gs.player.party.length > 0 && gs.npcs) {
+    const activeParty = gs.player.party.filter((name: string) => {
+      const n = gs.npcs[name];
+      return n && isSameLocation(n.currentRoom, loc);
+    });
+    if (activeParty.length > 0) {
+      parts.push(`[队友] ${activeParty.join("、")}（正跟随你）`);
+    }
+  }
+
   // ── 导演提示：沉默 NPC 不插话（仅当有 NPC 在场但无人 cue 玩家时） ──
   if (gs._activeNPCs && gs._activeNPCs.length === 0 && gs.npcs) {
     const loc2 = gs.player?.location;
@@ -265,6 +296,34 @@ async function buildRenderStateContext(gs: any): Promise<string> {
       .map(([name]) => name);
     if (presentNames.length > 0) {
       parts.push(`[导演提示] 当前在场的 NPC（${presentNames.join("、")}）并未主动与你互动，请不要让他们突然插入对话。如果他们应该注意到玩家，通过环境细节暗示（如视线移动、动作停顿）而非直接对话。`);
+    }
+  }
+
+  // ── 社交检定结果 ──
+  if (gs._lastSocialCheck) {
+    const sc = gs._lastSocialCheck;
+    parts.push(`[社交检定结果]\n  玩家对 ${sc.targetNpc} 发起“${sc.actionType}”检定。\n  检定方式: ${sc.approach}。物理判定结果: ${sc.success ? "成功" : "失败"}。\n  判定描述: ${sc.detailMsg}\n  【编译指导契约】：本轮渲染中，该社交动作的实际物理结果是“${sc.success ? "成功" : "失败"}”。请你用最符合NPC性格和关系的方式，将此结果编写为自然对话。如果成功，写出他们接受/配合的台词；如果失败，写出他们合理拒绝/逃避的言辞（大失败可写出傲娇或负面发弹，但最终结果绝不能改变）。`);
+    delete gs._lastSocialCheck;
+  }
+
+  // ── 通勤偶遇 ──
+  if (gs._lastCommuteEncounter) {
+    parts.push(gs._lastCommuteEncounter);
+    delete gs._lastCommuteEncounter;
+  }
+
+  // ── NPC 今日动态 ──
+  if (gs.npcs) {
+    const scheduleLines: string[] = [];
+    for (const [name, npc] of Object.entries(gs.npcs)) {
+      if (!npc.alive) continue;
+      const ov = (npc as any).pendingOverride;
+      if (ov && ov.reason && ov.reason !== "自主决定" && !ov.reason.startsWith("日历事件")) {
+        scheduleLines.push(`  ${name} — ${ov.action || "自由行动"}（${ov.reason}）`);
+      }
+    }
+    if (scheduleLines.length > 0) {
+      parts.push(`[NPC·今日动态]\n${scheduleLines.join("\n")}\n请自然融入叙事——不要直接朗读这些计划，用角色的言行暗示她们的去向。`);
     }
   }
 

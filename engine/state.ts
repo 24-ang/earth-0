@@ -117,7 +117,7 @@ export function isSameLocation(loc1: string, loc2: string): boolean {
       if (!fs.existsSync(dir)) continue;
       for (const f of fs.readdirSync(dir)) {
         if (!f.endsWith(".json") || f.startsWith("_")) continue;
-        try { const arr = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")); for (const e of (Array.isArray(arr)?arr:[arr])) { if (e.org) _orgCache[e.org] = e; } } catch (_) {}
+        try { const arr = JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")); for (const e of (Array.isArray(arr)?arr:[arr])) { const orgName = e.org || e.name; if (orgName) _orgCache[orgName] = e; } } catch (_) {}
       }
     }
   }
@@ -134,10 +134,10 @@ export function isSameLocation(loc1: string, loc2: string): boolean {
 let _orgCache: Record<string, any> | null = null;
 
 // --- 模块级游戏状态（单例，整个 session 一份） ---
-let STATE_DIR = path.resolve(process.cwd(), "state");
-let STATE_FILE = path.join(STATE_DIR, "session.json");
-let TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
-let SAVES_DIR = path.join(STATE_DIR, "saves");
+export let STATE_DIR = path.resolve(process.cwd(), "state");
+export let STATE_FILE = path.join(STATE_DIR, "session.json");
+export let TURN_BACKUP_DIR = path.join(STATE_DIR, "turn_backups");
+export let SAVES_DIR = path.join(STATE_DIR, "saves");
 
 function checkStatePaths() {
   const targetDir = process.env.NODE_ENV === "test"
@@ -203,6 +203,31 @@ function createInitialState(): GameState {
     });
   }
 
+  // 加载大势默认天空盒 — 扫 locations/ 目录
+  let defaultWorldState: WorldState = {
+    tech: 0,
+    stability: 0,
+    tension: 0,
+    prosperity: 0,
+    regime: "未知体制",
+    economy_type: "未知经济型",
+    diplomacy_stance: "未知外交立场",
+    globalFlags: {}
+  };
+  
+  try {
+    const locs = loadWorldpackDirRecursive("locations", "region_contexts.json");
+    const countryData = locs["日本"] || locs["japan"] || Object.values(locs).find(l => (l as any).skybox_defaults);
+    if (countryData && countryData.skybox_defaults) {
+      defaultWorldState = {
+        ...defaultWorldState,
+        ...countryData.skybox_defaults
+      };
+    }
+  } catch (e) {
+    console.error("createInitialState: failed to load skybox defaults from locations", e);
+  }
+
   return {
     time: { ...INITIAL_TIME_STATE },
     player: createDefaultPlayer(),
@@ -225,12 +250,7 @@ function createInitialState(): GameState {
     world_states: {},
     completed_events: [],
     quests: {},
-    worldState: {
-      tech: 0,
-      stability: 0,
-      tension: 0,
-      globalFlags: {}
-    },
+    worldState: defaultWorldState,
     schemaVersion: 1,
     interactionMode: "novel",
     turnsSinceLastNPCInteraction: 2,
@@ -356,7 +376,7 @@ function createDefaultPlayer(): PlayerState {
       height_cm: 170, weight_kg: 58, build: "标准", leg_type: "修长",
       skin: { base_tone: "普通", tan: 0, texture: "普通" },
     },
-    attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 12, 感知: 10, 魅力: 10 },
+    attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 12, 感知: 10, 魅力: 10, 幸运: 10 },
     skills: {},
     abilities: {},
     hp: { current: 18, max: 18 },
@@ -375,6 +395,8 @@ function createDefaultPlayer(): PlayerState {
     known_locations: ["千叶_住宅区"],
     titles: [],
     properties: {},
+    social_class: "小资产阶级",
+    personal_axes: { "经济立场": 0, "政治立场": 0 }
   };
 }
 
@@ -394,24 +416,29 @@ function atomicWrite(filepath: string, data: string): void {
 
 export function saveState(filepath?: string): void {
   checkStatePaths();
-  const fp = filepath ?? STATE_FILE;
+  let fp = filepath ?? STATE_FILE;
+  let isTheater = false;
+  if (gameState._theaterActive && !filepath) {
+    fp = path.join(STATE_DIR, "theater_session.json");
+    isTheater = true;
+  }
   const targetDir = path.dirname(fp);
   fs.mkdirSync(targetDir, { recursive: true });
 
   // 房间修改也持久化，保存到 session 目录下的 rooms_delta.json，而不覆写 data/rooms.json
-  const roomsDeltaPath = path.join(targetDir, "rooms_delta.json");
+  const roomsDeltaPath = isTheater ? path.join(targetDir, "theater_rooms_delta.json") : path.join(targetDir, "rooms_delta.json");
   atomicWrite(roomsDeltaPath, JSON.stringify(ROOMS, null, 2));
 
   // 动态角色持久化
-  const dcPath = path.join(targetDir, "dynamic_characters.json");
+  const dcPath = isTheater ? path.join(targetDir, "theater_dynamic_characters.json") : path.join(targetDir, "dynamic_characters.json");
   atomicWrite(dcPath, JSON.stringify(DYNAMIC_CHARACTERS, null, 2));
 
   // 动态地点持久化
-  const deltaPath = path.join(targetDir, "locations_delta.json");
+  const deltaPath = isTheater ? path.join(targetDir, "theater_locations_delta.json") : path.join(targetDir, "locations_delta.json");
   atomicWrite(deltaPath, JSON.stringify(LOCATIONS_DELTA, null, 2));
 
   // 家具容器持久化
-  const fcPath = path.join(targetDir, "furniture_containers.json");
+  const fcPath = isTheater ? path.join(targetDir, "theater_furniture_containers.json") : path.join(targetDir, "furniture_containers.json");
   atomicWrite(fcPath, JSON.stringify(_furnitureContainerStore, null, 2));
 
   atomicWrite(fp, JSON.stringify(gameState, null, 2));
@@ -419,7 +446,15 @@ export function saveState(filepath?: string): void {
 
 export function loadState(filepath?: string): boolean {
   checkStatePaths();
-  const fp = filepath ?? STATE_FILE;
+  let fp = filepath ?? STATE_FILE;
+  let isTheater = false;
+  if (!filepath) {
+    const theaterPath = path.join(STATE_DIR, "theater_session.json");
+    if (fs.existsSync(theaterPath)) {
+      fp = theaterPath;
+      isTheater = true;
+    }
+  }
   if (!fs.existsSync(fp)) return false;
   const targetDir = path.dirname(fp);
   const raw = fs.readFileSync(fp, "utf-8");
@@ -434,50 +469,72 @@ export function loadState(filepath?: string): boolean {
     delete gameState.npcs[gameState.player.name];
   }
   setAcademicYearOffset(gameState.academic_year_offset ?? 0);
-  gameState.worldState = {
-    tech: 0,
-    stability: 0,
-    tension: 0,
-    globalFlags: {},
-    ...(gameState.worldState || {})
-  };
+  if (gameState.player && gameState.player.attributes) {
+    gameState.player.attributes.幸运 ??= 10;
+  }
+
+  gameState.worldState ??= { tech: 0, stability: 0, tension: 0, globalFlags: {} };
+  Object.assign(gameState.worldState, {
+    tech: gameState.worldState.tech ?? 0,
+    stability: gameState.worldState.stability ?? 0,
+    tension: gameState.worldState.tension ?? 0,
+    globalFlags: gameState.worldState.globalFlags ?? {}
+  });
 
   // 读取 rooms_delta.json 并覆盖 ROOMS（原地更新，不替换引用）
   function updateROOMS(newRooms: any) {
     for (const key of Object.keys(ROOMS)) { delete (ROOMS as any)[key]; }
     Object.assign(ROOMS, newRooms);
   }
-  const roomsDeltaPath = path.join(targetDir, "rooms_delta.json");
+  const roomsDeltaName = isTheater ? "theater_rooms_delta.json" : "rooms_delta.json";
+  const roomsDeltaPath = path.join(targetDir, roomsDeltaName);
   if (fs.existsSync(roomsDeltaPath)) {
     try {
       updateROOMS(JSON.parse(fs.readFileSync(roomsDeltaPath, "utf-8")));
     } catch (e) {
-      console.error("loadState: 解析 rooms_delta.json 失败，回退到静态rooms", e);
+      console.error(`loadState: 解析 ${roomsDeltaName} 失败，回退到静态rooms`, e);
       updateROOMS(rooms);
     }
   } else {
     updateROOMS(rooms);
   }
 
-  loadLocationsDelta(targetDir);
+  // 恢复动态地点
+  const locationsDeltaName = isTheater ? "theater_locations_delta.json" : "locations_delta.json";
+  const locationsDeltaPath = path.join(targetDir, locationsDeltaName);
+  if (fs.existsSync(locationsDeltaPath)) {
+    try {
+      const parsedLocs = JSON.parse(fs.readFileSync(locationsDeltaPath, "utf-8"));
+      for (const key of Object.keys(LOCATIONS_DELTA)) delete LOCATIONS_DELTA[key];
+      Object.assign(LOCATIONS_DELTA, parsedLocs);
+    } catch (e) {
+      console.error(`Failed to parse ${locationsDeltaName}:`, e);
+      for (const key of Object.keys(LOCATIONS_DELTA)) delete LOCATIONS_DELTA[key];
+    }
+  } else {
+    for (const key of Object.keys(LOCATIONS_DELTA)) delete LOCATIONS_DELTA[key];
+  }
+
   // 恢复动态角色
-  const dcPath = path.join(targetDir, "dynamic_characters.json");
+  const dcName = isTheater ? "theater_dynamic_characters.json" : "dynamic_characters.json";
+  const dcPath = path.join(targetDir, dcName);
   if (fs.existsSync(dcPath)) {
     try {
       DYNAMIC_CHARACTERS = JSON.parse(fs.readFileSync(dcPath, "utf-8"));
     } catch (e) {
-      console.error("Failed to parse dynamic_characters.json:", e);
+      console.error(`Failed to parse ${dcName}:`, e);
       DYNAMIC_CHARACTERS = {};
     }
   } else {
     DYNAMIC_CHARACTERS = {};
   }
   // 恢复家具容器
-  const fcPath = path.join(targetDir, "furniture_containers.json");
+  const fcName = isTheater ? "theater_furniture_containers.json" : "furniture_containers.json";
+  const fcPath = path.join(targetDir, fcName);
   if (fs.existsSync(fcPath)) {
     try {
       Object.assign(_furnitureContainerStore, JSON.parse(fs.readFileSync(fcPath, "utf-8")));
-    } catch (e) { console.error("loadState: 解析 furniture_containers.json 失败", e); }
+    } catch (e) { console.error(`loadState: 解析 ${fcName} 失败`, e); }
   }
   // 存档版本迁移——旧档无 schemaVersion 视为 v0，按版本增量跑迁移
   const currentSchemaVersion = 1;
@@ -782,7 +839,7 @@ function resolveScheduleGroup(src: any, currentAge: number): string {
 
 /** 按年龄缩放属性。身体属性按年龄比例缩放，心智属性保持 baseline */
 function scaleAttributesForAge(src: any, age: number): Record<string, number> {
-  const base = (src?.attributes as Record<string, number>) || { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 };
+  const base = (src?.attributes as Record<string, number>) || { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10, 幸运: 10 };
   const physicalRatio = age <= 6 ? 0.5 : age <= 12 ? 0.7 : age <= 15 ? 0.85 : 1.0;
   if (physicalRatio >= 1.0) return { ...base };
   const physical = new Set(["力量", "敏捷", "体质"]);
@@ -874,6 +931,18 @@ export function setPlayerLocation(loc: string): void {
   // 移动后自动初始化网格坐标（位置变化时 或 gridPos 为 null 时触发）
   if (oldLoc !== key || !gameState.player.gridPos) {
     initPlayerGrid();
+  }
+
+  // 队友跟随移动
+  if (gameState.player.party && gameState.player.party.length > 0) {
+    for (const name of gameState.player.party) {
+      const npc = gameState.npcs[name];
+      if (npc && npc.alive !== false) {
+        npc.currentRoom = key;
+        npc.gridPos = null; // 重新进入场景时分配坐标
+        npc.action = "跟随玩家";
+      }
+    }
   }
 }
 
@@ -1310,6 +1379,53 @@ function ensureCollectors(): void {
             lines.push(`  [mood_hint] ${moodHint}`);
             const ts = getThoughtsSummary(sx);
             if (ts) lines.push(`  [心里话] ${ts}`);
+          }
+
+          // Inject detailed genital and body specs for sex scene consistency
+          if (s().mode === "sex") {
+            const linesSpec: string[] = [];
+            // Active player's body and genitals (the switched POV character or original player)
+            if (p.gender === "女" && prof.female) {
+              const f = prof.female;
+              linesSpec.push(`  [我的物理规格特征]`);
+              if (f.breast) linesSpec.push(`    胸部: ${f.breast.cup}罩杯 | 形状: ${f.breast.shape} | 触感: ${f.breast.feel} | 乳头: ${f.breast.nipple_color}(${f.breast.nipple_size})`);
+              if (f.vagina) linesSpec.push(`    秘部: 阴道: ${f.vagina.type} | 紧致: ${f.vagina.tightness} | 内壁: ${f.vagina.inner_color} | 深度: ${f.vagina.depth_cm}cm`);
+              if (f.clitoris) linesSpec.push(`    阴蒂: ${f.clitoris}`);
+            } else if (p.gender === "男" && prof.male) {
+              const m = prof.male;
+              linesSpec.push(`  [我的物理规格特征]`);
+              if (m.penis) linesSpec.push(`    阴茎: 疲软: ${m.penis.length_cm}cm/${m.penis.girth_cm}cm | 勃起: ${m.penis.erect_length_cm}cm/${m.penis.erect_girth_cm}cm | 形状: ${m.penis.shape} | 包皮: ${m.penis.circumcised ? "已切除" : "包茎/未切"}`);
+            }
+
+            // Target NPC's body and genitals
+            const targetName = prof.name;
+            const targetNpc = s().npcs[targetName] || (s()._npcSnapshot && s()._npcSnapshot.name === targetName ? s()._npcSnapshot : null);
+            if (targetNpc) {
+              const tp = prof;
+              if (p.gender === "男" && tp.female) {
+                const f = tp.female;
+                linesSpec.push(`  [对方的物理规格特征]`);
+                if (f.breast) linesSpec.push(`    胸部: ${f.breast.cup}罩杯 | 形状: ${f.breast.shape} | 触感: ${f.breast.feel} | 乳头: ${f.breast.nipple_color}(${f.breast.nipple_size})`);
+                if (f.vagina) linesSpec.push(`    秘部: 阴道: ${f.vagina.type} | 紧致: ${f.vagina.tightness} | 内壁: ${f.vagina.inner_color} | 深度: ${f.vagina.depth_cm}cm`);
+                if (f.clitoris) linesSpec.push(`    阴蒂: ${f.clitoris}`);
+              } else if (p.gender === "女" && tp.male) {
+                const m = tp.male;
+                linesSpec.push(`  [对方的物理规格特征]`);
+                if (m.penis) linesSpec.push(`    阴茎: 疲软: ${m.penis.length_cm}cm/${m.penis.girth_cm}cm | 勃起: ${m.penis.erect_length_cm}cm/${m.penis.erect_girth_cm}cm | 形状: ${m.penis.shape} | 包皮: ${m.penis.circumcised ? "已切除" : "包茎/未切"}`);
+              }
+            }
+            if (sx.stamina !== undefined) {
+              linesSpec.push(`  [男方体力] ${sx.stamina}/100`);
+            }
+            if (sx.contraceptionUsed) {
+              const brokenStr = sx.condomBroken ? " (安全套已破损！避孕失效)" : "";
+              const contraNames: Record<string, string> = { condom: "安全套", pill: "避孕药", none: "无避孕措施" };
+              linesSpec.push(`  [避孕状态] ${contraNames[sx.contraceptionUsed] || sx.contraceptionUsed}${brokenStr}`);
+            }
+            linesSpec.push(`  [我的幸运] ${p.attributes.幸运 ?? 10} | [对方幸运] ${targetNpc?.attributes?.幸运 ?? 10}`);
+            if (linesSpec.length > 0) {
+              lines.push(...linesSpec);
+            }
           }
         }
         for (const [nname, npc] of Object.entries(s().npcs)) {
@@ -2173,7 +2289,7 @@ export function registerDynamicCharacter(name: string, data: Record<string, any>
     gender: "female",
     base_age: 16,
     appearance_brief: "",
-    attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10 },
+    attributes: { 力量: 8, 敏捷: 10, 体质: 9, 智力: 10, 感知: 10, 魅力: 10, 幸运: 10 },
     body: { height_cm: 160, weight_kg: 50, build: "标准", leg_type: "修长", skin: { base_tone: "普通", tan: 0, texture: "普通" } },
     schedule_group: "自由人",
     default_location: gameState.player.location,
@@ -2477,7 +2593,9 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
       alive: true,
       attributes: runtimeAttrs,
       skills: runtimeSkills,
-      abilities: {}
+      abilities: {},
+      social_class: src?.social_class || "普通市民",
+      personal_axes: src?.personal_axes || { "经济立场": 0, "政治立场": 0 }
     };
     // 初始化自主意图（从 drives_by_age 按当前年龄取对应段）
     if (src?.drives_by_age) {
@@ -2777,20 +2895,241 @@ export function translateWorldState(ws?: any): string {
   if (!ws) return "";
   const lines: string[] = [];
   if (ws.stability !== undefined) {
-    if (ws.stability <= -2) lines.push("【社会大局势】战火蔓延，街头可见巡逻兵，物资配给开始受限。人们普遍缺乏安全感。");
+    if (ws.stability <= -3) lines.push("【社会大局势】社会秩序全面崩溃，爆发严重冲突与战乱，法律已失效。暴力与混乱成了日常。");
+    else if (ws.stability <= -2) lines.push("【社会大局势】战火蔓延，街头可见巡逻兵，物资配给开始受限。人们普遍缺乏安全感。");
     else if (ws.stability <= -1) lines.push("【社会大局势】社会暗流涌动，治安恶化。人们在街上行走时下意识加快了脚步。");
+    else if (ws.stability >= 3) lines.push("【社会大局势】处于铁血的高压强力秩序下，军管状态，所有反抗被绝对抹杀。秩序死寂。");
     else if (ws.stability >= 2) lines.push("【社会大局势】社会处于高压秩序下，街头布满监控与警卫，秩序井然得有些压抑。");
   }
   if (ws.tech !== undefined) {
-    if (ws.tech >= 4) lines.push("【科技水平】虚拟现实和AI已渗透日常生活。全息广告随处可见。");
+    if (ws.tech >= 5) lines.push("【科技水平】高科技、低生活。赛博朋克风的全息日常，AI与黑客成为常态，资源由技术寡头垄断。");
+    else if (ws.tech >= 4) lines.push("【科技水平】虚拟现实和AI已渗透日常生活。全息广告随处可见。");
     else if (ws.tech >= 2) lines.push("【科技水平】一些新奇的技术开始进入民用领域。");
   }
   if (ws.tension !== undefined) {
-    if (ws.tension >= 4) lines.push("【危机感】人人自危，危机逼近的压抑感弥漫在每个角落。");
+    if (ws.tension >= 5) lines.push("【危机感】末日终焉即临，所有人陷入彻底的绝望，末日警钟轰鸣，世界危在旦夕。");
+    else if (ws.tension >= 4) lines.push("【危机感】人人自危，危机逼近的压抑感弥漫在每个角落。");
   }
+  if (ws.prosperity !== undefined) {
+    if (ws.prosperity <= -5) lines.push("【社会繁荣度】经济彻底崩溃，大面积企业破产，失业率飙升，民生凋敝。");
+    else if (ws.prosperity <= -3) lines.push("【社会繁荣度】处于严重经济衰退期，市场低迷，降薪裁员潮不断，生活成本高企。");
+    else if (ws.prosperity <= -1) lines.push("【社会繁荣度】经济增长乏力，部分行业低迷，居民消费趋于保守。");
+    else if (ws.prosperity >= 5) lines.push("【社会繁荣度】经济极度繁荣狂热，资本涌流，各行各业欣欣向荣。");
+    else if (ws.prosperity >= 3) lines.push("【社会繁荣度】经济处于景气繁荣期，就业充足，市场信心强劲。");
+    else if (ws.prosperity >= 1) lines.push("【社会繁荣度】经济稳步增长，商业活动活跃。");
+  }
+  if (ws.regime) lines.push(`【政治体制】${ws.regime}`);
+  if (ws.economy_type) lines.push(`【经济体制】${ws.economy_type}`);
+  if (ws.diplomacy_stance) lines.push(`【地缘外交】${ws.diplomacy_stance}`);
   return lines.join("\n");
 }
 
+/** 动态级联合并地理层级的天空盒默认值 */
+export function getMergedWorldState(location: string): WorldState {
+  if (!_regionContexts) {
+    _regionContexts = loadWorldpackDirRecursive("locations", "region_contexts.json");
+  }
+
+  // 运行时 worldState 为权威底值（事件/自转可动态修改）
+  const base: WorldState = {
+    tech: gameState.worldState?.tech ?? 0,
+    stability: gameState.worldState?.stability ?? 0,
+    tension: gameState.worldState?.tension ?? 0,
+    prosperity: gameState.worldState?.prosperity ?? 0,
+    regime: gameState.worldState?.regime ?? "未知体制",
+    economy_type: gameState.worldState?.economy_type ?? "未知经济型",
+    diplomacy_stance: gameState.worldState?.diplomacy_stance ?? "未知外交立场",
+    globalFlags: { ...(gameState.worldState?.globalFlags || {}) }
+  };
+
+  let breadcrumbs: string[] = [];
+  try {
+    const nav = getLocationNav(location);
+    if (nav && nav.breadcrumb) { breadcrumbs = [...nav.breadcrumb]; }
+  } catch (e) {}
+  if (breadcrumbs.length === 0) { breadcrumbs = [location]; }
+
+  // tier 优先级: global=0 national=1 regional=2 local=3 site=4（数字越大越底层，越不能覆盖上层数值）
+  const TIER_RANK: Record<string, number> = { global: 0, national: 1, regional: 2, local: 3, site: 4 };
+  const numericSourceTier: Record<string, number> = {}; // 哪个 tier 设置了 prosperity/stability/tension/tech
+
+  // 自下而上遍历 breadcrumb（子节点先，父节点后——较上层后应用，覆盖下层数值）
+  const reversed = [...breadcrumbs].reverse();
+
+  for (const node of reversed) {
+    const nodeLower = node.toLowerCase();
+
+    // 最长 key 精确匹配
+    let bestMatchKey: string | null = null;
+    let bestMatchData: any = null;
+    let bestMatchLen = 0;
+    for (const [rk, data] of Object.entries(_regionContexts)) {
+      for (const k of (data?.keys || [])) {
+        const kl = k.toLowerCase();
+        if (nodeLower.includes(kl) || kl.includes(nodeLower)) {
+          if (kl.length > bestMatchLen) {
+            bestMatchLen = kl.length;
+            bestMatchKey = rk;
+            bestMatchData = data;
+          }
+        }
+      }
+    }
+
+    if (!bestMatchData?.skybox_defaults) continue;
+
+    // 跳过日本根节点（national 级 skybox 在 createInitialState 已加载为 worldState 底值）
+    if (bestMatchKey === "日本" || bestMatchKey === "japan") continue;
+
+    const sd = bestMatchData.skybox_defaults;
+    const tier = sd.tier || "site"; // 无 tier 声明的视为 site（最底层），数值继承上级
+    const tierRank = TIER_RANK[tier] ?? 99;
+
+    // 字符串字段——总是允许覆盖（描述本地特征，上层不需要保护）
+    if (sd.regime !== undefined) base.regime = sd.regime;
+    if (sd.economy_type !== undefined) base.economy_type = sd.economy_type;
+    if (sd.diplomacy_stance !== undefined) base.diplomacy_stance = sd.diplomacy_stance;
+
+    // 数值字段——只允许较高 tier（更宏观）覆盖较低 tier（更局部）
+    // 即：国家 > 地区 > 省市 > 城区 > 具体地点。site 不能改 local 设的 prosperity
+    for (const numField of ["prosperity", "stability", "tension", "tech"]) {
+      if (sd[numField] !== undefined) {
+        const prevSourceRank = numericSourceTier[numField] ?? 99;
+        if (tierRank <= prevSourceRank) {
+          base[numField] = sd[numField];
+          numericSourceTier[numField] = tierRank;
+        }
+      }
+    }
+  }
+
+  return base;
+}
+/** 获取匹配某 location 节点的 tier（从 skybox_defaults.tier 读取） */
+export function getLocationTier(location: string): string {
+  if (!_regionContexts) {
+    _regionContexts = loadWorldpackDirRecursive("locations", "region_contexts.json");
+  }
+  let bestTier = "site"; let bestLen = 0;
+  const locLower = location.toLowerCase();
+  for (const [rk, data] of Object.entries(_regionContexts)) {
+    for (const k of (data?.keys || [])) {
+      const kl = k.toLowerCase();
+      if (locLower.includes(kl) && kl.length > bestLen) {
+        bestLen = kl.length;
+        if (data?.skybox_defaults?.tier) bestTier = data.skybox_defaults.tier;
+      }
+    }
+  }
+  return bestTier;
+}
+
+/** 层级映射: org scale → location tier 的参与权限
+ *  national → 可参与所有层级
+ *  regional → regional/local/site
+ *  local    → local/site
+ *  club     → 只能 site; social/culture 可跨一级到 local
+ */
+export function canOrgActAtTier(orgScale: string, targetTier: string, orgSector?: string): { allowed: boolean; reason: string } {
+  const SCALE_RANK: Record<string, number> = { national: 0, regional: 1, local: 2, club: 3 };
+  const TIER_RANK: Record<string, number> = { global: 0, national: 0, regional: 1, local: 2, site: 3 };
+  const orgRank = SCALE_RANK[orgScale] ?? 99;
+  const tierRank = TIER_RANK[targetTier] ?? 99;
+  if (orgRank <= tierRank) return { allowed: true, reason: "同等级或上级——可直接参与" };
+  if (orgScale === "club" && targetTier === "local" && (orgSector === "social" || orgSector === "culture")) {
+    return { allowed: true, reason: "社团的社会/文化影响力可渗透到地方层级" };
+  }
+  return { allowed: false, reason: orgScale + "级势力无法直接参与" + targetTier + "级事务——需通过 parent_org 链中的上级组织间接干涉" };
+}
+
+/** 获取当前地点活跃的组织列表（按层级过滤 + 声望排序） */
+/** 获取当前地点活跃的组织列表（多重判定：声明+领土+成员在场+阶级基本盘）
+ *  relevance: "大本营" > "控制" > "主导(声明)" > "在场(成员)" > "参与(同tier)" > "旁観(上级)"
+ *  同级同sector组织之间产生竞争信号（relations<0→对抗, relations>0→合作）
+ */
+export function getActiveOrgsForLocation(location: string): {
+  orgId: string; name: string;
+  relevance: "大本营" | "控制" | "主导" | "在场" | "参与" | "旁観";
+  sector: string; playerRep: number; tier: string;
+  rivalries?: { orgId: string; name: string; relation: number; cause: string }[];
+}[] {
+  const tier = getLocationTier(location);
+  const orgs = gameState.organizations;
+  if (!orgs) return [];
+
+  // ── 1. 多重判定 relevance ──
+  const result: any[] = [];
+  const governingSet = new Set<string>();
+
+  // breadcrumb 链匹配 governing_orgs
+  let govBreadcrumbs = [location];
+  try { const nav = getLocationNav(location); if (nav?.breadcrumb) govBreadcrumbs = [...nav.breadcrumb]; } catch (e) {}
+  if (_regionContexts) {
+    for (const [rk, data] of Object.entries(_regionContexts)) {
+      if (!data?.governing_orgs) continue;
+      const matched = data.keys?.some(k => govBreadcrumbs.some(b => b.includes(k) || k.includes(b)));
+      if (matched) { for (const gov of data.governing_orgs) { governingSet.add(gov.orgId); } }
+    }
+  }
+
+  // 获取当前地点的在场 NPC 列表
+  const presentNPCs = new Set<string>();
+  if (gameState.npcs) {
+    for (const [name, npc] of Object.entries(gameState.npcs)) {
+      if ((npc as any).currentRoom && isSameLocation((npc as any).currentRoom, location)) {
+        presentNPCs.add(name);
+      }
+    }
+  }
+
+  for (const [id, org] of Object.entries(orgs)) {
+    const check = canOrgActAtTier(org.scale || "club", tier, org.sector);
+    if (!check.allowed) continue;
+
+    const rep = gameState.player.reputation?.[id] ?? 0;
+    let relevance = "参与" as any;
+
+    // 判定优先级：大本营 > 领土控制 > 声明主导 > 成员在场 > 同tier参与 > 上级旁观
+    if (org.coreLocation && isSameLocation(org.coreLocation, location)) {
+      relevance = "大本营";
+    } else if (org.territoryRoomKeys?.some((r: string) => isSameLocation(r, location))) {
+      relevance = "控制";
+    } else if (governingSet.has(id)) {
+      relevance = "主导";
+    } else if (org.members?.some((m: any) => presentNPCs.has(m.npcName))) {
+      relevance = "在场";
+    } else if (check.reason.includes("上级")) {
+      relevance = "旁観";
+    }
+
+    result.push({ orgId: id, name: org.name, relevance, sector: org.sector || "unknown", playerRep: rep, tier: org.scale || "club" });
+  }
+
+  // ── 2. 同级同 sector 竞争检测 ──
+  for (const entry of result) {
+    if (entry.relevance === "旁観") continue; // 上级旁观者不参与同级竞争
+    const rivals: any[] = [];
+    for (const other of result) {
+      if (other.orgId === entry.orgId) continue;
+      if (other.tier !== entry.tier) continue; // 不同层级不构成直接竞争
+      if (other.sector !== entry.sector) continue; // 不同部门不构成直接竞争
+      // 查 org 间 relations
+      const org = orgs[entry.orgId];
+      const rel = org?.relations?.[other.orgId] ?? 0;
+      const cause = rel < 0 ? "sector冲突：同属" + entry.sector + "部门，利益直接对立" :
+                    rel > 0 ? "sector合作：同属" + entry.sector + "部门，共同维护行业利益" :
+                    "sector共存：同属" + entry.sector + "部门，当前关系中性";
+      rivals.push({ orgId: other.orgId, name: other.name, relation: rel, cause });
+    }
+    if (rivals.length > 0) entry.rivalries = rivals;
+  }
+
+  // ── 3. 排序 ──
+  const relOrder: Record<string, number> = { "大本营": 0, "控制": 1, "主导": 2, "在场": 3, "参与": 4, "旁観": 5 };
+  result.sort((a, b) => { const d = relOrder[a.relevance] - relOrder[b.relevance]; return d !== 0 ? d : Math.abs(b.playerRep) - Math.abs(a.playerRep); });
+
+  return result;
+}
 export function addMemoryTag(
   npcName: string,
   tag: string,
@@ -2804,9 +3143,13 @@ export function addMemoryTag(
   let stainedTag = tag;
   if (gameState.worldState) {
     const ws = gameState.worldState;
-    if (ws.stability !== undefined && ws.stability < 0) stainedTag += "（但笼罩在局势动荡的阴影下）";
-    if (ws.tension !== undefined && ws.tension >= 4) stainedTag += "（在人人自危的氛围中）";
-    if (ws.tech !== undefined && ws.tech >= 4) stainedTag += "（在这个AI渗透日常的时代）";
+    const elements: string[] = [];
+    if (ws.stability !== undefined && ws.stability < 0) elements.push("局势动荡");
+    if (ws.tension !== undefined && ws.tension >= 4) elements.push("人人自危");
+    if (ws.tech !== undefined && ws.tech >= 4) elements.push("AI渗透");
+    if (elements.length > 0) {
+      stainedTag += `（但在${elements.join("、")}的背景下）`;
+    }
   }
 
   // 玩家记忆写入 player.memories，绝不污染 npcs 表
@@ -2938,12 +3281,82 @@ export function appendShortTermBuffer(
   }
 }
 
+// --- 组织声望桥接辅助 ---
+
+/** 通过 scheduleGroup 名/组织名/orgId 查找关联的 orgId */
+export function resolveOrgIdForGroup(group: string): string | null {
+  const orgs = gameState.organizations;
+  if (!orgs) return null;
+  // 1. 直接 orgId 匹配
+  if (orgs[group]) return group;
+  // 2. 名称匹配
+  for (const [id, org] of Object.entries(orgs)) {
+    if (org.name === group) return id;
+  }
+  // 3. match_rules.schedule_groups 匹配
+  const groupLower = group.toLowerCase();
+  for (const [id, org] of Object.entries(orgs)) {
+    if (org.match_rules?.schedule_groups) {
+      if (org.match_rules.schedule_groups.some(sg => sg.toLowerCase() === groupLower)) return id;
+    }
+  }
+  return null;
+}
+
+/** 检查目标 roomKey 是否是某势力的核心区，返回该势力 id 或 null */
+export function getOrgForTerritory(roomKey: string): string | null {
+  // 1. 优先查 rooms.json 中房间是否指定 controlled_by
+  try {
+    const room = getRoom(roomKey);
+    if (room && room.controlled_by) {
+      return room.controlled_by;
+    }
+  } catch (e) {}
+
+  // 2. 其次查 organizations 中的 territoryRoomKeys
+  const orgs = gameState.organizations;
+  if (!orgs) return null;
+  const rk = roomKey.toLowerCase();
+  for (const [id, org] of Object.entries(orgs)) {
+    if (org.territoryRoomKeys?.some(t => t.toLowerCase() === rk)) return id;
+  }
+  return null;
+}
+
+/** 查找 NPC 所属的所有组织 ID */
+export function getOrgMembershipsForNpc(npcName: string): string[] {
+  const orgs = gameState.organizations;
+  if (!orgs) return [];
+  const result: string[] = [];
+  for (const [id, org] of Object.entries(orgs)) {
+    if (org.members?.some(m => m.npcName === npcName)) {
+      result.push(id);
+    }
+  }
+  return result;
+}
+
 // --- 多维声望 ---
 export function updateReputation(group: string, delta: number): number {
   if (!gameState.player.reputation[group]) gameState.player.reputation[group] = 0;
   const oldVal = gameState.player.reputation[group];
   const newVal = Math.max(-3, Math.min(5, oldVal + delta));
   gameState.player.reputation[group] = newVal;
+
+  // 声望桥接：将 scheduleGroup 声望变化同步到对应 orgId，并支持嵌套传导
+  const orgId = resolveOrgIdForGroup(group) || (gameState.organizations?.[group] ? group : null);
+  if (orgId) {
+    if (!gameState.player.reputation[orgId]) gameState.player.reputation[orgId] = 0;
+    gameState.player.reputation[orgId] = Math.max(-3, Math.min(5, gameState.player.reputation[orgId] + delta));
+    
+    // 嵌套组织声望传导：子组织声望波动按 20% 传导到父组织
+    const orgObj = gameState.organizations?.[orgId];
+    if (orgObj && orgObj.parent_org) {
+      const parentId = orgObj.parent_org;
+      if (!gameState.player.reputation[parentId]) gameState.player.reputation[parentId] = 0;
+      gameState.player.reputation[parentId] = Math.max(-3, Math.min(5, gameState.player.reputation[parentId] + delta * 0.2));
+    }
+  }
 
   // 检测跨越 ±1, ±2, ±3 阈值
   const thresholdCrossed = (val1: number, val2: number) => {
@@ -3038,6 +3451,23 @@ export function clearScheduleOverride(npcName: string): string {
 
 export let PRICE_RANGE = economyConfig.price_ranges as Record<string, [number, number]>;
 
+function getPriceMultiplier(): number {
+  const stability = gameState.worldState?.stability ?? 0;
+  const prosperity = gameState.worldState?.prosperity ?? 0;
+  
+  if (stability < 0 && prosperity < 0) {
+    // 萧条且动荡 -> 通货膨胀 (物价上涨)
+    return 1 + Math.abs(stability) * 0.15;
+  } else if (prosperity < 0) {
+    // 萧条但稳定 -> 通货紧缩 (物价下跌)
+    return 1 + prosperity * 0.05;
+  } else if (prosperity > 0) {
+    // 景气繁荣 -> 物价小幅上涨
+    return 1 + prosperity * 0.05;
+  }
+  return 1.0;
+}
+
 function validatePrice(itemName: string, price: number): string | null {
   let itemType = "tool";
   for (const [cat, items] of Object.entries(itemsCatalog)) {
@@ -3046,7 +3476,10 @@ function validatePrice(itemName: string, price: number): string | null {
       break;
     }
   }
-  const [min, max] = PRICE_RANGE[itemType] || [10, 50000];
+  const mult = getPriceMultiplier();
+  const [baseMin, baseMax] = PRICE_RANGE[itemType] || [10, 50000];
+  const min = Math.round(baseMin * mult);
+  const max = Math.round(baseMax * mult);
   const currencySymbol = getCurrency();
   if (price < min) return `${itemName}价格通常不低于${currencySymbol}${min}`;
   if (price > max) return `${itemName}价格通常不超过${currencySymbol}${max}`;
@@ -3097,17 +3530,22 @@ export function buyItem(itemName: string, price: number, shopName?: string): str
 
   const err = validatePrice(itemName, price);
   if (err) return err;
+  
+  const mult = getPriceMultiplier();
+  const scaledPrice = Math.round(price * mult);
+
   // 魅力谈判：高魅力砍价
   const chaBonus = attrMod(gameState.player.attributes.魅力);
-  const discount = Math.round(price * chaBonus * 0.01);
-  const finalPrice = Math.max(price - discount, price * 0.85);
+  const discount = Math.round(scaledPrice * chaBonus * 0.01);
+  const finalPrice = Math.max(scaledPrice - discount, scaledPrice * 0.85);
   const currencySymbol = getCurrency();
   if (gameState.player.funds < finalPrice) return `钱不够。需要${currencySymbol}${finalPrice}，余额${currencySymbol}${gameState.player.funds}`;
   gameState.player.funds -= finalPrice;
   gameState.player.inventory.push(structuredClone(itemData));
   saveState();
   const discountStr = discount > 0 ? ` (魅力砍价-${currencySymbol}${discount})` : "";
-  return `买了${itemName}，花费${currencySymbol}${finalPrice}${discountStr}。余额${currencySymbol}${gameState.player.funds}`;
+  const scalingStr = mult !== 1.0 ? ` (因社会环境物价波动系数: ${mult.toFixed(2)})` : "";
+  return `买了${itemName}，花费${currencySymbol}${finalPrice}${discountStr}${scalingStr}。余额${currencySymbol}${gameState.player.funds}`;
 }
 
 export function sellItem(itemName: string, price: number, buyerName?: string, shopName?: string): string {
@@ -3131,10 +3569,14 @@ export function sellItem(itemName: string, price: number, buyerName?: string, sh
 
   const err = validatePrice(itemName, price);
   if (err) return err;
+  
+  const mult = getPriceMultiplier();
+  const scaledPrice = Math.round(price * mult);
+
   // 魅力谈判：高魅力卖更高价
   const chaBonus = attrMod(gameState.player.attributes.魅力);
-  const premium = Math.round(price * chaBonus * 0.005);
-  const finalPrice = Math.min(price + premium, price * 1.1);
+  const premium = Math.round(scaledPrice * chaBonus * 0.005);
+  const finalPrice = Math.min(scaledPrice + premium, scaledPrice * 1.1);
   const currencySymbol = getCurrency();
   if (buyerName) {
     const npc = getOrCreateNPC(buyerName);
@@ -3146,17 +3588,25 @@ export function sellItem(itemName: string, price: number, buyerName?: string, sh
   saveState();
   const buyerMsg = buyerName ? `（卖给${buyerName}）` : "";
   const premiumStr = premium > 0 ? ` (魅力谈价+${currencySymbol}${premium})` : "";
-  return `卖了${itemName}${buyerMsg}，获得${currencySymbol}${finalPrice}${premiumStr}。余额${currencySymbol}${gameState.player.funds}`;
+  const scalingStr = mult !== 1.0 ? ` (因社会环境物价波动系数: ${mult.toFixed(2)})` : "";
+  return `卖了${itemName}${buyerMsg}，获得${currencySymbol}${finalPrice}${premiumStr}${scalingStr}。余额${currencySymbol}${gameState.player.funds}`;
 }
 
 export function workJob(jobName: string, hours: number): string {
   const rates = economyConfig.job_rates as Record<string, number>;
   const rate = rates[jobName] || 900;
-  const pay = rate * hours;
+  
+  // 根据全局繁荣度计算时薪（直接读 runtime worldState，响应事件/自转的动态修改）
+  const prosperity = gameState.worldState?.prosperity ?? 0;
+  const multiplier = 1 + prosperity * 0.05;
+  const finalRate = Math.round(rate * multiplier);
+  
+  const pay = finalRate * hours;
   gameState.player.funds += pay;
   saveState();
   const currencySymbol = getCurrency();
-  return `工作${hours}小时（${jobName}），获得${currencySymbol}${pay}。余额${currencySymbol}${gameState.player.funds}`;
+  const recessionHint = prosperity < 0 ? ` (因经济不景气时薪由${rate}降为${finalRate})` : prosperity > 0 ? ` (因经济景气时薪由${rate}升为${finalRate})` : "";
+  return `工作${hours}小时（${jobName}），获得${currencySymbol}${pay}${recessionHint}。余额${currencySymbol}${gameState.player.funds}`;
 }
 
 // --- 生长发育（月末结算） ---
@@ -3217,15 +3667,18 @@ export async function updateNPCSchedules(): Promise<string[]> {
   const { time_of_day, day_of_week } = gameState.time;
   const isWeekend = ["土", "日"].includes(day_of_week);
   
-  // 当前时段 → 模板key
+  // 当前时段 → 模板key（通用 + 星期前缀）
   const slotMap: Record<string, string> = {
-    "morning": "weekday_morning",
-    "lunch": "weekday_lunch",
-    "afternoon": "weekday_afternoon",
-    "evening": "weekday_evening",
-    "night": "weekday_evening",
+    "morning": "morning",
+    "lunch": "lunch",
+    "afternoon": "afternoon",
+    "evening": "evening",
+    "night": "evening",
   };
-  const timeKey = isWeekend ? "weekend" : (slotMap[time_of_day] || "weekday_morning");
+  const slot = slotMap[time_of_day] || "morning";
+  const timeKey = isWeekend ? "weekend" : `weekday_${slot}`;
+  // 星期前缀 key: 月_afternoon, 水_afternoon, 金_evening 等 → 引擎先查这个
+  const dayKey = isWeekend ? "weekend" : `${day_of_week}_${slot}`;
   
   // 房间容量计数器，初始化玩家所在位置人数
   const roomCounts: Record<string, number> = {};
@@ -3241,7 +3694,18 @@ export async function updateNPCSchedules(): Promise<string[]> {
     console.error("applyOrgEffects error:", e);
   }
 
+  // 假期/长假: 日历 multi-day schedule_override
+  const activeOverrides = await getActiveScheduleOverrides();
+
   for (const [name, npc] of Object.entries(gameState.npcs)) {
+    // 队友跟随移动，屏蔽日程计算
+    if (gameState.player.party && gameState.player.party.includes(name)) {
+      npc.currentRoom = gameState.player.location;
+      npc.gridPos = null;
+      npc.action = "跟随玩家";
+      continue;
+    }
+
     // 旧存档修复：用 schedule_group_by_age 重解析 scheduleGroup
     const _src2 = findCharacter(name);
     if (_src2?.schedule_group_by_age) {
@@ -3281,12 +3745,12 @@ export async function updateNPCSchedules(): Promise<string[]> {
     
     const src = (characters as any[]).find((c: any) => c.name === name);
     
-    // 优先 override > 群体模板 > 旧 schedule
+    // 优先 override > 群体模板 > 旧 schedule（星期前缀优先）
     let targetRoom: string | null = null;
-    if (npc.scheduleOverrides?.[timeKey]) {
-      targetRoom = npc.scheduleOverrides[timeKey];
-    } else if (src?.schedule_overrides?.[timeKey]) {
-      targetRoom = src.schedule_overrides[timeKey];
+    if (npc.scheduleOverrides?.[dayKey] || npc.scheduleOverrides?.[timeKey]) {
+      targetRoom = npc.scheduleOverrides[dayKey] || npc.scheduleOverrides[timeKey];
+    } else if (src?.schedule_overrides?.[dayKey] || src?.schedule_overrides?.[timeKey]) {
+      targetRoom = src.schedule_overrides[dayKey] || src.schedule_overrides[timeKey];
     }
     
     if (!targetRoom) {
@@ -3303,12 +3767,18 @@ export async function updateNPCSchedules(): Promise<string[]> {
         effectiveGroup = src.schedule_group_by_age[String(best)] || effectiveGroup;
       }
       const tpl = TEMPLATES[effectiveGroup];
-      let routeStr = tpl?.[timeKey];
+      // 优先星期前缀（月_afternoon / 水_afternoon / 金_evening），回退通用 weekday_xxx
+      let routeStr = tpl?.[dayKey] || tpl?.[timeKey];
       if (tpl) {
         const season = getSeason(gameState.time.game_date);
         const wKey = mapChineseWeather(gameState.weather?.type || "晴");
-        if (tpl.weather_overrides?.[wKey]?.[timeKey]) {
+        // weather_overrides/seasonal_overrides 同样优先星期前缀
+        if (tpl.weather_overrides?.[wKey]?.[dayKey]) {
+          routeStr = tpl.weather_overrides[wKey][dayKey];
+        } else if (tpl.weather_overrides?.[wKey]?.[timeKey]) {
           routeStr = tpl.weather_overrides[wKey][timeKey];
+        } else if (tpl.seasonal_overrides?.[season]?.[dayKey]) {
+          routeStr = tpl.seasonal_overrides[season][dayKey];
         } else if (tpl.seasonal_overrides?.[season]?.[timeKey]) {
           routeStr = tpl.seasonal_overrides[season][timeKey];
         }
@@ -3317,8 +3787,13 @@ export async function updateNPCSchedules(): Promise<string[]> {
         const opts = routeStr.split("/");
         targetRoom = opts[Math.floor(Math.random() * opts.length)].trim();
       }
+
+      // 假期/长假覆盖: calendar schedule_override 覆写模板决议结果
+      if (targetRoom && activeOverrides[effectiveGroup]) {
+        targetRoom = activeOverrides[effectiveGroup];
+      }
     }
-    
+
     if (targetRoom === "不在日本") {
       npc.currentRoom = "";
       npc.gridPos = null;
@@ -3331,7 +3806,17 @@ export async function updateNPCSchedules(): Promise<string[]> {
     let resolvedTarget = targetRoom;
     if (targetRoom === "自宅" || targetRoom === "下校") {
       const src = (characters as any[]).find((c: any) => c.name === name);
-      resolvedTarget = (src as any)?.default_location || npc.currentRoom || "";
+      let defaultLoc = (src as any)?.default_location || npc.currentRoom || "";
+      // default_location_by_age: 住址随年龄变化（如 6岁→雪之下邸, 15岁→海浜幕張）
+      if ((src as any)?.default_location_by_age) {
+        const byAge = (src as any).default_location_by_age;
+        const curAge = getNpcCurrentAge(src.base_age || 16);
+        const keys = Object.keys(byAge).map(Number).sort((a, b) => a - b);
+        let best = byAge[String(keys[0])];
+        for (const k of keys) { if (k <= curAge) best = byAge[String(k)]; else break; }
+        defaultLoc = best || defaultLoc;
+      }
+      resolvedTarget = defaultLoc;
     }
 
     let matchedRoom = getRoomKey(resolvedTarget);
@@ -3577,6 +4062,44 @@ export async function updateNPCSchedules(): Promise<string[]> {
   return events;
 }
 
+/** 检查日历中是否有活跃的多日 schedule_override（假期/长假） */
+async function getActiveScheduleOverrides(): Promise<Record<string, string>> {
+  const overrides: Record<string, string> = {};
+  const today = gameState.time.game_date;
+  const year = parseInt(today.split("-")[0]);
+  const mmdd = today.includes("-") ? `${parseInt(today.split("-")[1])}月${parseInt(today.split("-")[2])}日` : today;
+
+  // Parse calendar entries — reuse loadCalendar() from timeline
+  let calendarEntries: any[] = [];
+  try {
+    const { loadCalendar } = await import("./timeline.ts");
+    const all = loadCalendar();
+    calendarEntries = all.filter((e: any) => e.schedule_override && e.duration_days);
+  } catch (e) {
+    console.error("getActiveScheduleOverrides timeline load failed:", e);
+    return overrides;
+  }
+
+  for (const e of calendarEntries) {
+    if (e.year !== null && e.year !== year) continue;
+
+    // Calculate offset: is today within [date, date + duration_days)?
+    const eParts = e.date.split("月");
+    const tParts = mmdd.split("月");
+    const eMonth = parseInt(eParts[0]), eDay = parseInt(eParts[1]);
+    const tMonth = parseInt(tParts[0]), tDay = parseInt(tParts[1]);
+    const offset = (tMonth - eMonth) * 30 + (tDay - eDay);
+
+    if (offset >= 0 && offset < (e.duration_days || 1)) {
+      for (const [group, target] of Object.entries(e.schedule_override)) {
+        overrides[group] = target as string;
+      }
+    }
+  }
+
+  return overrides;
+}
+
 /** P1: 应用日历事件的 org_effects — 为匹配组织的 NPC 自动设 pendingOverride */
 async function applyOrgEffects(): Promise<void> {
   const { getCalendarPhase } = await import("./timeline.ts");
@@ -3677,7 +4200,7 @@ function inferRoleActionForNPC(name: string, npc: NPCRuntimeState): string {
 
 // ── 区域设定自动注入 ──
 
-let _regionContexts: Record<string, { keys: string[]; context: string; social_norms?: string; npc_beauty_ref?: string }> | null = null;
+export let _regionContexts: Record<string, { keys: string[]; context: string; social_norms?: string; npc_beauty_ref?: string }> | null = null;
 
 export function clearRegionContextCache(): void {
   _regionContexts = null;
@@ -4029,6 +4552,87 @@ export function loadActiveWorld(worldName?: string): void {
     roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
     residenceTemplates = loadJSON("residence_templates.json", residenceTemplatesStatic);
     sexProfilesData = loadJSON("sex_profiles.json", null);
+
+    // Step 7: 组织/势力系统数据加载 (纯动态从 orgs/ 扫描，去中心化)
+    if (gameState) {
+      // 保持之前的声望关系不丢失，只更新势力属性
+      gameState.organizations ??= {};
+      
+      const orgsDir = path.resolve(process.cwd(), "worldpacks", world, "orgs");
+      if (fs.existsSync(orgsDir)) {
+        for (const f of fs.readdirSync(orgsDir)) {
+          if (!f.endsWith(".json") || f.startsWith("_")) continue;
+          try {
+            const arr = JSON.parse(fs.readFileSync(path.join(orgsDir, f), "utf-8"));
+            for (const item of (Array.isArray(arr) ? arr : [arr])) {
+              const orgId = item.id || item.org;
+              if (!orgId) continue;
+              
+              gameState.organizations[orgId] = {
+                id: orgId,
+                name: item.name || item.org || orgId,
+                type: item.type || "学校",
+                scale: item.scale || "local",
+                sector: item.sector || "social",
+                parent_org: item.parent_org,
+                wealth: item.wealth ?? 50,
+                influence: item.influence ?? 50,
+                cohesion: item.cohesion ?? 50,
+                public_legitimacy: item.public_legitimacy ?? 50,
+                coreLocation: item.coreLocation || "",
+                territoryRoomKeys: item.territoryRoomKeys || [],
+                class_base: item.class_base || {},
+                organizationalAxes: item.organizationalAxes || { "经济立场": 0, "政治立场": 0 },
+                goals: item.goals || { macroGoal: "", currentPhaseGoal: "" },
+                leader: item.leader || "",
+                members: item.members || [],
+                relations: item.relations || {},
+                match_rules: item.match_rules || {},
+                entries: item.entries || []
+              };
+            }
+          } catch (e) {
+            console.error(`Failed to load org file: ${f}`, e);
+          }
+        }
+      }
+
+      // 重新加载新世界包的天空盒默认值
+      try {
+        const locs = loadWorldpackDirRecursive("locations", "region_contexts.json");
+        let foundDefaults = false;
+        for (const [_, locData] of Object.entries(locs)) {
+          if (locData && (locData as any).skybox_defaults) {
+            gameState.worldState = {
+              tech: 0,
+              stability: 0,
+              tension: 0,
+              prosperity: 0,
+              regime: "未知体制",
+              economy_type: "未知经济型",
+              diplomacy_stance: "未知外交立场",
+              globalFlags: {},
+              ...(gameState.worldState || {}),
+              ...(locData as any).skybox_defaults
+            };
+            foundDefaults = true;
+            break;
+          }
+        }
+        if (!foundDefaults) {
+          gameState.worldState = {
+            tech: 0,
+            stability: 0,
+            tension: 0,
+            prosperity: 0,
+            globalFlags: {},
+            ...(gameState.worldState || {})
+          };
+        }
+      } catch (e) {
+        console.error("loadActiveWorld: failed to update worldState from locations", e);
+      }
+    }
 
     // ── 脑裂检测：data/ 比 worldpack 内容多 → 警告 ──
     // 你正在改 data/ 下的文件，但游戏运行时读的是 worldpacks/<world>/。

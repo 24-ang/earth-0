@@ -62,6 +62,8 @@ const ACTION_WHITELIST = [
   "add_memory_tag",
   "add_calendar_event",
   "replay_pov",
+  "create_organization",
+  "lookup_org",
 ];
 
 // ── 公开 API ──
@@ -186,6 +188,8 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "  🎒 物品: use_item, equip_item",
     "  🚗 载具: mount_vehicle, dismount_vehicle",
     "  📋 管理: schedule_override, table_crud, add_memory_tag, add_calendar_event",
+    "  🏛️ 组织/势力: create_organization（动态创建社团/帮派/圈子——引擎数据驱动）, lookup_org（查势力详情，声望决定可见度）",
+    "  🏗️ 地点: create_location（创建新地点并注入skybox属性——繁荣度/稳定度/体制/经济类型/外交立场）",
     "  🆕 新游戏: init_game（仅当玩家明确说「新游戏」「重新开始」——「我是XX」不是新游戏）",
     "  🎬 镜头: create_story_hook（剧情钩子,可带intermission幕间）, replay_pov（同场复述——某句关键台词值得慢镜头重放）",
     "",

@@ -145,9 +145,19 @@ export default {
           "- 拒绝空洞比喻（石子入湖/惊雷）和OO句式（不是xx而是xx、一丝、不易察觉）。",
         ].filter(Boolean).join("\n");
 
+        // Build NPC Agent 今天的生活上下文
+        let todayContext = "";
         try {
+          const { buildTodayContext } = await import("../helpers.ts");
+          todayContext = buildTodayContext(gameState, npcName, npc, src);
+        } catch (e) {
+          console.error("spawn_npc_agents buildTodayContext failed:", e);
+        }
+
+        try {
+          const finalPrompt = todayContext ? prompt + "\n\n" + todayContext : prompt;
           const narrativeModel = await getNpcAgentModel();
-          const response = await generateCompletion(prompt, 512, _ctx, narrativeModel);
+          const response = await generateCompletion(finalPrompt, 512, _ctx, narrativeModel);
           if (!response) return {response: `${npcName}（沉默）`, outfit: ""};
           return {response, outfit: outfit || ""};
         } catch (e) {
@@ -169,6 +179,13 @@ export default {
           gameState._npc_last_responses ??= {};
           gameState._npc_last_responses[filteredNPCs[i].npcName] = text;
           await recordNpcAgentAction(filteredNPCs[i].npcName, text, results[i].outfit || "", gameState.player.location);
+          // 解析 schedule_intent
+          try {
+            const { parseScheduleIntent } = await import("../helpers.ts");
+            await parseScheduleIntent(filteredNPCs[i].npcName, text);
+          } catch (e) {
+            console.error("spawn_npc_agents parseScheduleIntent failed:", e);
+          }
         }
       }
       const text = filteredNPCs.map((n, i) => `[${n.npcName}] ${results[i].response}`).join("\n");

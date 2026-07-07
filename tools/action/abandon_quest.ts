@@ -9,7 +9,7 @@ export default {
     async execute(_id, params, _s, _o, _ctx) {
       const { abandonQuest, getActiveQuests } = await import("../../engine/timeline.ts");
       const { saveState } = await import("../../engine/state.ts");
-      const r = abandonQuest(params.eventId);
+      const r = await abandonQuest(params.eventId);
       saveState();
       return { content: [{ type: "text", text: r || `已放弃: ${params.eventId}` }], details: {} };
     },

@@ -92,5 +92,61 @@
       "type": "flag",
       "flagName": "is_teacher"
     }
+  },
+  {
+    "title": "侍奉部の颜",
+    "condition": {
+      "type": "reputation",
+      "group": "soubu_service_club",
+      "min": 4
+    },
+    "location_filter": [
+      "侍奉部",
+      "総武高"
+    ]
+  },
+  {
+    "title": "学生会の黒幕",
+    "condition": {
+      "type": "reputation",
+      "group": "soubu_student_council",
+      "min": 3
+    }
+  },
+  {
+    "title": "雪之下家の宾客",
+    "condition": {
+      "type": "reputation",
+      "group": "yukinoshita_family",
+      "min": 3
+    }
+  },
+  {
+    "title": "経団連の顔馴染み",
+    "condition": {
+      "type": "reputation",
+      "group": "japan_keidanren",
+      "min": 2
+    }
+  },
+  {
+    "title": "教委会の要注意人物",
+    "condition": {
+      "type": "reputation_max",
+      "group": "soubu_school_board",
+      "max": -2
+    }
+  },
+  {
+    "title": "千叶の顔役",
+    "condition": {
+      "type": "any_reputation",
+      "groups": [
+        "chiba_prefectural_govt",
+        "chiba_shopping_union",
+        "hayama_legal_alliance"
+      ],
+      "min": 3
+    }
   }
 ]

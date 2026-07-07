@@ -3316,6 +3316,7 @@
     "height": 9,
     "cellSize": 1,
     "floor": 2,
+    "controlled_by": "soubu_service_club",
     "atmosphere": "空置教室改造的社团活动室。几张旧桌子拼在一起，地上堆着没拆封的纸箱。窗外的光线很柔和",
     "origin": [
       4,

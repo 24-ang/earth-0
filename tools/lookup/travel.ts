@@ -137,6 +137,18 @@ export default {
         // 同城到达：直接更新位置+网格坐标（不再依赖 complete_travel）
         setPlayerLocation(dest);
         advanceMinutes(gameState.time, minutes);
+
+        // 通勤偶遇检测
+        try {
+          const { detectCommuteEncounter } = await import("../../engine/commute.ts");
+          const encounter = await detectCommuteEncounter(currentLoc, dest, route, minutes, gameState);
+          if (encounter) {
+            gameState._lastCommuteEncounter = encounter;
+          }
+        } catch (e) {
+          console.error("travel: detectCommuteEncounter failed:", e);
+        }
+
         saveState();
 
         const vehicleHint =

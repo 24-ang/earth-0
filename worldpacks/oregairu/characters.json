@@ -267,7 +267,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶市立稻毛小学校",
+    "default_location": "海浜幕張",
     "sex_profile": "雪之下雪乃",
     "anchors": {
       "emotional": "外表冰冷的美人，私下很会撒娇。毒舌是防御也是试探——当她开始用毒舌调情时说明已经信赖你。高好感后争吵在外人看来就是打情骂俏。会逐渐放下戒备做出亲密举动。喝醉变超级黏人。发烧时冰山融化像小猫蜷在怀里。怕热，路痴，不擅长电子机械。反差是核心魅力。",
@@ -346,7 +346,16 @@
         "text": "小学时全班以她太优秀为由孤立她——从此不信任集体。",
         "level": "close"
       }
-    ]
+    ],
+    "default_location_by_age": {
+      "6": "千葉_雪之下邸",
+      "15": "海浜幕張"
+    },
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -2
+    }
   },
   {
     "name": "由比滨结衣",
@@ -516,7 +525,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule": {
       "weekday_morning": "总武高_2年F班",
       "weekday_afternoon": "总武高_侍奉部",
@@ -570,7 +579,12 @@
         "text": "家里养了一只叫萨布雷的萨摩耶。经常去KTV和朋友唱歌。",
         "level": "familiar"
       }
-    ]
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": -1
+    }
   },
   {
     "name": "比企谷八幡",
@@ -662,7 +676,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "schedule": {
       "weekday_morning": "总武高_2年F班",
       "weekday_afternoon": "总武高_侍奉部",
@@ -691,7 +705,12 @@
         "text": "注册了侍奉部，被平冢静以'矫正孤僻性格'为由强制入部。",
         "level": "familiar"
       }
-    ]
+    ],
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -2,
+      "政治立场": -3
+    }
   },
   {
     "name": "喜多川海梦",
@@ -826,7 +845,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "sex_profile": "喜多川海梦",
     "grid_pos": [
       3,
@@ -865,7 +884,12 @@
       "侮辱他人爱好的人",
       "逆来顺受的性格",
       "游泳（不会）"
-    ]
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -2
+    }
   },
   {
     "name": "椎名詩織",
@@ -1063,7 +1087,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "sex_profile": "椎名詩織",
     "anchors": {
       "emotional": "温柔贤惠的完美妻子形象，对外总是带着治愈微笑。但对自己的魅力有清晰认识——在丈夫面前会特意展现大胆一面。稍微有天然呆属性，反差萌十足。",
@@ -1105,6 +1129,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "自由人"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -1169,7 +1198,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "千葉駅前",
     "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
@@ -1181,7 +1210,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 1000
+    "funds": 1000,
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
   },
   {
     "name": "户塚彩加",
@@ -1246,7 +1280,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "西千葉",
     "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
@@ -1258,7 +1292,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 1500
+    "funds": 1500,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "如月真绫",
@@ -1422,7 +1461,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule_group": "总武高学生",
     "schedule_group_by_age": {
       "7": "小学生",
@@ -1446,6 +1485,11 @@
       "12": {
         "hair_style": "中长发"
       }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -1509,7 +1553,7 @@
       }
     },
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule_group": "高校生",
     "grid_pos": null,
     "anchors": {
@@ -1521,7 +1565,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 2000
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "如月翔太",
@@ -1574,6 +1623,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "上班族"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -1626,7 +1680,7 @@
     },
     "equipment": {},
     "inventory": [],
-    "default_location": "千叶_住宅区",
+    "default_location": "稲毛海岸",
     "schedule_group": "自由人",
     "grid_pos": null,
     "anchors": {
@@ -1638,6 +1692,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "自由人"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
     }
   },
   {
@@ -1753,6 +1812,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "自由人"
+    },
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 4,
+      "政治立场": 4
     }
   },
   {
@@ -1913,6 +1977,11 @@
       "12": {
         "hair_style": "中长发"
       }
+    },
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 3,
+      "政治立场": 2
     }
   },
   {
@@ -1964,7 +2033,12 @@
       "15": "高校生",
       "18": "大学生"
     },
-    "funds": 6000
+    "funds": 6000,
+    "social_class": "大资产阶级",
+    "personal_axes": {
+      "经济立场": 4,
+      "政治立场": 3
+    }
   },
   {
     "name": "橘京香",
@@ -2078,6 +2152,11 @@
       "15": "高校生",
       "18": "大学生",
       "22": "上班族"
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 0
     }
   },
   {
@@ -2211,6 +2290,11 @@
       "10": {
         "hair_accessories": ""
       }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -2361,6 +2445,11 @@
       "10": {
         "hair_style": "中长发"
       }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
     }
   },
   {
@@ -2523,7 +2612,12 @@
       "被人比较",
       "被评价",
       "无意义的社交"
-    ]
+    ],
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "浅仓透",
@@ -2693,7 +2787,12 @@
       "一成不变的日常",
       "太复杂的说明",
       "忘记重要的事"
-    ]
+    ],
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "平冢静",
@@ -2871,7 +2970,12 @@
       "18": "大学生",
       "22": "总武高教师"
     },
-    "default_location": "职员室"
+    "default_location": "検見川浜",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -2
+    }
   },
   {
     "name": "式守都",
@@ -2956,7 +3060,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "式守都"
+    "sex_profile": "式守都",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
   },
   {
     "name": "天乃莉莉纱",
@@ -3036,7 +3145,12 @@
     },
     "schedule_group": "高校生",
     "funds": 5000,
-    "sex_profile": "天乃莉莉纱"
+    "sex_profile": "天乃莉莉纱",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "橘美花莉",
@@ -3116,7 +3230,12 @@
     },
     "schedule_group": "高校生",
     "funds": 8000,
-    "sex_profile": "橘美花莉"
+    "sex_profile": "橘美花莉",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "绫濑沙季",
@@ -3192,7 +3311,12 @@
     },
     "schedule_group": "高校生",
     "funds": 4000,
-    "sex_profile": "绫濑沙季"
+    "sex_profile": "绫濑沙季",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "羽生真由梨",
@@ -3272,7 +3396,12 @@
     },
     "schedule_group": "社会人",
     "funds": 15000,
-    "sex_profile": "羽生真由梨"
+    "sex_profile": "羽生真由梨",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "诺诺亚",
@@ -3301,7 +3430,8 @@
         "base_tone": "苍白",
         "tan": 2,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 43
     },
     "attributes": {
       "力量": 2,
@@ -3349,7 +3479,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "诺诺亚"
+    "sex_profile": "诺诺亚",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "喜咲亚理亚",
@@ -3376,7 +3511,8 @@
         "base_tone": "健康小麦",
         "tan": 8,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 42
     },
     "attributes": {
       "力量": 3,
@@ -3424,7 +3560,12 @@
     },
     "schedule_group": "高校生",
     "funds": 2000,
-    "sex_profile": "喜咲亚理亚"
+    "sex_profile": "喜咲亚理亚",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "和泉幽希",
@@ -3449,7 +3590,8 @@
         "base_tone": "普通",
         "tan": 5,
         "texture": "普通"
-      }
+      },
+      "weight_kg": 50
     },
     "attributes": {
       "力量": 2,
@@ -3495,7 +3637,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 2000
+    "funds": 2000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "城廻巡",
@@ -3520,7 +3667,8 @@
         "base_tone": "白皙",
         "tan": 5,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 50
     },
     "attributes": {
       "力量": 3,
@@ -3561,7 +3709,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 5000
+    "funds": 5000,
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
   },
   {
     "name": "户部翔",
@@ -3586,7 +3739,8 @@
         "base_tone": "普通",
         "tan": 8,
         "texture": "普通"
-      }
+      },
+      "weight_kg": 62
     },
     "attributes": {
       "力量": 5,
@@ -3627,7 +3781,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 3000
+    "funds": 3000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 1
+    }
   },
   {
     "name": "折本香织",
@@ -3645,7 +3804,8 @@
         "base_tone": "普通",
         "tan": 8,
         "texture": "普通"
-      }
+      },
+      "weight_kg": 48
     },
     "attributes": {
       "力量": 3,
@@ -3682,7 +3842,12 @@
       "18": "大学生"
     },
     "schedule_group": "高校生",
-    "funds": 3000
+    "funds": 3000,
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 1
+    }
   },
   {
     "name": "黑川茜",
@@ -3702,7 +3867,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 47
     },
     "attributes": {
       "力量": 3,
@@ -3750,7 +3916,12 @@
     },
     "schedule_group": "高校生",
     "funds": 5000,
-    "sex_profile": "黑川茜"
+    "sex_profile": "黑川茜",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
   },
   {
     "name": "星野瑠美衣",
@@ -3770,7 +3941,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 44
     },
     "attributes": {
       "力量": 3,
@@ -3820,7 +3992,12 @@
     },
     "schedule_group": "高校生",
     "funds": 8000,
-    "sex_profile": "星野瑠美衣"
+    "sex_profile": "星野瑠美衣",
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -2,
+      "政治立场": -1
+    }
   },
   {
     "name": "矶野上多绪",
@@ -3888,7 +4065,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "矶野上多绪"
+    "sex_profile": "矶野上多绪",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "寻峰洋子",
@@ -3955,7 +4137,12 @@
     },
     "schedule_group": "高校生",
     "funds": 4000,
-    "sex_profile": "寻峰洋子"
+    "sex_profile": "寻峰洋子",
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "宝多六花",
@@ -4023,7 +4210,12 @@
     },
     "schedule_group": "高校生",
     "funds": 4000,
-    "sex_profile": "宝多六花"
+    "sex_profile": "宝多六花",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   },
   {
     "name": "南梦芽",
@@ -4042,7 +4234,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 51
     },
     "attributes": {
       "力量": 4,
@@ -4089,7 +4282,12 @@
     },
     "schedule_group": "高校生",
     "funds": 3000,
-    "sex_profile": "南梦芽"
+    "sex_profile": "南梦芽",
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
   },
   {
     "name": "樱岛麻衣",
@@ -4109,7 +4307,8 @@
         "base_tone": "白皙",
         "tan": 2,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 49
     },
     "attributes": {
       "力量": 3,
@@ -4156,7 +4355,12 @@
     },
     "schedule_group": "高校生",
     "funds": 20000,
-    "sex_profile": "樱岛麻衣"
+    "sex_profile": "樱岛麻衣",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "高木",
@@ -4175,7 +4379,8 @@
         "base_tone": "普通",
         "tan": 5,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 42
     },
     "attributes": {
       "力量": 2,
@@ -4220,7 +4425,12 @@
     },
     "schedule_group": "中学生",
     "funds": 1500,
-    "sex_profile": "高木"
+    "sex_profile": "高木",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "指宿凛凛澄",
@@ -4239,7 +4449,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 47
     },
     "attributes": {
       "力量": 4,
@@ -4283,7 +4494,12 @@
     },
     "schedule_group": "高校生",
     "funds": 5000,
-    "sex_profile": "指宿凛凛澄"
+    "sex_profile": "指宿凛凛澄",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "不知火舞",
@@ -4304,7 +4520,8 @@
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
-      }
+      },
+      "weight_kg": 55
     },
     "attributes": {
       "力量": 8,
@@ -4374,7 +4591,12 @@
       }
     ],
     "funds": 10000,
-    "sex_profile": "不知火舞"
+    "sex_profile": "不知火舞",
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
   },
   {
     "name": "材木座义辉",
@@ -4479,7 +4701,7 @@
         "state": "intact"
       }
     ],
-    "default_location": "千叶_住宅区",
+    "default_location": "蘇我",
     "schedule": {
       "weekday_morning": "总武高_2年C班",
       "weekday_afternoon": "总武高_游戏部",
@@ -4526,6 +4748,11 @@
         "text": "材木座关于写作是认真的。浮夸的中二病台词和战国武将架势是他面对真实世界时的铠甲。摘下眼镜坐在电脑前时只是个害怕失败的高中生。",
         "level": "industry"
       }
-    ]
+    ],
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": -1
+    }
   }
 ]

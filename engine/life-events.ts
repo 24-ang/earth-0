@@ -8,7 +8,7 @@
  */
 
 import type { LifeEvent, IllnessState, PregnancyState } from "./types.ts";
-import { gameState, getOrCreateNPC, saveState } from "./state.ts";
+import { gameState, getOrCreateNPC, saveState, registerDynamicCharacter } from "./state.ts";
 import { injectDynamicEvent, removeDynamicEvent, currentDay } from "./timeline.ts";
 
 /** 每回合调用：推进所有 NPC 的人生事件 */
@@ -144,11 +144,149 @@ function tickPregnancy(npcName: string, ev: LifeEvent, day: number): void {
         urgency: "high",
       },
     });
-    // 清除人生事件 + pendingOverride
+    // Clean up pregnancy event and pendingOverride
     npc.pendingOverride = null;
     npc.lifeEvents = (npc.lifeEvents || []).filter(e => e.id !== ev.id);
+    
+    // Trigger child birth registration and hydration
+    try {
+      const childName = triggerBirth(npcName, data.father);
+      console.log(`tickPregnancy: ${npcName} successfully gave birth to ${childName}`);
+    } catch (e) {
+      console.error(`tickPregnancy: ${npcName} child birth registration failed`, e);
+    }
     saveState();
   }
+}
+
+/** 触发婴儿出生注册与遗传算法 */
+export function triggerBirth(motherName: string, fatherName: string, nameConfig?: {
+  surnames?: string[];
+  maleNames?: string[];
+  femaleNames?: string[];
+}): string {
+  const mother = getOrCreateNPC(motherName);
+
+  // Resolve father state
+  let father: any = null;
+  if (fatherName === gameState.player.name) {
+    father = gameState.player;
+  } else {
+    father = getOrCreateNPC(fatherName);
+  }
+
+  // Determine child's gender (50% male/female)
+  const isFemale = Math.random() < 0.5;
+  const gender = isFemale ? "female" : "male";
+
+  // Surname extraction: try config list first, then derive from father name
+  const surnames = nameConfig?.surnames || [];
+  let surname = "";
+  for (const s of surnames) {
+    if (fatherName.startsWith(s)) { surname = s; break; }
+  }
+  if (!surname) {
+    // Generic fallback: take first 1-2 chars of father's name
+    surname = fatherName.length >= 2 ? fatherName.slice(0, 2) : fatherName;
+  }
+
+  // Choose first name from config or use generic fallback
+  const maleNames = nameConfig?.maleNames || [];
+  const femaleNames = nameConfig?.femaleNames || [];
+
+  // Generic fallback names (not tied to any specific worldpack)
+  const fallbackMale = ["太朗", "大介", "健太", "阳翔", "大翔"];
+  const fallbackFemale = ["樱", "花", "美咲", "葵", "阳菜"];
+
+  const mNames = maleNames.length > 0 ? maleNames : fallbackMale;
+  const fNames = femaleNames.length > 0 ? femaleNames : fallbackFemale;
+  const firstName = isFemale
+    ? fNames[Math.floor(Math.random() * fNames.length)]
+    : mNames[Math.floor(Math.random() * mNames.length)];
+  const childName = `${surname}${firstName}`;
+
+  // Averaging & mutation for attributes
+  const childAttributes: Record<string, number> = {};
+  const attrKeys = ["力量", "敏捷", "体质", "智力", "感知", "魅力", "幸运"];
+  for (const k of attrKeys) {
+    const mVal = mother.attributes[k] ?? 10;
+    const fVal = father.attributes[k] ?? 10;
+    const avg = (mVal + fVal) / 2;
+    // Mutation [-1, +2]
+    const mutation = Math.floor(Math.random() * 4) - 1; // -1, 0, 1, 2
+    childAttributes[k] = Math.max(3, Math.min(18, Math.round(avg + mutation)));
+  }
+
+  // Register child as a dynamic character
+  registerDynamicCharacter(childName, {
+    gender,
+    base_age: 0, // baby
+    appearance_brief: `${surname}家新生儿，长相可爱稚嫩。`,
+    attributes: childAttributes,
+    default_location: mother.currentRoom || "千叶_住宅区",
+    schedule_group: "自由人"
+  });
+
+  // Hydrate child as an NPC in gameState.npcs
+  gameState.npcs[childName] = {
+    name: childName,
+    gender,
+    age: 0,
+    currentRoom: mother.currentRoom || "千叶_住宅区",
+    gridPos: mother.gridPos ? [...mother.gridPos] : null,
+    attributes: childAttributes,
+    skills: {},
+    abilities: {},
+    hp: { current: 10, max: 10 },
+    equipment: {},
+    inventory: [],
+    wounds: [],
+    funds: 0,
+    alive: true,
+    fatigue: 0,
+    action: "熟睡中",
+    known_locations: [mother.currentRoom || "千叶_住宅区"],
+    npcRelationships: {
+      [motherName]: { stage: "亲子", affection: 100, tone: "和", notes: "母亲" },
+      [fatherName]: { stage: "亲子", affection: 100, tone: "和", notes: "父亲" }
+    }
+  } as any;
+
+  // Add mutual relationship from mother to child
+  mother.npcRelationships ??= {};
+  mother.npcRelationships[childName] = {
+    stage: "亲子",
+    affection: 100,
+    tone: "和",
+    notes: "孩子",
+    romance: null,
+    history: []
+  } as any;
+
+  // Add mutual relationship from father to child
+  if (fatherName === gameState.player.name) {
+    gameState.player.relationships ??= {};
+    gameState.player.relationships[childName] = {
+      stage: "亲子",
+      affection: 100,
+      notes: "孩子",
+      romance: null,
+      history: []
+    } as any;
+  } else {
+    father.npcRelationships ??= {};
+    father.npcRelationships[childName] = {
+      stage: "亲子",
+      affection: 100,
+      tone: "和",
+      notes: "孩子",
+      romance: null,
+      history: []
+    } as any;
+  }
+
+  saveState();
+  return childName;
 }
 
 /** GM/引擎设一个 NPC 人生事件 */

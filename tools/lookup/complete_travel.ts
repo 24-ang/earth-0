@@ -15,7 +15,19 @@ export default {
 
       await moveTo(pt.to, _ctx, gameState, saveState);
       await advanceTimeMinutes(pt.minutes, _ctx, gameState, saveState);
-      
+
+      // 通勤偶遇检测
+      try {
+        const { detectCommuteEncounter } = await import("../../engine/commute.ts");
+        const encounter = await detectCommuteEncounter(pt.from, pt.to, pt.route || "步行", pt.minutes, gameState);
+        if (encounter) {
+          gameState._lastCommuteEncounter = encounter;
+          saveState();
+        }
+      } catch (e) {
+        console.error("complete_travel: detectCommuteEncounter failed:", e);
+      }
+
       return { content: [{ type: "text", text: `旅行完成，已到达 ${pt.to}，耗时 ${pt.minutes} 分钟` }], details: {} };
     },
   };

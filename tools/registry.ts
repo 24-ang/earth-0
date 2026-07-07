@@ -84,8 +84,17 @@ import restockShopTool from "./action/restock_shop.ts";
 import useAbilityTool from "./action/use_ability.ts";
 import debugSexHeatTool from "./action/debug_sex_heat.ts";
 import spawnTempNpcTool from "./action/spawn_temp_npc.ts";
+import directPartyMemberTool from "./action/direct_party_member.ts";
+import switchCharacterTool from "./action/switch_character.ts";
 import replayPovTool from "./action/replay_pov.ts";
+import takeContraceptivePillTool from "./action/take_contraceptive_pill.ts";
+import performAbortionTool from "./action/perform_abortion.ts";
+import socialCheckTool from "./action/social_check.ts";
 import lookupAbilityTool from "./lookup/lookup_ability.ts";
+import lookupOrgTool from "./lookup/lookup_org.ts";
+import startBroadcastTool from "./action/start_broadcast.ts";
+import endBroadcastTool from "./action/end_broadcast.ts";
+import createOrganizationTool from "./action/create_organization.ts";
 import gambleCommand from "./tui/gamble.ts";
 import housingCommand from "./tui/housing.ts";
 import relationsCommand from "./tui/relations.ts";
@@ -161,7 +170,7 @@ export function registerAll(pi: ExtensionAPI) {
   const lookupTools = [
     lookupRegionTool, diceRollTool, createLocationTool, lookupLoreTool,
     lookupVillainTool, checkPhoneTool, browseSnsTool, lookupWeatherTool, lookupFurnitureTool,
-    lookupAbilityTool, postSnsTool, sendSmsTool, makeCallTool,
+    lookupAbilityTool, postSnsTool, sendSmsTool, makeCallTool, lookupOrgTool,
   ];
   for (const t of lookupTools) if (t) pi.registerTool(t);
 
@@ -179,10 +188,11 @@ export function registerAll(pi: ExtensionAPI) {
     inflictDamageTool, lookupBodyTool, addMemoryTagTool, setNpcDrivesTool,
     setNpcRelationTool, tableCrudTool, openQuestTool, advanceQuestTool,
     abandonQuestTool, partyManagementTool, addCalendarEventTool, createStoryHookTool, instantiateNpcTool,
-    spawnTempNpcTool, replayPovTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
+    spawnTempNpcTool, directPartyMemberTool, switchCharacterTool, replayPovTool, addLifeEventTool, gambleBetTool, blackMarketTradeTool,
     managePropertyTool, housingStorageTool, interactFurnitureTool, restockShopTool,
-    useAbilityTool,
+    useAbilityTool, takeContraceptivePillTool, performAbortionTool, socialCheckTool,
     travelTool, // P2: 统一旅行（合并 go_to_location + travel_intercity + complete_travel）
+    startBroadcastTool, endBroadcastTool, createOrganizationTool,
     // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
     moveTool, moveToTool, boardTrainTool, completeTravelTool, goToLocationTool,
     sendSmsTool, postSnsTool, makeCallTool, travelIntercityTool,

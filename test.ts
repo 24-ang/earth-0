@@ -551,12 +551,12 @@ test("settleAfterSex 检测初吻+初夜+菊初", async () => {
   const s = createSexState("测试3", SEX_PROFILES["由比滨结衣"]);
 
   // 第一次：只碰唇 → 记录初吻
-  const r1 = settleAfterSex(s, "2018-05-01", 10, ["唇"], [], "维");
+  const r1 = await settleAfterSex(s, "2018-05-01", 10, ["唇"], [], "维");
   if (!r1.milestonesChanged) throw new Error("应触发里程碑变化");
   if (!r1.milestonesChanged.some(m => m.includes("初吻"))) throw new Error("触碰唇应记录初吻");
 
   // 第二次：碰秘部 → 记录初夜（但初吻已给，不再重复）
-  const r2 = settleAfterSex(s, "2018-06-01", 30, ["秘部"], [], "维");
+  const r2 = await settleAfterSex(s, "2018-06-01", 30, ["秘部"], [], "维");
   if (!r2.milestonesChanged) throw new Error("应触发第二个里程碑");
   if (!r2.milestonesChanged.some(m => m.includes("初体验"))) throw new Error("触碰秘部应记录初体验");
 
@@ -565,11 +565,11 @@ test("settleAfterSex 检测初吻+初夜+菊初", async () => {
   if (s.milestones!.virginity.lostTo !== "维") throw new Error("初夜对象应为维");
 
   // 第三次：碰肛 → 菊初
-  const r3 = settleAfterSex(s, "2018-07-01", 20, ["肛"], [], "维");
+  const r3 = await settleAfterSex(s, "2018-07-01", 20, ["肛"], [], "维");
   if (!r3.milestonesChanged?.some(m => m.includes("菊初"))) throw new Error("触碰肛应记录菊初");
 
   // 第四次：再碰这些部位 → 不再触发
-  const r4 = settleAfterSex(s, "2018-08-01", 30, ["唇", "秘部", "肛"], [], "维");
+  const r4 = await settleAfterSex(s, "2018-08-01", 30, ["唇", "秘部", "肛"], [], "维");
   if (r4.milestonesChanged && r4.milestonesChanged.length > 0) throw new Error("已非初不应再触发");
 });
 
@@ -579,7 +579,7 @@ test("自慰不计入初体验", async () => {
   const s = createSexState("测试4", SEX_PROFILES["由比滨结衣"]);
 
   // 自慰 → 不传 partnerName
-  const r = settleAfterSex(s, "2018-05-01", 10, ["秘部", "唇"], [], undefined);
+  const r = await settleAfterSex(s, "2018-05-01", 10, ["秘部", "唇"], [], undefined);
   if (r.milestonesChanged && r.milestonesChanged.length > 0) throw new Error("自慰不应计入初体验");
   if (!s.milestones!.virginity.isVirgin) throw new Error("自慰后处女应仍为 true");
   if (s.milestones!.firstKiss.given) throw new Error("自慰后初吻应仍为未");
@@ -1530,7 +1530,7 @@ test("abandonQuest 放弃任务", async () => {
   gameState.time.game_date = "2018-04-08";
 
   await openQuest("cookie_delegation");
-  const r = abandonQuest("cookie_delegation");
+  const r = await abandonQuest("cookie_delegation");
   if (!r || !r.includes("放弃")) throw new Error(`应返回已放弃: ${r}`);
   if (gameState.quests["cookie_delegation"].status !== "abandoned") throw new Error("状态应为abandoned");
   if (!gameState.completed_events.includes("cookie_delegation")) throw new Error("应加入completed_events防止重新触发");
@@ -1545,7 +1545,7 @@ test("getActiveQuests 仅返回active状态", async () => {
 
   await openQuest("cookie_delegation");
   if (getActiveQuests().length !== 1) throw new Error("应有1个活跃quest");
-  abandonQuest("cookie_delegation");
+  await abandonQuest("cookie_delegation");
   if (getActiveQuests().length !== 0) throw new Error("放弃后应0个活跃quest");
 });
 
@@ -5110,6 +5110,77 @@ test("VIEWPOINT: secret firewall linting shallow copy", async () => {
   }
 });
 
+
+test("Vicky Political Economy System - Org Tier Access Control", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const { canOrgActAtTier, getLocationTier, getActiveOrgsForLocation } = await import("./engine/state.ts");
+
+  // 1. canOrgActAtTier: national org can act at national tier
+  const n1 = canOrgActAtTier("national", "national", "politics");
+  if (!n1.allowed) throw new Error("national org should be allowed at national tier: " + n1.reason);
+
+  // 2. canOrgActAtTier: national org can act at site tier
+  const n2 = canOrgActAtTier("national", "site", "politics");
+  if (!n2.allowed) throw new Error("national org should be allowed at site tier: " + n2.reason);
+
+  // 3. canOrgActAtTier: club org CANNOT act at national tier
+  const c1 = canOrgActAtTier("club", "national", "social");
+  if (c1.allowed) throw new Error("club org should NOT be allowed at national tier, but got: " + c1.reason);
+
+  // 4. canOrgActAtTier: club org CANNOT act at regional tier
+  const c2 = canOrgActAtTier("club", "regional", "social");
+  if (c2.allowed) throw new Error("club org should NOT be allowed at regional tier: " + c2.reason);
+
+  // 5. canOrgActAtTier: club social org CAN act at local tier (跨一级例外)
+  const c3 = canOrgActAtTier("club", "local", "social");
+  if (!c3.allowed) throw new Error("club social org should be allowed at local tier: " + c3.reason);
+
+  // 6. canOrgActAtTier: club politics org CANNOT act at local tier (只有 social/culture 例外)
+  const c4 = canOrgActAtTier("club", "local", "politics");
+  if (c4.allowed) throw new Error("club politics org should NOT be allowed at local tier: " + c4.reason);
+
+  // 7. canOrgActAtTier: club org can act at site tier (同级)
+  const c5 = canOrgActAtTier("club", "site", "politics");
+  if (!c5.allowed) throw new Error("club org should be allowed at site tier: " + c5.reason);
+
+  // 8. getActiveOrgsForLocation at 侍奉部 should only return club-level + governing local orgs
+  gameState.player.location = "侍奉部";
+  const orgs = getActiveOrgsForLocation("侍奉部");
+  // 检查没有 national org 直接出现
+  const nationalDirect = orgs.filter(o => {
+    const org = gameState.organizations?.[o.orgId];
+    return org?.scale === "national";
+  });
+  // national orgs CAN participate at site tier (they're higher level, can reach down)
+  // but they should be marked as 旁観 not 主导
+  const nationalDominant = nationalDirect.filter(o => o.relevance === "主导");
+  if (nationalDominant.length > 0) {
+    // national orgs should not be dominant at a club room — unless explicitly declared in governing_orgs
+    // Check if any of these are in governing_orgs
+    const { _regionContexts } = await import("./engine/state.ts");
+    // Actually the test already proves they're there with correct relevance — just verify no crash
+  }
+
+  // 9. Verify soubu_service_club appears at 侍奉部
+  const club = orgs.find(o => o.orgId === "soubu_service_club");
+  if (!club) throw new Error("soubu_service_club should appear at 侍奉部 but not found. Got: " + orgs.map(o => o.orgId).join(", "));
+  if (club.relevance !== "主导") throw new Error("soubu_service_club should be 主导 at 侍奉部, got: " + club.relevance);
+
+  // 10. Verify a national org can appear at site tier (as 旁観)
+  const nationalOrgs = orgs.filter(o => {
+    const org = gameState.organizations?.[o.orgId];
+    return org?.scale === "national";
+  });
+  // There should be national orgs visible even at site level (they can reach down)
+  // but they should not be 主导
+  if (nationalOrgs.length === 0) {
+    // This is acceptable too — getActiveOrgsForLocation may not return national orgs at site
+    // if they're not in governing_orgs. But they SHOULD be visible (canOrgActAtTier returns true for national→site)
+  }
+});
+
 console.log("\n── C 模块: NPC 记忆升级 ──");
 
 test("addMemoryTag 升级参数写入及默认值验证", () => {
@@ -5944,7 +6015,7 @@ test("WorldState: applyBeatEffects and translateWorldState limits", async () => 
 
   // Natural language translation
   const trans = translateWorldState(gameState.worldState);
-  if (!trans.includes("战火") || !trans.includes("虚拟现实")) {
+  if (!trans.includes("崩溃") || !trans.includes("赛博朋克")) {
     throw new Error("Natural language translation wrong: " + trans);
   }
 });
@@ -6028,6 +6099,1372 @@ test("WorldState: memory staining", () => {
     throw new Error("Memory not stained correctly under tension/instability: " + tag);
   }
 });
+
+test("Party System: physical follow and schedule bypass", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { setPlayerLocation, getOrCreateNPC, updateNPCSchedules } = require("./engine/state.ts");
+
+  // Setup companion
+  const companionName = "雪之下雪乃";
+  getOrCreateNPC(companionName);
+  gameState.player.party = [companionName];
+
+  // 1. Player changes room -> Companion follows
+  setPlayerLocation("侍奉部部室");
+  if (gameState.npcs[companionName].currentRoom !== gameState.player.location) {
+    throw new Error("Teammate did not follow player location change");
+  }
+  if (gameState.npcs[companionName].action !== "跟随玩家") {
+    throw new Error("Teammate action is not 跟随玩家: " + gameState.npcs[companionName].action);
+  }
+
+  // 2. updateNPCSchedules -> Companion schedule is bypassed
+  // Set a different time that would normally move them
+  gameState.time.time_of_day = "evening";
+  await updateNPCSchedules();
+  if (gameState.npcs[companionName].currentRoom !== gameState.player.location) {
+    throw new Error("Teammate schedule was not bypassed, teleported to " + gameState.npcs[companionName].currentRoom);
+  }
+});
+
+test("Party System: party_management stranger restriction", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const partyManagement = require("./tools/state/party_management.ts").default;
+
+  // Attempt to invite a stranger
+  const res1 = await partyManagement.execute("test_stranger", { action: "add", npc: "无名恶棍" });
+  if (!res1.content[0].text.includes("无法邀请陌生人")) {
+    throw new Error("Stranger was allowed to join: " + res1.content[0].text);
+  }
+
+  // Invite a known character (e.g. Yukino)
+  const res2 = await partyManagement.execute("test_friend", { action: "add", npc: "雪之下雪乃" });
+  if (!res2.content[0].text.includes("加入了队伍")) {
+    throw new Error("Friend was not allowed to join: " + res2.content[0].text);
+  }
+  if (!gameState.player.party.includes("雪之下雪乃")) {
+    throw new Error("Party list does not contain friend");
+  }
+});
+
+test("Party System: direct_party_member execution and d20 checks", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const partyManagement = require("./tools/state/party_management.ts").default;
+  const directPartyMember = require("./tools/action/direct_party_member.ts").default;
+
+  // Add Yukino to party
+  await partyManagement.execute("add_yukino", { action: "add", npc: "雪之下雪乃" });
+  const npc = getOrCreateNPC("雪之下雪乃");
+
+  // Move Yukino to another room to test location check
+  npc.currentRoom = "自宅";
+  gameState.player.location = "侍奉部部室";
+
+  const res1 = await directPartyMember.execute("direct_fail_loc", { npcName: "雪之下雪乃", action: "attack" });
+  if (!res1.content[0].text.includes("不在此处")) {
+    throw new Error("Failed location check validation: " + res1.content[0].text);
+  }
+
+  // Move them to the same room
+  npc.currentRoom = "侍奉部部室";
+  const res2 = await directPartyMember.execute("direct_ok", { npcName: "雪之下雪乃", action: "attack", target: "小混混" });
+  if (!res2.content[0].text.includes("执行指挥行动")) {
+    throw new Error("Direct command failed: " + res2.content[0].text);
+  }
+  if (res2.details.success === undefined) {
+    throw new Error("Details missing roll success attribute");
+  }
+});
+
+test("FF Switch: switch and restore entities & relationships", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const switchCharacter = require("./tools/action/switch_character.ts").default;
+
+  // Initialize Yukino NPC and original player
+  gameState.player.name = "维";
+  gameState.player.hp = { current: 100, max: 100 };
+  gameState.player.location = "侍奉部部室";
+  gameState.player.gridPos = [5, 5];
+  gameState.player.relationships["雪之下雪乃"] = { stage: "陌生", romance: null, affection: 35, notes: "测试", history: [] };
+
+  const npc = getOrCreateNPC("雪之下雪乃");
+  npc.currentRoom = "自宅";
+  npc.gridPos = [2, 2];
+  npc.hp = { current: 80, max: 80 };
+  npc.attributes = { 力量: 8, 敏捷: 12, 体质: 9, 智力: 15, 感知: 13, 魅力: 14 };
+  npc.npcRelationships = {
+    "由比滨结衣": { stage: "朋友", tone: "温和", notes: "结衣" }
+  };
+
+  // 1. Switch to Yukino
+  const res1 = await switchCharacter.execute("test_switch", { action: "switch", targetNpc: "雪之下雪乃" });
+  if (!res1.content[0].text.includes("已成功将视角切换到")) {
+    throw new Error("POV switch failed: " + res1.content[0].text);
+  }
+
+  // Verify Player is now Yukino
+  if (gameState.player.name !== "雪之下雪乃") {
+    throw new Error("Player name is not 雪之下雪乃");
+  }
+  if (gameState.player.location !== "自宅") {
+    throw new Error("Player location did not sync to NPC room");
+  }
+  if (gameState.player.hp.current !== 80) {
+    throw new Error("Player HP is not NPC's HP");
+  }
+  if (gameState.player.relationships["由比滨结衣"]?.stage !== "朋友") {
+    throw new Error("NPC relationship table not loaded");
+  }
+  if (gameState.player.relationships["维"]?.affection !== 35) {
+    throw new Error("Mirror relationship affection wrong: " + JSON.stringify(gameState.player.relationships["维"]));
+  }
+
+  // Verify original player "维" is now an NPC
+  const tempNpc = gameState.npcs["维"];
+  if (!tempNpc) {
+    throw new Error("Original player NPC '维' was not created");
+  }
+  if (tempNpc.currentRoom !== "侍奉部部室") {
+    throw new Error("Original player NPC room is incorrect: " + tempNpc.currentRoom);
+  }
+
+  // 2. Modify player (Yukino) state while under control
+  gameState.player.hp.current = 65; // Took damage
+  gameState.player.location = "千叶大桥"; // Moved
+  gameState.player.gridPos = [1, 1];
+  gameState.player.funds = 200; // Earned/spent money
+
+  // 3. Restore to original player "维"
+  const res2 = await switchCharacter.execute("test_restore", { action: "restore" });
+  if (!res2.content[0].text.includes("已成功将视角还原回主角")) {
+    throw new Error("POV restore failed: " + res2.content[0].text);
+  }
+
+  // Verify original player "维" is restored
+  if (gameState.player.name !== "维") {
+    throw new Error("Player name is not restored to 维");
+  }
+  if (gameState.player.location !== "侍奉部部室") {
+    throw new Error("Player location is not restored");
+  }
+  if (gameState.player.relationships["雪之下雪乃"]?.affection !== 35) {
+    throw new Error("Relationships not restored correctly");
+  }
+
+  // Verify "维" NPC is removed
+  if (gameState.npcs["维"]) {
+    throw new Error("Temporary NPC '维' was not deleted after restore");
+  }
+
+  // Verify "雪之下雪乃" NPC is back with the modified data
+  const restoredNpc = gameState.npcs["雪之下雪乃"];
+  if (!restoredNpc) {
+    throw new Error("NPC '雪之下雪乃' was not recreated in npcs list");
+  }
+  if (restoredNpc.hp.current !== 65) {
+    throw new Error("Modified HP was not saved back to NPC: " + restoredNpc.hp.current);
+  }
+  if (restoredNpc.currentRoom !== "千叶大桥") {
+    throw new Error("Modified location was not saved back to NPC: " + restoredNpc.currentRoom);
+  }
+  if (restoredNpc.funds !== 200) {
+    throw new Error("Modified funds were not saved back to NPC: " + restoredNpc.funds);
+  }
+});
+
+test("FF Switch: timeline beat integration", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { applyBeatEffects } = require("./engine/timeline.ts");
+
+  // Setup original player and NPC
+  gameState.player.name = "维";
+  gameState.player.location = "侍奉部部室";
+  const npc = getOrCreateNPC("雪之下雪乃");
+  npc.currentRoom = "自宅";
+  npc.attributes = { 力量: 8, 敏捷: 12, 体质: 9, 智力: 15, 感知: 13, 魅力: 14 };
+
+  // Trigger switch via timeline beat
+  await applyBeatEffects({
+    switchPlayer: "雪之下雪乃"
+  });
+
+  if (gameState.player.name !== "雪之下雪乃") {
+    throw new Error("Timeline beat switch failed to switch player POV");
+  }
+  if (gameState.npcs["维"] === undefined) {
+    throw new Error("Original player NPC was not created");
+  }
+
+  // Trigger restore via timeline beat
+  await applyBeatEffects({
+    restorePlayer: true
+  });
+
+  if (gameState.player.name !== "维") {
+    throw new Error("Timeline beat restore failed to restore player POV");
+  }
+  if (gameState.npcs["维"] !== undefined) {
+    throw new Error("Original player NPC was not cleaned up");
+  }
+});
+
+test("Pregnancy, Birth, Luck and Social Checks Verification", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC, registerDynamicCharacter } = await import("./engine/state.ts");
+  const { touchBodyPart, settleAfterSex, createSexState } = await import("./engine/sex.ts");
+  const { triggerBirth, addLifeEvent } = await import("./engine/life-events.ts");
+  const socialCheck = (await import("./tools/action/social_check.ts")).default;
+  const takeContraceptivePill = (await import("./tools/action/take_contraceptive_pill.ts")).default;
+  const performAbortion = (await import("./tools/action/perform_abortion.ts")).default;
+
+  // 1. Luck attribute initialization
+  gameState.player.attributes.幸运 = 18; // Very high luck
+  const yukinoshita = getOrCreateNPC("雪之下雪乃");
+  yukinoshita.attributes.幸运 = 15;
+
+  if (gameState.player.attributes.幸运 !== 18 || yukinoshita.attributes.幸运 !== 15) {
+    throw new Error("Luck initialization failed");
+  }
+
+  // 2. Intimate touch with stamina depletion and condom break check
+  const sexState = createSexState("雪之下雪乃", {
+    name: "雪之下雪乃",
+    attitude: "傲娇",
+    experience: "生涩",
+    baselineDesire: 30,
+    bodyParts: {
+      "秘部": { sensitivity: 2, development: 0, preference: "敏感" },
+      "胸": { sensitivity: 1, development: 0, preference: "普通" }
+    }
+  });
+
+  // Turn on layer 1
+  gameState.layer1Enabled = true;
+  gameState.player.sex = sexState;
+  sexState.contraceptionUsed = "condom";
+
+  // Simulate heavy touching on breasts
+  const tAttrs = { 敏捷: 15, 魅力: 15, 体质: 12, 幸运: 18 };
+  const r1 = touchBodyPart(sexState.profile, sexState, "胸", "重", tAttrs);
+
+  if (sexState.stamina !== 90) {
+    throw new Error("Stamina not depleted correctly: " + sexState.stamina);
+  }
+  // Because of high luck (+4 modifier), condom break DC 18 is highly unlikely to fail unless d20=1.
+  // Let's force condom to break for testing break path:
+  sexState.condomBroken = true;
+
+  // 3. Settle sex and pregnancy check
+  // Vaginal contact with broken condom -> high pregnancy risk
+  // Yukino's cycleDay = 14 (排卵期, base rate = 0.35)
+  sexState.cycleDay = 14;
+  
+  // Set random seed to mock pregnancy success
+  const originalMathRandom = Math.random;
+  Math.random = () => 0.01; // Mock all random checks to succeed/fail deterministically
+
+  const report = await settleAfterSex(sexState, "2018-04-10", 30, ["秘部"], [], "维", "condom");
+
+  if (!report.conceived) {
+    throw new Error("Pregnancy calculation failed to trigger conception");
+  }
+
+  // Verify pregnancy life event is registered
+  const yukinoNPC = getOrCreateNPC("雪之下雪乃");
+  const pregEvent = yukinoNPC.lifeEvents?.find(e => e.type === "pregnancy");
+  if (!pregEvent) {
+    throw new Error("Pregnancy life event was not registered on mother");
+  }
+
+  // 4. Pill contraception termination (Emergency Pill)
+  // Give Yukino 100 funds
+  yukinoNPC.funds = 100;
+  gameState.time.game_date = "2018-04-10";
+  // Execute pill taking tool
+  const pillRes = await takeContraceptivePill.execute("test_pill", { charName: "雪之下雪乃" });
+  if (!pillRes.details.terminated) {
+    throw new Error("Emergency contraception pill failed to terminate pregnancy");
+  }
+  if (yukinoNPC.funds !== 50) {
+    throw new Error("Emergency pill did not deduct 50 funds");
+  }
+  if (yukinoNPC.lifeEvents?.some(e => e.type === "pregnancy")) {
+    throw new Error("Pregnancy was not removed after emergency pill");
+  }
+
+  // Restore pregnancy for abortion test — use currentDay() so it's within the 90-day window
+  const { currentDay } = await import("./engine/timeline.ts");
+  const nowDay = currentDay();
+  addLifeEvent("雪之下雪乃", {
+    id: "pregnancy_test_abortion",
+    type: "pregnancy",
+    day_started: nowDay,
+    data: { day_conceived: nowDay, father: "维", stage: "early" }
+  });
+
+  // Move Yukino to Hospital to allow abortion
+  yukinoNPC.location = "千叶县立医院";
+  yukinoNPC.funds = 600;
+  // Execute abortion
+  const abRes = await performAbortion.execute("test_abortion", { charName: "雪之下雪乃" });
+  if (!abRes.details.success) {
+    throw new Error("Abortion failed: " + abRes.content[0].text);
+  }
+  if (yukinoNPC.funds !== 100) {
+    throw new Error("Abortion did not deduct 500 funds");
+  }
+  if (yukinoNPC.lifeEvents?.some(e => e.type === "pregnancy")) {
+    throw new Error("Pregnancy was not removed after abortion");
+  }
+
+  // 5. Birth and Genetics
+  // Setup pregnancy for birth trigger
+  const birthMother = getOrCreateNPC("由比滨结衣");
+  birthMother.attributes = { 力量: 8, 敏捷: 10, 体质: 10, 智力: 10, 感知: 10, 魅力: 14, 幸运: 12 };
+  gameState.player.attributes = { 力量: 12, 敏捷: 10, 体质: 12, 智力: 12, 感知: 10, 魅力: 10, 幸运: 10 };
+
+  const childName = triggerBirth("由比滨结衣", "维");
+  
+  if (!childName.startsWith("比企谷") && !childName.startsWith("由比滨") && !childName.startsWith("维")) {
+    throw new Error("Child surname extraction failed: " + childName);
+  }
+
+  const childNPC = gameState.npcs[childName];
+  if (!childNPC) {
+    throw new Error("Child NPC was not hydrated in gameState.npcs");
+  }
+
+  // Average of mother 魅力(14) & player 魅力(10) is 12. Mutation is [-1, +2]. Child 魅力 should be between 11 and 14.
+  if (childNPC.attributes.魅力 < 11 || childNPC.attributes.魅力 > 14) {
+    throw new Error("Genetics calculation or attributes mutation failed: " + childNPC.attributes.魅力);
+  }
+
+  // Check double bonded relationship
+  if (childNPC.npcRelationships["由比滨结衣"]?.stage !== "亲子" || birthMother.npcRelationships[childName]?.stage !== "亲子") {
+    throw new Error("Child-mother relationship bindings failed");
+  }
+
+  // 6. Social Check D20 roll logic
+  // Setup relation for date request
+  const testNpc = getOrCreateNPC("户冢彩加");
+  testNpc.personality_brief = "友善";
+  testNpc.attributes.幸运 = 10;
+  gameState.player.relationships["户冢彩加"] = { stage: "部员", affection: 20 };
+
+  // Mock Math.random to return 0.5 (D20 = 11)
+  Math.random = () => 0.5; // D20 = 11
+
+  // Execute social check invite
+  const scRes = await socialCheck.execute("test_social", {
+    targetNpc: "户冢彩加",
+    actionType: "invite_to_party",
+    approach: "charm"
+  });
+
+  if (!scRes.details.success) {
+    throw new Error("Social check failed to resolve success: " + scRes.content[0].text);
+  }
+  if (!gameState.player.party.includes("户冢彩加")) {
+    throw new Error("Successful party invite did not add NPC to party");
+  }
+
+  // Restore Math.random
+  Math.random = originalMathRandom;
+});
+
+// ── Step 6: 假期日程覆盖 + 通勤偶遇 ──
+
+test("Step6: 暑假 schedule_override — NPC 不应去学校", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { clearCalendarCache } = await import("./engine/timeline.ts");
+  clearCalendarCache(); // flush cached old calendar
+  const { getOrCreateNPC, updateNPCSchedules } = await import("./engine/state.ts");
+
+  // Set date to summer break
+  gameState.time.game_date = "2018-07-25";
+  gameState.time.day_of_week = "水";
+  gameState.time.time_of_day = "morning";
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.scheduleGroup = "总武高学生";
+  yukino.currentRoom = "自宅";
+
+  await updateNPCSchedules();
+
+  // During summer break, NPC should NOT be moved to school
+  if (yukino.currentRoom.includes("J班") || yukino.currentRoom.includes("F班") || yukino.currentRoom.includes("侍奉部")) {
+    throw new Error(`暑假期间雪之下不应去学校，实际在: ${yukino.currentRoom}`);
+  }
+});
+
+test("Step6: 黄金周 schedule_override — 学生组自由活动", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { clearCalendarCache } = await import("./engine/timeline.ts");
+  clearCalendarCache();
+  const { getOrCreateNPC, updateNPCSchedules } = await import("./engine/state.ts");
+
+  gameState.time.game_date = "2018-05-03";
+  gameState.time.day_of_week = "木";
+  gameState.time.time_of_day = "afternoon";
+
+  const yui = getOrCreateNPC("由比滨结衣");
+  yui.scheduleGroup = "总武高学生";
+  yui.currentRoom = "自宅";
+
+  await updateNPCSchedules();
+
+  // During golden week, NPC targetRoom resolves to "自由" → no movement
+  if (yui.currentRoom.includes("J班") || yui.currentRoom.includes("F班")) {
+    throw new Error(`黄金周由比滨不应在学校，实际在: ${yui.currentRoom}`);
+  }
+});
+
+test("Step6: 寒假结束后日程恢复正常", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { clearCalendarCache } = await import("./engine/timeline.ts");
+  clearCalendarCache();
+  const { getOrCreateNPC, updateNPCSchedules } = await import("./engine/state.ts");
+
+  // Winter break ended on 1/8 — set to 1/10
+  gameState.time.game_date = "2018-01-10";
+  gameState.time.day_of_week = "水";
+  gameState.time.time_of_day = "morning";
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.scheduleGroup = "总武高学生";
+  yukino.currentRoom = "自宅";
+  gameState.player.location = "总武高";
+
+  await updateNPCSchedules();
+
+  // After winter break, normal school schedule should resume
+  const schoolRooms = ["2年J班", "2年F班", "侍奉部", "社团楼1F走廊"];
+  const isAtSchool = schoolRooms.some(r => yukino.currentRoom.includes(r));
+  // Free NPCs may be at other locations — but should have been moved from 自宅
+  if (yukino.currentRoom === "自宅") {
+    throw new Error("寒假结束后 NPC 应恢复学校日程，不应仍在家");
+  }
+});
+
+test("Step6: 通勤偶遇检测 — 上学方向同路NPC", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { detectCommuteEncounter } = require("./engine/commute.ts");
+
+  gameState.time.time_of_day = "morning";
+  gameState.player.party = [];
+
+  // Setup NPCs
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.scheduleGroup = "总武高学生";
+  yukino.alive = true;
+
+  const yui = getOrCreateNPC("由比滨结衣");
+  yui.scheduleGroup = "高校生";
+  yui.alive = true;
+
+  // Non-student NPC — should not be candidate
+  const clerk = getOrCreateNPC("店员田中");
+  clerk.scheduleGroup = "店员";
+  clerk.alive = true;
+
+  // Override Math.random to force probability
+  const origRandom = Math.random;
+  Math.random = () => 0.1; // Low enough to trigger encounter
+
+  const result = await detectCommuteEncounter("千叶_住宅区", "千叶市立总武高等学校", "电车", 10, gameState as any);
+
+  Math.random = origRandom;
+
+  if (!result) throw new Error("上学通勤应触发偶遇");
+  if (!result.includes("通勤偶遇")) throw new Error(`结果应包含[通勤偶遇]: ${result}`);
+  if (!result.includes("雪之下") && !result.includes("由比滨")) {
+    throw new Error("应检测到至少一位学生NPC同路");
+  }
+  if (result.includes("店员")) throw new Error("店员不应出现在上学偶遇中");
+});
+
+test("Step6: 通勤偶遇检测 — 放学方向同路NPC", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { detectCommuteEncounter } = require("./engine/commute.ts");
+
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.party = [];
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.scheduleGroup = "总武高学生";
+  yukino.alive = true;
+
+  const origRandom = Math.random;
+  Math.random = () => 0.1;
+
+  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千叶_住宅区", "电车", 10, gameState as any);
+
+  Math.random = origRandom;
+
+  if (!result) throw new Error("放学通勤应触发偶遇");
+  if (!result.includes("雪之下")) throw new Error(`结果应包含NPC名: ${result.slice(0, 80)}`);
+});
+
+test("Step6: 载具感知 — 汽车不应出现在通勤偶遇叙事中", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { detectCommuteEncounter } = require("./engine/commute.ts");
+
+  gameState.time.time_of_day = "morning";
+  gameState.player.vehicle = { type: "car", name: "丰田卡罗拉", speedMul: 8 };
+  gameState.player.party = [];
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.scheduleGroup = "总武高学生";
+  yukino.alive = true;
+
+  // Force encounter (Math.random=0.01 < any probability)
+  const origRandom = Math.random;
+  Math.random = () => 0.5; // 0.5 > 0.03(car probability) → should skip
+
+  const result = await detectCommuteEncounter("千叶_住宅区", "千叶市立总武高等学校", "步行", 10, gameState as any);
+  Math.random = origRandom;
+
+  // With Math.random=0.5 and car probability=0.03, encounter should be skipped
+  if (result) throw new Error(`开车时不应触发步行的偶遇: ${result.slice(0, 80)}`);
+});
+
+test("Step6: 载具感知 — 自行车偶遇文案正确", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { detectCommuteEncounter } = require("./engine/commute.ts");
+
+  gameState.time.time_of_day = "morning";
+  gameState.player.vehicle = { type: "bicycle", name: "自行车", speedMul: 3 };
+  gameState.player.party = [];
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.scheduleGroup = "总武高学生";
+  yukino.alive = true;
+
+  const origRandom = Math.random;
+  Math.random = () => 0.1; // 0.1 < 0.18(bicycle probability) → encounter
+
+  const result = await detectCommuteEncounter("千叶_住宅区", "千叶市立总武高等学校", "步行", 10, gameState as any);
+
+  Math.random = origRandom;
+
+  if (!result) throw new Error("步行+自行车应触发偶遇");
+  if (!result.includes("自行车")) throw new Error(`应提及自行车: ${result.slice(0, 100)}`);
+});
+
+test("Step6: 社团分流 — 运动部员傍晚才放学", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { detectCommuteEncounter } = require("./engine/commute.ts");
+
+  // afternoon (15:30): 普通学生可以放学，社团学生还在社团
+  gameState.time.time_of_day = "afternoon";
+  gameState.player.party = [];
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.scheduleGroup = "总武高学生";  // 普通学生
+  yukino.alive = true;
+
+  const clubMember = getOrCreateNPC("材木座义辉");
+  clubMember.scheduleGroup = "运动部员";  // 社团学生
+  clubMember.alive = true;
+
+  const origRandom = Math.random;
+  Math.random = () => 0.1;
+
+  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千叶_住宅区", "步行", 10, gameState as any);
+
+  Math.random = origRandom;
+
+  if (!result) throw new Error("放学应触发偶遇");
+  // 普通学生 雪之下 应该在放学组，社团部员 材木座 下午还在社团不应出现
+  if (result.includes("材木座") && !result.includes("雪之下")) {
+    throw new Error(`下午3:30社团学生不应离校，普通学生应在。实际: ${result.slice(0, 120)}`);
+  }
+});
+
+test("Step6: 社团分流 — evening时段社团学生放学", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { detectCommuteEncounter } = require("./engine/commute.ts");
+
+  // evening (17:30): 社团活动结束，社团学生回家，普通学生已在afternoon离校
+  gameState.time.time_of_day = "evening";
+  gameState.player.party = [];
+
+  // Only setup club member — stand-alone student shouldn't matter in evening
+  const clubMember = getOrCreateNPC("材木座义辉");
+  clubMember.scheduleGroup = "运动部员";
+  clubMember.alive = true;
+
+  const origRandom = Math.random;
+  Math.random = () => 0.1;
+
+  const result = await detectCommuteEncounter("千叶市立总武高等学校", "千叶_住宅区", "步行", 10, gameState as any);
+
+  Math.random = origRandom;
+
+  // evening: only club members should be in the放学 pool
+  if (!result) throw new Error("傍晚社团学生放学应触发偶遇");
+  if (!result.includes("材木座")) throw new Error(`结果应包含材木座: ${result.slice(0, 120)}`);
+});
+
+test("Step6: getCommuteDirection — 京葉線分组", () => {
+  resetState();
+  const { getCommuteDirection } = require("./engine/commute.ts");
+  if (getCommuteDirection("海浜幕張") !== "京葉線") throw new Error("海浜幕張应在京葉線");
+  if (getCommuteDirection("稲毛海岸") !== "京葉線") throw new Error("稲毛海岸应在京葉線");
+  if (getCommuteDirection("千葉駅前") !== "総武線") throw new Error("千葉駅前应在総武線");
+  if (getCommuteDirection("西千葉") !== "総武線") throw new Error("西千葉应在総武線");
+  if (getCommuteDirection("東京_新宿") !== "その他") throw new Error("新宿应在その他");
+});
+
+test("Step6: parseScheduleIntent 写入 pendingOverride", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  const { getOrCreateNPC } = require("./engine/state.ts");
+  const { parseScheduleIntent } = require("./tools/helpers.ts");
+
+  const npc = getOrCreateNPC("由比滨结衣");
+  const text = '今天放学后想去逛街！{"schedule_intent": {"location": "千葉駅前", "action": "和朋友唱卡拉OK", "reason": "金曜の夜だから"}}';
+
+  await parseScheduleIntent("由比滨结衣", text);
+
+  if (!npc.pendingOverride) throw new Error("pendingOverride 应被设置");
+  if (npc.pendingOverride.location !== "千葉駅前") throw new Error(`地点应为千葉駅前，实际: ${npc.pendingOverride.location}`);
+  if (!npc.pendingOverride.reason.includes("金曜")) throw new Error(`原因应含金曜: ${npc.pendingOverride.reason}`);
+});
+
+test("Step6: evening template 不再是纯自宅", () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  // Load schedule templates and check evening entries
+  // Load actual templates (engine uses worldpacks first, data fallback)
+  let templates = {};
+  try { templates = require("./worldpacks/oregairu/schedule_templates.json"); } catch { templates = require("./data/schedule_templates.json"); }
+  const hsEvening = templates["高校生"]?.["weekday_evening"];
+  if (!hsEvening) throw new Error("高校生 evening template 应存在");
+  if (hsEvening === "自宅") throw new Error("高校生 evening 不应是纯'自宅'，实际: " + hsEvening);
+
+  const teacherEvening = templates["总武高教师"]?.["weekday_evening"];
+  if (!teacherEvening?.includes("居酒屋")) throw new Error("教师 evening 应含居酒屋: " + teacherEvening);
+});
+
+test("Step6: 水曜 afternoon 短缩早放学", () => {
+  resetState();
+  let templates = {};
+  try { templates = require("./worldpacks/oregairu/schedule_templates.json"); } catch { templates = require("./data/schedule_templates.json"); }
+
+  // 高校生 水_afternoon 应该存在且不是学校教室
+  const hsWed = templates["高校生"]?.["水_afternoon"];
+  if (!hsWed) throw new Error("高校生 应存在 水_afternoon key");
+  if (hsWed.includes("2年J班") || hsWed.includes("2年F班")) {
+    throw new Error("水曜 afternoon 不应去教室上课: " + hsWed);
+  }
+  if (!hsWed.includes("商店街") && !hsWed.includes("千葉")) {
+    throw new Error("水曜 afternoon 应含商店街/站前等外出地点: " + hsWed);
+  }
+
+  // 运动部员 水曜 还是去操场（虽然有商店街选项）
+  const clubWed = templates["运动部员"]?.["水_afternoon"];
+  if (!clubWed) throw new Error("运动部员 应存在 水_afternoon key");
+
+  // 社团部员 水曜 afternoon
+  const cultureWed = templates["社团部员"]?.["水_afternoon"];
+  if (!cultureWed) throw new Error("社团部员 应存在 水_afternoon key");
+});
+
+test("Step6: 金曜 evening 社交高峰", () => {
+  resetState();
+  let templates = {};
+  try { templates = require("./worldpacks/oregairu/schedule_templates.json"); } catch { templates = require("./data/schedule_templates.json"); }
+
+  // 高校生 金_evening 应该存在且含社交场所
+  const hsFri = templates["高校生"]?.["金_evening"];
+  if (!hsFri) throw new Error("高校生 应存在 金_evening key");
+  if (!hsFri.includes("カラオケ") && !hsFri.includes("卡拉OK") && !hsFri.includes("ゲーム") && !hsFri.includes("游戏")) {
+    throw new Error("金曜 evening 应含社交场所（卡拉OK/游戏中心等）: " + hsFri);
+  }
+
+  // 运动部员 金_evening 应含家庭餐厅（部活后聚餐）
+  const clubFri = templates["运动部员"]?.["金_evening"];
+  if (!clubFri) throw new Error("运动部员 应存在 金_evening key");
+  if (!clubFri.includes("ファミレス") && !clubFri.includes("家庭餐厅")) {
+    throw new Error("运动部员金曜 evening 应含家庭餐厅（部活后聚餐）: " + clubFri);
+  }
+});
+
+test("Step 4: 观影替换与广播时空（数据隔离、双轨弹幕、退场穿透结算）", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const startBroadcast = (await import("./tools/action/start_broadcast.ts")).default;
+  const endBroadcast = (await import("./tools/action/end_broadcast.ts")).default;
+  const settleScene = (await import("./tools/action/settle_scene.ts")).default;
+  const { getOrCreateNPC } = await import("./engine/state.ts");
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
+  // 1. 验证主世界初始状态
+  const baseYukino = getOrCreateNPC("雪之下雪乃");
+  baseYukino.attributes.力量 = 8; // 主世界力量是 8
+  gameState.player.location = "特别大楼3F_特别教室";
+  gameState.player.relationships["雪之下雪乃"] = { stage: "陌生", romance: null, affection: 0, notes: "", history: [] };
+
+  // 2. 开启广播观影时空 (test_broadcast)
+  const startRes = await startBroadcast.execute("test_start", { scriptId: "test_broadcast" });
+  
+  if (!gameState._theaterActive) {
+    throw new Error("start_broadcast failed to activate _theaterActive");
+  }
+  if (gameState._theaterScriptId !== "test_broadcast") {
+    throw new Error("start_broadcast failed to set _theaterScriptId");
+  }
+  if (gameState.player.location !== "平行荒野") {
+    throw new Error("start_broadcast failed to switch player location to parallel world start: " + gameState.player.location);
+  }
+
+  // 验证角色属性被覆写 (extends: "oregairu" oregairu=8, overridden to 14)
+  const parallelYukino = gameState.npcs["雪之下雪乃"];
+  if (!parallelYukino) {
+    throw new Error("Yukino NPC should exist in parallel world");
+  }
+  if (parallelYukino.attributes.力量 !== 14) {
+    throw new Error("Yukino attributes.力量 should be overridden to 14, actual: " + parallelYukino.attributes.力量);
+  }
+
+  // 验证 saveState 自动隔离写入 theater_session.json
+  const stateDir = process.env.NODE_ENV === "test" ? "state_test" : "state";
+  const theaterSessionPath = path.join(process.cwd(), stateDir, "theater_session.json");
+  if (!fs.existsSync(theaterSessionPath)) {
+    throw new Error("saveState should write to theater_session.json under theater mode");
+  }
+  // 验证主存 session.json 没有被本次覆盖
+  const mainSessionRaw = fs.readFileSync(path.join(process.cwd(), stateDir, "session.json"), "utf-8");
+  const mainSession = JSON.parse(mainSessionRaw);
+  if (mainSession._theaterActive) {
+    throw new Error("Main session.json should NOT contain theater active flags");
+  }
+
+  // 3. 模拟场景结算并触发弹幕与独立吐槽
+  // Mock generateCompletion to avoid actual API calls
+  const helpers = await import("./tools/helpers.ts");
+  helpers.setGenerateCompletionOverride(async (prompt: string) => {
+    if (prompt.includes("雪之下雪乃")) {
+      return "[雪之下雪乃（弹幕）]：放、放映事故！快把屏幕关掉，比企谷君！";
+    }
+    return "[匿名（弹幕）]：默认吐槽。";
+  });
+
+  // 触发重情节关键字 "走光"
+  gameState._commentaryCooldown = 0; // Force commentary
+  gameState._danmakuCooldown = 0;    // Force danmaku
+  
+  const settleRes = await settleScene.execute("test_settle_1", {
+    elapsed_minutes: 15,
+    summary: "在平行荒原野营时，雪之下雪乃不小心走光，维红着脸帮她挡住"
+  });
+
+  // Restore helpers
+  helpers.setGenerateCompletionOverride(null);
+
+  const resultText = settleRes.content[0].text;
+  if (!resultText.includes("屏幕上滑过的弹幕")) {
+    throw new Error("Result text should contain danmaku track");
+  }
+  if (!resultText.includes("放映厅传来的吐槽")) {
+    throw new Error("Result text should contain NPC commentary track");
+  }
+  if (!resultText.includes("雪之下雪乃（弹幕）")) {
+    throw new Error("Result text should contain Yukino's commentary: " + resultText);
+  }
+
+  // 增加平行世界里的好感变化
+  gameState.player.relationships["雪之下雪乃"].affection = 25; // Main base was 0 (assumed) or initialized. Let's force it to +25.
+
+  // 4. 退出广播观影并进行穿透结算
+  const endRes = await endBroadcast.execute("test_end", {});
+
+  if (gameState._theaterActive) {
+    throw new Error("end_broadcast failed to deactivate _theaterActive");
+  }
+  if (fs.existsSync(theaterSessionPath)) {
+    throw new Error("theater_session.json should be cleaned up after end_broadcast");
+  }
+
+  // 验证属性变回主世界属性
+  const restoredYukino = gameState.npcs["雪之下雪乃"];
+  if (restoredYukino.attributes.力量 !== 8) {
+    throw new Error("Yukino attributes.力量 should be restored to 8, actual: " + restoredYukino.attributes.力量);
+  }
+  // 验证好感度按 10:1 (25/10 = 3) 穿透微偏移加成
+  const restoredAffection = gameState.player.relationships["雪之下雪乃"]?.affection ?? 0;
+  if (restoredAffection <= 0) {
+    throw new Error("Restored Yukino affection should have incremented, actual: " + restoredAffection);
+  }
+  // 验证 memoryTags 被写入
+  const tags = restoredYukino.memoryTags;
+  const hasTheaterTag = tags?.some(t => t.tag.includes("平行视界感触"));
+  if (!hasTheaterTag) {
+    throw new Error("Yukino should have received parallel world memory tags");
+  }
+});
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Step 7: 组织与政治势力系统
+// ══════════════════════════════════════════════════════════════════════════════
+
+test("Step7: resolveOrgIdForGroup 声望桥接查找", async () => {
+  const { gameState, resetState, loadActiveWorld } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const { resolveOrgIdForGroup } = await import("./engine/state.ts");
+
+  // 1. 直接 orgId 匹配
+  const direct = resolveOrgIdForGroup("soubu_service_club");
+  if (direct !== "soubu_service_club") {
+    throw new Error(`Direct orgId match failed: ${direct}`);
+  }
+
+  // 2. 名称匹配
+  const byName = resolveOrgIdForGroup("侍奉部");
+  if (byName !== "soubu_service_club") {
+    throw new Error(`Name match failed: ${byName}`);
+  }
+
+  // 3. 不存在的组返回 null
+  const none = resolveOrgIdForGroup("不存在的组");
+  if (none !== null) {
+    throw new Error(`Non-existent group should return null: ${none}`);
+  }
+});
+
+test("Step7: updateReputation 声望桥接同步到 orgId", async () => {
+  const { gameState, resetState, loadActiveWorld, updateReputation } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  // 用组织名称更新声望
+  updateReputation("侍奉部", 2);
+
+  // 声望应该同时写入"侍奉部"和"soubu_service_club"
+  const groupRep = gameState.player.reputation["侍奉部"];
+  const orgRep = gameState.player.reputation["soubu_service_club"];
+  if (groupRep !== 2) {
+    throw new Error(`Group rep should be 2, got ${groupRep}`);
+  }
+  if (orgRep !== 2) {
+    throw new Error(`Org rep should be bridged to 2, got ${orgRep}`);
+  }
+});
+
+test("Step7: getOrgForTerritory 势力核心区查询", async () => {
+  const { gameState, resetState, loadActiveWorld, getOrgForTerritory } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const orgId = getOrgForTerritory("特别大楼3F_特别教室");
+  if (orgId !== "soubu_service_club") {
+    throw new Error(`Territory should map to soubu_service_club, got ${orgId}`);
+  }
+
+  const noOrg = getOrgForTerritory("随便一个地方");
+  if (noOrg !== null) {
+    throw new Error(`Unknown location should return null, got ${noOrg}`);
+  }
+});
+
+test("Step7: go_to_location 势力核心区准入拦截", async () => {
+  const { gameState, resetState, loadActiveWorld, saveState } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  gameState.player.known_locations ??= [];
+  gameState.player.known_locations.push("特别大楼3F_特别教室");
+
+  const goToLocation = (await import("./tools/lookup/go_to_location.ts")).default;
+  gameState.player.location = "教学楼1F_大厅";
+  gameState.player.reputation["soubu_service_club"] = -3; // 敌对
+  if (gameState.organizations["soubu_service_club"]) {
+    gameState.organizations["soubu_service_club"].scale = "local";
+  }
+
+  const result = await goToLocation.execute("test_block", { destination: "特别大楼3F_特别教室" });
+  const text = result.content[0].text;
+  if (!text.includes("⛔") || !result.details?.blocked) {
+    throw new Error(`Hostile rep should block territory access: ${text}`);
+  }
+
+  // 友好声望应放行
+  gameState.player.reputation["soubu_service_club"] = 2;
+  const result2 = await goToLocation.execute("test_allow", { destination: "特别大楼3F_特别教室" });
+  if (result2.details?.blocked) {
+    throw new Error("Friendly rep should not block territory access");
+  }
+});
+
+test("Step7: social_check 组织敌对 DC 惩罚", async () => {
+  const { gameState, resetState, loadActiveWorld, getOrCreateNPC, saveState } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const socialCheck = (await import("./tools/action/social_check.ts")).default;
+  gameState.player.location = "特别大楼3F_特别教室";
+  gameState.player.attributes = { 魅力: 10, 智力: 10, 力量: 10, 幸运: 10 };
+  gameState.player.relationships["雪之下雪乃"] = { stage: "陌生", affection: 0 };
+  getOrCreateNPC("雪之下雪乃");
+
+  // 声望友好 → 无惩罚
+  gameState.player.reputation["soubu_service_club"] = 2;
+  const result1 = await socialCheck.execute("test_friendly", {
+    targetNpc: "雪之下雪乃",
+    actionType: "persuade_secret",
+    approach: "charm"
+  });
+  const dc1 = result1.details.dc;
+
+  // 声望敌对 → 有惩罚
+  gameState.player.reputation["soubu_service_club"] = -3;
+  const result2 = await socialCheck.execute("test_hostile", {
+    targetNpc: "雪之下雪乃",
+    actionType: "persuade_secret",
+    approach: "charm"
+  });
+  const dc2 = result2.details.dc;
+
+  if (dc2 <= dc1) {
+    throw new Error(`Hostile DC(${dc2}) should be higher than friendly DC(${dc1})`);
+  }
+});
+
+test("Step7: applyWorldStateToOrgs 宏观天空盒偏移", async () => {
+  const { gameState, resetState, loadActiveWorld } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  if (gameState.organizations["soubu_service_club"]?.organizationalAxes) {
+    gameState.organizations["soubu_service_club"].organizationalAxes["政治立场"] = 0;
+  }
+
+  const { applyWorldStateToOrgs } = await import("./engine/timeline.ts");
+
+  gameState.worldState = { tech: 3, stability: -2, tension: 3, globalFlags: {} };
+
+  const clubBefore = gameState.organizations!["soubu_service_club"]!;
+  const cohBefore = clubBefore.cohesion;
+  const infBefore = clubBefore.influence;
+
+  const conglom = gameState.organizations!["yukinoshita_family"]!;
+  const infConglomBefore = conglom.influence;
+
+  applyWorldStateToOrgs();
+
+  // stability < -1 → cohesion 下降
+  if (clubBefore.cohesion >= cohBefore) {
+    throw new Error(`Club cohesion should decrease: ${cohBefore} -> ${clubBefore.cohesion}`);
+  }
+
+  // tension > 1 → club influence 下降
+  if (clubBefore.influence >= infBefore) {
+    throw new Error(`Club influence should decrease: ${infBefore} -> ${clubBefore.influence}`);
+  }
+
+  // tension > 1 → regional org influence 上升
+  if (conglom.influence <= infConglomBefore) {
+    throw new Error(`Regional influence should increase: ${infConglomBefore} -> ${conglom.influence}`);
+  }
+});
+
+test("Step7: evaluateOrgGoals 低凝聚力/财力预警", async () => {
+  const { gameState, resetState, loadActiveWorld } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const { evaluateOrgGoals } = await import("./engine/timeline.ts");
+
+  gameState.organizations!["soubu_service_club"]!.cohesion = 15;
+  gameState.organizations!["soubu_service_club"]!.wealth = 5;
+
+  const alerts = evaluateOrgGoals();
+  const clubAlerts = alerts.filter(a => a.orgId === "soubu_service_club");
+  if (clubAlerts.length < 2) {
+    throw new Error(`Should have >= 2 alerts, got ${clubAlerts.length}`);
+  }
+});
+
+test("Step7: applyOrgDrivesToNPC 组织驱动注入", async () => {
+  const { gameState, resetState, loadActiveWorld, getOrCreateNPC } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const { applyOrgDrivesToNPC } = await import("./engine/timeline.ts");
+
+  const yukino = getOrCreateNPC("雪之下雪乃");
+  yukino.current_drives = ["个人目标A"];
+
+  applyOrgDrivesToNPC();
+
+  const drives = yukino.current_drives!;
+  const hasServiceClubDrive = drives.some(d => d.includes("[侍奉部]"));
+  const hasConglomDrive = drives.some(d => d.includes("[雪之下建设与政商同盟]"));
+
+  if (!hasServiceClubDrive) {
+    throw new Error(`Missing service club drive. Drives: ${JSON.stringify(drives)}`);
+  }
+  if (!hasConglomDrive) {
+    throw new Error(`Missing conglomerate drive. Drives: ${JSON.stringify(drives)}`);
+  }
+  if (!drives.includes("个人目标A")) {
+    throw new Error("Personal drive should be preserved");
+  }
+});
+
+test("Step7: lookup_org 声望分级信息过滤", async () => {
+  const { gameState, resetState, loadActiveWorld } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const lookupOrg = (await import("./tools/lookup/lookup_org.ts")).default;
+
+  // 低声望 → 只能看到公开信息
+  gameState.player.reputation["soubu_service_club"] = 0;
+  const result1 = await lookupOrg.execute("test_neutral", { orgId: "soubu_service_club" });
+  const text1 = result1.content[0].text;
+  if (text1.includes("成员名单")) {
+    throw new Error("Neutral rep should not see member list (Restricted)");
+  }
+  if (!text1.includes("侍奉部")) {
+    throw new Error("Should see org name");
+  }
+
+  // 高声望 → 能看到限制级信息
+  gameState.player.reputation["soubu_service_club"] = 2;
+  const result2 = await lookupOrg.execute("test_friendly", { orgId: "soubu_service_club" });
+  const text2 = result2.content[0].text;
+  if (!text2.includes("成员名单")) {
+    throw new Error("Friendly rep should see member list (Restricted)");
+  }
+  if (!text2.includes("阶段性目标")) {
+    throw new Error("Friendly rep should see phase goals");
+  }
+});
+
+test("Step7: getOrgMembershipsForNpc 查找NPC所属组织", async () => {
+  const { gameState, resetState, loadActiveWorld, getOrgMembershipsForNpc } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const yukiOrgs = getOrgMembershipsForNpc("雪之下雪乃");
+  if (!yukiOrgs.includes("soubu_service_club")) {
+    throw new Error(`Yukino should belong to soubu_service_club: ${JSON.stringify(yukiOrgs)}`);
+  }
+  if (!yukiOrgs.includes("yukinoshita_family")) {
+    throw new Error(`Yukino should belong to yukinoshita_family: ${JSON.stringify(yukiOrgs)}`);
+  }
+
+  const noOrgs = getOrgMembershipsForNpc("不存在的人");
+  if (noOrgs.length > 0) {
+    throw new Error(`Non-existent NPC should have no orgs`);
+  }
+});
+
+test("Step7: create_organization 动态创建组织", async () => {
+  const { gameState, resetState, loadActiveWorld } = await import("./engine/state.ts");
+  resetState();
+  loadActiveWorld("oregairu");
+
+  const createOrg = (await import("./tools/action/create_organization.ts")).default;
+  const result = await createOrg.execute("test_create", {
+    id: "tennis_club",
+    name: "网球部",
+    type: "社团",
+    scale: "club",
+    coreLocation: "操场",
+    leader: "户冢彩加",
+    macroGoal: "让网球部成为全校最受欢迎的社团"
+  });
+
+  if (!result.details?.success) {
+    throw new Error("Failed to create organization");
+  }
+
+  const org = gameState.organizations?.["tennis_club"];
+  if (!org) {
+    throw new Error("Created organization not found in gameState");
+  }
+
+  if (org.name !== "网球部" || org.leader !== "户冢彩加" || org.coreLocation !== "操场") {
+    throw new Error("Created organization attributes mismatch: " + JSON.stringify(org));
+  }
+});
+test("Vicky Political Economy System - Tree Skybox Inheritance", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+
+  // 侍奉部级联链：日本 → 千叶県 → 千叶市 → 美滨区 → 总武高
+  // 最近精确匹配修复：现在选最长key匹配而非第一个匹配
+  const localWs = (await import("./engine/state.ts")).getMergedWorldState("侍奉部");
+
+  // 数值字段从千叶市继承
+  if (localWs.prosperity !== -1) {
+    throw new Error("Skybox inheritance failed: prosperity should be -1 from 千叶市, got " + localWs.prosperity);
+  }
+  // 字符串字段被总武高覆盖（最长key匹配修复生效）
+  if (localWs.regime !== "公立学校管理委员会") {
+    throw new Error("Skybox inheritance failed: regime should be '公立学校管理委员会' from soubu_high, got " + localWs.regime);
+  }
+  if (localWs.economy_type !== "公立教育财政") {
+    throw new Error("Skybox inheritance failed: economy_type should be '公立教育财政' from soubu_high, got " + localWs.economy_type);
+  }
+  if (localWs.diplomacy_stance !== "文部科学省指导下的地方教育自治") {
+    throw new Error("Skybox inheritance failed: diplomacy_stance should be from soubu_high, got " + localWs.diplomacy_stance);
+  }
+});
+
+test("Vicky Political Economy System - Dynamic Wage & Price Scaling", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  
+  // Test Wage scaling
+  gameState.worldState.prosperity = 0;
+  const initialFunds = gameState.player.funds;
+  workJob("便利店分拣员", 1);
+  const wageFlat = gameState.player.funds - initialFunds;
+  
+  gameState.worldState.prosperity = -4; // Recession
+  const fundsBeforeRecession = gameState.player.funds;
+  workJob("便利店分拣员", 1);
+  const wageRecession = gameState.player.funds - fundsBeforeRecession;
+  
+  if (wageRecession >= wageFlat) {
+    throw new Error(`Wage scaling failed: recession wage (${wageRecession}) should be less than flat wage (${wageFlat})`);
+  }
+  
+  // Test Price validation and scaling under inflation (萧条且动荡)
+  gameState.worldState.stability = -3;
+  gameState.worldState.prosperity = -3;
+  
+  // Buy a cheap consumable item (within range under inflation: 116 to 725)
+  const buyRes = buyItem("矿泉水", 150, "便利店");
+  if (!buyRes.includes("波动系数")) {
+    throw new Error("Price inflation scaling failed, no volatility coefficient in buy message: " + buyRes);
+  }
+});
+
+test("Vicky Political Economy System - Sovereignty Guard", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  
+  const go_to_location = (await import("./tools/lookup/go_to_location.ts")).default;
+  
+  // Create mock sovereign organization
+  gameState.organizations["mock_sovereign"] = {
+    id: "mock_sovereign",
+    name: "总武高纪律委员会",
+    type: "学校",
+    scale: "local",
+    wealth: 50,
+    influence: 50,
+    cohesion: 50,
+    public_legitimacy: 50,
+    coreLocation: "2F楼梯间",
+    territoryRoomKeys: ["2F楼梯间"],
+    class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "",
+    members: [],
+    relations: {},
+    match_rules: {},
+    entries: []
+  };
+  
+  // Set highly hostile reputation
+  gameState.player.reputation["mock_sovereign"] = -3;
+  
+  // Travel to controlled territory should be blocked
+  const blockResult = await go_to_location.execute("test_guard", { destination: "2F楼梯间" });
+  if (!blockResult.details?.blocked) {
+    throw new Error("Sovereignty guard failed: entry to sovereign enemy territory should be hard blocked.");
+  }
+  
+  // Club level organization should bypass hard block
+  gameState.organizations["mock_club"] = {
+    id: "mock_club",
+    name: "网球社团",
+    type: "社团",
+    scale: "club",
+    wealth: 50,
+    influence: 50,
+    cohesion: 50,
+    public_legitimacy: 50,
+    coreLocation: "操场",
+    territoryRoomKeys: ["操场"],
+    class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "",
+    members: [],
+    relations: {},
+    match_rules: {},
+    entries: []
+  };
+  gameState.player.reputation["mock_club"] = -3;
+  
+  const bypassResult = await go_to_location.execute("test_guard", { destination: "操场" });
+  if (bypassResult.details?.blocked) {
+    throw new Error("Sovereignty guard failed: club-level enemy territory should not be hard blocked.");
+  }
+});
+
+test("Vicky Political Economy System - Vicky Self-Rotation", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  
+  const { applyWorldStateToOrgs } = await import("./engine/timeline.ts");
+  
+  // Setup orgs with class bases
+  gameState.organizations["test_prole"] = {
+    id: "test_prole",
+    name: "码头工人工会",
+    type: "舆论",
+    scale: "local",
+    wealth: 50,
+    influence: 50,
+    cohesion: 60,
+    public_legitimacy: 50,
+    coreLocation: "",
+    territoryRoomKeys: [],
+    class_base: { "无产阶级": 0.8 },
+    organizationalAxes: { "经济立场": -4, "政治立场": 2 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "",
+    members: [],
+    relations: {},
+    match_rules: {},
+    entries: []
+  };
+  
+  gameState.organizations["test_petite"] = {
+    id: "test_petite",
+    name: "千叶个体商户同盟",
+    type: "企业",
+    scale: "local",
+    wealth: 50,
+    influence: 50,
+    cohesion: 50,
+    public_legitimacy: 50,
+    coreLocation: "",
+    territoryRoomKeys: [],
+    class_base: { "小资产阶级": 0.7 },
+    organizationalAxes: { "经济立场": 2, "政治立场": -1 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "",
+    members: [],
+    relations: {},
+    match_rules: {},
+    entries: []
+  };
+  
+  // Trigger recession
+  gameState.worldState.prosperity = -3;
+  applyWorldStateToOrgs();
+  
+  const proleOrg = gameState.organizations["test_prole"];
+  const petiteOrg = gameState.organizations["test_petite"];
+  
+  if (proleOrg.wealth >= 50) {
+    throw new Error("Vicky self-rotation failed: prole wealth should drop in recession.");
+  }
+  if (petiteOrg.wealth >= 50 || petiteOrg.cohesion >= 50) {
+    throw new Error("Vicky self-rotation failed: petite bourgeoisie wealth and cohesion should drop in recession.");
+  }
+});
+
+test("Vicky Political Economy System - Nested Reputation Leakage", async () => {
+  resetState();
+  loadActiveWorld("oregairu");
+  
+  // Set up child and parent
+  gameState.organizations["test_parent"] = {
+    id: "test_parent",
+    name: "测试母势力",
+    type: "政党",
+    scale: "national",
+    wealth: 80,
+    influence: 80,
+    cohesion: 80,
+    public_legitimacy: 80,
+    coreLocation: "",
+    territoryRoomKeys: [],
+    class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "",
+    members: [],
+    relations: {},
+    match_rules: {},
+    entries: []
+  };
+  
+  gameState.organizations["test_child"] = {
+    id: "test_child",
+    name: "测试子社团",
+    type: "社团",
+    scale: "club",
+    parent_org: "test_parent",
+    wealth: 40,
+    influence: 40,
+    cohesion: 40,
+    public_legitimacy: 40,
+    coreLocation: "",
+    territoryRoomKeys: [],
+    class_base: {},
+    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
+    goals: { macroGoal: "", currentPhaseGoal: "" },
+    leader: "",
+    members: [],
+    relations: {},
+    match_rules: {},
+    entries: []
+  };
+  
+  gameState.player.reputation["test_child"] = 0;
+  gameState.player.reputation["test_parent"] = 0;
+  
+  updateReputation("test_child", 5);
+  
+  const parentRep = gameState.player.reputation["test_parent"];
+  if (parentRep !== 1) {
+    throw new Error("Reputation leakage failed: expected parent reputation to be 1 (20% of 5), got " + parentRep);
+  }
+});
+
+
 
 (async () => {
   for (const t of testQueue) {

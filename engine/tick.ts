@@ -7,12 +7,38 @@
  */
 
 export async function runWorldTick(): Promise<void> {
-  const { checkTimelineEvents, expireHooks } = await import("./timeline.ts");
+  const { checkTimelineEvents, expireHooks, applyWorldStateToOrgs, evaluateOrgGoals, applyOrgDrivesToNPC } = await import("./timeline.ts");
   const { checkDriveDrivenHooks } = await import("./drives.ts");
   const { tickLifeEvents } = await import("./life-events.ts");
 
   checkTimelineEvents();
   checkDriveDrivenHooks();
   tickLifeEvents();
+
+  // Step 7: 组织自转管线
+  applyWorldStateToOrgs();
+  const orgAlerts = evaluateOrgGoals();
+  applyOrgDrivesToNPC();
+
+  // 组织危机警告 → 注入动态事件
+  if (orgAlerts.length > 0) {
+    const { injectDynamicEvent } = await import("./timeline.ts");
+    const { gameState } = await import("./state.ts");
+    for (const alert of orgAlerts) {
+      const org = gameState.organizations?.[alert.orgId];
+      injectDynamicEvent({
+        id: `org_crisis_${alert.orgId}`,
+        source: "engine",
+        expires_days: 5,
+        repeatable: true,
+        hook: {
+          source_npc: org?.leader || "旁白",
+          hook_text: alert.alert,
+          urgency: "low",
+        },
+      });
+    }
+  }
+
   await expireHooks();
 }

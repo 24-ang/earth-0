@@ -20,6 +20,7 @@ export default {
       const { runSettlement } = await import("../../engine/settlement.ts");
       const { resultText, events } = await runSettlement({
         elapsed_minutes: params.elapsed_minutes,
+        summary: params.summary,
         memory_tags: params.memory_tags,
         ctx: _ctx,
       });

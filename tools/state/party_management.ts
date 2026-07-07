@@ -13,6 +13,13 @@ export default {
       p.party ??= [];
 
       if (params.action === "add") {
+        const { findCharacter } = await import("../../engine/state.ts");
+        const isKnown = findCharacter(params.npc) !== null;
+        const rel = p.relationships[params.npc];
+        if (!isKnown && !rel) {
+          return { content: [{ type: "text", text: `无法邀请陌生人 ${params.npc} 加入队伍。` }], details: {} };
+        }
+
         const npc = getOrCreateNPC(params.npc);
         if (!npc) return { content: [{ type: "text", text: `未找到NPC: ${params.npc}` }], details: {} };
         if (p.party.includes(params.npc)) return { content: [{ type: "text", text: `${params.npc} 已在队伍中` }], details: {} };

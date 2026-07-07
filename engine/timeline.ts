@@ -20,7 +20,7 @@ const CALENDAR_DIR = path.resolve(process.cwd(), "data", "calendar");
 
 /** 加载当前活跃世界观的日历文件 → 扁平化为 CalendarEntry[] */
 let _calendarCache: Record<string, CalendarEntry[]> = {};
-function loadCalendar(): CalendarEntry[] {
+export function loadCalendar(): CalendarEntry[] {
   const world = gameState.activeWorld || "oregairu";
   if (_calendarCache[world]) return _calendarCache[world];
   const entries: CalendarEntry[] = [];
@@ -552,8 +552,7 @@ function expireHookSync(hook: Hook, ev: TimelineEvent | DynamicEvent): void {
 
 function checkBranchCondition(cond: any, gs: any): boolean {
   if (!cond) return true;
-  gs.worldState ??= { tech: 0, stability: 0, tension: 0, globalFlags: {} };
-  const ws = gs.worldState;
+  const ws = gs.worldState ?? { tech: 0, stability: 0, tension: 0, globalFlags: {} };
 
   if (cond.tech !== undefined) {
     if (typeof cond.tech === "object") {
@@ -893,11 +892,20 @@ export async function advanceQuest(eventId: string, outcomeKey?: string): Promis
   return `任务完成: ${ev.title}`;
 }
 
-/** 放弃 quest */
-export function abandonQuest(eventId: string): string | null {
+export async function abandonQuest(eventId: string): Promise<string | null> {
   gameState.quests ??= {};
   const q = gameState.quests[eventId];
   if (!q) return `未找到任务: ${eventId}`;
+  
+  if (gameState._playerSnapshot) {
+    try {
+      const switchTool = (await import("../tools/action/switch_character.ts")).default;
+      await switchTool.execute("auto_restore", { action: "restore" }, null, null, null);
+    } catch (e) {
+      console.error("abandonQuest: auto restore failed:", e);
+    }
+  }
+
   q.status = "abandoned";
   gameState.completed_events.push(eventId);
   return `任务已放弃: ${q.title}`;
@@ -936,7 +944,9 @@ export async function applyBeatEffects(effects: {
   npcRelations?: Record<string, Record<string, { stage: string; tone: string; notes: string }>>;
   playerRelations?: Record<string, { stage?: string; romance?: string; notes?: string }>;
   worldStateDelta?: { tech?: number; stability?: number; tension?: number; globalFlags?: Record<string, boolean> };
-}): Promise<void> {
+  switchPlayer?: string;
+  restorePlayer?: boolean;
+}, ignorePov?: boolean): Promise<void> {
   if (effects.flags) {
     for (const [k, v] of Object.entries(effects.flags)) {
       gameState.flags[k] = v;
@@ -954,7 +964,7 @@ export async function applyBeatEffects(effects: {
     if (!settleAfterSex) return;
     const ss = await getOrCreateSexState(effects.sex.npc);
     if (ss) {
-      settleAfterSex(
+      await settleAfterSex(
         ss,
         gameState.time.game_date,
         effects.sex.duration || 30,
@@ -1018,12 +1028,29 @@ export async function applyBeatEffects(effects: {
     if (effects.worldStateDelta.tension !== undefined) {
       ws.tension = Math.max(0, Math.min(5, (ws.tension || 0) + effects.worldStateDelta.tension));
     }
+    if ((effects.worldStateDelta as any).set) {
+      const setObj = (effects.worldStateDelta as any).set;
+      if (setObj.tech !== undefined) ws.tech = Math.max(0, Math.min(5, setObj.tech));
+      if (setObj.stability !== undefined) ws.stability = Math.max(-3, Math.min(3, setObj.stability));
+      if (setObj.tension !== undefined) ws.tension = Math.max(0, Math.min(5, setObj.tension));
+    }
     if (effects.worldStateDelta.globalFlags) {
       ws.globalFlags ??= {};
       for (const [k, v] of Object.entries(effects.worldStateDelta.globalFlags)) {
         ws.globalFlags[k] = v;
       }
     }
+  }
+  if (effects.switchPlayer && effects.restorePlayer) {
+    console.warn("applyBeatEffects: Cannot switch and restore player POV in the same beat effects simultaneously.");
+  }
+  if (effects.switchPlayer && !ignorePov) {
+    const switchTool = (await import("../tools/action/switch_character.ts")).default;
+    await switchTool.execute("timeline_auto", { action: "switch", targetNpc: effects.switchPlayer }, null, null, null);
+  }
+  if (effects.restorePlayer && !ignorePov) {
+    const switchTool = (await import("../tools/action/switch_character.ts")).default;
+    await switchTool.execute("timeline_auto", { action: "restore" }, null, null, null);
   }
 }
 
@@ -1069,7 +1096,7 @@ export async function fastForwardTimeline(startingDay: number): Promise<string[]
       if (ev.on_expire) {
         const eff = resolveExpireEffects(ev);
         if (eff) {
-          try { await applyBeatEffects(eff); } catch (e) { console.error(`fastForward: on_expire ${ev.id} error`, e); }
+          try { await applyBeatEffects(eff, true); } catch (e) { console.error(`fastForward: on_expire ${ev.id} error`, e); }
         }
       }
       gameState.completed_events.push(ev.id);
@@ -1092,7 +1119,7 @@ export async function fastForwardTimeline(startingDay: number): Promise<string[]
 
       // 应用 beat 级 effects
       if (beat.effects) {
-        try { await applyBeatEffects(beat.effects); } catch (e) { console.error(`fastForward: beat ${ev.id}/${beat.id} effects error`, e); }
+        try { await applyBeatEffects(beat.effects, true); } catch (e) { console.error(`fastForward: beat ${ev.id}/${beat.id} effects error`, e); }
       }
 
       // 无 outcomes → 终结点
@@ -1101,7 +1128,7 @@ export async function fastForwardTimeline(startingDay: number): Promise<string[]
       // 选第一个 outcome（canonical 路径）
       const outcome = beat.outcomes[0];
       if (outcome.effects) {
-        try { await applyBeatEffects(outcome.effects); } catch (e) { console.error(`fastForward: outcome ${ev.id}/${beat.id} effects error`, e); }
+        try { await applyBeatEffects(outcome.effects, true); } catch (e) { console.error(`fastForward: outcome ${ev.id}/${beat.id} effects error`, e); }
       }
 
       currentBeatId = outcome.next_beat || null;
@@ -1112,4 +1139,140 @@ export async function fastForwardTimeline(startingDay: number): Promise<string[]
   }
 
   return autoCompleted;
+}
+
+// ──────────────────────────────────────────────────
+// Step 7: 组织自转与 NPC 驱动级联注入
+// ──────────────────────────────────────────────────
+
+/**
+ * 宏观天空盒 → 组织参数偏移
+ * 当 worldState 变化时，影响所有组织的 wealth/influence/cohesion。
+ * 调用时机：每次 advanceTime / applyBeatEffects 修改 worldState 后。
+ */
+export function applyWorldStateToOrgs(): void {
+  const ws = gameState.worldState;
+  if (!ws) return;
+  const orgs = gameState.organizations;
+  if (!orgs) return;
+
+  // 寻找所有以无产阶级为基本盘的组织，以便跟踪劳资关系恶化
+  const proleOrgIds = Object.keys(orgs).filter(id => (orgs[id].class_base?.["无产阶级"] ?? 0) > 0.4);
+
+  for (const org of Object.values(orgs)) {
+    const classBase = org.class_base || {};
+    const isProle = (classBase["无产阶级"] ?? 0) > 0.4;
+    const isPetite = (classBase["小资产阶级"] ?? 0) > 0.4;
+    const isBourgeois = (classBase["大资产阶级"] ?? 0) > 0.4;
+
+    // ── 繁荣度 (prosperity) 影响 ──
+    if (ws.prosperity !== undefined && ws.prosperity < 0) {
+      // 萧条下：
+      if (isProle) {
+        // 无产阶级：财力下跌，但抱团取暖致凝聚力或影响力小幅上升
+        org.wealth = Math.max(0, org.wealth - 2);
+        if (org.cohesion > 50) {
+          org.influence = Math.min(100, org.influence + 1);
+        }
+      } else if (isPetite) {
+        // 小资产阶级：商铺倒闭，财力与凝聚力重创
+        org.wealth = Math.max(0, org.wealth - 3);
+        org.cohesion = Math.max(0, org.cohesion - 2);
+      } else if (isBourgeois) {
+        // 大资产阶级：资本家剥削加重以转移危机，导致与无产阶级组织的关系恶化
+        for (const proleId of proleOrgIds) {
+          if (org.relations[proleId] !== undefined) {
+            org.relations[proleId] = Math.max(-100, org.relations[proleId] - 3);
+          }
+        }
+      }
+    } else if (ws.prosperity !== undefined && ws.prosperity > 0) {
+      // 繁荣下：
+      org.wealth = Math.min(100, org.wealth + 1);
+    }
+
+    // ── 稳定度 (stability) 影响 ──
+    if (ws.stability !== undefined) {
+      const politicalStance = org.organizationalAxes?.["政治立场"] ?? 0;
+      if (ws.stability < 0) {
+        // 乱世/失序下：
+        // 1. 保守派官僚/铁腕秩序派（政治立场正）社会话语权/影响力扩大以图恢复稳定
+        if (politicalStance > 1) {
+          org.influence = Math.min(100, org.influence + 2);
+        }
+        // 2. 自由进步派（政治立场负）凝聚力上升（抱团反抗）；其他组织凝聚力因动荡流失
+        if (politicalStance < -1) {
+          org.cohesion = Math.min(100, org.cohesion + 2);
+        } else {
+          org.cohesion = Math.max(0, org.cohesion - 1);
+        }
+      } else if (ws.stability > 1) {
+        // 治世/稳定下：
+        org.cohesion = Math.min(100, org.cohesion + 1);
+      }
+    }
+
+    // ── 紧张度 (tension) 影响 ──
+    if (ws.tension !== undefined && ws.tension > 1) {
+      // 紧张大势下：军事、安全、法务类（military / politics 支柱）的影响力获得被动提升
+      if (org.sector === "military" || org.sector === "politics") {
+        org.influence = Math.min(100, org.influence + 2);
+      } else if (org.scale === "club") {
+        // 闲散娱乐社团影响力退潮
+        org.influence = Math.max(0, org.influence - 1);
+      }
+    }
+  }
+}
+
+/**
+ * 评估组织阶段性目标进度
+ * 检查 requiredResources 是否有对应的 world flags 或条件满足。
+ * 简化版本：只做存活性检查和凝聚力崩溃警告。
+ */
+export function evaluateOrgGoals(): { orgId: string; alert: string }[] {
+  const orgs = gameState.organizations;
+  if (!orgs) return [];
+  const alerts: { orgId: string; alert: string }[] = [];
+
+  for (const [id, org] of Object.entries(orgs)) {
+    // 凝聚力过低 → 组织内部产生分裂/不满叙事钩子
+    if (org.cohesion <= 20) {
+      alerts.push({ orgId: id, alert: `「${org.name}」内部凝聚力极低（${org.cohesion}），成员间出现分裂迹象。` });
+    }
+    // 财力耗尽 → 组织陷入资金危机
+    if (org.wealth <= 10) {
+      alerts.push({ orgId: id, alert: `「${org.name}」财力几近枯竭（${org.wealth}），日常运营陷入困难。` });
+    }
+  }
+
+  return alerts;
+}
+
+/**
+ * 将组织的阶段性目标注入到成员 NPC 的 current_drives 中
+ * 调用时机：drives.ts 初始化 drives 之后或每天 tick 一次。
+ */
+export function applyOrgDrivesToNPC(): void {
+  const orgs = gameState.organizations;
+  if (!orgs) return;
+
+  for (const [orgId, org] of Object.entries(orgs)) {
+    if (!org.goals?.currentPhaseGoal) continue;
+    const orgDrive = `[${org.name}]${org.goals.currentPhaseGoal}`;
+
+    for (const member of org.members || []) {
+      const npc = gameState.npcs[member.npcName];
+      if (!npc) continue;
+      
+      npc.current_drives ??= [];
+      // 避免重复注入同一组织的目标
+      const existing = npc.current_drives.findIndex(d => d.startsWith(`[${org.name}]`));
+      if (existing >= 0) {
+        npc.current_drives[existing] = orgDrive;
+      } else {
+        npc.current_drives.push(orgDrive);
+      }
+    }
+  }
 }

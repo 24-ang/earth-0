@@ -312,15 +312,34 @@ export default {
         "④ 行为泄漏: 哪个小动作出卖了你的真心",
       ].filter(Boolean).join("\n");
 
+      // Build NPC Agent 今天的生活上下文
+      let todayContext = "";
       try {
+        const { buildTodayContext } = await import("../helpers.ts");
+        const npc = getOrCreateNPC(params.npcName);
+        const src = findCharacter(params.npcName);
+        todayContext = buildTodayContext(gameState, params.npcName, npc, src);
+      } catch (e) {
+        console.error("spawn_npc_agent buildTodayContext failed:", e);
+      }
+
+      try {
+        const finalPrompt = todayContext ? charPrompt + "\n\n" + todayContext : charPrompt;
         const narrativeModel = await getNpcAgentModel();
-        const response = await generateCompletion(charPrompt, 512, _ctx, narrativeModel);
+        const response = await generateCompletion(finalPrompt, 512, _ctx, narrativeModel);
         if (!response) {
           return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
         }
         gameState._npc_last_responses ??= {};
         gameState._npc_last_responses[params.npcName] = response;
         await recordNpcAgentAction(params.npcName, response, outfit || "", gameState.player.location);
+        // 解析 schedule_intent
+        try {
+          const { parseScheduleIntent } = await import("../helpers.ts");
+          await parseScheduleIntent(params.npcName, response);
+        } catch (e) {
+          console.error("spawn_npc_agent parseScheduleIntent failed:", e);
+        }
         return { content: [{ type: "text", text: response }], details: {} };
       } catch (err) {
         console.error("generateCompletion error in spawn_npc_agent:", err);
