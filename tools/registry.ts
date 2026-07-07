@@ -138,7 +138,14 @@ function withToolTracking(tool: any) {
     async execute(id: string, params: any, signal: any, onUpdate: any, ctx: any) {
       // lazy-import to avoid circular deps at module load time
       const { pushToolCall, saveState, gameState } = await import("../engine/state.ts");
-      if (gameState?._toolsLocked === true && tool.name !== "init_game" && tool.name !== "settle_scene") {
+      // 只拦截修改状态的动作工具，不拦只读查询和死锁救急工具
+      const BYPASS_LOCK = new Set([
+        "init_game", "settle_scene", "get_status", "complete_travel",
+        "lookup_character", "lookup_region", "lookup_lore", "lookup_weather",
+        "lookup_furniture", "lookup_ability", "lookup_org",
+        "dice_roll", "self_check", "check_phone", "browse_sns",
+      ]);
+      if (gameState?._toolsLocked === true && !BYPASS_LOCK.has(tool.name)) {
         console.warn(`[tool:${tool.name}] blocked: tools are locked during rendering phase`);
         return { content: [{ type: "text", text: `[引擎已拦截] 渲染/降级阶段禁止调用工具。` }], details: {} };
       }
