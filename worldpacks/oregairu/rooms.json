@@ -1299,11 +1299,11 @@
     ],
     "cellSize": 5,
     "floor": 0,
-    "atmosphere": "开阔的沙土操场。北边是教学楼，南边是校门，东边是体育馆，西边是社团楼。跑道环绕，中央是足球场",
+    "atmosphere": "开阔的沙土操场。北边是教学楼，南边是校门，东边是体育馆，西边是特别大楼。跑道环绕，中央是足球场",
     "horizon": {
       "北": "总武高教学楼，窗户整齐排列",
       "南": "校门和通往千叶市街的道路",
-      "西": "社团楼，偶尔有学生进出",
+      "西": "特别大楼，偶尔有学生进出",
       "东": "体育馆外墙上褪色的校训"
     },
     "ambient": {
@@ -3200,12 +3200,12 @@
       ]
     ]
   },
-  "社团楼1F走廊": {
+  "特别大楼1F走廊": {
     "width": 6,
     "height": 3,
     "cellSize": 2,
     "floor": 0,
-    "atmosphere": "社团楼的走廊。空气中飘着颜料、茶和旧书混合的味道",
+    "atmosphere": "特别大楼的走廊。空气中飘着颜料、茶和旧书混合的味道",
     "origin": [
       3,
       2
@@ -4836,6 +4836,117 @@
           "type": "floor",
           "block": false,
           "label": "  "
+        }
+      ]
+    ]
+  },
+  "商店街": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 5,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "千叶稻毛区商店街——下午的阳光斜照在拱廊顶棚上。两侧是肉店、蔬果店、不动产中介、麦克斯咖啡自动贩卖机。家庭主妇推着自行车经过，偶尔有放学的高中生在甜品店前驻足。",
+    "capacity": 30,
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": "商店街入口"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "自动贩卖机",
+          "label": "麦克斯咖啡贩卖机"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "返回千叶市",
+          "exitTo": "千葉駅前"
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "不动产中介",
+          "label": "千叶不动产"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
         }
       ]
     ]
