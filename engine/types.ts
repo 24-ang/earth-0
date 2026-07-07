@@ -265,6 +265,7 @@ export interface PlayerState {
   properties: Record<string, PropertyState>; // 拥有的房产
   social_class?: string;
   personal_axes?: Record<string, number>;
+  memberships?: OrgMembership[];         // 玩家所属的组织及职位
   vehicle?: {                          // 当前载具
     type: "bicycle" | "motorcycle" | "car";
     name: string;                      // 物品名
@@ -316,6 +317,26 @@ export interface StaticCharacter {
   social_class?: string;
   personal_axes?: Record<string, number>;
 }
+
+/** 玩家在组织中的身份 */
+export interface OrgMembership {
+  orgId: string;
+  role: string;       // 职位名（自由文本，如"部长""普通部员"）
+  rank: number;       // 1-10: 1-3=边缘 → 4-6=普通 → 7-9=核心 → 10=领袖
+  joinedAt: string;   // game_date
+}
+
+/** 四层职位的权力边界 */
+export const RANK_PERMISSIONS: Record<string, { minRank: number; description: string }> = {
+  enter_headquarters: { minRank: 1, description: "进入大本营不被拦" },
+  view_restricted:    { minRank: 4, description: "查看受限信息和阶段性目标" },
+  recruit_member:     { minRank: 7, description: "招募新成员" },
+  use_funds:          { minRank: 7, description: "动用组织资金（有限额）" },
+  represent_org:      { minRank: 7, description: "代表组织对外谈判/签条约" },
+  set_goals:          { minRank: 10, description: "修改组织宏观目标" },
+  appoint_core:       { minRank: 10, description: "任免核心成员" },
+  expel_member:       { minRank: 7, description: "开除成员" },
+};
 
 // --- NPC运行时状态（lazy init，只存被修改过的NPC） ---
 // --- 场景服装集（每套衣服的各槽物品名） ---

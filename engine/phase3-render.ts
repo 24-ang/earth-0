@@ -197,7 +197,18 @@ async function buildRenderStateContext(gs: any): Promise<string> {
     }
   } catch (e) { console.error("getActiveOrgsForLocation failed:", e); }
 
-	// ── NPC 反应日志（恶意行为触发的日程越权） ──
+	
+  // ── 玩家组织身份 ──
+  const memberships = gs.player?.memberships;
+  if (memberships && memberships.length > 0) {
+    const msLines = memberships.map(function(m) {
+      var tier = m.rank >= 10 ? "👑" : m.rank >= 7 ? "⭐" : m.rank >= 4 ? "●" : "○";
+      var orgName = gs.organizations?.[m.orgId]?.name || m.orgId;
+      return "  " + tier + " " + orgName + " — " + m.role + " (rank:" + m.rank + ")";
+    });
+    parts.push("[你的组织身份]\n" + msLines.join("\n") + "\n你所属的组织及职位。NPC对待你的态度应由你的组织身份决定——同组织成员视你为同伴，敌对组织成员视你为威胁。");
+  }
+// ── NPC 反应日志（恶意行为触发的日程越权） ──
 	try {
 		const { getReactionSummary } = await import("./npc-reactions.ts");
 		const reactionSummary = getReactionSummary();

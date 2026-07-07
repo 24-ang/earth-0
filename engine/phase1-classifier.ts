@@ -65,6 +65,9 @@ const ACTION_WHITELIST = [
   "create_organization",
   "lookup_org",
   "contribute_to_org",
+  "join_org",
+  "leave_org",
+  "promote_member",
 ];
 
 // ── 公开 API ──
@@ -394,6 +397,9 @@ async function loadTool(toolName: string): Promise<any | null> {
     add_memory_tag: "../tools/state/add_memory_tag.ts",
     add_calendar_event: "../tools/action/add_calendar_event.ts",
     contribute_to_org: "../tools/action/contribute_to_org.ts",
+    join_org: "../tools/action/join_org.ts",
+    leave_org: "../tools/action/leave_org.ts",
+    promote_member: "../tools/action/promote_member.ts",
   };
 
   const relPath = toolPaths[toolName];

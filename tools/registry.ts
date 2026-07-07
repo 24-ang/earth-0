@@ -96,6 +96,9 @@ import startBroadcastTool from "./action/start_broadcast.ts";
 import endBroadcastTool from "./action/end_broadcast.ts";
 import createOrganizationTool from "./action/create_organization.ts";
 import contributeToOrgTool from "./action/contribute_to_org.ts";
+import joinOrgTool from "./action/join_org.ts";
+import leaveOrgTool from "./action/leave_org.ts";
+import promoteMemberTool from "./action/promote_member.ts";
 import gambleCommand from "./tui/gamble.ts";
 import housingCommand from "./tui/housing.ts";
 import relationsCommand from "./tui/relations.ts";
@@ -209,6 +212,7 @@ export function registerAll(pi: ExtensionAPI) {
     useAbilityTool, takeContraceptivePillTool, performAbortionTool, socialCheckTool,
     travelTool, // P2: 统一旅行（合并 go_to_location + travel_intercity + complete_travel）
     startBroadcastTool, endBroadcastTool, createOrganizationTool, contributeToOrgTool,
+    joinOrgTool, leaveOrgTool, promoteMemberTool,
     // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
     moveTool, moveToTool, boardTrainTool, completeTravelTool, goToLocationTool,
     sendSmsTool, postSnsTool, makeCallTool, travelIntercityTool,

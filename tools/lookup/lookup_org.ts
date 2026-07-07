@@ -28,6 +28,15 @@ export default {
     output += `规模: ${org.scale} | 类型: ${org.type} | 阶段: ${org.lifecycle_stage || "未知"}\n`;
     output += `核心控制区: ${org.coreLocation || "未知"}\n`;
     if (org.archived) output += `⚠️ 该组织已解体消亡\n`;
+
+    // ── 玩家在该组织中的身份 ──
+    gameState.player.memberships ??= [];
+    const membership = gameState.player.memberships.find(m => m.orgId === orgId);
+    if (membership) {
+      const tierLabel = membership.rank >= 10 ? "👑领袖" : membership.rank >= 7 ? "⭐核心成员" : membership.rank >= 4 ? "●普通成员" : "○边缘成员";
+      output += `你的身份: ${tierLabel} — ${membership.role}（rank: ${membership.rank}）\n`;
+      output += `加入日期: ${membership.joinedAt}\n`;
+    }
     output += `\n`;
 
     // 1. Expose wealth/influence/cohesion

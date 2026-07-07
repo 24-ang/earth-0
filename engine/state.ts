@@ -397,7 +397,8 @@ function createDefaultPlayer(): PlayerState {
     titles: [],
     properties: {},
     social_class: "小资产阶级",
-    personal_axes: { "经济立场": 0, "政治立场": 0 }
+    memberships: [],
+    personal_axes: { "经济立场": 0, "政治立场": 0 },
   };
 }
 

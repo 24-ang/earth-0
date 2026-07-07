@@ -7535,6 +7535,7 @@ test("contribute_to_org - complete_quest", async () => {
     leader: "", members: [], relations: {}, match_rules: {}, entries: []
   } as any;
   gameState.player.reputation["test_club"] = 0;
+  gameState.player.memberships = [{ orgId: "test_club", role: "部员", rank: 7, joinedAt: "2018-04-07" }];
 
   const tool = await import("./tools/action/contribute_to_org.ts");
   const result = await tool.default.execute(null, {
@@ -7566,6 +7567,7 @@ test("contribute_to_org - betray", async () => {
   gameState.organizations["rival_club"] = mkOrg("rival_club", "敌对社团");
   gameState.player.reputation["test_club"] = 0;
   gameState.player.reputation["rival_club"] = 0;
+  gameState.player.memberships = [{ orgId: "test_club", role: "部员", rank: 7, joinedAt: "2018-04-07" }];
 
   const tool = await import("./tools/action/contribute_to_org.ts");
   const result = await tool.default.execute(null, {
@@ -7594,6 +7596,7 @@ test("contribute_to_org - recruit_member", async () => {
     leader: "", members: [], relations: {}, match_rules: {}, entries: []
   } as any;
   gameState.player.reputation["test_club"] = 0;
+  gameState.player.memberships = [{ orgId: "test_club", role: "部员", rank: 7, joinedAt: "2018-04-07" }];
 
   const tool = await import("./tools/action/contribute_to_org.ts");
   const result = await tool.default.execute(null, {
