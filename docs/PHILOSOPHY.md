@@ -406,14 +406,14 @@ LLM 不输出 intent → 走现有模板。**模板是兜底，LLM 是增强。*
 
 > Vicky 系统是 earth-0 的宏观模拟层。它不依赖 LLM —— 所有组织的行为、阶级关系、势力消长都由确定性引擎计算。LLM 拿数据做叙事，引擎拿规则做自转。
 
-### 13.1 四个层次
+### 13.1 六大层次
 
 ```
-数据层 (17 orgs × 5-tier location skybox × 42 characters with class)
+数据层 (17 orgs × 5-tier location skybox × 42 characters with class × 15 capital_types)
     ↓
-查询层 (getActiveOrgsForLocation / canOrgActAtTier / resolveOrgIdForGroup)
+查询层 (getActiveOrgsForLocation / canOrgActAtTier / resolveOrgIdForGroup / lookup_org)
     ↓
-渲染层 (Phase 3 活跃势力注入 + lifecycle_stage/scale 显示 + _lastOrgAlerts)
+渲染层 (Phase 3 活跃势力注入 + lifecycle_stage/scale 显示 + _lastOrgAlerts + getReactionSummary)
     ↓
 LLM 层 (Phase 2 NPC Agent 注入所属组织/阶级立场/内心冲突)
     ↓
@@ -427,7 +427,58 @@ LLM 层 (Phase 2 NPC Agent 注入所属组织/阶级立场/内心冲突)
 - 数据→查询→渲染→LLM 在上一轮已完成（HANDOFF-2026-07-07 之前）。
 - 交互→反应→生命周期在本轮（2026-07-07）完成。
 
-### 13.2 引擎自转 vs LLM 叙事
+### 13.2 数据层详解
+
+#### 13.2.1 组织 (17 orgs in worldpacks/oregairu/orgs/)
+
+每个组织是一个独立 JSON 文件，含以下关键字段：
+
+- `scale` (club|local|regional|national) + `tier` 的对应关系
+- `sector` (politics|economy|culture|military|social) — 五大支柱
+- `capital_type` — 权力来源分类：金融资本·产业资本·媒体资本·官僚资本·暴力装置·社会资本·艺能资本·法务资本·商业资本。两个同为"经济右派"的 org 因 capital_type 不同而竞争逻辑完全不同
+- `class_base` — 阶级基本盘权重（大资产阶级/小资产阶级/无产阶级/知识分子/流氓无产阶级）
+- `organizationalAxes` — 经济立场(-5~+5) × 政治立场(-5~+5)
+- `parent_org` — 级联干涉链 + 声望 20% 传导
+- `relations` — 组织间好感/敌对度 (-100~+100)
+- `entries` — 按 common/industry/hidden 三级分级的组织情报
+- `governing_orgs` 关联 — 通过 location JSON 的 `governing_orgs` 数组声明某 org 在某地的"主导"地位
+
+#### 13.2.2 地点 (5 location files with tier + skybox + governing_orgs)
+
+每个 location JSON 包含：
+
+- `tier` — 层级标记 (national|regional|local|site)，引擎据此保护高层数值不被低层覆盖
+- `skybox_defaults` — prosperity/stability/tension/tech 数值 + regime/economy_type/diplomacy_stance 字符串
+- `governing_orgs` — `[{orgId, role, sector}]` 声明该地的主导势力。通过 breadcrumb 链向下渗透——総武高的 governing_orgs 对侍奉部生效
+- `context` + `social_norms` — LLM 叙事基底
+
+级联规则：`getMergedWorldState` 沿 breadcrumb 自上而下合并 skybox，`tier` 保护防止 site 覆盖 regional 的 prosperity。`getActiveOrgsForLocation` 六重判定（大本营 > 控制 > 主导(声明) > 在场(成员NPC在) > 参与(同tier) > 旁观(上级)）。
+
+#### 13.2.3 信息分级（四维统一）
+
+引擎自动按玩家在该组织中的声望过滤可见信息：
+
+| 声望 | 可见内容 |
+|------|---------|
+| 中立 (rep<1) | 名称、规模、类型、公开领袖、宏观目标、common 级 entries |
+| 友好 (rep≥1) | + 阶段性目标、完整成员名单、industry/close 级 entries |
+| 核心 (rep≥4) | + 财力/影响力/凝聚力/公信力精确数值、hidden/intimate 级全部黑幕 |
+
+这与角色信息分级（按关系阶段过滤 facts）、秘密分级（revealLog）、Lore 分级（VisibilityLevel）形成统一的四维过滤体系。所有过滤均为引擎级——不走 LLM prompt 请求。
+
+#### 13.2.4 LLM 工具：创建组织与地点
+
+- `create_organization` — 参数含 `sector`/`parentOrg`/`economicAxis`/`politicalAxis`，创建后立即写入 `gameState.organizations`
+- `create_location` — 支持完整 skybox 注入（prosperity/stability/regime/economyType/diplomacyStance/context/socialNorms），创建后写入 `_regionContexts` 供级联引擎使用
+- 两个工具均已在 Phase 1 白名单 (`ACTION_WHITELIST`) + classifier prompt + `gm-phase1-classifier.md` 中注册
+交互层 (contribute_to_org: donate | complete_quest | betray | recruit_member)
+    ↓
+反应层 (NPC reactive schedule override: avoid | tail | confront | setup)
+    ↓
+生命周期层 (org lifecycle 六阶段 + scale 升降级 + 崩溃解散)
+```
+
+### 13.3 引擎自转 vs LLM 叙事
 
 Vicky 系统的核心哲学："引擎算账，LLM 写故事"。
 
@@ -437,7 +488,7 @@ Vicky 系统的核心哲学："引擎算账，LLM 写故事"。
 - ✅ 引擎反制：NPC 被偷/被打/被背叛 → `processNpcReactions` 自动写 `pendingOverride`
 - ❌ 引擎不替 LLM 写：引擎只给 "凝聚力-10" 和 stage transition message，LLM 决定角色怎么反应
 
-### 13.3 生命周期六阶段：确定性推断
+### 13.4 生命周期六阶段：确定性推断
 
 引擎根据 `wealth / influence / cohesion` 自动推断 `lifecycle_stage`，不依赖 LLM 判断：
 
@@ -452,7 +503,7 @@ Vicky 系统的核心哲学："引擎算账，LLM 写故事"。
 
 衰退可逆（条件恢复后回到成长），消亡不可逆（标记 `archived: true`，所有引擎函数跳过）。
 
-### 13.4 NPC 反应式日程：物理反馈而非台词宣泄
+### 13.5 NPC 反应式日程：物理反馈而非台词宣泄
 
 设计文档：`npc_reaction_schedule_design.md`
 
@@ -465,7 +516,7 @@ Vicky 系统的核心哲学："引擎算账，LLM 写故事"。
 
 实现方式：`withToolTracking` 在每次工具执行后调 `processNpcReactions`，查 lookup table 决定反应模式 → 写入 `pendingOverride`。**LLM 不参与判定——这是引擎层的事。**
 
-### 13.5 为什么不让 LLM 管组织演化
+### 13.6 为什么不让 LLM 管组织演化
 
 如果让 LLM 决定哪个组织该升级、哪个该崩溃：
 - LLM 会基于"故事好不好看"而非"数值该不该"做决策 → 演化为戏剧而非模拟
@@ -474,7 +525,7 @@ Vicky 系统的核心哲学："引擎算账，LLM 写故事"。
 
 确定性引擎：每次 tick 同样的输入 → 同样的输出。玩家可以通过 `contribute_to_org` 加速或逆转趋势，但不能绕过数值。
 
-### 13.6 相关文件
+### 13.7 相关文件
 
 | 文件 | 职责 |
 |------|------|
