@@ -327,7 +327,7 @@ export interface OrgMembership {
 }
 
 /** 四层职位的权力边界 */
-export const RANK_PERMISSIONS: Record<string, { minRank: number; description: string }> = {
+ = {
   enter_headquarters: { minRank: 1, description: "进入大本营不被拦" },
   view_restricted:    { minRank: 4, description: "查看受限信息和阶段性目标" },
   recruit_member:     { minRank: 7, description: "招募新成员" },

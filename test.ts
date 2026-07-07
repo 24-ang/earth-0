@@ -39,8 +39,6 @@ import {
   getTodayCalendar, getCalendarEvents, getCalendarPhase, clearCalendarCache,
   getHookNoveltyHint, evaluateOrgGoals, applyOrgDrivesToNPC,
 } from "./engine/timeline.ts";
-import { processNpcReactions } from "./engine/npc-reactions.ts";
-
 let passed = 0, failed = 0;
 const testQueue: { name: string; fn: () => any }[] = [];
 function test(name: string, fn: () => any) {
@@ -7683,40 +7681,7 @@ test("combat_action → reaction", () => {
   }
 });
 
-test("contribute_to_org betray → member reactions", () => {
-  resetState();
-  loadActiveWorld("oregairu");
-  gameState.organizations = gameState.organizations || {};
-  gameState.organizations["test_org"] = {
-    id: "test_org", name: "测试组织", type: "社团", scale: "club",
-    wealth: 50, influence: 50, cohesion: 50, public_legitimacy: 50,
-    coreLocation: "部室", territoryRoomKeys: [], class_base: {},
-    organizationalAxes: { "经济立场": 0, "政治立场": 0 },
-    goals: { macroGoal: "", currentPhaseGoal: "" },
-    leader: "雪ノ下雪乃",
-    members: [
-      { npcName: "雪ノ下雪乃", role: "部长", rank: 10 },
-      { npcName: "由比ヶ浜結衣", role: "普通部员", rank: 3 }
-    ],
-    relations: {}, match_rules: {}, entries: []
-  } as any;
-  gameState.player.location = "教室";
-  seedNpc("雪ノ下雪乃");
-  seedNpc("由比ヶ浜結衣");
 
-  const reactions = processNpcReactions("contribute_to_org", {
-    orgId: "test_org", action: "betray", details: "泄露部费去向"
-  });
-
-  if (reactions.length === 0) throw new Error("Betray should trigger org member reactions");
-  // Leader (rank 10) should setup or confront
-  const leaderReaction = reactions.find(r => r.npcName === "雪ノ下雪乃");
-  if (!leaderReaction) throw new Error("Leader should react");
-  // Regular member (rank 3) should avoid
-  const memberReaction = reactions.find(r => r.npcName === "由比ヶ浜結衣");
-  if (!memberReaction) throw new Error("Member should react");
-  if (memberReaction.mode !== "avoid") throw new Error(`Member should avoid, got ${memberReaction.mode}`);
-});
 
 test("intimate_touch high affection → no reaction", () => {
   resetState();

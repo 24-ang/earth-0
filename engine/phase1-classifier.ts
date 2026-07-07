@@ -68,6 +68,8 @@ const ACTION_WHITELIST = [
   "join_org",
   "leave_org",
   "promote_member",
+  "org_action",
+  "adjust_org_relation",
 ];
 
 // ── 公开 API ──
@@ -400,6 +402,8 @@ async function loadTool(toolName: string): Promise<any | null> {
     join_org: "../tools/action/join_org.ts",
     leave_org: "../tools/action/leave_org.ts",
     promote_member: "../tools/action/promote_member.ts",
+    org_action: "../tools/action/org_action.ts",
+    adjust_org_relation: "../tools/action/adjust_org_relation.ts",
   };
 
   const relPath = toolPaths[toolName];

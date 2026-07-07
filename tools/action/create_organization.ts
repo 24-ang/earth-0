@@ -71,6 +71,19 @@ export default {
     };
 
     gameState.organizations[params.id] = newOrg;
+
+    // 如果 leader 是玩家自己 → 自动加 memberships
+    if (params.leader && params.leader === gameState.player.name) {
+      gameState.player.memberships ??= [];
+      if (!gameState.player.memberships.some(m => m.orgId === params.id)) {
+        gameState.player.memberships.push({ orgId: params.id, role: "领袖", rank: 10, joinedAt: gameState.time.game_date });
+      }
+      // 确保 player 也在 org.members 里
+      if (!newOrg.members.some(m => m.npcName === gameState.player.name)) {
+        newOrg.members.push({ npcName: gameState.player.name, role: "领袖", rank: 10 });
+      }
+    }
+
     saveState();
 
     const summary = `【势力创建成功】\n名称: ${params.name} (ID: ${params.id})\n类型: ${params.type} | 规模: ${params.scale} | 支柱: ${newOrg.sector}\n大本营: ${params.coreLocation}\n政治轴: 经济${newOrg.organizationalAxes["经济立场"]} / 政治${newOrg.organizationalAxes["政治立场"]}\n目标: ${newOrg.goals.macroGoal}`;

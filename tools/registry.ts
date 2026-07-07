@@ -99,6 +99,8 @@ import contributeToOrgTool from "./action/contribute_to_org.ts";
 import joinOrgTool from "./action/join_org.ts";
 import leaveOrgTool from "./action/leave_org.ts";
 import promoteMemberTool from "./action/promote_member.ts";
+import orgActionTool from "./action/org_action.ts";
+import adjustOrgRelationTool from "./action/adjust_org_relation.ts";
 import gambleCommand from "./tui/gamble.ts";
 import housingCommand from "./tui/housing.ts";
 import relationsCommand from "./tui/relations.ts";
@@ -157,14 +159,6 @@ function withToolTracking(tool: any) {
         const result = await origExec(id, params, signal, onUpdate, ctx);
         // 自动落盘：工具成功执行后确保状态持久化
         try { saveState(); } catch (_) {}
-        // NPC 反应式日程越权：处理恶意行为触发的 NPC 反制
-        try {
-          const { processNpcReactions } = await import("../engine/npc-reactions.ts");
-          const triggered = processNpcReactions(tool.name, params);
-          if (triggered.length > 0) {
-            console.log(`[NPC反应] ${tool.name} 触发了 ${triggered.length} 条NPC反应: ${triggered.map(r => `${r.npcName}→${r.mode}`).join(", ")}`);
-          }
-        } catch (_) { /* NPC reactions are best-effort, never block tool execution */ }
         return result;
       } catch (e: any) {
         const loc = e.stack?.split("\n")?.[1]?.trim() || "";
@@ -212,7 +206,7 @@ export function registerAll(pi: ExtensionAPI) {
     useAbilityTool, takeContraceptivePillTool, performAbortionTool, socialCheckTool,
     travelTool, // P2: 统一旅行（合并 go_to_location + travel_intercity + complete_travel）
     startBroadcastTool, endBroadcastTool, createOrganizationTool, contributeToOrgTool,
-    joinOrgTool, leaveOrgTool, promoteMemberTool,
+    joinOrgTool, leaveOrgTool, promoteMemberTool, orgActionTool, adjustOrgRelationTool,
     // 8 lookup tools that mutate game state (moved from lookupTools — fix Layer 2 audit blindness)
     moveTool, moveToTool, boardTrainTool, completeTravelTool, goToLocationTool,
     sendSmsTool, postSnsTool, makeCallTool, travelIntercityTool,

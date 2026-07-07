@@ -28,32 +28,6 @@ export default {
 
     const { action } = params;
     let summary = "";
-
-    // ── 权限校验：根据 action 判断是否需要成员资格 ──
-    gameState.player.memberships ??= [];
-    const membership = gameState.player.memberships.find(m => m.orgId === params.orgId);
-    const memberRank = membership?.rank ?? 0;
-
-    // donate：所有人都可以捐款（包括非成员）
-    // complete_quest：普通成员(rank≥4)以上
-    // betray：必须是成员才能背叛
-    // recruit_member：核心成员(rank≥7)以上
-    const actionMinRank: Record<string, number> = {
-      donate: 0,
-      complete_quest: 4,
-      betray: 1,
-      recruit_member: 7,
-    };
-    const requiredRank = actionMinRank[action] ?? 0;
-    if (requiredRank > 0 && memberRank < requiredRank) {
-      const rankLabels: Record<number, string> = { 0: "非成员", 1: "边缘成员", 4: "普通成员", 7: "核心成员", 10: "领袖" };
-      const need = rankLabels[requiredRank] || `rank≥${requiredRank}`;
-      const have = membership ? `${membership.role}(${rankLabels[memberRank < 4 ? 1 : memberRank < 7 ? 4 : memberRank < 10 ? 7 : 10]})` : "非成员";
-      return {
-        content: [{ type: "text", text: `❌ 「${action}」需要 ${need} 权限。你当前的身份: ${have}。` }],
-        details: { success: false }
-      };
-    }
     let playerRepDelta = 0;
 
     // ── 辅助：确保 player.reputation[orgId] 存在 ──
