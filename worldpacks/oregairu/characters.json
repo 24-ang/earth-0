@@ -3460,9 +3460,9 @@
       "12": "中学生",
       "16": "高校生",
       "20": "大学生",
-      "22": "自由人"
+      "22": "总武高教师"
     },
-    "schedule_group": "自由人",
+    "schedule_group": "总武高教师",
     "funds": 15000,
     "sex_profile": "羽生真由梨",
     "social_class": "小资产阶级",
@@ -6217,66 +6217,244 @@
     "source": "我们无法一起学习",
     "base_age": 24,
     "gender": "female",
-    "appearance_brief": "女生，身高 165cm。来自《我们无法一起学习》。",
-    "hair_color": "棕色",
-    "hair_style": "短发",
+    "appearance_brief": "冰山美人型的年轻数学教师，对学生极为严格，被称为「零分机器」。",
+    "hair_color": "深蓝",
+    "hair_style": "长直发",
+    "eye_color": "冰蓝",
     "outfits": {
-      "school": {
-        "top": "制服外套",
-        "shirt": "校服衬衫",
-        "bottom": "裙子",
-        "feet": "皮鞋"
+      "work": {
+        "top": "白色衬衫",
+        "bottom": "深色包臀裙",
+        "legs": "黑色丝袜",
+        "feet": "中跟鞋",
+        "inner_top": "胸罩",
+        "inner_bot": "内裤"
+      },
+      "casual": {
+        "top": "针织衫",
+        "bottom": "长裙",
+        "feet": "平底鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
       }
     },
     "body": {
       "height_cm": 165,
-      "weight_kg": 50,
+      "weight_kg": 52,
       "build": "苗条",
+      "measurements": {
+        "bust": 89,
+        "waist": 58,
+        "hips": 88
+      },
+      "cup": "E",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
       "skin": {
         "base_tone": "白皙",
         "tan": 3,
         "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 116,
+        "weight_kg": 19,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "measurements": {
+          "bust": 74,
+          "waist": 54,
+          "hips": 78
+        },
+        "cup": "A",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 5,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 158,
+        "weight_kg": 46,
+        "build": "匀称",
+        "measurements": {
+          "bust": 82,
+          "waist": 56,
+          "hips": 84
+        },
+        "cup": "D",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 4,
+          "texture": "细腻"
+        }
+      },
+      "24": {
+        "height_cm": 165,
+        "weight_kg": 52,
+        "build": "苗条",
+        "measurements": {
+          "bust": 89,
+          "waist": 58,
+          "hips": 88
+        },
+        "cup": "E",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 3,
+          "texture": "细腻"
+        }
       }
     },
     "attributes": {
       "力量": 4,
       "敏捷": 6,
-      "体质": 6,
-      "智力": 10,
-      "感知": 10,
-      "魅力": 11
+      "体质": 5,
+      "智力": 16,
+      "感知": 14,
+      "魅力": 16
     },
-    "skills": {},
-    "personality_brief": "来自《我们无法一起学习》的角色。",
-    "personality_stages": {
-      "6": "普通的成长童年。"
+    "skills": {
+      "世界史": 10,
+      "教学": 9,
+      "整理": 8,
+      "钢琴": 6
     },
-    "speech_style": "礼貌温和的平辈语气。",
-    "anchors": {
-      "emotional": "来自《我们无法一起学习》的登场人物。"
+    "hp": {
+      "current": 12,
+      "max": 12
     },
-    "likes": [
-      "日常"
-    ],
-    "dislikes": [
-      "麻烦"
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "白衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
     ],
     "default_location": "西千葉",
+    "default_location_by_age": {
+      "6": "西千葉",
+      "12": "西千葉",
+      "15": "西千葉",
+      "18": "東京",
+      "24": "西千葉"
+    },
+    "schedule_group": "总武高教师",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
       "15": "高校生",
+      "18": "大学生",
       "24": "总武高教师"
     },
-    "schedule_group": "总武高教师",
-    "funds": 2000,
+    "funds": 180000,
+    "personality_brief": "冰山美人型的年轻世界史教师，对学生极为严格，被称为「零分机器」。但其实暗中非常关心学生的前途，会在放学后无偿给落后者补课。对自己的感情生活极度不坦率——被问到有没有男朋友时会冷着脸说「这和世界史有关系吗」。担任2年J班班主任。",
+    "personality_stages": {
+      "12": "成绩优异但性格孤僻的少女。觉得同龄人太幼稚，宁愿一个人看书。",
+      "15": "以全校第一的成绩考入重点高中。开始展现出对数学的天赋和热情。",
+      "18": "考入一流大学的理学部数学科。大学期间开始思考教育和人的成长。",
+      "24": "毕业后直接来到总武高任教。坚信'严格要求是对学生最大的尊重'——尽管她的严格经常被误解为冷漠。"
+    },
+    "speech_style": "语气冷淡、措辞精确，绝不多说一个不必要的字。批评学生时不带感情但句句扎心——「你的答案错得很精彩，精彩到我能拿来当下次考试的错题范例」。偶尔流露出温柔一面时会立刻用更严厉的语气掩盖。",
+    "likes": [
+      "世界史",
+      "整理收纳",
+      "热咖啡",
+      "校园的安静早晨"
+    ],
+    "dislikes": [
+      "不认真的态度",
+      "找借口的学生",
+      "被问私人问题",
+      "甜食（但其实不讨厌）"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的世界史教师，2年J班班主任。以严格著称，考试从不放水。",
+        "level": "common"
+      },
+      {
+        "text": "被称为'零分机器'——但不是因为她给零分，而是因为她不允许任何一个学生停留在零分的阶段。",
+        "level": "common"
+      },
+      {
+        "text": "虽然表面冷淡，但放学后经常能在空教室里看到她给跟不上的学生单独补课。据听过她补课的学生说，她私下讲的世界史比上课精彩十倍——只是不好意思在众人面前那么热情。",
+        "level": "familiar"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "暗中非常在意学生的评价。看到学生给她的绰号从'冰之女王'变成'零分机器的真冬老师'其实偷偷高兴了很久。",
+        "level": "close"
+      },
+      {
+        "text": "大学时有过一段失败的初恋——对方嫌她'太认真太无趣'。从那以后对恋爱话题更加回避。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "24": {
+        "drives": [
+          "让每个学生至少不害怕世界史",
+          "做一个被学生信赖的老师"
+        ],
+        "goal": "让2年J班在世界史期末考试中的平均分进入年级前三。"
+      }
+    },
     "social_class": "知识分子",
     "personal_axes": {
-      "经济立场": -1,
+      "经济立场": 0,
       "政治立场": 1
-    },
-    "default_location_by_age": {
-      "24": "西千葉"
     }
   },
   {
@@ -7429,14 +7607,14 @@
     "dislikes": [
       "麻烦"
     ],
-    "default_location": "西千葉",
+    "default_location": "东京_世田谷",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
       "15": "高校生",
-      "16": "高校生"
+      "18": "大学生"
     },
-    "schedule_group": "高校生",
+    "schedule_group": "自由人",
     "funds": 2000,
     "social_class": "大资产阶级",
     "personal_axes": {
@@ -7444,10 +7622,11 @@
       "政治立场": 1
     },
     "default_location_by_age": {
-      "16": "西千葉"
-    },
-    "grade": 2,
-    "homeroom": "F"
+      "6": "东京_世田谷",
+      "12": "东京_世田谷",
+      "15": "东京_世田谷",
+      "18": "东京_世田谷"
+    }
   },
   {
     "name": "克莱因",
@@ -9781,73 +9960,6 @@
     "homeroom": "E"
   },
   {
-    "name": "秋月孝三",
-    "source": "鬼父",
-    "base_age": 45,
-    "gender": "male",
-    "appearance_brief": "男生，身高 175cm。来自《鬼父》。",
-    "hair_color": "棕色",
-    "hair_style": "短发",
-    "outfits": {
-      "school": {
-        "top": "制服外套",
-        "shirt": "校服衬衫",
-        "bottom": "长裤",
-        "feet": "皮鞋"
-      }
-    },
-    "body": {
-      "height_cm": 175,
-      "weight_kg": 68,
-      "build": "普通",
-      "skin": {
-        "base_tone": "白皙",
-        "tan": 3,
-        "texture": "细腻"
-      }
-    },
-    "attributes": {
-      "力量": 6,
-      "敏捷": 6,
-      "体质": 6,
-      "智力": 10,
-      "感知": 10,
-      "魅力": 11
-    },
-    "skills": {},
-    "personality_brief": "来自《鬼父》的角色。",
-    "personality_stages": {
-      "6": "普通的成长童年。"
-    },
-    "speech_style": "礼貌温和的平辈语气。",
-    "anchors": {
-      "emotional": "来自《鬼父》的登场人物。"
-    },
-    "likes": [
-      "日常"
-    ],
-    "dislikes": [
-      "麻烦"
-    ],
-    "default_location": "千葉みなと",
-    "schedule_group_by_age": {
-      "6": "小学生",
-      "12": "中学生",
-      "15": "高校生",
-      "45": "总武高教师"
-    },
-    "schedule_group": "总武高教师",
-    "funds": 2000,
-    "social_class": "知识分子",
-    "personal_axes": {
-      "经济立场": 1,
-      "政治立场": 2
-    },
-    "default_location_by_age": {
-      "45": "千葉みなと"
-    }
-  },
-  {
     "name": "秋月爱莉",
     "source": "鬼父",
     "base_age": 14,
@@ -10124,69 +10236,199 @@
   },
   {
     "name": "牧野",
-    "source": "鬼父",
+    "source": "原创/参考",
     "base_age": 35,
     "gender": "male",
-    "appearance_brief": "男生，身高 172cm。来自《鬼父》。",
-    "hair_color": "棕色",
+    "appearance_brief": "中年化学教师，讲课枯燥但实验课极其认真。",
+    "hair_color": "黑色",
     "hair_style": "短发",
+    "eye_color": "黑色",
     "outfits": {
-      "school": {
-        "top": "制服外套",
-        "shirt": "校服衬衫",
-        "bottom": "长裤",
-        "feet": "皮鞋"
+      "work": {
+        "top": "西装外套",
+        "bottom": "西裤",
+        "feet": "皮鞋",
+        "shirt": "白衬衫"
+      },
+      "casual": {
+        "top": "休闲夹克",
+        "bottom": "休闲裤",
+        "feet": "休闲鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
       }
     },
     "body": {
-      "height_cm": 172,
-      "weight_kg": 64,
-      "build": "普通",
+      "height_cm": 170,
+      "weight_kg": 72,
+      "build": "标准",
+      "leg_type": "结实",
       "skin": {
-        "base_tone": "白皙",
-        "tan": 3,
-        "texture": "细腻"
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "35": {
+        "height_cm": 170,
+        "weight_kg": 72,
+        "build": "标准",
+        "leg_type": "结实",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
       }
     },
     "attributes": {
       "力量": 6,
-      "敏捷": 6,
-      "体质": 6,
-      "智力": 10,
-      "感知": 10,
-      "魅力": 11
+      "敏捷": 5,
+      "体质": 7,
+      "智力": 13,
+      "感知": 15,
+      "魅力": 10
     },
-    "skills": {},
-    "personality_brief": "来自《鬼父》的角色。",
-    "personality_stages": {
-      "6": "普通的成长童年。"
+    "skills": {
+      "化学": 9,
+      "教学": 7,
+      "实验安全": 10,
+      "育儿": 8
     },
-    "speech_style": "礼貌温和的平辈语气。",
-    "anchors": {
-      "emotional": "来自《鬼父》的登场人物。"
+    "hp": {
+      "current": 14,
+      "max": 14
     },
-    "likes": [
-      "日常"
-    ],
-    "dislikes": [
-      "麻烦"
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
     ],
     "default_location": "検見川浜",
+    "default_location_by_age": {
+      "6": "検見川浜",
+      "12": "検見川浜",
+      "15": "検見川浜",
+      "35": "検見川浜"
+    },
+    "schedule_group": "总武高教师",
     "schedule_group_by_age": {
       "6": "小学生",
       "12": "中学生",
       "15": "高校生",
+      "18": "大学生",
       "35": "总武高教师"
     },
-    "schedule_group": "总武高教师",
-    "funds": 2000,
+    "funds": 300000,
+    "personality_brief": "中年化学教师，讲课枯燥但实验课极其认真。对安全规范有强迫症——实验前必须检查三遍护目镜。私下是个好父亲，办公桌上放着小女儿的照片。因性格温和好说话，被学生叫'牧野大叔'。担任1年B班班主任。",
+    "personality_stages": {
+      "12": "喜欢在家做小实验的理科少年，曾经因为自制火山模型把厨房炸了。",
+      "15": "化学课代表，实验室里的'安全警察'——比老师还紧张安全规范。",
+      "18": "考入千叶大学理学部化学科。在实验室度过了大学四年。",
+      "35": "当了十年化学教师。对教学没有野心——就想安安静静做实验、教学生、下班陪女儿。"
+    },
+    "speech_style": "温和啰嗦，上课总是提醒'注意安全'至少五次。讲理论时容易陷入自己的世界讲到忘我——被学生叫醒才会不好意思地挠头。",
+    "likes": [
+      "化学实验",
+      "安全规范",
+      "女儿",
+      "咖啡糖"
+    ],
+    "dislikes": [
+      "危险的实验操作",
+      "不戴护目镜的学生",
+      "深夜加班"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的化学教师兼1年B班班主任，实验室安全规范的活化石。",
+        "level": "common"
+      },
+      {
+        "text": "实验课前的安全宣讲全校有名——'你们知道不戴护目镜的后果吗？不，你们不知道，但我知道，所以戴上。'",
+        "level": "common"
+      },
+      {
+        "text": "办公桌上那张小女孩的照片是全校最温馨的风景——那是他五岁的女儿。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "妻子是小学教师，两人在教职员研修会上认识。每天一起通勤。",
+        "level": "close"
+      },
+      {
+        "text": "其实讲课内容很扎实，只是节奏太慢——学生说他'适合开个化学播客当睡前节目'。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "35": {
+        "drives": [
+          "保证每一节实验课零事故",
+          "让女儿为爸爸是老师感到骄傲"
+        ],
+        "goal": "培养出至少一个愿意选化学专业的学生。"
+      }
+    },
     "social_class": "知识分子",
     "personal_axes": {
       "经济立场": 0,
-      "政治立场": 1
-    },
-    "default_location_by_age": {
-      "35": "検見川浜"
+      "政治立场": 0
     }
   },
   {
@@ -11237,7 +11479,7 @@
     ],
     "public_facts": [
       {
-        "text": "总武高的英文老师，性格开朗大方，和文静的黑崎老师是形成强烈对比的好朋友，两人都极受欢迎。",
+        "text": "总武高英语教师，2-C班主任。",
         "level": "common"
       }
     ],
@@ -11456,7 +11698,7 @@
         "hair_color": "黑色"
       }
     },
-    "personality_brief": "极其正经死板的女教师。丈夫过世后独自抚养继子，对继子有着极其复杂的感情，表面上像个严厉的母亲。",
+    "personality_brief": "极其正经死板的数学教师。丈夫过世后独自抚养继子。继子恰好也在总武高读高二（不同班）——母子关系对外从未公开，只有教务主任和校长知情。更危险的是：山田隆文正是高二的学年主任，直接掌握继子的学籍生杀大权。表面上是个严厉的数学老师，每天在走廊和继子擦肩而过却只能像陌生人一样点头。",
     "personality_stages": {
       "12": "认真听话的好学生。",
       "15": "严肃认真的班长类型。",
@@ -11468,18 +11710,31 @@
       "做家务"
     ],
     "dislikes": [
-      "年级主任的骚扰",
-      "违背伦理道德的事情"
+      "山田主任的骚扰",
+      "违背伦理道德的事情",
+      "在走廊撞见继子时的心虚感"
     ],
     "public_facts": [
       {
-        "text": "学校里出了名严肃认真的女教师，是单亲妈妈。",
+        "text": "总武高的数学教师，负责2年级数学II·B。出了名的严格——考试从不放水，答案少写一个步骤扣一分。",
         "level": "common"
+      },
+      {
+        "text": "学校里出了名严肃认真的女教师，单身。几乎不参加教员聚会，放学后总是最早离开——赶回家做饭。",
+        "level": "common"
+      },
+      {
+        "text": "她带的班里学生私下说'咲子老师的课只要认真听其实讲得很好'——但这句评价没人敢当面说。",
+        "level": "familiar"
       }
     ],
     "private_facts": [
       {
-        "text": "因为继子在学校里的某些把柄被年级主任抓住，遭到了威胁，被迫与其发生肉体关系。",
+        "text": "继子就在总武高读高二，在另一个班。两人在学校从不说话——这是她定下的规矩。但她会在放学后偷偷看继子班级的成绩排名——山田隆文是这一年级的学年主任，她知道这意味着什么。",
+        "level": "close"
+      },
+      {
+        "text": "因为继子在学校里的某些把柄被山田隆文抓住，遭到了威胁。山田用'让你继子退学'和'公开你们的关系'双重要挟——作为学年主任，他完全能做到。",
         "level": "close"
       }
     ],
@@ -11668,7 +11923,7 @@
     "homeroom": "C"
   },
   {
-    "name": "山田主任",
+    "name": "山田隆文",
     "source": "原创 (MTSP衍生)",
     "base_age": 48,
     "gender": "male",
@@ -11797,7 +12052,7 @@
         "hair_color": "黑色"
       }
     },
-    "personality_brief": "风评极差的老色狼。道貌岸然，擅长利用权力进行潜规则和要挟。",
+    "personality_brief": "总武高2年级学年主任，风评极差的老色狼。道貌岸然，擅长利用权力进行潜规则和要挟。高二年级十个班的学籍和处分都在他手里——对御堂咲子来说，这个位置让他的威胁无懈可击。知道她和继子的秘密后一直在找机会下手。",
     "personality_stages": {
       "18": "普通的大学生。",
       "48": "在职场混成老油条，利用职权骚扰女教师和女学生。"
@@ -11806,29 +12061,39 @@
     "likes": [
       "女教师",
       "女学生",
-      "权力"
+      "权力",
+      "掌握别人秘密的感觉"
     ],
     "dislikes": [
       "反抗他的人"
     ],
     "public_facts": [
       {
-        "text": "总武高的年级主任，风评不佳，被传为老色狼。",
+        "text": "总武高2年级的学年主任，负责管理2年级全部10个班的教务和纪律。",
+        "level": "common"
+      },
+      {
+        "text": "风评不佳，被学生和年轻女教师私下称为'老色狼'。但他和教务主任野村关系不错——野村看重他的行政效率。",
         "level": "common"
       }
     ],
     "private_facts": [
       {
-        "text": "抓住了御堂诚的把柄，以此要挟御堂咲子和他发生关系。",
+        "text": "抓住了御堂诚（咲子的继子）的把柄，以此要挟御堂咲子和他发生关系。",
+        "level": "close"
+      },
+      {
+        "text": "对校长佐久間表面恭敬，但背地里认为'快退休的老头子什么都不懂'。",
         "level": "close"
       }
     ],
     "drives_by_age": {
       "48": {
         "drives": [
-          "满足私欲"
+          "满足私欲",
+          "维护自己在学校里的权力地位"
         ],
-        "goal": "彻底掌控御堂咲子。"
+        "goal": "彻底掌控御堂咲子，同时在教务主任面前保持能干的形象。"
       }
     },
     "social_class": "知识分子",
@@ -11995,5 +12260,2393 @@
     },
     "grade": 3,
     "homeroom": "I"
+  },
+  {
+    "name": "榊原賢治",
+    "source": "原创",
+    "base_age": 31,
+    "gender": "male",
+    "appearance_brief": "前企业研发工程师转行的物理教师。",
+    "hair_color": "黑色",
+    "hair_style": "短发",
+    "eye_color": "黑色",
+    "outfits": {
+      "work": {
+        "top": "西装外套",
+        "bottom": "西裤",
+        "feet": "皮鞋",
+        "shirt": "白衬衫"
+      },
+      "casual": {
+        "top": "休闲夹克",
+        "bottom": "休闲裤",
+        "feet": "休闲鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 175,
+      "weight_kg": 70,
+      "build": "标准",
+      "leg_type": "结实",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "31": {
+        "height_cm": 175,
+        "weight_kg": 70,
+        "build": "标准",
+        "leg_type": "结实",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 8,
+      "敏捷": 7,
+      "体质": 8,
+      "智力": 16,
+      "感知": 12,
+      "魅力": 11
+    },
+    "skills": {
+      "物理": 10,
+      "教学": 8,
+      "发明": 9,
+      "咖啡": 7
+    },
+    "hp": {
+      "current": 14,
+      "max": 14
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "海浜幕張",
+    "default_location_by_age": {
+      "6": "海浜幕張",
+      "12": "海浜幕張",
+      "15": "海浜幕張",
+      "31": "海浜幕張"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "31": "总武高教师"
+    },
+    "funds": 800000,
+    "personality_brief": "前企业研发工程师转行的物理教师。上课喜欢用生活中的例子解释物理——「为什么电车急刹车时你会往前倒？」。对教科书照本宣科有生理性厌恶。拥有多项专利，专利收入让他不怎么在乎教师的低收入。担任科学部顾问。",
+    "personality_stages": {
+      "12": "对理科有浓厚兴趣的少年，喜欢拆家里的电器再装回去。",
+      "15": "高中物理竞赛常胜选手，已经开始自学大学物理。",
+      "18": "考入东工大，在材料和光学领域发表论文。",
+      "31": "厌倦了企业研发的官僚主义，辞职回到千叶当老师。觉得教年轻人比写专利更有意义。"
+    },
+    "speech_style": "随性、口语化，偶尔冒出技术术语又立刻自嘲——「抱歉，说人话就是……」。对学生不摆架子，像学长多过像老师。",
+    "likes": [
+      "物理实验",
+      "DIY",
+      "电车",
+      "咖啡"
+    ],
+    "dislikes": [
+      "照本宣科",
+      "形式主义",
+      "不思考就问'这题怎么做'"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高物理教师，3-C班主任，科学部顾问。",
+        "level": "common"
+      },
+      {
+        "text": "据说手里有好几项专利，是学校里最不缺钱的老师——但他开的还是那辆旧丰田。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "离开企业是因为看不惯上级把一项能减少交通事故的传感器专利卖给军工企业。",
+        "level": "close"
+      },
+      {
+        "text": "科学部实验室里藏着一台他自己组装的粒子检测装置——虽然从来没有正常工作过。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "31": {
+        "drives": [
+          "让学生看到物理的乐趣而不只是公式",
+          "用教学影响下一代工程师"
+        ],
+        "goal": "培养出至少一个考入东工大的学生。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": -2,
+      "政治立场": -2
+    }
+  },
+  {
+    "name": "大森和彦",
+    "source": "原创",
+    "base_age": 45,
+    "gender": "male",
+    "appearance_brief": "讲日本史能讲到热泪盈眶的中年男人。",
+    "hair_color": "黑色",
+    "hair_style": "短发",
+    "eye_color": "黑色",
+    "outfits": {
+      "work": {
+        "top": "西装外套",
+        "bottom": "西裤",
+        "feet": "皮鞋",
+        "shirt": "白衬衫"
+      },
+      "casual": {
+        "top": "休闲夹克",
+        "bottom": "休闲裤",
+        "feet": "休闲鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 78,
+      "build": "丰满",
+      "leg_type": "结实",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "45": {
+        "height_cm": 172,
+        "weight_kg": 78,
+        "build": "丰满",
+        "leg_type": "结实",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 5,
+      "体质": 6,
+      "智力": 15,
+      "感知": 16,
+      "魅力": 12
+    },
+    "skills": {
+      "日本史": 10,
+      "教学": 10,
+      "人际": 9,
+      "写作": 7
+    },
+    "hp": {
+      "current": 12,
+      "max": 12
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "千葉駅前",
+    "default_location_by_age": {
+      "6": "千葉駅前",
+      "12": "千葉駅前",
+      "15": "千葉駅前",
+      "45": "千葉駅前"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "45": "总武高教师"
+    },
+    "funds": 350000,
+    "personality_brief": "讲日本史能讲到热泪盈眶的中年男人。对战国时代有近乎狂热的爱，讲到本能寺之变总会哽咽。学生评价「听大森的课像在看大河剧+落语混合体」。在教员室里是个老好人，从不参与派系斗争。担任2年A班班主任。",
+    "personality_stages": {
+      "12": "喜欢读历史漫画的安静少年，对三国志和战国武将如数家珍。",
+      "15": "加入了历史研究同好会，开始读正史而非演义。",
+      "18": "考取千叶大学教育学部，专攻日本近世史。",
+      "45": "教了二十年书的老教师。对每个学生的名字和性格都记得。对教育热情不减但体力开始跟不上了。"
+    },
+    "speech_style": "热情洋溢，带点说书人的腔调。对历史人物有明确的道德立场——「信长是天才但不是好人，光秀是叛徒但我理解他」。上课时偶尔会突然切换成战国武将的口气。",
+    "likes": [
+      "战国史",
+      "大河剧",
+      "落语",
+      "温泉",
+      "日本酒"
+    ],
+    "dislikes": [
+      "历史修正主义",
+      "派系斗争",
+      "智能手机（不太会用）"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的日本史兼世界史教师，2年A班班主任。",
+        "level": "common"
+      },
+      {
+        "text": "上课旁征博引、妙趣横生，是学生投票'最想再听一节课'的教师第一名。",
+        "level": "common"
+      },
+      {
+        "text": "据说年轻时被邀请去NHK做历史节目的顾问，但拒绝了——因为'不想离开讲台'。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "妻子十年前病故，独自把女儿养大。女儿现在在东京上大学，每周回来一次。",
+        "level": "close"
+      },
+      {
+        "text": "办公桌最下面的抽屉里锁着一本未完成的战国小说手稿——写了二十年还没写完。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "45": {
+        "drives": [
+          "让学生理解历史不只是年号和人名",
+          "帮助每个学生找到自己的方向"
+        ],
+        "goal": "在退休前把写了二十年的战国小说写完。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "佐久間義隆",
+    "source": "原创",
+    "base_age": 58,
+    "gender": "male",
+    "appearance_brief": "头发花白、戴老花镜的矮个子老人。总是穿着略旧的灰色西装，笑容和蔼。",
+    "hair_color": "灰白",
+    "hair_style": "短发",
+    "eye_color": "黑色",
+    "outfits": {
+      "work": {
+        "top": "灰色旧西装",
+        "bottom": "深灰西裤",
+        "feet": "旧皮鞋",
+        "shirt": "白衬衫",
+        "acc": "老花镜"
+      },
+      "casual": {
+        "top": "开衫毛衣",
+        "bottom": "宽松裤子",
+        "feet": "拖鞋"
+      }
+    },
+    "body": {
+      "height_cm": 170,
+      "weight_kg": 68,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "58": {
+        "height_cm": 170,
+        "weight_kg": 68,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 4,
+      "敏捷": 5,
+      "体质": 5,
+      "智力": 15,
+      "感知": 18,
+      "魅力": 13
+    },
+    "skills": {
+      "行政": 10,
+      "人际": 9,
+      "将棋": 7,
+      "忍耐": 10
+    },
+    "hp": {
+      "current": 10,
+      "max": 10
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "千葉みなと",
+    "default_location_by_age": {
+      "6": "千葉みなと",
+      "12": "千葉みなと",
+      "15": "千葉みなと",
+      "58": "千葉みなと"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "58": "总武高教师"
+    },
+    "funds": 600000,
+    "personality_brief": "温和的老绅士校长，即将退休。对学生永远笑眯眯，讲话永远是「要努力哦」的鼓励型。但没人知道他在想什么——能在教务主任和平冢静的激烈对立中保持中立二十年，绝不简单。真正关心的是「别出丑闻，让我安稳退休」。",
+    "personality_stages": {
+      "12": "普通的东京少年，喜欢读书和下将棋。",
+      "15": "成绩中上但人缘极好的高中生，被老师评价为'有领导才能但过于谨慎'。",
+      "18": "考入东京学艺大学，选择教育行政方向。",
+      "58": "千叶教育界的老面孔。三十年的行政生涯教会他一件事——学校不是靠理想运转的，是靠平衡。"
+    },
+    "speech_style": "缓慢、和蔼、不表态——「嗯嗯，我知道了。大家各有各的道理嘛。」偶尔在关键问题上轻描淡写一句话就让所有人闭嘴。",
+    "likes": [
+      "将棋",
+      "园艺",
+      "孙子兵法",
+      "安静"
+    ],
+    "dislikes": [
+      "丑闻",
+      "激进改革",
+      "麻烦事",
+      "开会太久"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的校长，在任已有十五年。",
+        "level": "common"
+      },
+      {
+        "text": "每天早上会在校门口跟学生打招呼，记得大部分学生的名字。",
+        "level": "common"
+      },
+      {
+        "text": "说话永远是鼓励型的——但从没明确表过态。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "年轻时的理想主义被泡沫经济后的教育预算削减磨光了。",
+        "level": "close"
+      },
+      {
+        "text": "私下觉得平冢静说的有道理，但更需要教务主任把升学率稳住。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "58": {
+        "drives": [
+          "安稳退休",
+          "别让学校出丑闻"
+        ],
+        "goal": "在明年退休前，让总武高的偏差值排名再升一位。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 1,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "野村克則",
+    "source": "原创",
+    "base_age": 49,
+    "gender": "male",
+    "appearance_brief": "瘦高身材、戴金丝眼镜的中年男人，头发一丝不苟。西装永远笔挺，办公桌永远整洁。",
+    "hair_color": "黑色（染的）",
+    "hair_style": "三七分",
+    "eye_color": "黑色",
+    "outfits": {
+      "work": {
+        "top": "深蓝色西装",
+        "bottom": "深灰西裤",
+        "feet": "黑皮鞋",
+        "shirt": "白衬衫",
+        "acc": "金丝眼镜"
+      },
+      "casual": {
+        "top": "衬衫",
+        "bottom": "西裤",
+        "feet": "皮鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 178,
+      "weight_kg": 68,
+      "build": "瘦削",
+      "leg_type": "修长",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "49": {
+        "height_cm": 178,
+        "weight_kg": 68,
+        "build": "瘦削",
+        "leg_type": "修长",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 5,
+      "敏捷": 6,
+      "体质": 6,
+      "智力": 16,
+      "感知": 14,
+      "魅力": 8
+    },
+    "skills": {
+      "行政": 10,
+      "数据分析": 9,
+      "教学管理": 9,
+      "辩论": 8
+    },
+    "hp": {
+      "current": 12,
+      "max": 12
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "検見川浜",
+    "default_location_by_age": {
+      "6": "検見川浜",
+      "12": "検見川浜",
+      "15": "検見川浜",
+      "49": "検見川浜"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "49": "总武高教师"
+    },
+    "funds": 500000,
+    "personality_brief": "瘦削的总武高教务主任，戴金丝眼镜，永远在翻成绩数据。和平冢静在升学方针上势如水火——他推填鸭式备考，平冢坚持学生自主。真心相信「为了学生的未来，多做题没什么不好」。不是坏人——只是和静的理念南辕北辙。",
+    "personality_stages": {
+      "12": "家境贫寒但学习刻苦的少年。靠奖学金读完中学。",
+      "15": "以全校第一的成绩考进千叶最好的高中。相信努力和分数是改变命运的唯一途径。",
+      "18": "考入东京大学教育学部的寒门子弟。学生会干部，以严厉和效率著称。",
+      "49": "二十五年的教育行政生涯。相信数据不相信直觉。对平冢静的方法论——太理想化了，不适合公立学校。"
+    },
+    "speech_style": "公事公办，数据说话。「去年偏差值降了0.3，你打算怎么解释？」偶尔会在没人注意时叹气——他也知道学生不喜欢他，但他相信自己是正确的。",
+    "likes": [
+      "数据",
+      "效率",
+      "排名",
+      "历史书"
+    ],
+    "dislikes": [
+      "低效率",
+      "空谈理想",
+      "被顶撞",
+      "平冢静抽烟的样子"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高教务主任，分管升学指导和成绩管理。",
+        "level": "common"
+      },
+      {
+        "text": "和平冢静的关系在教员室是公开的秘密——两人见面只有公事公办。",
+        "level": "common"
+      },
+      {
+        "text": "每年的偏差值分析报告长达两百页，被年轻教师私下称为'野村白皮书'。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "他的父亲是个一辈子在工厂做工的工人。他对教育的信念来自父亲的遗言：'你读书，比我有出路。'",
+        "level": "close"
+      },
+      {
+        "text": "其实并不讨厌平冢静——甚至暗中佩服她敢说敢做的性格。但他不允许自己承认这一点。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "49": {
+        "drives": [
+          "提升升学率",
+          "维持学校的偏差值排名"
+        ],
+        "goal": "在任期内让总武高偏差值突破70，进入千叶公立校前三。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 2,
+      "政治立场": 3
+    }
+  },
+  {
+    "name": "新田裕也",
+    "source": "原创",
+    "base_age": 32,
+    "gender": "male",
+    "appearance_brief": "安静寡言的年轻信息教师。",
+    "hair_color": "黑色",
+    "hair_style": "短发",
+    "eye_color": "黑色",
+    "outfits": {
+      "work": {
+        "top": "西装外套",
+        "bottom": "西裤",
+        "feet": "皮鞋",
+        "shirt": "白衬衫"
+      },
+      "casual": {
+        "top": "休闲夹克",
+        "bottom": "休闲裤",
+        "feet": "休闲鞋"
+      },
+      "sleep": {
+        "shirt": "睡衣"
+      }
+    },
+    "body": {
+      "height_cm": 172,
+      "weight_kg": 62,
+      "build": "瘦削",
+      "leg_type": "修长",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "32": {
+        "height_cm": 172,
+        "weight_kg": 62,
+        "build": "瘦削",
+        "leg_type": "修长",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 5,
+      "敏捷": 7,
+      "体质": 6,
+      "智力": 17,
+      "感知": 14,
+      "魅力": 9
+    },
+    "skills": {
+      "编程": 10,
+      "教学": 7,
+      "系统管理": 10,
+      "游戏": 8
+    },
+    "hp": {
+      "current": 14,
+      "max": 14
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "千葉駅前",
+    "default_location_by_age": {
+      "6": "千葉駅前",
+      "12": "千葉駅前",
+      "15": "千葉駅前",
+      "32": "千葉駅前"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "32": "总武高教师"
+    },
+    "funds": 250000,
+    "personality_brief": "安静寡言的年轻信息教师。真正的全栈工程师水平——「为什么来当老师？因为觉得教学生写代码比给黑心企业做外包有意义」。电脑室里藏着一台他自己组装的服务器。对手机游戏上瘾屡次被学生撞见。",
+    "personality_stages": {
+      "12": "对电脑着迷的少年，用零花钱买了第一本编程入门书。",
+      "15": "高中时已经是学校电脑室的常驻人员，帮老师修好了无数次打印机。",
+      "18": "考入信息科学专业，大学期间接外包项目赚生活费。",
+      "32": "从IT企业辞职转行当老师。觉得班上那些对编程有兴趣的孩子让他看到了当年的自己。"
+    },
+    "speech_style": "说话声小、用词精炼。涉及技术话题时突然变得健谈。被学生问到游戏攻略时会假装严肃——「下课再说」。",
+    "likes": [
+      "编程",
+      "开源软件",
+      "手机游戏",
+      "组装硬件"
+    ],
+    "dislikes": [
+      "闭源垄断",
+      "不备份的人",
+      "叫他'计算机老师'的人——'我是信息科不是计算机科'"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的信息科教师，负责全校的电脑室管理。",
+        "level": "common"
+      },
+      {
+        "text": "据说电脑室里有一台他从家里搬来的服务器——没人知道他用来跑什么。",
+        "level": "common"
+      },
+      {
+        "text": "对手机游戏异常精通，是部分男生心中的'隐藏大佬'。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "大学时做过一款独立游戏，在Steam上卖了三千份——赚的钱全买了新的开发设备。",
+        "level": "close"
+      },
+      {
+        "text": "服务器跑的是一个开源的校内匿名BBS，他知道是谁在用但从不揭穿。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "32": {
+        "drives": [
+          "让每个学生至少会用代码解决一个问题",
+          "维护好自己搭的服务器"
+        ],
+        "goal": "在年内把电脑室升级成真正的计算机科学实验室。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": -2,
+      "政治立场": -3
+    }
+  },
+  {
+    "name": "児玉源造",
+    "source": "原创",
+    "base_age": 57,
+    "gender": "male",
+    "appearance_brief": "矮小干瘦的老人，灰白的短发，满是老茧的双手。永远穿着深蓝色工作服，口袋里装着扳手和螺丝刀。",
+    "hair_color": "灰白",
+    "hair_style": "短寸",
+    "eye_color": "黑色",
+    "outfits": {
+      "work": {
+        "top": "深蓝工作服",
+        "bottom": "工作裤",
+        "feet": "安全鞋"
+      },
+      "casual": {
+        "top": "旧衬衫",
+        "bottom": "宽松裤子",
+        "feet": "拖鞋"
+      }
+    },
+    "body": {
+      "height_cm": 165,
+      "weight_kg": 60,
+      "build": "瘦削",
+      "leg_type": "结实",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 148,
+        "weight_kg": 38,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "57": {
+        "height_cm": 165,
+        "weight_kg": 60,
+        "build": "瘦削",
+        "leg_type": "结实",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 6,
+      "敏捷": 5,
+      "体质": 7,
+      "智力": 10,
+      "感知": 16,
+      "魅力": 8
+    },
+    "skills": {
+      "修理": 10,
+      "木工": 9,
+      "水电": 9,
+      "园艺": 7
+    },
+    "hp": {
+      "current": 14,
+      "max": 14
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "西装",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "千葉みなと",
+    "default_location_by_age": {
+      "6": "千葉みなと",
+      "12": "千葉みなと",
+      "15": "千葉みなと",
+      "57": "千葉みなと"
+    },
+    "schedule_group": "总武高教师",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "18": "大学生",
+      "57": "总武高教师"
+    },
+    "funds": 150000,
+    "personality_brief": "沉默的校工老人。在学校干了二十五年，比校长还了解每块地板。什么都会修——水管、电灯、桌椅。学生们叫他「おじいちゃん」。偶尔会在放学后和落单的学生聊天，说出意想不到的智慧话语。",
+    "personality_stages": {
+      "12": "乡下长大的少年，跟着父亲学会了木工和修东西的手艺。",
+      "15": "中学毕业后直接去工厂做工，没继续读书。",
+      "18": "在建筑工地干苦力，学会了水电和泥瓦。",
+      "57": "二十五年前因为腰伤从建筑公司退下来，来总武高当校工。把学校当成了自己的家。"
+    },
+    "speech_style": "话少，每句不超过十个字。偶尔冒出一句自己编的俳句。对学生不叫名字叫「お前さん」——透着一种老派人独有的亲近。",
+    "likes": [
+      "修理东西",
+      "盆栽",
+      "午后的阳光",
+      "看到学生们长大"
+    ],
+    "dislikes": [
+      "浪费",
+      "不尊重物品的人",
+      "退休（不想退，但知道该退了）"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高的校工，在学校干了二十五年。",
+        "level": "common"
+      },
+      {
+        "text": "什么都会修——只要児玉爷爷拿着工具箱走过来，一切问题都能解决。",
+        "level": "common"
+      },
+      {
+        "text": "每天早上六点就到学校，把每一层走廊的灯打开。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "二十五年前妻子难产过世，孩子也没保住。从那以后一个人过。",
+        "level": "close"
+      },
+      {
+        "text": "每年毕业典礼时都会偷偷站在体育馆最后面看完——这是全校唯一会让他眼眶发红的日子。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "57": {
+        "drives": [
+          "让这个学校一直运转下去",
+          "在还能干的时候多干一点"
+        ],
+        "goal": "在退休前教会年轻的校工接班人所有手艺。"
+      }
+    },
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -2,
+      "政治立场": -2
+    }
+  },
+  {
+    "name": "蓝泽芽衣",
+    "source": "ぼくだけがセックスできない家 / 紅村かる",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "短金发，戴耳环和choker，麦色肌肤，惹眼的丰满身材，田径部出身的辣妹风女生。",
+    "hair_color": "金色（漂染）",
+    "hair_style": "短发",
+    "eye_color": "琥珀色",
+    "hair_accessories": "耳环（珍珠耳钉）",
+    "grade": 2,
+    "homeroom": "A",
+    "outfits": {
+      "school": {
+        "top": "白色衬衫（领口略敞）",
+        "bottom": "深灰百褶裙",
+        "legs": "短袜",
+        "feet": "乐福鞋",
+        "inner_top": "黑色蕾丝bra",
+        "inner_bot": "黑色内裤",
+        "shirt": "红色蝴蝶结领带"
+      },
+      "casual": {
+        "top": "黑色低胸tank top",
+        "bottom": "牛仔热裤",
+        "feet": "运动鞋",
+        "inner_top": "黑色bra",
+        "inner_bot": "黑色内裤",
+        "shirt": "白色开衫（披着）"
+      },
+      "sleep": {
+        "shirt": "宽松运动T恤（下面只穿内裤）"
+      }
+    },
+    "body": {
+      "height_cm": 160,
+      "weight_kg": 52,
+      "build": "丰满",
+      "measurements": {
+        "bust": 88,
+        "waist": 58,
+        "hips": 86
+      },
+      "cup": "E",
+      "leg_type": "运动型",
+      "body_shape": {
+        "chest": "半球",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "小麦",
+        "tan": 15,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "规律运动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 112,
+        "weight_kg": 18,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 152,
+        "weight_kg": 42,
+        "build": "标准",
+        "measurements": {
+          "bust": 76,
+          "waist": 56,
+          "hips": 78
+        },
+        "cup": "B",
+        "leg_type": "运动型",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "小麦",
+          "tan": 18,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 158,
+        "weight_kg": 48,
+        "build": "丰满",
+        "measurements": {
+          "bust": 84,
+          "waist": 57,
+          "hips": 83
+        },
+        "cup": "D",
+        "leg_type": "运动型",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "小麦",
+          "tan": 16,
+          "texture": "细腻"
+        }
+      },
+      "17": {
+        "height_cm": 160,
+        "weight_kg": 52,
+        "build": "丰满",
+        "measurements": {
+          "bust": 88,
+          "waist": 58,
+          "hips": 86
+        },
+        "cup": "E",
+        "leg_type": "运动型",
+        "body_shape": {
+          "chest": "半球",
+          "hips": "蜜桃",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "小麦",
+          "tan": 15,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 10,
+      "敏捷": 13,
+      "体质": 12,
+      "智力": 9,
+      "感知": 11,
+      "魅力": 16
+    },
+    "skills": {
+      "运动": 10,
+      "田径": 9,
+      "人际": 8,
+      "诱惑": 9
+    },
+    "hp": {
+      "current": 24,
+      "max": 24
+    },
+    "ac": 11,
+    "equipment": {
+      "top": {
+        "name": "白色衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "深灰百褶裙",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "inner_top": {
+        "name": "黑色蕾丝bra",
+        "type": "clothing",
+        "slot": "inner_top",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      },
+      "inner_bot": {
+        "name": "黑色内裤",
+        "type": "clothing",
+        "slot": "inner_bot",
+        "weight": 0.02,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "钱包",
+        "type": "tool",
+        "weight": 0.05,
+        "volume": 0.1,
+        "effects": [],
+        "state": "intact",
+        "flavor": "亮色皮质小钱包，里面有几张便利店优惠券和零钱"
+      },
+      {
+        "name": "耳机",
+        "type": "tool",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛海岸",
+    "default_location_by_age": {
+      "6": "稲毛海岸",
+      "12": "稲毛海岸",
+      "15": "稲毛海岸",
+      "17": "稲毛海岸"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "17": "高校生"
+    },
+    "funds": 8000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "马尾",
+        "hair_color": "深棕色（天然色）"
+      },
+      "15": {
+        "hair_style": "短发",
+        "hair_color": "金色（开始漂染）"
+      }
+    },
+    "personality_brief": "外表豪放、浑身辣妹气场，看似对感情随便，实则内心很容易受伤。私下里在和年长男生约会，对班上的城戸存在一种说不清楚的情绪。",
+    "personality_stages": {
+      "12": "田径部的刻苦少女，直率开朗，对感情懵懂。",
+      "15": "开始漂染头发、穿耳孔，逐渐形成辣妹风格，感情上也变得大胆。",
+      "17": "表面上洒脱随性，私下里和校外的年长男生有来往。对同学城戸有某种复杂的关注，但自己也说不清楚是什么。"
+    },
+    "speech_style": "讲话直接、用语随意，偶尔带关西腔的语气词。对感兴趣的人会主动搭话，对无聊的人直接无视。",
+    "likes": [
+      "田径",
+      "夏天",
+      "辣食",
+      "被人关注"
+    ],
+    "dislikes": [
+      "认真讲道理的人",
+      "被人看穿"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高二年级田径部员，染着金发，是班上最引人注目的女生之一。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "私下在和校外的年长男生交往，学校里的同学都不知道，已经有过性经验。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "17": {
+        "drives": [
+          "维持自由洒脱的形象",
+          "弄清楚自己对城戸的感情"
+        ],
+        "goal": "搞清楚自己到底想要什么。"
+      }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -2
+    }
+  },
+  {
+    "name": "本田朝阳",
+    "source": "ぼくだけがセックスできない家 / 紅村かる",
+    "base_age": 17,
+    "gender": "female",
+    "appearance_brief": "黑色长直发，戴红框眼镜，学生会长候选，外表清纯端庄，身材出人意料地丰满。",
+    "hair_color": "黑色",
+    "hair_style": "长直发",
+    "eye_color": "深棕色",
+    "hair_accessories": "",
+    "grade": 2,
+    "homeroom": "A",
+    "outfits": {
+      "school": {
+        "top": "白色衬衫",
+        "bottom": "深灰百褶裙",
+        "legs": "黑色过膝袜",
+        "feet": "黑色皮鞋",
+        "inner_top": "白色棉质bra",
+        "inner_bot": "白色内裤",
+        "shirt": "米色毛衣马甲（外穿）"
+      },
+      "casual": {
+        "top": "高领细针织衫",
+        "bottom": "A字长裙",
+        "feet": "平底鞋",
+        "inner_top": "白色bra",
+        "inner_bot": "白色内裤",
+        "shirt": "薄外套"
+      },
+      "sleep": {
+        "shirt": "浅蓝色睡衣套装"
+      }
+    },
+    "body": {
+      "height_cm": 163,
+      "weight_kg": 53,
+      "build": "丰满",
+      "measurements": {
+        "bust": 87,
+        "waist": 58,
+        "hips": 85
+      },
+      "cup": "E",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 114,
+        "weight_kg": 19,
+        "build": "纤细",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 3,
+          "texture": "细腻"
+        }
+      },
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 40,
+        "build": "标准",
+        "measurements": {
+          "bust": 72,
+          "waist": 55,
+          "hips": 76
+        },
+        "cup": "A",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "扁平",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      },
+      "15": {
+        "height_cm": 159,
+        "weight_kg": 48,
+        "build": "丰满",
+        "measurements": {
+          "bust": 82,
+          "waist": 57,
+          "hips": 82
+        },
+        "cup": "C",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      },
+      "17": {
+        "height_cm": 163,
+        "weight_kg": 53,
+        "build": "丰满",
+        "measurements": {
+          "bust": 87,
+          "waist": 58,
+          "hips": 85
+        },
+        "cup": "E",
+        "leg_type": "修长",
+        "body_shape": {
+          "chest": "水滴",
+          "hips": "圆润",
+          "waist": "细腰"
+        },
+        "skin": {
+          "base_tone": "白皙",
+          "tan": 2,
+          "texture": "细腻"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 7,
+      "敏捷": 8,
+      "体质": 8,
+      "智力": 15,
+      "感知": 13,
+      "魅力": 14
+    },
+    "skills": {
+      "学习": 11,
+      "演讲": 9,
+      "人际": 8,
+      "组织": 9
+    },
+    "hp": {
+      "current": 16,
+      "max": 16
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "白色衬衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "深灰百褶裙",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "legs": {
+        "name": "黑色过膝袜",
+        "type": "clothing",
+        "slot": "legs",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      },
+      "inner_top": {
+        "name": "白色棉质bra",
+        "type": "clothing",
+        "slot": "inner_top",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact"
+      },
+      "inner_bot": {
+        "name": "白色内裤",
+        "type": "clothing",
+        "slot": "inner_bot",
+        "weight": 0.02,
+        "effects": [],
+        "state": "intact"
+      },
+      "shirt": {
+        "name": "米色毛衣马甲",
+        "type": "clothing",
+        "slot": "shirt",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "钱包",
+        "type": "tool",
+        "weight": 0.05,
+        "volume": 0.1,
+        "effects": [],
+        "state": "intact",
+        "flavor": "深蓝色皮质钱包，里面整齐地放着学生证和少量现金"
+      },
+      {
+        "name": "笔记本",
+        "type": "tool",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "西千葉",
+    "default_location_by_age": {
+      "6": "西千葉",
+      "12": "西千葉",
+      "15": "西千葉",
+      "17": "西千葉"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "17": "高校生"
+    },
+    "funds": 5000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "双马尾",
+        "hair_color": "黑色"
+      },
+      "15": {
+        "hair_style": "长直发",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "典型的优等生学生会长气质，做事认真负责。但这副清纯外表的背后，隐藏着一段班上同学都不知道的秘密关系。",
+    "personality_stages": {
+      "12": "认真努力的好学生，是老师眼中的模范生。",
+      "15": "升入高中后开始竞选学生会，做事越来越有主见，表面依然清纯。",
+      "17": "学生会长候选，成绩优秀，在班上受人敬重。私下里与某个男性有着班上无人知晓的特殊关系。表面的清纯和私下的落差极大。"
+    },
+    "speech_style": "说话有礼貌、一板一眼，常用敬语。在学生会相关事务上非常有主导性。私下里在亲密关系中会表现出截然不同的一面。",
+    "likes": [
+      "阅读",
+      "整理笔记",
+      "学校活动"
+    ],
+    "dislikes": [
+      "乱糟糟的事情",
+      "被人打乱计划"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高二年A班的学习委员兼学生会长候选，成绩优秀，在班上很有声望。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "正和一个班级以外的男性保持着秘密的性关系，班上没有任何人知道。清纯外表和私下行为之间存在巨大落差。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "17": {
+        "drives": [
+          "维护自己在学校里的形象",
+          "维持那段秘密关系"
+        ],
+        "goal": "当上学生会长，同时守住自己的秘密。"
+      }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 2
+    }
+  },
+  {
+    "name": "城戸优斗",
+    "source": "ぼくだけがセックスできない家 / 紅村かる",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "深棕色短发，普通男高中生外表，性格有些被动，是这个家里唯一什么都没有的人。",
+    "hair_color": "深棕色",
+    "hair_style": "短发",
+    "eye_color": "深棕色",
+    "hair_accessories": "",
+    "grade": 2,
+    "homeroom": "A",
+    "outfits": {
+      "school": {
+        "top": "白色衬衫",
+        "bottom": "深灰西裤",
+        "feet": "皮鞋",
+        "inner_top": "白色T恤",
+        "inner_bot": "四角内裤",
+        "shirt": "校服外套"
+      },
+      "casual": {
+        "top": "简单T恤或衬衫",
+        "bottom": "休闲裤",
+        "feet": "运动鞋",
+        "inner_top": "白色T恤",
+        "inner_bot": "四角内裤"
+      },
+      "sleep": {
+        "shirt": "宽松T恤配短裤"
+      }
+    },
+    "body": {
+      "height_cm": 173,
+      "weight_kg": 62,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 8,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 116,
+        "weight_kg": 21,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "12": {
+        "height_cm": 151,
+        "weight_kg": 42,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 167,
+        "weight_kg": 56,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      },
+      "17": {
+        "height_cm": 173,
+        "weight_kg": 62,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 8,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 8,
+      "敏捷": 9,
+      "体质": 9,
+      "智力": 11,
+      "感知": 13,
+      "魅力": 9
+    },
+    "skills": {
+      "学习": 7,
+      "观察": 8,
+      "忍耐": 10
+    },
+    "hp": {
+      "current": 18,
+      "max": 18
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "校服外套",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "深灰西裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      },
+      "feet": {
+        "name": "皮鞋",
+        "type": "clothing",
+        "slot": "feet",
+        "weight": 0.4,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "钱包",
+        "type": "tool",
+        "weight": 0.05,
+        "volume": 0.1,
+        "effects": [],
+        "state": "intact",
+        "flavor": "普通黑色钱包，里面只有学生证和零花钱"
+      }
+    ],
+    "default_location": "稲毛海岸",
+    "default_location_by_age": {
+      "6": "稲毛海岸",
+      "12": "稲毛海岸",
+      "15": "稲毛海岸",
+      "17": "稲毛海岸"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "17": "高校生"
+    },
+    "funds": 5000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "深棕色"
+      }
+    },
+    "personality_brief": "普通老实的男高中生，不擅长主动出击，感知力比较强。和芽衣、朝阳同住，对两人都有感情，却是家里唯一什么都没有的那个人。",
+    "personality_stages": {
+      "12": "老实平凡的中学生，没什么特别出挑的地方。",
+      "15": "升入高中后开始意识到自己对异性的在意，但依然被动。",
+      "17": "和蓝泽芽衣、本田朝阳成为同班同学，因小组课题走近，最终意外住到了同一屋檐下。明明离两个女生那么近，却是这个屋子里唯一什么都没有的人，这种尴尬和煎熬每天折磨着他。"
+    },
+    "speech_style": "说话平实直接，不会花言巧语。面对芽衣会有些手足无措，面对朝阳则有点紧张，但面对外人时是个正常的普通男生。",
+    "likes": [
+      "安静",
+      "游戏",
+      "芽衣和朝阳"
+    ],
+    "dislikes": [
+      "被晾在外面的感觉",
+      "不知道该怎么办的时候"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高二年A班的普通男生，和蓝泽芽衣、本田朝阳是同班同学。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "和芽衣、朝阳住在同一个屋檐下，对两人都有感情。同住的三个人中，只有他一个人什么都没有。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "17": {
+        "drives": [
+          "弄清楚自己对芽衣和朝阳各自的感情",
+          "改变自己被动的状态"
+        ],
+        "goal": "在这个家里，不再只是那个被晾在外面的人。"
+      }
+    },
+    "social_class": "小资产阶级",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 0
+    }
+  },
+  {
+    "name": "渡边拓海",
+    "source": "ぼくだけがセックスできない家 / 紅村かる",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "戴黑框眼镜、留黑色短发的清秀男生，看起来像个老实学生。",
+    "hair_color": "黑色",
+    "hair_style": "短发偏分",
+    "eye_color": "黑色",
+    "hair_accessories": "",
+    "grade": 2,
+    "homeroom": "A",
+    "outfits": {
+      "school": {
+        "top": "白色衬衫",
+        "bottom": "深灰西裤",
+        "feet": "皮鞋",
+        "inner_top": "白色短袖",
+        "inner_bot": "四角内裤",
+        "shirt": "制服西装外套"
+      },
+      "casual": {
+        "top": "深色短袖衬衫",
+        "bottom": "休闲长裤",
+        "feet": "运动鞋",
+        "inner_top": "白色短袖",
+        "inner_bot": "四角内裤"
+      },
+      "sleep": {
+        "shirt": "休闲睡衣裤"
+      }
+    },
+    "body": {
+      "height_cm": 175,
+      "weight_kg": 64,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 2,
+        "texture": "普通"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 115,
+        "weight_kg": 20,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 3,
+          "texture": "普通"
+        }
+      },
+      "12": {
+        "height_cm": 150,
+        "weight_kg": 40,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 2,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 169,
+        "weight_kg": 58,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 2,
+          "texture": "普通"
+        }
+      },
+      "17": {
+        "height_cm": 175,
+        "weight_kg": 64,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 2,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 8,
+      "敏捷": 8,
+      "体质": 9,
+      "智力": 13,
+      "感知": 11,
+      "魅力": 10
+    },
+    "skills": {
+      "学习": 9,
+      "交际": 8,
+      "观察": 7
+    },
+    "hp": {
+      "current": 18,
+      "max": 18
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "制服西装外套",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "深灰西裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "西千葉",
+    "default_location_by_age": {
+      "6": "西千葉",
+      "12": "西千葉",
+      "15": "西千葉",
+      "17": "西千葉"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "17": "高校生"
+    },
+    "funds": 7000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "短发",
+        "hair_color": "黑色"
+      }
+    },
+    "personality_brief": "表面是个戴着眼镜、老老实实的学生，但内心极具掌控欲和欲望。盯上了同班的清纯会长候选本田朝阳。",
+    "personality_stages": {
+      "12": "听话的优等生，在班级里默默无闻。",
+      "15": "青春期后开始隐藏自己的色欲，善于利用温柔老实的面具接近心仪的女生。",
+      "17": "在班上表现出斯文的一面，但对本田朝阳抱有强烈的占有欲，一直在寻找攻破她防线的机会。"
+    },
+    "speech_style": "语气斯文客气，偶尔会流露出有些轻浮或者势在必得的态度。",
+    "likes": [
+      "本田朝阳",
+      "阅读",
+      "做计划"
+    ],
+    "dislikes": [
+      "被打乱节奏",
+      "被忽视"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高二年级学生，成绩中上，性格温和老实。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "私底下其实玩得非常开，并且一直计划着夺走清纯会长本田朝阳的身体。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "17": {
+        "drives": [
+          "彻底占有本田朝阳",
+          "维持老实学生的人设"
+        ],
+        "goal": "让本田朝阳成为只属于自己的女人。"
+      }
+    },
+    "social_class": "知识分子",
+    "personal_axes": {
+      "经济立场": 0,
+      "政治立场": 1
+    }
+  },
+  {
+    "name": "小林大介",
+    "source": "ぼくだけがセックスできない家 / 紅村かる",
+    "base_age": 17,
+    "gender": "male",
+    "appearance_brief": "寸头、小麦色皮肤的健壮男生，性格外向粗犷，田径部出身。",
+    "hair_color": "深棕色",
+    "hair_style": "寸头",
+    "eye_color": "深褐色",
+    "hair_accessories": "",
+    "grade": 2,
+    "homeroom": "A",
+    "outfits": {
+      "school": {
+        "top": "白色衬衫",
+        "bottom": "深灰西裤",
+        "feet": "运动鞋",
+        "inner_top": "无袖背心",
+        "inner_bot": "运动内裤",
+        "shirt": "运动外套"
+      },
+      "casual": {
+        "top": "运动短袖T恤",
+        "bottom": "运动短裤",
+        "feet": "运动鞋",
+        "inner_top": "无袖背心",
+        "inner_bot": "运动内裤"
+      },
+      "sleep": {
+        "shirt": "大裤衩"
+      }
+    },
+    "body": {
+      "height_cm": 178,
+      "weight_kg": 70,
+      "build": "结实",
+      "leg_type": "运动型",
+      "skin": {
+        "base_tone": "小麦",
+        "tan": 12,
+        "texture": "普通"
+      },
+      "diet": "多肉",
+      "exercise": "规律运动"
+    },
+    "body_by_age": {
+      "6": {
+        "height_cm": 118,
+        "weight_kg": 22,
+        "build": "标准",
+        "leg_type": "普通",
+        "skin": {
+          "base_tone": "普通",
+          "tan": 5,
+          "texture": "普通"
+        }
+      },
+      "12": {
+        "height_cm": 153,
+        "weight_kg": 44,
+        "build": "结实",
+        "leg_type": "运动型",
+        "skin": {
+          "base_tone": "小麦",
+          "tan": 10,
+          "texture": "普通"
+        }
+      },
+      "15": {
+        "height_cm": 172,
+        "weight_kg": 64,
+        "build": "结实",
+        "leg_type": "运动型",
+        "skin": {
+          "base_tone": "小麦",
+          "tan": 12,
+          "texture": "普通"
+        }
+      },
+      "17": {
+        "height_cm": 178,
+        "weight_kg": 70,
+        "build": "结实",
+        "leg_type": "运动型",
+        "skin": {
+          "base_tone": "小麦",
+          "tan": 12,
+          "texture": "普通"
+        }
+      }
+    },
+    "attributes": {
+      "力量": 12,
+      "敏捷": 11,
+      "体质": 12,
+      "智力": 8,
+      "感知": 9,
+      "魅力": 11
+    },
+    "skills": {
+      "运动": 10,
+      "交际": 8,
+      "调情": 7
+    },
+    "hp": {
+      "current": 24,
+      "max": 24
+    },
+    "ac": 10,
+    "equipment": {
+      "top": {
+        "name": "运动外套",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.4,
+        "effects": [],
+        "state": "intact"
+      },
+      "bottom": {
+        "name": "深灰西裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    },
+    "inventory": [
+      {
+        "name": "手机",
+        "type": "tool",
+        "slot": "back",
+        "weight": 0.2,
+        "effects": [],
+        "state": "intact"
+      },
+      {
+        "name": "运动水壶",
+        "type": "tool",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact"
+      }
+    ],
+    "default_location": "稲毛",
+    "default_location_by_age": {
+      "6": "稲毛",
+      "12": "稲毛",
+      "15": "稲毛",
+      "17": "稲毛"
+    },
+    "schedule_group": "高校生",
+    "schedule_group_by_age": {
+      "6": "小学生",
+      "12": "中学生",
+      "15": "高校生",
+      "17": "高校生"
+    },
+    "funds": 3000,
+    "appearance_by_age": {
+      "12": {
+        "hair_style": "寸头",
+        "hair_color": "深棕色"
+      }
+    },
+    "personality_brief": "典型的运动系单细胞男生，性格粗鲁直接，崇尚力量和性冲动。对辣妹风的蓝泽芽衣垂涎已久。",
+    "personality_stages": {
+      "12": "田径社主力，精力过剩的小伙子。",
+      "15": "喜欢和哥们聚在一起聊女生，性格口无遮拦。",
+      "17": "性格粗放、精力旺盛。对异性有着非常直接的生理冲动，认为蓝泽芽衣这样的辣妹正合他的胃口。"
+    },
+    "speech_style": "说话大嗓门，常带有一些粗俗或者挑逗性质的词汇，语气自信大方。",
+    "likes": [
+      "运动",
+      "蓝泽芽衣",
+      "快餐"
+    ],
+    "dislikes": [
+      "繁琐的规定",
+      "学习"
+    ],
+    "public_facts": [
+      {
+        "text": "总武高田径部成员，性格开朗外向，爱开玩笑。",
+        "level": "common"
+      }
+    ],
+    "private_facts": [
+      {
+        "text": "一直想找机会和蓝泽芽衣发生关系，甚至不介意在集体聚会时下手。",
+        "level": "close"
+      }
+    ],
+    "drives_by_age": {
+      "17": {
+        "drives": [
+          "在运动社团中拿到好成绩",
+          "彻底攻占蓝泽芽衣"
+        ],
+        "goal": "找机会和蓝泽芽衣发生关系。"
+      }
+    },
+    "social_class": "无产阶级",
+    "personal_axes": {
+      "经济立场": -1,
+      "政治立场": -1
+    }
   }
 ]
