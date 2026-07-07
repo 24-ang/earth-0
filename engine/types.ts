@@ -829,7 +829,16 @@ export interface Organization {
     location_contains?: string;
   };
   entries?: any[];                // facts entries
+
+  // ── 生命周期与规模演化 ──
+  lifecycle_stage?: LifecycleStage;   // 六阶段生命周期，引擎自动推断
+  ticks_at_scale?: number;            // 当前 scale 已持续的 ticks 数
+  ticks_at_stage?: number;            // 当前 lifecycle_stage 已持续的 ticks 数
+  archived?: boolean;                 // 标记为已消亡（不下发 LLM）
 }
+
+export type LifecycleStage = "萌芽" | "初创" | "成长" | "成熟" | "衰退" | "消亡";
+export const SCALE_LADDER: readonly string[] = ["club", "local", "regional", "national"] as const;
 
 // ── 手机数据（存储在 Item.phoneData）──
 

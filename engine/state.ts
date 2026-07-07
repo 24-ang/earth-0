@@ -4595,6 +4595,21 @@ export function loadActiveWorld(worldName?: string): void {
             console.error(`Failed to load org file: ${f}`, e);
           }
         }
+
+        // 初始化生命周期字段（对没有这些字段的已有 org，引擎自动推断）
+        for (const org of Object.values(gameState.organizations)) {
+          if (!org.lifecycle_stage) {
+            const w = org.wealth, inf = org.influence, coh = org.cohesion;
+            if (w < 20 && inf < 20) org.lifecycle_stage = "萌芽";
+            else if (w < 40 && inf < 40) org.lifecycle_stage = "初创";
+            else if (coh < 40 || w < 30) org.lifecycle_stage = "衰退";
+            else if (w < 70 && inf < 70) org.lifecycle_stage = "成长";
+            else if (w >= 70 && inf >= 70 && coh >= 60) org.lifecycle_stage = "成熟";
+            else org.lifecycle_stage = "成长";
+          }
+          org.ticks_at_stage ??= 0;
+          org.ticks_at_scale ??= 0;
+        }
       }
 
       // 重新加载新世界包的天空盒默认值

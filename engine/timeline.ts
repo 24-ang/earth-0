@@ -1226,9 +1226,10 @@ export function applyWorldStateToOrgs(): void {
 }
 
 /**
- * 评估组织阶段性目标进度
- * 检查 requiredResources 是否有对应的 world flags 或条件满足。
- * 简化版本：只做存活性检查和凝聚力崩溃警告。
+ * 评估组织阶段性目标进度 + 规模升降级 + 生命周期演化。
+ *
+ * 调用时机：每次 settlement tick（advanceTime / applyBeatEffects）之后。
+ * 返回叙事告警列表，供 Phase 3 渲染注入。
  */
 export function evaluateOrgGoals(): { orgId: string; alert: string }[] {
   const orgs = gameState.organizations;
@@ -1236,17 +1237,151 @@ export function evaluateOrgGoals(): { orgId: string; alert: string }[] {
   const alerts: { orgId: string; alert: string }[] = [];
 
   for (const [id, org] of Object.entries(orgs)) {
-    // 凝聚力过低 → 组织内部产生分裂/不满叙事钩子
-    if (org.cohesion <= 20) {
-      alerts.push({ orgId: id, alert: `「${org.name}」内部凝聚力极低（${org.cohesion}），成员间出现分裂迹象。` });
+    // ── 跳过已消亡组织 ──
+    if (org.archived) continue;
+
+    // ── 初始化生命周期追踪字段 ──
+    org.lifecycle_stage ??= inferLifecycleStage(org);
+    org.ticks_at_stage ??= 0;
+    org.ticks_at_scale ??= 0;
+
+    // ── Step 1: 存活性检查（最高优先级） ──
+    if (org.cohesion < 10 && org.wealth < 10 && org.public_legitimacy < 10) {
+      org.lifecycle_stage = "消亡";
+      org.archived = true;
+      alerts.push({
+        orgId: id,
+        alert: `💀 「${org.name}」已解体消亡——财力（${org.wealth}）、凝聚力（${org.cohesion}）、公信力（${org.public_legitimacy}）三重枯竭。退出活跃势力。`
+      });
+      continue;
     }
-    // 财力耗尽 → 组织陷入资金危机
+
+    // ── Step 2: 凝聚力/财力低告警 ──
+    if (org.cohesion <= 20) {
+      alerts.push({ orgId: id, alert: `⚠️ 「${org.name}」内部凝聚力极低（${org.cohesion}），成员间出现分裂迹象。` });
+    }
     if (org.wealth <= 10) {
-      alerts.push({ orgId: id, alert: `「${org.name}」财力几近枯竭（${org.wealth}），日常运营陷入困难。` });
+      alerts.push({ orgId: id, alert: `💰 「${org.name}」财力几近枯竭（${org.wealth}），日常运营陷入困难。` });
+    }
+
+    // ── Step 3: 生命周期阶段判定 ──
+    const newStage = inferLifecycleStage(org);
+    if (newStage !== org.lifecycle_stage) {
+      const oldStage = org.lifecycle_stage;
+      org.lifecycle_stage = newStage;
+      org.ticks_at_stage = 0;
+      alerts.push({
+        orgId: id,
+        alert: lifecycleTransitionMessage(org.name, oldStage!, newStage, org.scale)
+      });
+    } else {
+      org.ticks_at_stage = (org.ticks_at_stage ?? 0) + 1;
+    }
+
+    // ── Step 4: 规模升降级 ──
+    org.ticks_at_scale = (org.ticks_at_scale ?? 0) + 1;
+    const scaleResult = evaluateScaleChange(org);
+    if (scaleResult) {
+      const oldScale = org.scale;
+      org.scale = scaleResult as any;
+      org.ticks_at_scale = 0;
+      alerts.push({
+        orgId: id,
+        alert: scaleChangeMessage(org.name, oldScale, scaleResult, org.lifecycle_stage!)
+      });
     }
   }
 
   return alerts;
+}
+
+// ── 生命周期辅助 ──
+
+/** 根据 wealth / influence / cohesion 推断当前生命周期阶段 */
+function inferLifecycleStage(org: any): string {
+  const { wealth, influence, cohesion } = org;
+
+  // 萌芽：资源和影响力都很低，刚建立
+  if (wealth < 20 && influence < 20) return "萌芽";
+
+  // 初创：有一定的起步基础
+  if (wealth < 40 && influence < 40) return "初创";
+
+  // 衰退检测（高于萌芽/初创才谈得上衰退）
+  if (cohesion < 40 || wealth < 30) return "衰退";
+
+  // 成长：中等规模
+  if (wealth < 70 && influence < 70) return "成长";
+
+  // 成熟：高财富+高影响力+高凝聚力
+  if (wealth >= 70 && influence >= 70 && cohesion >= 60) return "成熟";
+
+  // 默认回落
+  return "成长";
+}
+
+function lifecycleTransitionMessage(name: string, from: string, to: string, scale: string): string {
+  const msgs: Record<string, Record<string, string>> = {
+    "萌芽": {
+      "初创": `🌱 → 🌿 「${name}」从萌芽期进入初创期——积累了一定资源与影响力（规模: ${scale}）。`,
+      "衰退": `🥀 「${name}」从萌芽直接走向衰退——基础不稳，后继乏力（规模: ${scale}）。`,
+      "消亡": `💀 「${name}」尚未发芽便已枯萎。`,
+    },
+    "初创": {
+      "成长": `🌿 → 🌳 「${name}」从初创期进入成长期——势力版图加速扩张（规模: ${scale}）。`,
+      "成熟": `🌿 → 🏛️ 「${name}」从初创跃升至成熟——高速增长后快速站稳脚跟（规模: ${scale}）。`,
+      "衰退": `🌿 → 🥀 「${name}」从初创期滑入衰退——增长乏力，内部矛盾浮现（规模: ${scale}）。`,
+    },
+    "成长": {
+      "成熟": `🌳 → 🏛️ 「${name}」从成长期进入成熟期——已成为${scale}级不可忽视的力量。`,
+      "衰退": `🌳 → 🥀 「${name}」从成长期滑入衰退——昔日光环褪色，内部裂痕扩大（规模: ${scale}）。`,
+    },
+    "成熟": {
+      "衰退": `🏛️ → 🥀 「${name}」从巅峰走向衰退——巩固不易，维持更难（规模: ${scale}）。`,
+      "成长": `🏛️ → 🌳 「${name}」从成熟回调至成长——规模调整期（规模: ${scale}）。`,
+    },
+    "衰退": {
+      "成长": `🥀 → 🌳 「${name}」触底反弹，重回成长轨道（规模: ${scale}）。`,
+      "初创": `🥀 → 🌿 「${name}」缩减规模，退回初创阶段（规模: ${scale}）。`,
+      "消亡": `🥀 → 💀 「${name}」衰退不可逆转，走向解体……`,
+    },
+  };
+
+  return msgs[from]?.[to] || `🔄 「${name}」生命周期变化: ${from} → ${to}（规模: ${scale}）。`;
+}
+
+// ── 规模演化辅助 ──
+
+const SCALE_RUNG: Record<string, number> = { "club": 0, "local": 1, "regional": 2, "national": 3 };
+
+function evaluateScaleChange(org: any): string | null {
+  const currentRung = SCALE_RUNG[org.scale] ?? 1;
+  const ticks = org.ticks_at_scale ?? 0;
+
+  // 升级条件：影响力 ≥ 60 且凝聚力 ≥ 70 且持续 ≥ 5 ticks
+  if (org.influence >= 60 && org.cohesion >= 70 && ticks >= 5) {
+    if (currentRung < 3) {
+      const rungs = ["club", "local", "regional", "national"];
+      return rungs[currentRung + 1]!;
+    }
+  }
+
+  // 降级条件：凝聚力 < 20 且持续 ≥ 3 ticks（但不低于 club）
+  if (org.cohesion < 20 && ticks >= 3) {
+    if (currentRung > 0) {
+      const rungs = ["club", "local", "regional", "national"];
+      return rungs[currentRung - 1]!;
+    }
+  }
+
+  return null;
+}
+
+function scaleChangeMessage(name: string, from: string, to: string, stage: string): string {
+  if (SCALE_RUNG[to]! > SCALE_RUNG[from]!) {
+    return `📈 「${name}」规模升级: ${from} → ${to}（阶段: ${stage}）。影响力扩大，能触及更高级别的势力互动。`;
+  }
+  return `📉 「${name}」规模降级: ${from} → ${to}（阶段: ${stage}）。控制力收缩，在更大格局中的话语权减弱。`;
 }
 
 /**

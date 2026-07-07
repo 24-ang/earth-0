@@ -261,6 +261,91 @@ export function validatePlayerState(
     warnings.push(`玩家名为默认值"维"——若非有意命名，检查 init_game 是否传对了 name`);
   }
 
+  // ── Vicky 政治经济学系统自检（仅 init 阶段跑一次，turn 阶段跳过防刷屏）──
+  if (phase === "init" && gs.organizations) {
+    const orgs = gs.organizations;
+    const TIERS = ["global", "national", "regional", "local", "site"];
+    const SECTORS = ["politics", "economy", "culture", "military", "social"];
+    const SCALES = ["club", "local", "regional", "national"];
+    const AXES = ["经济立场", "政治立场"];
+    let orgCount = 0, oldFormatCount = 0, missingTierCount = 0;
+    let missingClassBaseCount = 0, brokenParentCount = 0, brokenAxesCount = 0;
+    let missingSectorCount = 0, badScaleCount = 0, badGovRefs = 0;
+
+    for (const [id, org] of Object.entries(orgs)) {
+      orgCount++;
+      if (!org.scale || !SCALES.includes(org.scale)) badScaleCount++;
+      if (!org.sector || !SECTORS.includes(org.sector)) missingSectorCount++;
+      if (!org.class_base || Object.keys(org.class_base).length === 0) missingClassBaseCount++;
+      if (!org.organizationalAxes ||
+          AXES.some(a => org.organizationalAxes[a] === undefined)) brokenAxesCount++;
+      if (org.parent_org && !orgs[org.parent_org]) brokenParentCount++;
+    }
+
+    // 检查旧格式残党（soubu_high 等从旧数组格式升级失败会触发）
+    for (const [id, org] of Object.entries(orgs)) {
+      if (!org.name || !org.scale || !org.sector) {
+        oldFormatCount++;
+        errors.push(`组织 "${id}" 疑似旧格式：缺少 name/scale/sector（soubu_high.json 可能未升级？）`);
+      }
+    }
+
+    // 检查 location tier 标记
+    if ((globalThis as any)._regionContextsCache || (globalThis as any)._regionContexts) {
+      const ctx = (globalThis as any)._regionContexts || {};
+      for (const [key, data] of Object.entries(ctx)) {
+        if ((data as any)?.skybox_defaults && !(data as any).skybox_defaults.tier) {
+          missingTierCount++;
+          warnings.push(`地点 "${key}" 有 skybox_defaults 但缺少 tier 标记——级联保护不会生效`);
+        }
+        // 检查 governing_orgs 引用的 orgId 是否存在
+        if ((data as any)?.governing_orgs) {
+          for (const gov of (data as any).governing_orgs) {
+            if (gov.orgId && !orgs[gov.orgId]) {
+              badGovRefs++;
+              warnings.push(`地点 "${key}" 的 governing_orgs 引用了一个不存在的组织: "${gov.orgId}"`);
+            }
+          }
+        }
+      }
+    }
+
+    // 检查角色数据完整性
+    const { characters } = require("./state.ts");
+    let missingClassCount = 0, missingAxesCount = 0;
+    if (characters) {
+      for (const ch of (characters as any[])) {
+        if (!ch.social_class) missingClassCount++;
+        if (!ch.personal_axes) missingAxesCount++;
+      }
+    }
+    if (missingClassCount > 0) {
+      warnings.push(`${missingClassCount} 个角色缺少 social_class——部分 NPC 将无法触发阶级内心冲突`);
+    }
+    if (missingAxesCount > 0) {
+      warnings.push(`${missingAxesCount} 个角色缺少 personal_axes——组织-个人理念轴比较将失效`);
+    }
+
+    // 汇总报告
+    if (oldFormatCount > 0) {
+      errors.push(`Vicky系统: ${oldFormatCount} 个组织仍为旧格式（缺少新字段），请升级 org JSON 文件`);
+    }
+    if (brokenParentCount > 0) {
+      errors.push(`Vicky系统: ${brokenParentCount} 个 parent_org 引用不存在——声望传导链条断裂`);
+    }
+    if (badGovRefs > 0) {
+      warnings.push(`Vicky系统: ${badGovRefs} 个 governing_orgs 引用不存在的组织——Phase 3 活跃势力列表会出现缺口`);
+    }
+    if (missingTierCount > 0) {
+      warnings.push(`Vicky系统: ${missingTierCount} 个 location 缺少 tier 标记——天空盒级联保护不完整`);
+    }
+
+    const okCount = orgCount - oldFormatCount - brokenParentCount;
+    if (orgCount > 0 && okCount === orgCount) {
+      // 全部 OK，不刷屏，只记一条
+    }
+  }
+
   // ── 报告 ──
   if (phase === "init") {
     // init 阶段：错误+警告全部大声报（烟雾报警器，及时抓）
