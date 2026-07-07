@@ -504,7 +504,7 @@ export async function showPhoneTUI(ctx: any, phoneItem: any) {
   const pd = getPlayerPhoneData(gameState);
   if (!pd) { ctx.ui.notify("没有手机数据", "warning"); return; }
 
-  syncContactsFromRelationships(pd);
+  syncContactsFromRelationships(gameState, pd);
 
   const gameYear = parseInt(gameState.time.game_date.split("-")[0]) || (gameState.time.timeline_origin?.year ?? 2018);
   const isJP = true;
