@@ -472,6 +472,7 @@ export function checkTimelineEvents(): void {
   for (const ev of gameState.dynamicEvents) {
     if (gameState.completed_events.includes(ev.id) && !ev.repeatable) continue;
     if (gameState.active_hooks.some(h => h.event_id === ev.id)) continue;
+    if (gameState.quests?.[ev.id]?.status === "active") continue; // 已有活跃任务，不重复触发
     if (ev.trigger && !checkTrigger(ev as any, day)) continue;
 
     const hook: Hook = {
@@ -798,19 +799,20 @@ export async function openQuest(eventId: string): Promise<string | null> {
 
   // 从 active_hooks 中移除
   gameState.active_hooks = gameState.active_hooks.filter(h => h.event_id !== eventId);
-  // 如果是动态事件，从注册表移除
-  removeDynamicEvent(eventId);
+  // 动态事件保留在 dynamicEvents 注册表中——advanceQuest 需要它来查找事件定义（beats/intermission）。
+  // checkTimelineEvents 的 quest guard 会阻止已有活跃 quest 的事件重复触发。
 
   // 自动推进满足 auto_if 条件的 beat
   const autoLogs = await autoAdvanceQuest(ev, gameState.quests[eventId]);
   const q = gameState.quests[eventId];
+  const qTitle = q.title || eventId;
   if (q.status === "completed") {
-    return `任务开始并自动完成: ${ev.title} (${autoLogs.join("; ")})`;
+    return `任务开始并自动完成: ${qTitle} (${autoLogs.join("; ")})`;
   }
   if (autoLogs.length > 0) {
-    return `任务开始: ${ev.title} [自动推进: ${autoLogs.join(" → ")}]`;
+    return `任务开始: ${qTitle} [自动推进: ${autoLogs.join(" → ")}]`;
   }
-  return `任务开始: ${ev.title}`;
+  return `任务开始: ${qTitle}`;
 }
 
 /** 推进 quest beat */

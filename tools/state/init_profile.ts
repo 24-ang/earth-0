@@ -41,7 +41,7 @@ function normalizeItem(raw: any, where: string): any {
     effects: fromCatalog?.effects || [],
     flavor: undefined,  // 先占位，下面三选一
     ...raw, // 模板显式值优先
-    effects: Array.isArray(raw.effects) ? raw.effects
+    effects: (Array.isArray(raw.effects) && (raw.effects as any[]).length > 0) ? raw.effects
           : (Array.isArray(fromCatalog?.effects) ? [...fromCatalog.effects] : []),
     // 三级兜底：模板 > catalog > 引擎生成兜底
     flavor: raw.flavor || fromCatalog?.flavor || `一件普通的${raw.name}`,

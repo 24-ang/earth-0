@@ -21,7 +21,7 @@ export default {
       })),
     }),
     async execute(_id, params, _s, _o, _ctx) {
-      const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine, translateWorldState } = await import("../../engine/state.ts");
+      const { gameState, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, findCharacter, getVisibleBodyDescription, getNPCVisibleBodyDescription, getNamelessNPCs, getRoom, getRoomAgingLine, translateWorldState, getOutfitChangesThisTurn } = await import("../../engine/state.ts");
       const charStages = await import("../../data/character_stages.json", { with: { type: "json" } });
 
       async function runOne(npcName: string, sceneContext: string, initiative?: boolean): Promise<{response: string; outfit: string}> {
@@ -129,6 +129,16 @@ export default {
             return parts.length > 0 ? parts.join("\n\n") : "";
           })(),
           "",
+          (() => {
+            const changes = getOutfitChangesThisTurn();
+            if (changes.length === 0) return "";
+            const myChange = changes.find(c => c.npc === npcName);
+            const otherChanges = changes.filter(c => c.npc !== npcName);
+            const lines: string[] = [];
+            if (myChange) lines.push(`你刚换上了${myChange.to}服装（${myChange.desc}）。之前穿的是${myChange.from}。思考或说话时自然提及换装动作，不要假装衣服一直穿着。`);
+            for (const oc of otherChanges) lines.push(`${oc.npc}刚换上了${oc.to}服装（${oc.desc}）。`);
+            return lines.length > 0 ? `[换装] ${lines.join(" ")}` : "";
+          })(),
           `当前场景: ${sceneContext}`,
           initiative ? "【模式: 自主行动】你没有被玩家触发。基于你的性格和当前环境，主动做或说点什么。" : "",
           "",

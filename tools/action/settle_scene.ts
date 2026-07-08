@@ -18,15 +18,17 @@ export default {
     }),
     async execute(_id, params, _s, _o, _ctx) {
       const { runSettlement } = await import("../../engine/settlement.ts");
+      const { gameState } = await import("../../engine/state.ts");
       const { resultText, events } = await runSettlement({
         elapsed_minutes: params.elapsed_minutes,
         summary: params.summary,
         memory_tags: params.memory_tags,
         ctx: _ctx,
       });
+      gameState._toolsLocked = false; // 场景收口后解锁——安全：Phase 1 流程中 extension.ts:162 会重新上锁
       return {
         content: [{ type: "text", text: resultText }],
-        details: { time: (await import("../../engine/state.ts")).gameState.time, events, memory_tags: params.memory_tags },
+        details: { time: gameState.time, events, memory_tags: params.memory_tags },
       };
     },
   };

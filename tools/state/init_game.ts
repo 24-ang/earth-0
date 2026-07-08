@@ -232,6 +232,10 @@ export default {
       effects: [{ type: "communication" }], state: "intact",
     });
 
+    // reload world data (orgs, items, characters, etc.) after resetState wiped them
+    const { loadActiveWorld } = stateMod;
+    loadActiveWorld();
+
     // ── 生殖器档案自动生成 ──
     try {
       const { getOrCreateSexState } = stateMod;

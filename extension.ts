@@ -181,6 +181,10 @@ export default function (pi: ExtensionAPI) {
       console.error("Phase2: auto-spawn NPCs failed:", e);
     }
 
+    // 清空本轮换装追踪（Phase 2 NPC Agent 已消费完毕）
+    const { clearOutfitChangesThisTurn } = await import("./engine/state.ts");
+    clearOutfitChangesThisTurn();
+
     // NPC 刚创建时 currentRoom 是 default_location，按当前时间段移动 NPC 到正确位置
     await (await import("./engine/state.ts")).updateNPCSchedules();
 
@@ -455,7 +459,7 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
 
   try {
     const { generateCompletion, getNpcAgentModel, recordNpcAgentAction, buildPresentLine } = await import("./tools/helpers.ts");
-    const { findCharacter, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, translateWorldState } = await import("./engine/state.ts");
+    const { findCharacter, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, translateWorldState, getOutfitChangesThisTurn } = await import("./engine/state.ts");
     const charStages = await import("./data/character_stages.json", { with: { type: "json" } });
 
     const results = await Promise.all(toSpawn.map(async ({ name }) => {
@@ -491,6 +495,16 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
           `穿着: ${outfit}`,
           `关系: ${stage}（好感${affection}）`,
           memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
+          (() => {
+            const changes = getOutfitChangesThisTurn();
+            if (changes.length === 0) return "";
+            const myChange = changes.find(c => c.npc === name);
+            const otherChanges = changes.filter(c => c.npc !== name);
+            const lines: string[] = [];
+            if (myChange) lines.push(`你刚换上了${myChange.to}服装（${myChange.desc}）。之前穿的是${myChange.from}。思考或说话时自然提及换装动作，不要假装衣服一直穿着。`);
+            for (const oc of otherChanges) lines.push(`${oc.npc}刚换上了${oc.to}服装（${oc.desc}）。`);
+            return lines.length > 0 ? `[换装] ${lines.join(" ")}` : "";
+          })(),
           "",
           "场景中有玩家在场。基于你的性格，自然地做出反应——可以是被动观察到玩家进入，也可以是主动打招呼。",
           "不要写叙事，只输出你的内心独白和回应（参考角色轮格式）。",

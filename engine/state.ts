@@ -265,6 +265,11 @@ function createInitialState(): GameState {
 // ── 本轮工具调用追踪 ──
 const _turnToolCalls: string[] = [];
 
+// ── 本轮换装追踪（Phase 2 NPC Agent 注入后由 extension.ts 清空）──
+const _outfitChanges: Array<{npc: string, from: string, to: string, desc: string}> = [];
+export function getOutfitChangesThisTurn() { return [..._outfitChanges]; }
+export function clearOutfitChangesThisTurn() { _outfitChanges.length = 0; }
+
 /** 记录一个工具被调用（由 registry wrapper 自动调用） */
 export function pushToolCall(name: string): void {
   if (!_turnToolCalls.includes(name)) {
@@ -646,6 +651,46 @@ export function loadState(filepath?: string): boolean {
     try {
       initPlayerGrid();
     } catch {}
+  }
+
+  // 旧档兜底：organizations 缺失或为空 → 从 worldpack 文件重新加载
+  if (!gameState.organizations || Object.keys(gameState.organizations).length === 0) {
+    gameState.organizations ??= {};
+    const orgsDir = path.resolve(process.cwd(), "worldpacks", gameState.activeWorld || "oregairu", "orgs");
+    if (fs.existsSync(orgsDir)) {
+      for (const f of fs.readdirSync(orgsDir)) {
+        if (!f.endsWith(".json") || f.startsWith("_")) continue;
+        try {
+          const arr = JSON.parse(fs.readFileSync(path.join(orgsDir, f), "utf-8"));
+          for (const item of (Array.isArray(arr) ? arr : [arr])) {
+            const orgId = item.id || item.org;
+            if (!orgId) continue;
+            gameState.organizations[orgId] = {
+              id: orgId,
+              name: item.name || item.org || orgId,
+              type: item.type || "学校",
+              scale: item.scale || "local",
+              sector: item.sector || "social",
+              parent_org: item.parent_org,
+              wealth: item.wealth ?? 50,
+              influence: item.influence ?? 50,
+              cohesion: item.cohesion ?? 50,
+              public_legitimacy: item.public_legitimacy ?? 50,
+              coreLocation: item.coreLocation || "",
+              territoryRoomKeys: item.territoryRoomKeys || [],
+              class_base: item.class_base || {},
+              organizationalAxes: item.organizationalAxes || { "经济立场": 0, "政治立场": 0 },
+              goals: item.goals || { macroGoal: "", currentPhaseGoal: "" },
+              leader: item.leader || "",
+              members: item.members || [],
+              relations: item.relations || {},
+              match_rules: item.match_rules || {},
+              entries: item.entries || [],
+            };
+          }
+        } catch (e) { console.error(`loadState: 解析 org ${f} 失败`, e); }
+      }
+    }
   }
 
   return true;
@@ -2705,21 +2750,33 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
     // 写入 outfits 使其持久
     if (!(src as any).outfits) (src as any).outfits = {};
     (src as any).outfits[outfitKey] = { ...def };
+    const oldOutfit = npc.currentOutfit || "school";
     npc.currentOutfit = outfitKey as any;
-    // equipment_by_outfit 联动
+    // equipment_by_outfit 联动：逐槽合并，保留新 outfit 未定义的槽位（武器/工具等）
     if ((src as any).equipment_by_outfit?.[outfitKey]) {
-      npc.equipment = structuredClone((src as any).equipment_by_outfit[outfitKey]);
+      const newEquip = (src as any).equipment_by_outfit[outfitKey];
+      for (const slot of Object.keys(newEquip)) {
+        const item = newEquip[slot];
+        (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
+      }
     }
     const desc = Object.values(def).join("、");
+    _outfitChanges.push({ npc: npcName, from: oldOutfit, to: outfitKey, desc });
     return `${npcName} → ${outfitKey}（自动生成）: ${desc}`;
   }
+  const oldOutfitMain = npc.currentOutfit || "school";
   npc.currentOutfit = outfitKey as any;
-  // equipment_by_outfit 联动：切换 outfit 时同步替换 NPC 装备（含单品 flavor）
+  // equipment_by_outfit 联动：逐槽合并，保留新 outfit 未定义的槽位（武器/工具等）
   if ((src as any).equipment_by_outfit?.[outfitKey]) {
-    npc.equipment = structuredClone((src as any).equipment_by_outfit[outfitKey]);
+    const newEquip = (src as any).equipment_by_outfit[outfitKey];
+    for (const slot of Object.keys(newEquip)) {
+      const item = newEquip[slot];
+      (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
+    }
   }
   const items = src.outfits[outfitKey];
   const desc = Object.values(items).join("、");
+  _outfitChanges.push({ npc: npcName, from: oldOutfitMain, to: outfitKey, desc });
   return `${npcName} → ${outfitKey}: ${desc}`;
 }
 
