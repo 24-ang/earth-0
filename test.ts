@@ -7863,6 +7863,36 @@ test("ticks_at_stage increments when stage unchanged", () => {
   }
 });
 
+test("validateCharacters 抓 缺必填/孤儿/指针", async () => {
+  const { validateCharacters } = await import("./engine/validate-characters.ts");
+  const chars = [
+    { name: "A", source: "x", base_age: 16, gender: "female", appearance_brief: "y",
+      body: { height_cm: 160, weight_kg: 50 }, attributes: {}, default_location: "L",
+      schedule_group: "学生", social_class: "中产", personal_axes: {}, sex_profile: "A" },
+    { name: "B" },
+  ];
+  const stages = { "C_if": {}, "A": {} };
+  const r = validateCharacters(chars, new Set(["学生"]), stages, {});
+  if (r.ok) throw new Error("应有 error → ok=false");
+  const codes = new Set(r.issues.map((i: any) => i.code));
+  if (!codes.has("missing-core")) throw new Error("应抓 missing-core (B)");
+  if (!codes.has("sexprofile-pointer")) throw new Error("应抓 sexprofile-pointer (A)");
+  if (!codes.has("orphan-stage")) throw new Error("应抓 orphan-stage (C_if)");
+});
+
+test("validateCharacters 干净输入 ok=true", async () => {
+  const { validateCharacters } = await import("./engine/validate-characters.ts");
+  const chars = [
+    { name: "A", source: "x", base_age: 16, gender: "female", appearance_brief: "y",
+      body: { height_cm: 160, weight_kg: 50 }, attributes: {}, default_location: "L",
+      schedule_group: "学生", social_class: "中产", personal_axes: {},
+      outfits: {}, equipment: {}, body_by_age: {}, sex_profile: {},
+      personality_stages: {}, personality_brief: "z", speech_style: "s" },
+  ];
+  const r = validateCharacters(chars, new Set(["学生"]));
+  if (!r.ok) throw new Error("干净输入应 ok=true，却有: " + JSON.stringify(r.summary));
+});
+
 (async () => {
   for (const t of testQueue) {
     try {
