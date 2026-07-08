@@ -2752,10 +2752,16 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
     (src as any).outfits[outfitKey] = { ...def };
     const oldOutfit = npc.currentOutfit || "school";
     npc.currentOutfit = outfitKey as any;
-    // equipment_by_outfit 联动：逐槽合并，保留新 outfit 未定义的槽位（武器/工具等）
+    // equipment_by_outfit 联动：清旧 outfit 的槽位，合新 outfit 的槽位
+    // 两个 outfit 都没定义的槽位不碰（保留武器/工具等）
+    const oldSlots = new Set(Object.keys((src as any).equipment_by_outfit?.[oldOutfit] || {}));
     if ((src as any).equipment_by_outfit?.[outfitKey]) {
       const newEquip = (src as any).equipment_by_outfit[outfitKey];
-      for (const slot of Object.keys(newEquip)) {
+      const newSlots = new Set(Object.keys(newEquip));
+      for (const slot of oldSlots) {
+        if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
+      }
+      for (const slot of newSlots) {
         const item = newEquip[slot];
         (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
       }
@@ -2766,10 +2772,15 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
   }
   const oldOutfitMain = npc.currentOutfit || "school";
   npc.currentOutfit = outfitKey as any;
-  // equipment_by_outfit 联动：逐槽合并，保留新 outfit 未定义的槽位（武器/工具等）
+  // equipment_by_outfit 联动：清旧 outfit 的槽位，合新 outfit 的槽位
+  const oldSlotsMain = new Set(Object.keys((src as any).equipment_by_outfit?.[oldOutfitMain] || {}));
   if ((src as any).equipment_by_outfit?.[outfitKey]) {
     const newEquip = (src as any).equipment_by_outfit[outfitKey];
-    for (const slot of Object.keys(newEquip)) {
+    const newSlots = new Set(Object.keys(newEquip));
+    for (const slot of oldSlotsMain) {
+      if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
+    }
+    for (const slot of newSlots) {
       const item = newEquip[slot];
       (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
     }
