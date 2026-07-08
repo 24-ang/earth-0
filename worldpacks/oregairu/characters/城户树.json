@@ -1,0 +1,268 @@
+{
+  "name": "城户树",
+  "source": "ぼくだけ加セックスできない家 / 紅村かる",
+  "base_age": 18,
+  "gender": "male",
+  "appearance_brief": "戴眼镜，身材高大，长相帅气，优秀且成熟自信的总武高学生会副会长。",
+  "hair_color": "黑色",
+  "hair_style": "短发偏分",
+  "eye_color": "黑色",
+  "hair_accessories": "",
+  "grade": 3,
+  "homeroom": "A",
+  "outfits": {
+    "school": {
+      "top": "白色衬衫",
+      "bottom": "深灰西裤",
+      "feet": "皮鞋",
+      "inner_top": "白色T恤",
+      "inner_bot": "四角内裤",
+      "shirt": "学生会制服外套"
+    },
+    "casual": {
+      "top": "修身衬衫",
+      "bottom": "休闲裤",
+      "feet": "皮鞋",
+      "inner_top": "白色T恤",
+      "inner_bot": "四角内裤"
+    },
+    "sleep": {
+      "shirt": "高档棉质睡衣"
+    }
+  },
+  "body": {
+    "height_cm": 182,
+    "weight_kg": 70,
+    "build": "结实",
+    "leg_type": "修长",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 2,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "规律运动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 118,
+      "weight_kg": 21,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "普通"
+      }
+    },
+    "12": {
+      "height_cm": 154,
+      "weight_kg": 45,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "普通"
+      }
+    },
+    "15": {
+      "height_cm": 174,
+      "weight_kg": 62,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "普通"
+      }
+    },
+    "18": {
+      "height_cm": 182,
+      "weight_kg": 70,
+      "build": "结实",
+      "leg_type": "修长",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 11,
+    "敏捷": 10,
+    "体质": 11,
+    "智力": 16,
+    "感知": 14,
+    "魅力": 16
+  },
+  "skills": {
+    "学习": 12,
+    "演讲": 10,
+    "管理": 10,
+    "社交": 9
+  },
+  "hp": {
+    "current": 22,
+    "max": 22
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "学生会制服外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact"
+    },
+    "bottom": {
+      "name": "深灰西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "学生会日志",
+      "type": "tool",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "稲毛",
+  "default_location_by_age": {
+    "6": "稲毛",
+    "12": "稲毛",
+    "15": "稲毛",
+    "18": "稲毛"
+  },
+  "schedule_group": "高校生",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "18": "高校生"
+  },
+  "funds": 15000,
+  "appearance_by_age": {
+    "6": {
+      "hair_style": "短发",
+      "hair_color": "黑色"
+    },
+    "12": {
+      "hair_style": "短发",
+      "hair_color": "黑色"
+    },
+    "15": {
+      "hair_style": "短发偏分",
+      "hair_color": "黑色"
+    },
+    "18": {
+      "hair_style": "短发偏分",
+      "hair_color": "黑色"
+    }
+  },
+  "personality_brief": "成熟、极其自信。学习优秀，但在男女关系上是‘来者不拒’的利己主义者。",
+  "personality_stages": {
+    "6": "聪明伶俐、受老师喜欢的孩子。",
+    "12": "成绩名列前茅的模范中学生，担任班干部。",
+    "15": "展现出非凡的社交和管理才能，受女生欢迎，但内心开始变得冷酷和利己。",
+    "18": "极度理性而自信，认为自己配得上最好的一切。在男女关系上顺水推舟，不在乎道德束缚。"
+  },
+  "speech_style": "谈吐高雅，幽默风趣，声音磁性且极具说服力。对人温和但带有居高临下的掌控感。",
+  "likes": [
+    "掌控局势",
+    "优秀的女生",
+    "红茶"
+  ],
+  "dislikes": [
+    "懦弱无能的人",
+    "不体面的争执"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高三年级学生，学生会副会长，学校里的风云人物。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "私底下对异性关系来者不拒，甚至同意了三弟提出的交换伴侣的离奇提议。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "18": {
+      "drives": [
+        "维持完美的精英形象",
+        "享受欲望的满足"
+      ],
+      "goal": "维持对身边事物的绝对掌控。"
+    }
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 2,
+    "政治立场": 2
+  },
+  "sex_profile": {
+    "baselineDesire": 8,
+    "attitude": "主动",
+    "experience": "熟练",
+    "climaxThreshold": 60,
+    "cycleDay": 0,
+    "likes": [
+      "口交",
+      "支配"
+    ],
+    "dislikes": [],
+    "male": {
+      "penis": {
+        "length_cm": 16,
+        "girth_cm": 12,
+        "erect_length_cm": 19,
+        "erect_girth_cm": 14,
+        "shape": "上翘",
+        "head_size": "大",
+        "circumcised": false,
+        "color": "普通"
+      },
+      "testicles": {
+        "size": "大"
+      },
+      "pubic_hair": {
+        "amount": "浓密",
+        "color": "黑色",
+        "style": "修剪"
+      }
+    }
+  }
+}

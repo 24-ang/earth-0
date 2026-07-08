@@ -1,0 +1,104 @@
+{
+  "name": "户冢彩加",
+  "source": "我的青春恋爱物语果然有问题。",
+  "base_age": 16,
+  "gender": "male",
+  "appearance_brief": "银色短发，面容精致到常被误认成女生。网球部。",
+  "hair_color": "银色",
+  "hair_style": "短发",
+  "body": {
+    "height_cm": 155,
+    "weight_kg": 45,
+    "build": "纤细",
+    "leg_type": "纤细",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 5,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "规律运动"
+  },
+  "attributes": {
+    "力量": 5,
+    "敏捷": 8,
+    "体质": 6,
+    "智力": 6,
+    "感知": 8,
+    "魅力": 14
+  },
+  "skills": {
+    "运动": 4
+  },
+  "hp": {
+    "current": 9,
+    "max": 9
+  },
+  "equipment": {
+    "top": {
+      "name": "总武高制服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact"
+    },
+    "bottom": {
+      "name": "短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    "feet": {
+      "name": "运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "西千葉",
+  "schedule_group": "高校生",
+  "grid_pos": null,
+  "anchors": {
+    "private": "网球部王牌。八幡看到他也会心跳加速。性格温柔，不擅长拒绝。"
+  },
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "18": "大学生"
+  },
+  "funds": 1500,
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "grade": 2,
+  "homeroom": "F",
+  "stages": {
+    "幼儿_小学": "长得太漂亮经常被认错性别。运动神经好。",
+    "中学": "加入网球部。不介意被认错了。",
+    "高中": "网球部王牌。温柔不擅长拒绝。",
+    "成年": "可能做职业选手。学会说不了。"
+  }
+}

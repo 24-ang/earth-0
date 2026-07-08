@@ -1,0 +1,171 @@
+{
+  "name": "南梦芽",
+  "source": "SSSS.DYNAZENON",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "浅棕色及肩发头顶粉色渐变、绿色杏仁眼。常带有困倦或沮丧的神情，慵懒中带一丝挑逗。20丹尼尔黑色连裤袜全年穿着。",
+  "hair_color": "浅棕色（头顶粉色渐变）",
+  "hair_style": "及肩发（凌乱刘海）",
+  "eye_color": "绿色",
+  "body": {
+    "height_cm": 160,
+    "build": "健康匀称",
+    "cup": "C",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    },
+    "weight_kg": 51
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 6,
+    "体质": 5,
+    "智力": 9,
+    "感知": 13,
+    "魅力": 15
+  },
+  "skills": {
+    "口才": 4
+  },
+  "personality_brief": "无口忧郁的Kuudere。言语不多语气平淡，显得冷漠难以接近。有故意约男生出来再放鸽子的习惯——本质上是在测试对方是否真诚、寻找不会背叛自己的人。姐姐五年前意外去世的阴影笼罩着她——她不相信那是意外。一旦敞开心扉会变得俏皮，爱开玩笑和恶作剧，享受戏弄喜欢的人。",
+  "personality_stages": {
+    "6": "和姐姐香乃亲密的小女孩。姐姐是合唱团的天才——她是夢芽的全世界。",
+    "12": "姐姐去世后世界崩塌。开始用冷漠和距离保护自己。不相信姐姐是意外死亡——这份怀疑成为她活下去的燃料。",
+    "16": "高中一年生。用爽约测试人性——在寻找不会背叛自己的人。话不多但每一句都经过深思熟虑。习惯在沉思时轻声哼唱——那是姐姐教她的歌。擅长驾驶有操纵天赋。"
+  },
+  "speech_style": "初期简短——「マジか」（真的假的）、「うっそ」（骗人），给人慵懒漠不关心的感觉。随着信任加深变得流畅甚至俏皮。标志性台词：「約束、したじゃない」（我们不是约好了吗？）。沉思时会轻声哼歌。",
+  "anchors": {
+    "emotional": "表面冷漠疏离的Kuudere，内在孤独渴望被理解。姐姐的死是她一切行为的根源。用爽约测试人——被爽约的人会愤怒离开，留下的才是认真的。不是故意伤害人——只是太害怕再次失去。",
+    "intimate": "一旦确认对方不会背叛，会展现完全不同的另一面：俏皮、恶作剧、享受戏弄喜欢的人。对蓬（麻中蓬）的真诚最终打动了她的心防。渴望被坚定地选择——那种不需要测试就知道对方会在的关系。",
+    "private": "姐姐南香乃五年前死于一场她不相信是意外的事故。家人回避谈论姐姐——这个沉默的家让她窒息。她开始约见与姐姐有关联的人——不是真的想爽约，只是每次见面之前恐惧都会压倒她。水族馆是她和姐姐最后的快乐记忆——水的沉默和包容像姐姐还在身边。"
+  },
+  "likes": [
+    "知恵の輪（益智环）",
+    "音乐（姐姐的合唱录音）",
+    "水族馆",
+    "水边"
+  ],
+  "dislikes": [
+    "被人爽约",
+    "被追问姐姐",
+    "轻率承诺",
+    "侵入个人空间",
+    "陌生人社交"
+  ],
+  "default_location": "东京",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "16": "高校生",
+    "18": "大学生"
+  },
+  "schedule_group": "高校生",
+  "funds": 3000,
+  "sex_profile": {
+    "baselineDesire": 30,
+    "attitude": "防御",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "C",
+        "shape": "水滴",
+        "nipple_size": "普通",
+        "nipple_color": "粉色",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "浅褐",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "敏感"
+      },
+      "胸": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "防御"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "防御"
+      },
+      "腿": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 4,
+        "development": 0,
+        "preference": "防御"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 19,
+    "climaxThreshold": 50,
+    "likes": [
+      "被坚定地选择",
+      "信任后的亲密",
+      "水边的安静"
+    ],
+    "dislikes": [
+      "被测试",
+      "轻率",
+      "侵入个人空间"
+    ]
+  },
+  "social_class": "无产阶级",
+  "personal_axes": {
+    "经济立场": -1,
+    "政治立场": -1
+  },
+  "default_location_by_age": {
+    "16": "东京"
+  },
+  "grade": 2,
+  "homeroom": "J",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

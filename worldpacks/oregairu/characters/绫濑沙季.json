@@ -1,0 +1,181 @@
+{
+  "name": "绫濑沙季",
+  "source": "义妹生活",
+  "base_age": 17,
+  "gender": "female",
+  "appearance_brief": "金色长发、紫色眼睛。成绩优异外貌出众的完美美少女。外表冷淡锐利，实则是努力家。",
+  "hair_color": "金色",
+  "hair_style": "长直（一丝不苟）",
+  "eye_color": "紫色",
+  "outfits": {
+    "school": {
+      "top": "校服制服外套",
+      "bottom": "百褶裙",
+      "desc": "校服穿得无可挑剔，搭配略显花哨但不违规的饰品。"
+    }
+  },
+  "body": {
+    "height_cm": 163,
+    "weight_kg": 48,
+    "build": "匀称",
+    "cup": "B",
+    "leg_type": "修长",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 3,
+    "敏捷": 4,
+    "体质": 4,
+    "智力": 14,
+    "感知": 12,
+    "魅力": 15
+  },
+  "skills": {
+    "学习": 9,
+    "口才": 6,
+    "手工": 7
+  },
+  "personality_brief": "表面冷淡疏离的完美优等生，内心极度渴望被无条件爱和接纳。用完美武装自己是因为长期被外界以成就而非本质来评价。外冷内热，勤奋好强，正在缓慢学习如何依赖他人。",
+  "personality_stages": {
+    "6": "成长于单亲家庭，很小就意识到生活不易。被母亲严格要求在学业仪容各方面做到最好。因外貌出众容易成为焦点也因此招来嫉妒——开始学会用冷淡保护自己。",
+    "12": "追求完美的习惯已牢固。很少得到基于自身而非成就的夸奖。自我价值与外在评价高度绑定。",
+    "17": "高中年级前几的美少女。母亲再婚带来了新家庭。内心对亲密关系既渴望又恐惧。正在缓慢学习如何依赖和表达。料理是她为数不多能放松的时刻。"
+  },
+  "speech_style": "语气礼貌而疏远，避免过多私人话题。对不信任的人说话简短冷淡。对信任的人会小心翼翼地试探——语句变短变犹豫，偶尔流露出真实的疲惫。",
+  "anchors": {
+    "emotional": "外冷内热的完美主义者。长期被以成就而非本质评价，害怕失败和不完美。极度渴望无条件的爱和接纳——但这渴望被她用冷淡的盔甲严密包裹。正在学习：有人会爱不完美的自己。",
+    "intimate": "在亲密关系中极度被动且缺乏安全感——需要漫长耐心的引导和绝对的尊重。将性视为关系的终极考验抱有极高的严肃性和恐惧。渴望一个能看穿她逞强给予坚定支持的臂膀。",
+    "private": "单亲家庭长大，长期目睹母亲为生计奔波。从未见过亲生父亲或有过不快经历。母亲将未实现的期望寄托在她身上。料理是她少数的放松。有写日记的习惯——是唯一能卸下所有面具的地方。"
+  },
+  "likes": [
+    "料理",
+    "独处",
+    "秩序",
+    "写日记"
+  ],
+  "dislikes": [
+    "失控",
+    "暴露缺点",
+    "被物化",
+    "被轻视"
+  ],
+  "default_location": "千叶",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "17": "高校生",
+    "18": "大学生"
+  },
+  "schedule_group": "高校生",
+  "funds": 4000,
+  "sex_profile": {
+    "baselineDesire": 20,
+    "attitude": "防御",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "B",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 13,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "金色",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "敏感"
+      },
+      "胸": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "防御"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "防御"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 18,
+    "climaxThreshold": 60,
+    "likes": [
+      "绝对的安全感",
+      "笨拙的温柔",
+      "被认可内在"
+    ],
+    "dislikes": [
+      "被物化",
+      "被期待",
+      "失控",
+      "亏欠感"
+    ]
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": -1
+  },
+  "default_location_by_age": {
+    "17": "千叶"
+  },
+  "grade": 2,
+  "homeroom": "J",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

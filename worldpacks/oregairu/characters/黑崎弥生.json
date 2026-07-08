@@ -1,0 +1,394 @@
+{
+  "name": "黑崎弥生",
+  "source": "原创/同人",
+  "base_age": 24,
+  "gender": "female",
+  "appearance_brief": "艳丽的长黑发、端正贤淑的面容，以及105公分极其引人注目的惊人巨乳。经常穿着会被胸部撑出缝隙的白衬衫。",
+  "hair_color": "黑色",
+  "hair_style": "长直发",
+  "eye_color": "黑色",
+  "hair_accessories": "",
+  "outfits": {
+    "work": {
+      "top": "白色长袖翻领衬衫",
+      "bottom": "修身OL包臀半身裙",
+      "legs": "黑色哑光薄丝袜",
+      "feet": "黑色尖头细高跟鞋",
+      "inner_top": "蕾丝无钢圈内衣",
+      "inner_bot": "蕾丝包边三角内裤",
+      "hair": "黑发低马尾，温婉知性",
+      "desc": "作为国文老师在学校授课时的标准职场装束。上身是一件质地硬挺的纯白长袖衬衫，版型贴身，却将她那对堪称魔鬼级别的惊人巨乳束缚得濒临极限，胸前纽扣紧绷，呈现出饱满诱人的弧度。下身搭配一条高腰深色包臀半身裙，恰到好处地勾勒出丰满多肉的腰臀曲线。双腿包裹在轻薄的黑丝之中，搭配一双优雅的黑色细高跟鞋。整套搭配文静沉稳中透着成熟女性的极致肉感，极具反差感。"
+    },
+    "casual": {
+      "top": "宽松套头针织衫",
+      "bottom": "纯棉修身长裙",
+      "feet": "居家软底拖鞋",
+      "shirt": "围裙（常做家务时穿）",
+      "hair": "黑发自然垂放，居家放松",
+      "inner_top": "舒适无钢圈内衣",
+      "inner_bot": "纯棉三角裤",
+      "desc": "在分租套房内下班做家务或休息时的温柔居家打扮。上身穿着一件宽松的纯色套头细线针织衫，领口略显宽松，慵懒地悬挂在雄伟的胸围边缘。外面通常套着一件深色挂脖无袖围裙。下身则是一条方便走动的过膝修身长裙，脚踩舒适的平底居家拖鞋。整套着装褪去了讲台上的严谨，散发着温柔、照顾人且充满人妻感的知性大姐姐魅力。"
+    },
+    "sleep": {
+      "shirt": "丝绸质感吊带睡裙",
+      "hair": "黑发散开在枕边，吊带微滑",
+      "desc": "夜间独处或在私密居所里放松时的性感装扮。一套质地极佳、带有柔和光泽的莫代尔丝绸质感吊带连体睡裙。细窄的吊带勉强支撑着沉甸甸的傲人双峰，低胸剪裁露出大片白皙细腻的胸前肌肤与深邃乳沟。裙摆轻盈垂顺地贴合在她丰腴多肉的胯部与大腿轮廓上，在夜色中不着痕迹地流露出极具诱惑力的成熟女人味。"
+    }
+  },
+  "body": {
+    "height_cm": 166,
+    "weight_kg": 60,
+    "build": "丰满",
+    "measurements": {
+      "bust": 105,
+      "waist": 62,
+      "hips": 95
+    },
+    "cup": "K",
+    "leg_type": "修长",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "圆润",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 2,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 115,
+      "weight_kg": 19,
+      "build": "纤细",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 150,
+      "weight_kg": 40,
+      "build": "标准",
+      "measurements": {
+        "bust": 82,
+        "waist": 56,
+        "hips": 82
+      },
+      "cup": "D",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "15": {
+      "height_cm": 162,
+      "weight_kg": 54,
+      "build": "丰满",
+      "measurements": {
+        "bust": 95,
+        "waist": 60,
+        "hips": 90
+      },
+      "cup": "H",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "24": {
+      "height_cm": 166,
+      "weight_kg": 60,
+      "build": "丰满",
+      "measurements": {
+        "bust": 105,
+        "waist": 62,
+        "hips": 95
+      },
+      "cup": "K",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 6,
+    "敏捷": 7,
+    "体质": 8,
+    "智力": 14,
+    "感知": 15,
+    "魅力": 16
+  },
+  "skills": {
+    "文学": 9,
+    "教学": 8,
+    "烹饪": 10,
+    "家政": 10
+  },
+  "hp": {
+    "current": 16,
+    "max": 16
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "白色长袖翻领衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "flavor": "高档聚酯纤维面料衬衫。尽管剪裁合身，但胸前的衣服布料依然被那对不合理的惊人凶器绷得纽扣缝隙间隐约带着一丝张力。"
+    },
+    "bottom": {
+      "name": "修身OL包臀半身裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.35,
+      "effects": [],
+      "state": "intact",
+      "flavor": "高腰深色职业包臀裙。面料富有微弹性，紧紧绷在丰满圆润的肥臀上，勾勒出惊人的腰臀比，两侧缝线因拉扯而笔直。"
+    },
+    "legs": {
+      "name": "黑色哑光薄丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.04,
+      "effects": [],
+      "state": "intact",
+      "flavor": "薄款半透明黑色连裤袜。由于大腿和臀部过于丰腴，面料被撑开后透出微微的肉色，带着细腻的光泽质感。"
+    },
+    "feet": {
+      "name": "黑色尖头细高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "flavor": "标准职场黑色皮革高跟鞋，鞋跟约5厘米。鞋面打理干净，边缘有少许日常走动留下的细微划痕。"
+    },
+    "inner_top": {
+      "name": "白色长袖翻领衬衫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.15,
+      "effects": [],
+      "state": "intact",
+      "flavor": "硬挺的纯白长袖衬衫，版型合身。领口扣至最上一颗，但因胸部过于宏伟，胸前纽扣仍被撑得濒临崩开。"
+    },
+    "inner_bot": {
+      "name": "蕾丝包边三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.03,
+      "effects": [],
+      "state": "intact",
+      "flavor": "做工精致的深色蕾丝包边内裤。质地轻薄透气，完美贴合饱满的下体曲线，在包臀裙和黑丝的包裹下不露痕迹。"
+    },
+    "acc": {
+      "name": "深色家用挂脖围裙",
+      "type": "accessory",
+      "slot": "acc",
+      "weight": 0.15,
+      "effects": [],
+      "state": "intact",
+      "flavor": "棉织耐磨围裙。挂脖带子有微压痕，因胸围宏伟围裙前胸被顶得极为突出，侧边系带将细腰收紧。"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "西千葉",
+  "default_location_by_age": {
+    "6": "西千葉",
+    "12": "西千葉",
+    "15": "西千葉",
+    "18": "東京",
+    "24": "西千葉"
+  },
+  "schedule_group": "总武高教师",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "18": "大学生",
+    "24": "总武高教师"
+  },
+  "funds": 150000,
+  "appearance_by_age": {
+    "12": {
+      "hair_style": "黑长直",
+      "hair_color": "黑色"
+    }
+  },
+  "personality_brief": "表面端正贤淑的国文老师，其实是个闷骚好色、个性好强不服输的贤妻良母型角色。对自己的巨乳感到纠结。",
+  "personality_stages": {
+    "12": "文静乖巧的优等生。",
+    "15": "因为胸部发育过快而感到极度害羞和困扰，变得更加内向。",
+    "24": "表面上是端庄的国文老师，私底下其实有些闷骚，负责家里的料理和打扫，是个傲娇的贤妻。"
+  },
+  "speech_style": "平时说话文静礼貌，但在亲密关系中会暴露出闷骚好色的一面，生气时会变成抖S。",
+  "likes": [
+    "下厨",
+    "打扫卫生",
+    "和真纪在一起",
+    "被恋人关注"
+  ],
+  "dislikes": [
+    "自己过于显眼的胸部",
+    "被别人当面调侃身材"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高深受学生欢迎的国文老师，因为端正的面容和惊人的胸围，常常成为男学生的话题。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "实际上是个闷骚好色的人，表面上是M，但生气时会展现出S的一面。包办了家里所有的家务。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "24": {
+      "drives": [
+        "教导好学生",
+        "维护和爱人的日常生活"
+      ],
+      "goal": "在学校维持端庄的形象，在家享受温馨且充满情趣的生活。"
+    }
+  },
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 1
+  },
+  "sex_profile": {
+    "baselineDesire": 45,
+    "attitude": "害羞——表面。一旦开关打开变成另一个人的风险极高。",
+    "experience": "青涩",
+    "female": {
+      "breast": {
+        "cup": "K",
+        "shape": "水滴",
+        "nipple_size": "稍大",
+        "nipple_color": "淡粉",
+        "areola_size": "大——与巨乳成比例",
+        "feel": "沉甸甸的实质性重量，手感极好"
+      },
+      "vagina": {
+        "type": "名器·千珠",
+        "labia_size": "普通",
+        "depth_cm": 15,
+        "tightness": "极紧——未经多少开发",
+        "inner_color": "淡粉",
+        "feel": "紧窄且内部有不规则褶皱"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "自然——但会偷偷打理"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 1,
+        "preference": "害羞——但接吻时会忘记害羞"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 1,
+        "preference": "敏感——被碰到会缩脖子但不会躲"
+      },
+      "胸": {
+        "sensitivity": 10,
+        "development": 2,
+        "preference": "极其敏感——自己想藏但藏不住"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 1,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "害羞——但也是最早背叛理性的部分"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥——除非她主动提"
+      }
+    },
+    "cycleDay": 15,
+    "climaxThreshold": 40,
+    "likes": [
+      "被恋人关注和需要",
+      "温柔的前戏——不要急",
+      "被夸'可爱'（会巨害羞但是喜欢）",
+      "在安全私密的环境"
+    ],
+    "dislikes": [
+      "被嘲笑胸部",
+      "被拿来和别人比",
+      "粗暴——除非是她生气时自己要求的"
+    ]
+  }
+}

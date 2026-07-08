@@ -1,0 +1,188 @@
+{
+  "name": "雪之下阳乃",
+  "source": "我的青春恋爱物语果然有问题。",
+  "base_age": 19,
+  "gender": "female",
+  "appearance_brief": "和雪乃相似的完美超人。黑长发，阳光笑容。姿容端丽，在雪乃以上。",
+  "hair_color": "黑色",
+  "hair_style": "长发",
+  "body": {
+    "height_cm": 166,
+    "weight_kg": 50,
+    "build": "纤细",
+    "cup": "B",
+    "measurements": {
+      "bust": 80,
+      "waist": 56,
+      "hips": 84
+    },
+    "leg_type": "修长",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "扁平",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 5,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "8": {
+      "height_cm": 128,
+      "weight_kg": 26,
+      "build": "纤细",
+      "leg_type": "纤细",
+      "diet": "正常",
+      "exercise": "日常活动",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 152,
+      "weight_kg": 42,
+      "build": "纤细",
+      "cup": "A",
+      "measurements": {
+        "bust": 74,
+        "waist": 54,
+        "hips": 80
+      },
+      "leg_type": "修长",
+      "diet": "正常",
+      "exercise": "日常活动",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "扁平",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "16": {
+      "height_cm": 163,
+      "weight_kg": 47,
+      "build": "纤细",
+      "cup": "B",
+      "measurements": {
+        "bust": 78,
+        "waist": 56,
+        "hips": 82
+      },
+      "leg_type": "修长",
+      "diet": "正常",
+      "exercise": "日常活动",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "扁平",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "20": {
+      "height_cm": 166,
+      "weight_kg": 50,
+      "build": "纤细",
+      "cup": "B",
+      "measurements": {
+        "bust": 80,
+        "waist": 56,
+        "hips": 84
+      },
+      "leg_type": "修长",
+      "diet": "正常",
+      "exercise": "日常活动",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "扁平",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 6,
+    "体质": 4,
+    "智力": 15,
+    "感知": 14,
+    "魅力": 17
+  },
+  "skills": {
+    "口才": 8,
+    "学习": 7,
+    "交易": 6
+  },
+  "hp": {
+    "current": 9,
+    "max": 9
+  },
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "千叶_雪之下邸",
+  "schedule_group": "大学生",
+  "schedule_group_by_age": {
+    "8": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "18": "大学生"
+  },
+  "schedule_overrides": {},
+  "anchors": {
+    "private": "雪乃的姐姐，比雪乃大2岁。总武高毕业，目前大学生。能力比雪乃更强，表面阳光开朗，实则腹黑。长期戴着完美的社交面具。认真时眼神相当恐怖。对没兴趣的人不干涉，喜欢的东西死命玩弄，讨厌的彻底击溃。叫平冢静「小静」。和雪乃关系复杂——雪乃一直想超越她但没成功过。阳乃曾说雪乃「讨厌我却不想被我讨厌」。"
+  },
+  "funds": 50000,
+  "appearance_by_age": {
+    "8": {
+      "hair_style": "短发"
+    },
+    "12": {
+      "hair_style": "中长发"
+    }
+  },
+  "social_class": "大资产阶级",
+  "personal_axes": {
+    "经济立场": 3,
+    "政治立场": 2
+  },
+  "grade": 1,
+  "homeroom": "C",
+  "stages": {
+    "幼儿_小学": "活泼开朗的女孩，比妹妹雪乃更外向。聪明且在社交场合如鱼得水。已经开始学会戴面具——大人面前的完美小孩。",
+    "中学": "能力全面超越同龄人。开始有意识地在不同人面前展现不同面孔。对雪乃的保护欲和竞争心同时增长。",
+    "高中": "总武高明星学生。表面阳光完美，内在腹黑。对没兴趣的人不干涉，喜欢的东西死命玩弄，讨厌的彻底击溃。和雪乃的关系开始变得复杂。",
+    "成年": "大学生。创立靶场展现惊人能力。社交面具更加纯熟，但偶尔会在信任的人面前露出真实的一面。对雪乃的叛逆既欣赏又担忧。"
+  }
+}

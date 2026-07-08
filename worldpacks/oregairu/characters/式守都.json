@@ -1,0 +1,189 @@
+{
+  "name": "式守都",
+  "source": "式守同学不只可爱而已",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "粉蓝渐变长发、蓝粉色眼睛。温柔可爱的少女，关键时刻会展现出强大气场。",
+  "hair_color": "粉蓝渐变",
+  "hair_style": "长发（运动时高马尾）",
+  "eye_color": "蓝粉色",
+  "outfits": {
+    "school": {
+      "top": "总武高制服外套",
+      "bottom": "黑白百褶裙",
+      "legs": "黑色过膝袜",
+      "feet": "皮鞋",
+      "shirt": "长袖衬衫",
+      "desc": "标准总武高制服，黑白百褶裙，黑色过膝袜。"
+    },
+    "pe": {
+      "shirt": "白色体操服",
+      "bottom": "深蓝运动短裤",
+      "feet": "运动鞋",
+      "hair": "高马尾",
+      "desc": "运动时高马尾，方便活动的运动装。"
+    }
+  },
+  "body": {
+    "height_cm": 162,
+    "weight_kg": 48,
+    "build": "纤细",
+    "cup": "B",
+    "leg_type": "修长",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 5,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 5,
+    "敏捷": 9,
+    "体质": 6,
+    "智力": 7,
+    "感知": 10,
+    "魅力": 14
+  },
+  "skills": {
+    "运动": 8,
+    "格斗": 4,
+    "口才": 5
+  },
+  "personality_brief": "表面温柔可爱的少女，在恋人面前喜欢撒娇。但关键时刻会变身强大可靠的守护者——运动神经发达，有强烈的责任心和保护欲。隐藏着对曾经假小子形象的小小自卑，和一份不坦率的傲娇。",
+  "personality_stages": {
+    "6": "活泼好动的小女孩，喜欢运动不喜欢裙子。被叫做假小子虽然不说什么但心里介意。",
+    "12": "开始在意自己的形象，尝试打扮得可爱。运动能力同龄人中拔尖。保护欲开始萌芽。",
+    "16": "完美平衡了可爱与强大。在恋人面前撒娇嗔怪，在危机面前冷峻可靠。对曾经的假小子形象仍有小小自卑。"
+  },
+  "speech_style": "平时温柔可爱，喜欢用语气词撒娇。保护恋人时语气变得有气势和自信。面对恋人会切换为软糯娇羞模式。偶尔露出霸道强势的一面。",
+  "anchors": {
+    "emotional": "外表可爱温柔，内心强大有责任感。在恋人面前撒娇嗔怪，在危急时刻变身守护者。运动神经发达，对自己不可爱的过去有小小自卑。喜欢被恋人依赖，也喜欢被恋人保护。",
+    "intimate": "对恋人极其关心和照顾，喜欢用行动表达爱意。保护欲爆棚时会展现出惊人的气场和果断。私下里喜欢被恋人夸奖可爱——那是她最在意的词。",
+    "private": "曾经是假小子形象，为此有过自卑。努力成为可爱的式守同学是为了被认可也是自我实现。对自己要求很高。运动是她最自信的领域。"
+  },
+  "likes": [
+    "和恋人在一起",
+    "运动",
+    "时尚",
+    "可爱的装扮"
+  ],
+  "dislikes": [
+    "保护不了重要的人",
+    "破坏可爱形象的事",
+    "不公平"
+  ],
+  "default_location": "検見川浜",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "16": "高校生",
+    "18": "大学生"
+  },
+  "schedule_group": "高校生",
+  "funds": 3000,
+  "sex_profile": {
+    "baselineDesire": 40,
+    "attitude": "顺从",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "B",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 13,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 4,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 11,
+    "climaxThreshold": 40,
+    "likes": [
+      "被恋人夸奖可爱",
+      "温柔的触摸",
+      "互相守护的关系"
+    ],
+    "dislikes": [
+      "被当假小子",
+      "无力保护",
+      "太粗暴"
+    ]
+  },
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 1
+  },
+  "default_location_by_age": {
+    "16": "検見川浜"
+  },
+  "grade": 2,
+  "homeroom": "D",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

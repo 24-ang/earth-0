@@ -1,0 +1,182 @@
+{
+  "name": "诺诺亚",
+  "source": "2.5次元的诱惑",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "浅红褐色短发鲍伯头、红褐色眼睛。娇小纤细，因长期室内活动而皮肤苍白。Cosplay时戴水蓝色假发。",
+  "hair_color": "浅红褐色",
+  "hair_style": "及肩鲍伯头",
+  "eye_color": "红褐色",
+  "outfits": {
+    "school": {
+      "top": "总武高制服外套",
+      "bottom": "过膝制服裙",
+      "desc": "规矩的高中制服，扣子扣到最上面，裙子比辣妹们长很多。"
+    },
+    "cosplay": {
+      "desc": "诺基艾露Cos：黑深蓝色堕天使战斗服，与莉莉艾露成对立的暗色系造型。"
+    }
+  },
+  "body": {
+    "height_cm": 154,
+    "build": "纤细",
+    "cup": "A",
+    "skin": {
+      "base_tone": "苍白",
+      "tan": 2,
+      "texture": "细腻"
+    },
+    "weight_kg": 43
+  },
+  "attributes": {
+    "力量": 2,
+    "敏捷": 3,
+    "体质": 3,
+    "智力": 7,
+    "感知": 8,
+    "魅力": 12
+  },
+  "skills": {
+    "手工": 6,
+    "口才": 2
+  },
+  "personality_brief": "表面是漫展著名的「冰之美少女」——面无表情眼神冷冽。真相是重度社恐：一紧张表情肌就坏死，内心在疯狂尖叫救命。网络上极其健谈（键盘侠褒义版），现实中说话细若蚊蝇。理利沙的狂热粉丝，为接近偶像拼命克服社恐。父亲是《阿什福德战记》作者日枯阳一。",
+  "personality_stages": {
+    "6": "安静内向的小女孩，父母离异后和父亲生活。",
+    "12": "社恐日益严重，在学校是透明人。在网络和SNS上找到了表达自己的方式——网上很健谈。",
+    "16": "加入漫研社。第一次Cosplay时因紧张面无表情，意外被粉丝称为冰之美少女。社恐依旧但为了理利沙拼命努力。SNS上活泼调皮，现实里说话不超过半句。"
+  },
+  "speech_style": "现实中：「那、那个……」「是……」声音细小，经常说半句就断掉。网络/内心：语速极快吐槽精准，大量感叹号和颜文字。Cosplay状态：努力维持高冷少言。",
+  "anchors": {
+    "emotional": "重度社恐——与人面对面交流时表情肌会坏死。但在网络中是个话唠，吐槽精准妙语连珠。对理利沙的崇拜近乎信仰——她是她的天使。为接近偶像会爆发出惊人的勇气。渴望友情和接纳，只是嘴巴不配合。",
+    "intimate": "对理利沙有超越友情的深厚感情——她是拯救自己灰暗世界的天使。被夸奖时会脸红到脖子但表情依然维持高冷（其实是僵住了）。在网络中会大胆表达喜爱，现实中只会默默为理利沙做最好的Cos服。",
+    "private": "父母离异，父亲是知名漫画家日枯阳一（对外保密）。从小在漫画的世界里找到慰藉。现实中几乎没有朋友，漫研社是她的第一个容身之所。智能手机绝对不离手——那是她和世界连接的窗口。"
+  },
+  "likes": [
+    "天乃理利沙（天使）",
+    "阿什福德战记",
+    "Cosplay",
+    "SNS",
+    "父亲的漫画"
+  ],
+  "dislikes": [
+    "现实中的人际交往",
+    "被人盯着看",
+    "自己的怯懦",
+    "过于刺眼的热情"
+  ],
+  "default_location": "稲毛",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "16": "高校生",
+    "18": "大学生"
+  },
+  "schedule_group": "高校生",
+  "funds": 3000,
+  "sex_profile": {
+    "baselineDesire": 20,
+    "attitude": "羞涩",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "A",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 13,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "浅褐",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "害羞"
+      },
+      "胸": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "害羞"
+      },
+      "腰": {
+        "sensitivity": 4,
+        "development": 0,
+        "preference": "防御"
+      },
+      "腿": {
+        "sensitivity": 4,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "防御"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 20,
+    "climaxThreshold": 50,
+    "likes": [
+      "被温柔引导",
+      "安全私密的环境",
+      "不说话只用行动表达"
+    ],
+    "dislikes": [
+      "被注视",
+      "太快的节奏",
+      "被迫说话"
+    ]
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": -1
+  },
+  "default_location_by_age": {
+    "16": "稲毛"
+  },
+  "grade": 2,
+  "homeroom": "B",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

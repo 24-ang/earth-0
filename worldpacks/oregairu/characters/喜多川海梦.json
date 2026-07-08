@@ -1,0 +1,277 @@
+{
+  "name": "喜多川海梦",
+  "source": "更衣人偶坠入爱河",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "金发辣妹系、开朗外向、热爱cosplay。",
+  "hair_color": "金色",
+  "hair_style": "辣妹系",
+  "body": {
+    "height_cm": 167,
+    "weight_kg": 54,
+    "build": "结实",
+    "measurements": {
+      "bust": 90,
+      "waist": 60,
+      "hips": 92
+    },
+    "cup": "E",
+    "leg_type": "运动型",
+    "body_shape": {
+      "chest": "吊钟",
+      "hips": "蜜桃",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "普通",
+      "tan": 25,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "规律运动"
+  },
+  "attributes": {
+    "力量": 3,
+    "敏捷": 5,
+    "体质": 4,
+    "智力": 6,
+    "感知": 9,
+    "魅力": 17
+  },
+  "skills": {
+    "潜行": 3,
+    "口才": 7,
+    "交易": 5
+  },
+  "hp": {
+    "current": 9,
+    "max": 9
+  },
+  "equipment": {
+    "top": {
+      "name": "校服上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact"
+    },
+    "bottom": {
+      "name": "短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "legs": {
+      "name": "泡泡袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact"
+    },
+    "feet": {
+      "name": "乐福鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "acc": {
+      "name": "彩色指甲油",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.01,
+      "effects": [],
+      "state": "intact"
+    },
+    "inner_top": {
+      "name": "运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact"
+    },
+    "inner_bot": {
+      "name": "条纹内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "right_hand",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "cosplay杂志",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "化妆品",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "千葉駅前",
+  "sex_profile": {
+    "baselineDesire": 55,
+    "attitude": "主动",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "E",
+        "shape": "吊钟",
+        "nipple_size": "大",
+        "nipple_color": "浅褐",
+        "areola_size": "宽",
+        "feel": "弹力"
+      },
+      "vagina": {
+        "type": "贝壳",
+        "labia_size": "普通",
+        "depth_cm": 15,
+        "tightness": "普通",
+        "inner_color": "玫瑰",
+        "feel": "普通"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "褐色",
+        "style": "剃除"
+      },
+      "clitoris": "敏感突出"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "腰": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "腿": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      }
+    },
+    "cycleDay": 10,
+    "climaxThreshold": 50,
+    "likes": [
+      "cosplay相关",
+      "新鲜感的互动",
+      "主动探索"
+    ],
+    "dislikes": [
+      "单调重复",
+      "太被动的人"
+    ]
+  },
+  "grid_pos": [
+    3,
+    3
+  ],
+  "schedule_group": "高校生",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "18": "大学生"
+  },
+  "funds": 8000,
+  "personality_brief": "开朗直率的外向型辣妹，善于交际，能坦率表达感受。对小众爱好（动画/游戏/cosplay）充满狂热，提到喜欢的事物会滔滔不绝。尊重他人爱好，认为喜欢什么和性别无关。行动力极强，一有想法马上付诸实践。自带小恶魔属性，喜欢捉弄对方。",
+  "personality_stages": {
+    "6": "活泼外向的小女孩，喜欢漂亮的衣服和闪亮的东西。母亲早逝后学会了独立，和父亲关系亲密。",
+    "12": "开始对动漫和cosplay产生兴趣，在班级里人气很高。性格开朗但偶尔会因过于直率而与人冲突。动手能力开始萌芽。",
+    "16": "完全体的辣妹系美少女。金发挑染、耳钉舌钉、美甲戒指。疯狂热爱cosplay，打工赚钱全投进爱好里。父亲调职后独自生活。遇到认真对待爱好的人会两眼放光觉得他们闪闪发亮。饭量大得惊人。不会游泳。"
+  },
+  "speech_style": "语气活泼直率，充满能量感。提到喜欢的东西会进入高速滔滔不绝模式。用词直接不拐弯，情绪激动时容易流泪。面对侮辱他人爱好的人会毫不客气地怼回去。和熟人说话时带有小恶魔式的调侃和捉弄。",
+  "anchors": {
+    "emotional": "外向开朗、热情活泼，能坦率表达感受。喜欢什么和性别无关——这是她的核心信念。尊重认真投入爱好的人，觉得他们闪闪发亮。讨厌随便侮辱别人兴趣爱好的人。行动力很强，一有想法马上付诸实践。",
+    "intimate": "在信任的人面前会放开展示自己的收藏和cos作品。虽然大大咧咧不擅长细节，但为喜欢的人会拼命努力。对性和爱好的态度同样坦率开放。容易感动流泪。饭量大但被说很能吃会害羞。不太会游泳但喜欢海边。",
+    "private": "母亲早逝，父亲调职外地后独自生活。房间很乱但充满热爱之物。为了cosplay经费兼职多项工作。外人看她光鲜亮丽，背后是一个为爱好全力以赴的孤独女孩。"
+  },
+  "likes": [
+    "cosplay",
+    "动画",
+    "漫画",
+    "游戏",
+    "大海",
+    "牛奶",
+    "拉面"
+  ],
+  "dislikes": [
+    "侮辱他人爱好的人",
+    "逆来顺受的性格",
+    "游泳（不会）"
+  ],
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": -2
+  },
+  "grade": 2,
+  "homeroom": "D",
+  "stages": {
+    "幼儿_小学": "活泼。喜欢漂亮衣服。",
+    "中学": "开始接触cosplay和动漫。不在意别人眼光。",
+    "高中": "金发辣妹。会自己做cos服。外向但第一次也会紧张。",
+    "成年": "可能在时尚行业。依然是焦点。"
+  }
+}

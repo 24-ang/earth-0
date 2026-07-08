@@ -1,0 +1,406 @@
+{
+  "name": "御堂咲子",
+  "source": "(C76) [MTSP (Jin)] 御堂咲子さんノ男性事情",
+  "base_age": 27,
+  "gender": "female",
+  "appearance_brief": "黑色长发盘起，戴着眼镜。外表端庄严肃，身材极好。总是一副认真的表情。",
+  "hair_color": "黑色",
+  "hair_style": "长发盘起",
+  "eye_color": "黑色",
+  "hair_accessories": "发圈",
+  "outfits": {
+    "work": {
+      "top": "深蓝色职业西装外套",
+      "bottom": "深蓝色配套西装长裤",
+      "legs": "肉色丝袜",
+      "feet": "黑色中跟皮鞋",
+      "inner_top": "白色翻领知性衬衫",
+      "inner_bot": "纯色棉质三角内裤",
+      "hair": "黑色长发盘起，半框眼镜——严肃知性",
+      "desc": "一套严谨端庄的高中女教师职场正装。外套是修身剪裁的深蓝色双扣西装，通常扣好纽扣，显得一丝不苟；里面搭配一件干净挺括的纯白翻领衬衫，领口规整地扣至最上一颗。下身是一条线条笔直、垂坠感极佳的同色系西装长裤，搭配低调的肉色丝袜与黑色中跟皮鞋。整套衣着毫无多余装饰，面料挺括防皱，带着强烈的禁欲感与职业威严。"
+    },
+    "casual": {
+      "top": "简约针织开衫",
+      "bottom": "及膝棉麻半身裙",
+      "feet": "平底皮质单鞋",
+      "shirt": "围裙",
+      "hair": "长发自然垂放，居家放松状态",
+      "legs": "无",
+      "inner_top": "浅色舒适吊带背心",
+      "inner_bot": "棉质平角内裤",
+      "desc": "居家或非工作日抚养继子时穿着的温婉日常服饰。上身是一件米白色或浅灰色的细线针织开衫，质地柔软亲肤，内搭一件素雅的圆领浅色打底衫。下身则换上了宽松舒适的暗色系及膝棉麻半身裙，双腿裸露，脚踩一双柔软的平底单鞋。整套搭配褪去了学校里的凌厉感，面料充满生活气息与褶皱质感，流露出作为母亲的温柔、知性与淡淡的疲惫感。"
+    },
+    "sleep": {
+      "shirt": "保守纯棉长袖睡衣套装",
+      "hair": "长发松散扎成低马尾",
+      "desc": "夜间独处或在母子家庭中生活的保守睡具。一套传统的纯棉质地长袖排扣睡衣裤套装，色调通常是极其低调的淡粉或浅蓝。衣服剪裁宽松、不显身材，领口微紧。面料因为反复洗涤而显得有些发软、泛旧，带有一种常年独居的清冷感，将身体包裹得严严实实。"
+    }
+  },
+  "body": {
+    "height_cm": 162,
+    "weight_kg": 52,
+    "build": "标准",
+    "measurements": {
+      "bust": 89,
+      "waist": 57,
+      "hips": 86
+    },
+    "cup": "E",
+    "leg_type": "修长",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "圆润",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 2,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 110,
+      "weight_kg": 18,
+      "build": "纤细",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 145,
+      "weight_kg": 38,
+      "build": "标准",
+      "measurements": {
+        "bust": 74,
+        "waist": 54,
+        "hips": 78
+      },
+      "cup": "A",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "15": {
+      "height_cm": 158,
+      "weight_kg": 46,
+      "build": "标准",
+      "measurements": {
+        "bust": 82,
+        "waist": 56,
+        "hips": 82
+      },
+      "cup": "C",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 4,
+        "texture": "细腻"
+      }
+    },
+    "27": {
+      "height_cm": 162,
+      "weight_kg": 52,
+      "build": "标准",
+      "measurements": {
+        "bust": 89,
+        "waist": 57,
+        "hips": 86
+      },
+      "cup": "E",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 6,
+    "敏捷": 7,
+    "体质": 7,
+    "智力": 14,
+    "感知": 14,
+    "魅力": 15
+  },
+  "skills": {
+    "教学": 8,
+    "人际": 6,
+    "家政": 9
+  },
+  "hp": {
+    "current": 14,
+    "max": 14
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "深蓝色职业西装外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.6,
+      "effects": [],
+      "state": "intact",
+      "flavor": "精纺羊毛混纺面料，版型硬挺，肩部和袖口打理得一尘不染。双排扣设计，常年扣得严严实实，在学校里用来维持教师的尊严与距离感。"
+    },
+    "bottom": {
+      "name": "深蓝色配套西装长裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "flavor": "中高腰直筒剪裁的职业长裤，中间带着笔挺的熨烫中缝。面料缺乏弹性但十分防皱，裤脚边缘有极其细微的日常走动磨损。"
+    },
+    "legs": {
+      "name": "肉色薄款丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "极其轻薄透气的哑光肉色连裤袜，紧紧贴合着双腿。质地细腻均匀，没有任何勾丝，规矩地隐藏在西装裤管之下。"
+    },
+    "feet": {
+      "name": "黑色中跟皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "flavor": "经典的黑色哑光牛皮职场鞋，带有约3厘米的粗跟。鞋面有因频繁走动形成的自然折痕，鞋跟内侧有轻微的相互踢碰痕迹。"
+    },
+    "inner_top": {
+      "name": "白色翻领知性衬衫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "flavor": "纯棉高支衬衫，领口和袖口被主妇细心地熨烫过。虽然版型保守，但在傲人的巨乳支撑下，胸前衣襟仍被绷得十分紧凑。"
+    },
+    "inner_bot": {
+      "name": "纯色棉质三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.03,
+      "effects": [],
+      "state": "intact",
+      "flavor": "毫无花哨装饰的白色普通棉质内裤。边缘由于多次洗涤略有些松懈，贴身舒适，反映出主人务实、保守且对性不太关注的心理。"
+    },
+    "acc": {
+      "name": "半框近视眼镜",
+      "type": "accessory",
+      "slot": "acc",
+      "weight": 0.03,
+      "effects": [],
+      "state": "intact",
+      "flavor": "银黑色金属半框眼镜，镜片擦拭得极其干净。稳固地架在挺拔的鼻梁上，为她平添了几分教导主任般的严厉与冷淡的知识分子气质。"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "稲毛海岸",
+  "default_location_by_age": {
+    "6": "東京",
+    "12": "東京",
+    "15": "東京",
+    "18": "東京",
+    "27": "稲毛海岸"
+  },
+  "schedule_group": "总武高教师",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "18": "大学生",
+    "24": "总武高教师",
+    "27": "总武高教师"
+  },
+  "funds": 200000,
+  "appearance_by_age": {
+    "12": {
+      "hair_style": "马尾",
+      "hair_color": "黑色"
+    }
+  },
+  "personality_brief": "极其正经死板的数学教师。丈夫过世后独自抚养继子。继子恰好也在总武高读高二（不同班）——母子关系对外从未公开，只有教务主任和校长知情。更危险的是：山田隆文正是高二的学年主任，直接掌握继子的学籍生杀大权。表面上是个严厉的数学老师，每天在走廊和继子擦肩而过却只能像陌生人一样点头。",
+  "personality_stages": {
+    "12": "认真听话的好学生。",
+    "15": "严肃认真的班长类型。",
+    "27": "失去丈夫的寡妇，独自抚养继子。看似对男性失去了兴趣，其实内心压抑着极大的压力。"
+  },
+  "speech_style": "总是用敬语或严肃的语气说话。在陷入困境时会表现出极度的动摇和屈辱。",
+  "likes": [
+    "看着继子成长",
+    "做家务"
+  ],
+  "dislikes": [
+    "山田主任的骚扰",
+    "违背伦理道德的事情",
+    "在走廊撞见继子时的心虚感"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高的数学教师，负责2年级数学II·B。出了名的严格——考试从不放水，答案少写一个步骤扣一分。",
+      "level": "common"
+    },
+    {
+      "text": "学校里出了名严肃认真的女教师，单身。几乎不参加教员聚会，放学后总是最早离开——赶回家做饭。",
+      "level": "common"
+    },
+    {
+      "text": "她带的班里学生私下说'咲子老师的课只要认真听其实讲得很好'——但这句评价没人敢当面说。",
+      "level": "familiar"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "继子就在总武高读高二，在另一个班。两人在学校从不说话——这是她定下的规矩。但她会在放学后偷偷看继子班级的成绩排名——山田隆文是这一年级的学年主任，她知道这意味着什么。",
+      "level": "close"
+    },
+    {
+      "text": "因为继子在学校里的某些把柄被山田隆文抓住，遭到了威胁。山田用'让你继子退学'和'公开你们的关系'双重要挟——作为学年主任，他完全能做到。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "27": {
+      "drives": [
+        "保护继子不受伤害",
+        "维持现在的家庭生活"
+      ],
+      "goal": "让继子顺利毕业。"
+    }
+  },
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 2
+  },
+  "sex_profile": {
+    "baselineDesire": 25,
+    "attitude": "抗拒——但长期的压抑使她内心有自己不敢承认的渴望",
+    "experience": "已婚有过——丈夫去世后完全断绝",
+    "female": {
+      "breast": {
+        "cup": "E",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "柔软适中——生育经验增加了重力感"
+      },
+      "vagina": {
+        "type": "普通",
+        "labia_size": "小",
+        "depth_cm": 14,
+        "tightness": "紧致——多年未使用",
+        "inner_color": "玫瑰",
+        "feel": "意外地紧——身体比心诚实"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "自然——无心情打理"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 5,
+        "development": 2,
+        "preference": "抗拒——和丈夫以外的人接吻让她感到罪恶"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 2,
+        "preference": "敏感——她自己都不知道"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 2,
+        "preference": "羞耻——被触碰时想起自己是一个'女人'而非'母亲'"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 2,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 2,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 9,
+        "development": 2,
+        "preference": "背叛——嘴上说不要，身体湿得一塌糊涂"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "强烈排斥——这是最后的底线"
+      }
+    },
+    "cycleDay": 22,
+    "climaxThreshold": 60,
+    "likes": [
+      "被当成'女人'而非'老师'或'母亲'——虽然她不会承认",
+      "温柔到让她无法拒绝",
+      "在没人认识的地方"
+    ],
+    "dislikes": [
+      "被威胁——这是她最深的伤口",
+      "被提到丈夫",
+      "在继子可能出现的地方",
+      "自己身体的背叛——这是她最大的挫败感来源"
+    ]
+  }
+}

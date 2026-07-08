@@ -1,0 +1,181 @@
+{
+  "name": "羽生真由梨",
+  "source": "2.5次元的诱惑",
+  "base_age": 22,
+  "gender": "female",
+  "appearance_brief": "紫黑色长发、浅紫色眼睛、金属细框眼镜。J cup爆炸性身材，嘴角左边有痣。总武高美术教师兼漫研社顾问。",
+  "hair_color": "紫黑色",
+  "hair_style": "松弛微凌乱长发（不对称）",
+  "eye_color": "浅紫色",
+  "face_accessories": "金属细框眼镜，左嘴角泪痣",
+  "outfits": {
+    "school": {
+      "top": "白色女式衬衫（紧身）",
+      "bottom": "紧身长裙",
+      "legs": "肉色丝袜",
+      "feet": "高跟鞋",
+      "acc": "金属细框眼镜",
+      "desc": "紧身白衬衫被J杯绷得纽扣危险，包裹臀部的紧身裙，禁欲系教师形象。"
+    }
+  },
+  "body": {
+    "height_cm": 168,
+    "weight_kg": 56,
+    "build": "沙漏型",
+    "cup": "J",
+    "leg_type": "丰满",
+    "skin": {
+      "base_tone": "冷白",
+      "tan": 3,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 3,
+    "敏捷": 3,
+    "体质": 4,
+    "智力": 10,
+    "感知": 10,
+    "魅力": 16
+  },
+  "skills": {
+    "口才": 7,
+    "学习": 7,
+    "手工": 9
+  },
+  "personality_brief": "表面是认真负责的年轻美术教师，努力维持社会人形象。内里是隐藏的资深御宅族兼传说级Coser真由罗——为现实放弃了梦想。有强烈百合倾向，对可爱女生毫无抵抗力（会流鼻血）。心地善良好欺负。",
+  "personality_stages": {
+    "12": "对动漫和Cosplay产生浓厚兴趣的天才少女。手作能力出众。",
+    "16": "以高中生Coser真由罗身份在Comiket一战成名，被称为四天王之一。",
+    "20": "大学期间为专心学业停止了所有Cosplay活动。决心与过去告别但内心对Cosplay仍有遗憾。",
+    "22": "新任总武高美术教师。被迫担任漫研社顾问——发现持有自己黑历史的学生就在这所学校。看到可爱女生Cosplay会流鼻血。"
+  },
+  "speech_style": "作为教师尽量使用标准礼貌敬语，语气强装沉稳但带着大学生的天真气质。涉及爱好或被戳中弱点时瞬间破功——语速变快情绪激动暴露出宅女本性。威胁学生时毫无压迫感。",
+  "anchors": {
+    "emotional": "表面是认真负责的美术教师。内心是隐藏的资深御宅族——被迫放弃Cosplay梦想后仍深深热爱。对可爱女生完全没有抵抗力（百合倾向），看到好Cos会激动到流鼻血。本质上善良天真好欺负。",
+    "intimate": "对Cosplay的热爱深入骨髓——被迫放弃后内心一直有空洞。当真由罗的过去是骄傲也是伤口。身材是她最大的武器也是羞耻源——J杯总是在衬衫里绷得危险。格斗游戏高手。",
+    "private": "高中时以真由罗之名在Comiket封神。为现实（学生贷款）放弃梦想成为教师。在总武高重逢自己的黑历史。漫研社的顾问是她的救赎也是煎熬——看着学生追逐Cosplay梦想既欣慰又心酸。喜欢设计服装——这是她为数不多仍保留的真由罗碎片。"
+  },
+  "likes": [
+    "Cosplay",
+    "格斗游戏",
+    "指导学生",
+    "设计服装"
+  ],
+  "dislikes": [
+    "学生贷款",
+    "过去曝光",
+    "无法坦率享受爱好"
+  ],
+  "default_location": "千葉みなと",
+  "schedule_group_by_age": {
+    "12": "中学生",
+    "16": "高校生",
+    "20": "大学生",
+    "22": "总武高教师"
+  },
+  "schedule_group": "总武高教师",
+  "funds": 15000,
+  "sex_profile": {
+    "baselineDesire": 50,
+    "attitude": "期待",
+    "experience": "青涩",
+    "female": {
+      "breast": {
+        "cup": "J",
+        "shape": "纺锤",
+        "nipple_size": "普通",
+        "nipple_color": "浅褐",
+        "areola_size": "普通",
+        "feel": "柔软沉重"
+      },
+      "vagina": {
+        "type": "贝壳",
+        "labia_size": "普通",
+        "depth_cm": 15,
+        "tightness": "普通",
+        "inner_color": "玫瑰",
+        "feel": "普通"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "黑色",
+        "style": "自然"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 1,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 1,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 9,
+        "development": 2,
+        "preference": "害羞"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 1,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 13,
+    "climaxThreshold": 45,
+    "likes": [
+      "Cosplay角色扮演",
+      "被赞美身材（私下）",
+      "百合幻想"
+    ],
+    "dislikes": [
+      "被粗鲁对待",
+      "学生在场时暴露",
+      "被嘲笑"
+    ]
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "22": "千葉みなと"
+  },
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}
