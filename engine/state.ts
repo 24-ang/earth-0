@@ -9,6 +9,7 @@ import charactersStatic from "../data/characters.json" with { type: "json" };
 import roomsStatic from "../data/rooms.json" with { type: "json" };
 import { lookupRegion, setAcademicYearOffset } from "./router.ts";
 import charStagesStatic from "../data/character_stages.json" with { type: "json" };
+import { validateCharacters as validateCharactersFn } from "./validate-characters.ts";
 import fs from "node:fs";
 import path from "node:path";
 import titleRulesStatic from "../data/title_rules.json" with { type: "json" };
@@ -183,6 +184,31 @@ function loadWorldpackDirRecursive(dirName: string, flatFileName: string): Recor
     catch (e) { console.error(`loadWorldpackDirRecursive: 解析 data/${flatFileName} 失败`, e); }
   }
   return result;
+}
+
+/** 加载 worldpacks/{world}/characters/ 目录（每文件一个角色对象）→ 数组。
+ *  无目录/空 → 返回 null（调用方回退旧平面 characters.json）。 */
+function loadCharactersFromDir(): any[] | null {
+  const dir = path.resolve(process.cwd(), "worldpacks", activeWorldName, "characters");
+  if (!fs.existsSync(dir)) return null;
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json") && !f.startsWith("_"));
+  if (!files.length) return null;
+  const arr: any[] = [];
+  for (const f of files) {
+    try { arr.push(JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"))); }
+    catch (e) { console.error(`loadCharactersFromDir: 解析 characters/${f} 失败`, e); }
+  }
+  return arr.length ? arr : null;
+}
+
+/** 从角色对象投影 charStages（stages/stages_if 已内联进单角色文件）。空 → 调用方回退旧文件。 */
+function deriveCharStages(chars: any[]): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const c of chars) {
+    if (c?.stages) out[c.name] = c.stages;
+    if (c?.stages_if) out[c.name + "_if"] = c.stages_if;
+  }
+  return out;
 }
 
 export let gameState: GameState = createInitialState();
@@ -4662,9 +4688,12 @@ export function loadActiveWorld(worldName?: string): void {
       return fallback;
     };
 
-    characters = loadJSON("characters.json", charactersStatic);
+    // 角色：优先扫 characters/ 目录（每人一文件，真相源），回退旧平面文件
+    characters = loadCharactersFromDir() ?? loadJSON("characters.json", charactersStatic);
     rooms = loadJSON("rooms.json", roomsStatic);
-    charStages = loadJSON("character_stages.json", charStagesStatic);
+    // charStages 从角色对象投影（stages/stages_if 已内联）；空则回退旧平面文件
+    const _derivedStages = deriveCharStages(characters);
+    charStages = Object.keys(_derivedStages).length ? _derivedStages : loadJSON("character_stages.json", charStagesStatic);
     titleRules = loadJSON("title_rules.json", titleRulesStatic);
     namelessNpcTemplates = loadJSON("nameless_npc_templates.json", namelessNpcTemplatesStatic);
     economyConfig = loadJSON("economy.json", economyConfigStatic);
@@ -4683,7 +4712,20 @@ export function loadActiveWorld(worldName?: string): void {
     scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
     roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
     residenceTemplates = loadJSON("residence_templates.json", residenceTemplatesStatic);
-    sexProfilesData = loadJSON("sex_profiles.json", null);
+    // sex profiles 从角色对象投影（sex_profile 已内联为完整对象）；空则回退旧平面文件
+    const _derivedSex: Record<string, any> = {};
+    for (const c of characters) if (c?.sex_profile && typeof c.sex_profile === "object") _derivedSex[c.name] = c.sex_profile;
+    sexProfilesData = Object.keys(_derivedSex).length ? _derivedSex : loadJSON("sex_profiles.json", null);
+
+    // 启动校验：只报硬错误（缺必填/非法组/孤儿），warn/info 是 backlog 不刷屏（铁律：bug 要看得见）
+    try {
+      const vr = validateCharactersFn(characters, new Set(Object.keys(scheduleTemplates || {})));
+      const errs = vr.issues.filter((i) => i.severity === "error");
+      if (errs.length) {
+        console.error(`⚠ 角色校验发现 ${errs.length} 个硬错误:`);
+        for (const e of errs.slice(0, 20)) console.error(`   [${e.name}] ${e.detail}`);
+      }
+    } catch (e) { console.error("loadActiveWorld: 角色校验失败", e); }
 
     // Step 7: 组织/势力系统数据加载 (纯动态从 orgs/ 扫描，去中心化)
     if (gameState) {
