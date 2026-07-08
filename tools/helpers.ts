@@ -1159,6 +1159,84 @@ export function buildTodayContext(gs: any, npcName: string, npc: any, src: any):
 
   const group = npc.scheduleGroup || src?.schedule_group || "";
   const isStudent = group.includes("学生") || group.includes("高校生") || group.includes("部员") || group.includes("大学");
+  const isTeacher = group.includes("教师");
+  const npcLoc = npc.currentRoom || npc.location || "";
+  const atSchool = npcLoc.includes("総武高") || npcLoc.includes("总武高") || npcLoc.includes("教室") ||
+                   npcLoc.includes("体育") || npcLoc.includes("プール") || npcLoc.includes("職員室") ||
+                   npcLoc.includes("职员室") || npcLoc.includes("理科") || npcLoc.includes("美術") ||
+                   npcLoc.includes("电脑") || npcLoc.includes("音楽") || npcLoc.includes("図書") ||
+                   npcLoc.includes("校");
+
+  // ── 课程表注入（v2: 班主任索引，持ち上がり制対応）──
+  if (atSchool) {
+    try {
+      const nfs = require("node:fs");
+      const npath = require("node:path");
+      const ttPath = npath.resolve(process.cwd(), "worldpacks", (gs as any).activeWorld || "oregairu", "timetable.json");
+      const orgPath = npath.resolve(process.cwd(), "worldpacks", (gs as any).activeWorld || "oregairu", "orgs", "soubu_high.json");
+      if (nfs.existsSync(ttPath)) {
+        const tt = JSON.parse(nfs.readFileSync(ttPath, "utf-8"));
+        let timetableKey = "";
+        let periodLine = "";
+
+        if (isStudent) {
+          const { resolveStudentTimetableKey } = require("../engine/time.ts");
+          // Try class_config first
+          if (nfs.existsSync(orgPath)) {
+            const org = JSON.parse(nfs.readFileSync(orgPath, "utf-8"));
+            const cc = org.class_config?.grades;
+            if (cc) {
+              timetableKey = resolveStudentTimetableKey(
+                (src as any)?.grade, (src as any)?.homeroom, cc
+              ) || "";
+            }
+          }
+          // Fallback: NPC flagged with hr_teacher_
+          if (!timetableKey) {
+            for (const fk of Object.keys((gs as any).flags || {})) {
+              if (fk.startsWith(`hr_teacher_${npcName}_`) && (gs as any).flags[fk]) {
+                timetableKey = fk.replace(`hr_teacher_${npcName}_`, "");
+                break;
+              }
+            }
+          }
+          if (timetableKey) {
+            const { buildPeriodLines } = require("../engine/time.ts");
+            periodLine = buildPeriodLines(timetableKey, (gs as any).time.minute_of_day, (gs as any).time.day_of_week, tt);
+          }
+        } else if (isTeacher) {
+          // 教师：反搜 timetable，找当前课节是不是他在上
+          const n = npcName;
+          const minuteOfDay = (gs as any).time.minute_of_day;
+          const dow = (gs as any).time.day_of_week;
+          const { getCurrentPeriod, buildPeriodLines } = require("../engine/time.ts");
+          const pi = getCurrentPeriod(minuteOfDay, dow);
+          if (pi.phase === "授業中" && pi.period) {
+            for (const tKey of Object.keys(tt.timetables || {})) {
+              const dayTT = tt.timetables[tKey]?.[dow];
+              if (!dayTT) continue;
+              const slot = dayTT.find((p: any) => p.period === pi.period && p.teacher === n);
+              if (slot) {
+                timetableKey = tKey;
+                periodLine = buildPeriodLines(tKey, minuteOfDay, dow, tt);
+                break;
+              }
+            }
+            if (!periodLine) {
+              periodLine = `[現在] ${pi.period}限 空きコマ | 職員室で準備中`;
+            }
+          } else {
+            periodLine = `[現在] ${pi.phase}`;
+          }
+        }
+
+        if (periodLine) {
+          lines.push(`[课堂] ${periodLine}`);
+        }
+      }
+    } catch (_e) { /* timetable 加载失败不阻塞 */ }
+  }
+
   const refPlaces = isStudent
     ? "自宅, 商店街, 千葉駅前, 稲毛海岸, カラオケ, 図書館, 本屋, ゲームセンター, ファミレス, コンビニ, 塾, 公園"
     : "自宅, 商店街, 千葉駅前, 居酒屋, ラーメン屋, ファミレス, 本屋, 公園";

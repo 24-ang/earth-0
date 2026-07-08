@@ -1,0 +1,161 @@
+{
+  "id": "akizuki_villain_arc",
+  "title": "紫色诱导剂 (秋月孝三·鬼父线)",
+  "source": "鬼父 (Blue Gale)",
+  "trigger": {
+    "min_day": 30,
+    "max_day": 365,
+    "location": "理科实验室",
+    "time_of_day": [
+      "afternoon",
+      "after_school"
+    ],
+    "flags": {
+      "met_airi": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 14,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "秋月爱莉",
+    "hook_text": "放学后的理科实验室飘着一股淡淡的甜味——不像化学试剂，更像某种花香。{{player.surname}}经过门口时听到里面传来爱莉压低的声音：'……我说了不要再靠近我。把你的喷雾拿开。'秋月孝三温和的声音回答：'爱莉，我只是在配消毒液。你对继父总是这么戒备，我很伤心呢。'从门缝望去，爱莉站在门口随时准备夺门而出，手已经放在了门把上——但她没有跑。她的脸很红。{{player.surname}}决定：",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "lab_discovery",
+      "label": "实验室的香味",
+      "prompt": "推开门的一瞬间，那股甜味更浓了。实验台上放着一个小巧的紫色喷雾瓶——标签面上什么都没写。孝三不慌不忙地把瓶子收进白大褂口袋，对{{player.surname}}露出一个无可挑剔的笑容：'啊，是来找真理奈的吗？她今天有补习，不在实验室。还是说——你对有机化学有兴趣？我一直觉得现在的高中生对真正的科学接触太少了。'他说这话时语气里没有一丝紧张。爱莉趁这个间隙冲出了实验室。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "告诉他自己对化学没兴趣，转身离开",
+          "effects": {
+            "flags": {
+              "akizuki_suspicious": true,
+              "met_airi": true
+            },
+            "affection": {
+              "秋月孝三": -5
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "试探性地问他那个紫色喷雾瓶里装的是什么",
+          "effects": {
+            "flags": {
+              "akizuki_confronted": true,
+              "met_airi": true
+            },
+            "affection": {
+              "秋月孝三": -10
+            }
+          },
+          "next_beat": "akizuki_deflect"
+        },
+        {
+          "pick": "假装对他的研究感兴趣，留下来多聊几句",
+          "effects": {
+            "flags": {
+              "akizuki_trusting": true,
+              "met_airi": true
+            },
+            "affection": {
+              "秋月孝三": 10
+            }
+          },
+          "next_beat": "akizuki_grooming"
+        }
+      ]
+    },
+    {
+      "id": "akizuki_deflect",
+      "label": "完美的解释",
+      "prompt": "孝三笑了——一个真诚到让人无法质疑的笑。'你真细心。这是我正在申请专利的植物萃取消毒液——薰衣草基底，加了一点我自己合成的抗菌肽。对学生太实用了，你知道实验室里每天有多少细菌吗？'他从抽屉里拿出一份装订整齐的论文打印稿，封面写着「植物源抗菌制剂的安全性评估——甲北大学 秋月孝三」。署名是真的，期刊是真的，数据可能也是真的。唯一的问题是——他为什么随身带着这份论文？像是早就准备好给别人看的。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "接受解释，礼貌道别",
+          "effects": {
+            "flags": {
+              "akizuki_suspicious": true
+            },
+            "affection": {
+              "秋月孝三": 0
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "收下论文拷贝，说想仔细读一读",
+          "effects": {
+            "flags": {
+              "akizuki_paper_obtained": true
+            },
+            "affection": {
+              "秋月孝三": -15,
+              "秋月爱莉": 5
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "akizuki_grooming",
+      "label": "绅士的邀请",
+      "prompt": "'太好了。'孝三的笑容里有一种奇怪的满足感。'我知道这个年纪的年轻人很少对真正的科学感兴趣。如果你愿意，我可以指导你做一个小型有机合成实验——当然，在安全的范围内。'他递了一张名片：甲北大学 生物化学研究室 秋月孝三。'周末来大学找我，我会准备好实验材料。只是——'他推了推眼镜，'暂时不要告诉其他同学。你知道的，高中生进大学实验室有点敏感。我不想惹麻烦。'他说话的方式让你觉得你被选中了——你是特别的。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "答应周末去大学找他",
+          "effects": {
+            "flags": {
+              "akizuki_weekend_lab": true,
+              "akizuki_trusting": true
+            },
+            "affection": {
+              "秋月孝三": 15
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "收下名片但不承诺",
+          "effects": {
+            "flags": {
+              "akizuki_card_held": true
+            },
+            "affection": {
+              "秋月孝三": 5
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "拒绝邀请",
+          "effects": {
+            "flags": {
+              "akizuki_refused": true
+            },
+            "affection": {
+              "秋月孝三": -5
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "几天后你路过理科实验室时，门锁着。贴在门上的告示说'因设备维护暂停使用'。走廊里还是有那股淡淡的花香——只是这次，你觉得有点冷。",
+    "effects": {
+      "flags": {
+        "akizuki_missed": true
+      }
+    }
+  },
+  "recommended_lore": [
+    "总武高社团",
+    "总武高偏差值排名"
+  ]
+}

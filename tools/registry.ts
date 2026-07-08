@@ -46,6 +46,7 @@ import identityCheckTool from "./action/identity_check.ts";
 import sellItemTool from "./action/sell_item.ts";
 import monthlyGrowthTool from "./action/monthly_growth.ts";
 import workJobTool from "./action/work_job.ts";
+import studyTool from "./action/study.ts";
 import completeTravelTool from "./lookup/complete_travel.ts";
 import travelTool from "./lookup/travel.ts";
 import goToLocationTool from "./lookup/go_to_location.ts";
@@ -196,7 +197,7 @@ export function registerAll(pi: ExtensionAPI) {
     revealSecretTool, spawnNpcAgentTool, spawnNpcAgentsTool,
     createRoomTool, updateReputationTool, scheduleOverrideTool, createCharacterTool,
     setNpcOutfitTool, mountVehicleTool, dismountVehicleTool, buyItemTool,
-    identityCheckTool, sellItemTool, monthlyGrowthTool, workJobTool, spawnItemTool,
+    identityCheckTool, sellItemTool, monthlyGrowthTool, workJobTool, studyTool, spawnItemTool,
     instantiateResidenceTool,
     inflictDamageTool, lookupBodyTool, addMemoryTagTool, setNpcDrivesTool,
     setNpcRelationTool, tableCrudTool, openQuestTool, advanceQuestTool,

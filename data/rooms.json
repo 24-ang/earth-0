@@ -5838,5 +5838,516 @@
         }
       ]
     ]
+  },
+  "城户家": {
+    "width": 10,
+    "height": 8,
+    "cellSize": 1,
+    "floor": 0,
+    "origin": [
+      0,
+      0
+    ],
+    "capacity": 20,
+    "atmosphere": "城户家的客厅——普通的日本独栋住宅。暖色灯光下茶几上散落着课题资料和零食包装。开放式厨房传来的水声是三兄弟日常生活的背景音。",
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "沙发",
+          "label": "沙发"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "电视",
+          "label": "电视"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": "餐桌",
+          "label": "餐桌"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ],
+      [
+        {
+          "type": "exit",
+          "block": false,
+          "furniture": null,
+          "label": "出门→稲毛",
+          "exitTo": "稲毛"
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        },
+        {
+          "type": "floor",
+          "block": false,
+          "furniture": null,
+          "label": ""
+        }
+      ]
+    ]
   }
 }

@@ -1,0 +1,236 @@
+{
+  "id": "bokudake_house_tragedy",
+  "title": "只有我不能做爱的房子 (苦主悲剧/IF截胡线)",
+  "source": "ぼくだけがセックスできない家 / 紅村かる",
+  "trigger": {
+    "min_day": 8,
+    "max_day": 300,
+    "location": "千叶市立总武高等学校",
+    "time_of_day": ["afternoon"],
+    "flags": {
+      "kido_house_event_active": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 15,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "城户优斗",
+    "hook_text": "放学后，{{player.surname}}在走廊看到同班的城户优斗、本田朝阳和蓝泽芽衣围在书桌旁。优斗正红着脸、扭扭捏捏地发出邀请：‘那个……关于这次的课题研究小组，我家里父母最近都不在，不如你们今天去我家一起做报告吧？’朝阳和芽衣觉得这主意不错，便爽快地答应了。优斗眼里闪过一丝狂喜。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "study_group_choice",
+      "label": "选择介入",
+      "prompt": "看着优斗那自卑畏缩却又暗自窃喜的模样，以及他那两位极具吸引力的同班女同学，{{player.surname}}打算：",
+      "outcomes": [
+        {
+          "pick": "上前微笑着打断：‘我也还没组队呢，不介意的话，加我一个怎么样？’",
+          "effects": {
+            "affection": {
+              "本田朝阳": 2,
+              "蓝泽芽衣": 2,
+              "城户优斗": -5
+            },
+            "flags": {
+              "player_in_kido_study": true
+            }
+          },
+          "next_beat": "kido_living_room"
+        },
+        {
+          "pick": "装作顺路，笑着说：‘我正好今晚没地方吃饭，优斗，去你家打扰一下没关系吧？’以观察者身份前往。",
+          "effects": {
+            "flags": {
+              "player_kido_visitor": true
+            }
+          },
+          "next_beat": "kido_living_room"
+        },
+        {
+          "pick": "不管闲事，随他们去吧。",
+          "effects": {
+            "flags": {
+              "kido_tragedy_unfolding": true,
+              "kido_tragedy_occurred": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "kido_living_room",
+      "label": "城户家的客厅",
+      "prompt": "来到独栋的城户家。优斗紧张地给大家倒水。这时，大门打开，优斗的兄弟们回来了——大哥城户树（西装笔挺的学生会副会长，高大英俊）和三弟城户状真（金发高挑、痞气帅气的初三生）。\n\n看到两个兄弟，朝阳和芽衣的表情瞬间变了。朝阳盯着成熟帅气的大哥，整个人变得拘谨红脸；而芽衣则被三弟状真的直球搭讪逗得娇笑连连。原本是主人的优斗，瞬间在旁边像个透明人。在大哥的顺水推舟下，两位女生当晚同意留宿。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "当晚以‘天色太晚’为由，要求一起留宿在优斗家的客厅沙发上，监视动向。",
+          "effects": {
+            "flags": {
+              "player_sleepover_kido": true
+            }
+          },
+          "next_beat": "midnight_room_visits"
+        },
+        {
+          "pick": "识趣地告辞离开，但在夜里偷偷折返，潜伏在独栋外观察窗户。",
+          "effects": {
+            "flags": {
+              "player_peek_kido": true
+            }
+          },
+          "next_beat": "midnight_room_visits"
+        }
+      ]
+    },
+    {
+      "id": "midnight_room_visits",
+      "label": "深宵异动",
+      "prompt": "深夜。优斗在房间里戴着耳机疯狂地打游戏，对外界一无所知。而二楼的走廊里，大哥城户树正推开朝阳的房门；三弟状真则带着坏笑溜进了芽衣的房间。隔着门缝，隐约能听到朝阳慌乱娇羞的喘息声和芽衣被挑逗时的调笑。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "【截胡大哥】抢先一步拦在大哥城户树面前，似笑非笑地看着他，直接推门走入朝阳的房间，把会长关在门外！",
+          "effects": {
+            "affection": {
+              "本田朝阳": 15
+            },
+            "flags": {
+              "saved_asahi_from_itsuki": true,
+              "nre_asahi_route": true
+            }
+          },
+          "next_beat": "asahi_rescue"
+        },
+        {
+          "pick": "【截胡三弟】快步跟在状真身后，一把揽住他的肩膀，带着危险的微笑：‘小鬼，金发辣妹你把握不住，让我来。’推门反锁，享用芽衣！",
+          "effects": {
+            "affection": {
+              "蓝泽芽衣": 15
+            },
+            "flags": {
+              "saved_mei_from_shoma": true,
+              "ntr_mei_route": true
+            }
+          },
+          "next_beat": "mei_conquest"
+        },
+        {
+          "pick": "【共犯加入】推开门，对大哥/三弟低声说：‘见者有份，加我一个如何？’加入他们，一起玩弄朝阳和芽衣。",
+          "effects": {
+            "affection": {
+              "本田朝阳": 5,
+              "蓝泽芽衣": 5
+            },
+            "flags": {
+              "kido_harem_share": true
+            }
+          },
+          "next_beat": "harem_debauchery"
+        },
+        {
+          "pick": "【唤醒优斗】去优斗房间，强行扯下他的耳机，指着门外：‘优斗，去看看你喜欢的人现在在谁的床上。’",
+          "effects": {
+            "flags": {
+              "yuto_awakened": true
+            }
+          },
+          "next_beat": "yuto_collapse"
+        },
+        {
+          "pick": "【冷眼旁观】什么都不做，默默记下这荒唐的一幕，冷笑离开。",
+          "effects": {
+            "flags": {
+              "kido_tragedy_canon": true,
+              "kido_tragedy_occurred": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "asahi_rescue",
+      "label": "朝阳的救赎",
+      "prompt": "本田朝阳在黑暗中惊慌失措地看着推门而入的{{player.surname}}。门外的大哥被你阻拦后识趣地离开了。你坐到朝阳的床边，取下她的红框眼镜，看着她泛红的眼眶：‘你喜欢会长对吧？但像他那种成熟的人，只会把你当成他的猎物之一。’朝阳震惊而委屈地流下眼泪，扑进你怀里大哭。这一晚，你温柔地陪伴了她，并在她耳边承诺了未来。第二天起，朝阳对你的依赖感飙升。",
+      "outcomes": [
+        {
+          "pick": "抱紧朝阳，向她宣告主权，彻底将这位清纯会长候选据为己有。",
+          "effects": {
+            "affection": {
+              "本田朝阳": 30
+            },
+            "flags": {
+              "asahi_boyfriend": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "mei_conquest",
+      "label": "芽衣的沦陷",
+      "prompt": "蓝泽芽衣看到进门的是{{player.surname}}，有些吃惊，但很快露出挑逗的笑容：‘哎呀，怎么是你？那个小金毛呢？’你毫不犹豫地将她压在身下：‘比起他，我更能让你满足。’芽衣在经历了最初的震惊后，开始疯狂地回应你。她其实一直极度缺乏安全感，这一夜，你在她的耳环和白皙皮肤上留下了深深的印记，彻底征服了这位放荡的金发辣妹。",
+      "outcomes": [
+        {
+          "pick": "占有芽衣，让她从此只对你一个人听话。",
+          "effects": {
+            "affection": {
+              "蓝泽芽衣": 30
+            },
+            "flags": {
+              "mei_submissive": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "harem_debauchery",
+      "label": "城户家的堕落狂宴",
+      "prompt": "两位美女被你和城户兄弟彻底开发。朝阳的双眼在快感中失去了高光，顺从地爬行；芽衣则浪笑着趴在长椅上。城户树和状真对你哈哈大笑：‘{{player.surname}}，你这家伙真有手段！以后这个家里，我们三个一起共享她们！’两位清纯和豪放的美女老师/同学，在你的掌控下越发堕落，只有隔壁的优斗依然一无所知。",
+      "outcomes": [
+        {
+          "pick": "畅快大笑，尽情享受这三个男人与两个女人的绝对堕落生活。",
+          "effects": {
+            "affection": {
+              "本田朝阳": 20,
+              "蓝泽芽衣": 20
+            },
+            "flags": {
+              "kido_communal_harem": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "yuto_collapse",
+      "label": "优斗的崩溃",
+      "prompt": "优斗双眼空洞地站在走廊上，手死死攥着门把手。门缝中传出他一直暗恋的朝阳高昂娇羞的声音，而他的弟弟状真正在疯狂地蹂躏着她。朝阳甚至透过门缝看到了优斗的眼睛，但她非但没有抗拒，反而用极度沉溺的表情抱紧了三弟。\n\n优斗发出了一声野兽般的呜咽，彻底崩溃，逃回自己的房间死死捂住耳朵，而{{player.surname}}在一旁冷笑着看着这一切。",
+      "outcomes": [
+        {
+          "pick": "看着他崩溃，等待他最终被逐出家门的那天。",
+          "effects": {
+            "flags": {
+              "yuto_totally_broken": true,
+              "kido_tragedy_occurred": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "effects": {
+      "flags": {
+        "kido_tragedy_occurred": true
+      }
+    }
+  }
+}

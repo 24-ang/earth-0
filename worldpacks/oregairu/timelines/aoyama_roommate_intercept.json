@@ -1,0 +1,114 @@
+{
+  "id": "aoyama_roommate_intercept",
+  "title": "截胡分租套房 (选择教华IF)",
+  "source": "原创 (选择教华衍生)",
+  "trigger": {
+    "min_day": 3,
+    "max_day": 30,
+    "location": "商店街",
+    "time_of_day": ["afternoon", "evening"],
+    "flags": {
+      "met_kurosaki_yayoi": true,
+      "aoyama_moved_in": false
+    },
+    "player_stage": "高中"
+  },
+  "expires_days": 7,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "黑崎弥生",
+    "hook_text": "傍晚，{{player.surname}}在商店街偶然碰到了黑崎弥生老师。她手里拿着一张贴在中介橱窗上的分租告示，若有所思地看着。旁边的白滨真纪老师凑过来嘟囔道：'弥生，上周来问过那个男生——叫什么青山来着——好像明天就要签合同搬进来了，那样的话我们那间套房就住满三个人了耶。'弥生老师低声'嗯'了一声，侧脸上有一丝说不清楚的情绪。{{player.surname}}听见了这对话，想到了什么。{{player.surname}}决定：",
+    "urgency": "medium"
+  },
+  "beats": [
+    {
+      "id": "intercept_decision",
+      "label": "要不要截胡",
+      "prompt": "那间分租套房，位于学校步行五分钟的住宅区里，两位老师已经住在其中。如果青山悠希明天签了合同，第三个房间就是他的了——和两位身材傲人的美女老师日夜相处，日久生情，最终被两人轮流'共享'。{{player.surname}}想了想，决定：",
+      "outcomes": [
+        {
+          "pick": "今晚就去中介，说自己对那间空房感兴趣，抢在青山悠希之前把合同签了。",
+          "effects": {
+            "affection": {
+              "黑崎弥生": 3,
+              "白滨真纪": 3
+            },
+            "flags": {
+              "intercepted_aoyama": true
+            }
+          },
+          "next_beat": "sign_contract"
+        },
+        {
+          "pick": "去找青山悠希，随便找个理由劝他别签那间房，让他打消念头。",
+          "effects": {
+            "flags": {
+              "intercepted_aoyama": true
+            }
+          },
+          "next_beat": "persuade_aoyama"
+        },
+        {
+          "pick": "和自己无关，不管。",
+          "effects": {
+            "flags": {
+              "aoyama_moved_in": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "sign_contract",
+      "label": "抢先签约",
+      "prompt": "{{player.surname}}当天下午就赶去中介，以'家离学校太远、急需一间就近的房子'为由，当场支付了押金和首月房租。中介说：'好的，那您明天就可以入住了——不过您要知道，套房里已经住着两位女性租客。'{{player.surname}}微微一笑：'没问题。'第二天，当{{player.surname}}拖着行李出现在门口时，弥生老师和真纪老师都愣了一下。真纪率先笑出声：'哇，是{{player.surname}}同学！这也太巧了吧！'弥生老师盯着你看了两秒，耳尖微微泛红，侧过脸去说：'……进来吧，盘子放着就好。'就这样，三人开始了同居生活。",
+      "outcomes": [
+        {
+          "pick": "搬进去，开始和两位老师一屋檐下的日子。",
+          "effects": {
+            "affection": {
+              "黑崎弥生": 10,
+              "白滨真纪": 10
+            },
+            "flags": {
+              "living_with_yayoi_maki": true,
+              "route_teacher_harem": true,
+              "aoyama_moved_in": false
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "persuade_aoyama",
+      "label": "劝退青山",
+      "prompt": "{{player.surname}}找到了青山悠希，随口扯了个理由——说那栋楼管道有问题、或者房东名声不好——总之让他打了退堂鼓。青山有些可惜地嘟囔了一句'那算了……'，转身去找别的房源了。第三间房就这样空了下来。之后{{player.surname}}若无其事地去中介看了眼，签下了合同。真纪老师得知新室友是{{player.surname}}时大笑着拍了拍他的肩膀，弥生老师站在厨房门口，安静地看了你一眼，什么都没说，只是默默多摆了一双筷子。",
+      "outcomes": [
+        {
+          "pick": "搬进去，日子就这么一天天过下去。",
+          "effects": {
+            "affection": {
+              "黑崎弥生": 12,
+              "白滨真纪": 8
+            },
+            "flags": {
+              "living_with_yayoi_maki": true,
+              "route_teacher_harem": true,
+              "aoyama_moved_in": false
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "effects": {
+      "flags": {
+        "aoyama_moved_in": true
+      }
+    }
+  }
+}

@@ -58,6 +58,7 @@ export default {
           const outer: string[] = [];
           const inner: string[] = [];
           for (const [slot, itemName] of Object.entries(outfit)) {
+            if (slot === 'desc') continue; // 跳过整体描述——只输出在穿着列表后
             const name = itemName as string;
             const flavor = flavorMap.get(name);
             const line = flavor ? `${name}（${flavor}）` : name;
@@ -66,6 +67,10 @@ export default {
           }
           if (outer.length > 0) equipLines.push(`穿着: ${outer.join("、")}`);
           if (inner.length > 0) equipLines.push(`内衣: ${inner.join("、")}`);
+          // 输出 outfit 的 desc（整体搭配感描述，供 LLM 还原角色细节）
+          if (outfit.desc && typeof outfit.desc === 'string') {
+            equipLines.push(`搭配: ${outfit.desc}`);
+          }
         } else if (ageGap > 3) {
           // 年龄差距过大，无适配 outfit → 通用描述
           const body = aged.body;
@@ -86,6 +91,14 @@ export default {
 
       const equipStr = equipLines.length > 0 ? `\n\n[当前装备]\n${equipLines.join("\n")}` : "";
 
+      // 列出该角色所有可用 outfit key——供 LLM 判断有哪些服装可切换
+      let outfitKeysStr = "";
+      if (c.outfits && Object.keys(c.outfits).length > 0) {
+        const keys = Object.keys(c.outfits);
+        const current = npc?.currentOutfit || "school";
+        outfitKeysStr = `\n\n[可切换服装卡] 当前: ${current} | 可用: ${keys.join(" / ")}`;
+      }
+
       // P3: Include character facts filtered by relationship level
       const rel = gameState.player.relationships[params.name];
       const stage = rel?.stage || "陌生";
@@ -105,6 +118,6 @@ export default {
         }
       }
 
-      return { content: [{ type: "text", text: JSON.stringify(aged, null, 2) + equipStr + factStr }], details: { character: aged } };
+      return { content: [{ type: "text", text: JSON.stringify(aged, null, 2) + equipStr + outfitKeysStr + factStr }], details: { character: aged } };
     },
   };

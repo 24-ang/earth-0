@@ -18,14 +18,14 @@
   "repeatable": false,
   "hook": {
     "source_npc": "御堂咲子",
-    "hook_text": "{{player.surname}}经过特别大楼的走廊时，听到空教室里传来年级主任山田和女教师御堂咲子的争执声。从门缝望去，山田隆文正拿着一沓照片，带着淫靡的笑容逼迫着满脸屈辱的咲子老师……{{player.surname}}决定：",
+    "hook_text": "{{player.surname}}经过特别大楼的走廊时，听到空教室里传来压低的争执声。从门缝望去，山田隆文正把几张照片摊在课桌上——照片上是御堂诚和隔壁班的女教师靠得很近的镜头。'这是你的继子对吧，咲子老师？他勾引女教师的证据在我手上。如果被校方知道——你应该清楚退学意味着什么。'咲子站在他对面，双手死死攥着裙摆，嘴唇咬到发白。'我可以不公开这件事。但你得配合我——你知道怎么配合。'山田隆文走过去，解开了她衬衫最上面的那颗扣子。咲子没有躲。{{player.surname}}决定：",
     "urgency": "medium"
   },
   "beats": [
     {
       "id": "blackmail_discovery",
-      "label": "屈辱的契约",
-      "prompt": "山田隆文得意洋洋地说：‘如果不想你继子退学的事被公开，你应该知道该怎么做吧？’咲子老师咬着嘴唇，眼含泪光地褪下了裙子。山田隆文直接将她按在课桌上，开始了粗暴的侵犯。{{player.surname}}决定：",
+      "label": "照片里的陷阱",
+      "prompt": "山田隆文收起照片，从公文包里取出一个小巧的数码相机，对准已经褪下裙子的咲子。'别担心，这些照片不会流出去的——只要你一直配合。这也是为了你的继子好，对吧？'快门声在空荡荡的教室里回响。咲子闭上了眼睛——表情里不是恐惧，是一种被掏空了的空白。{{player.surname}}决定：",
       "outcomes": [
         {
           "pick": "悄悄拿出手机录下这一幕作为日后的把柄，然后离开",
@@ -117,6 +117,53 @@
                 "没想到不仅是主任，连学生也...我已经没有退路了...诚，对不起..."
               ],
               "duration": 45
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    },
+    {
+      "id": "sakiko_aftermath_seeds",
+      "label": "博客的踪迹（条件：录下证据或救出咲子）",
+      "auto_if": {
+        "flags": [
+          "sakiko_blackmail_recorded"
+        ]
+      },
+      "_note": "此 beat 在后续回合通过新 timeline 触发。这里只写可以设的后续 flag。",
+      "prompt": "(此beat由引擎自动推进——根据之前的选择，数天后{{player.surname}}在浏览匿名论坛时注意到一个加密博客链接——标题是'咲子先生の特別授業'。博客需要密码，但缩略图里的照片足以让人确定——那是御堂老师。诚还什么都不知道。)",
+      "outcomes": [
+        {
+          "pick": "先保存链接，不告诉任何人",
+          "effects": {
+            "flags": {
+              "sakiko_blog_discovered": true,
+              "sakiko_blog_kept_secret": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "想办法警告御堂诚——隐晦地，不让他知道具体内容",
+          "effects": {
+            "affection": {
+              "御堂诚": 15
+            },
+            "flags": {
+              "sakiko_warned_makoto": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "匿名把链接发给山田隆文本人——告诉他有人注意到了",
+          "effects": {
+            "flags": {
+              "sakiko_warned_yamada": true
+            },
+            "affection": {
+              "山田隆文": 5
             }
           },
           "next_beat": null

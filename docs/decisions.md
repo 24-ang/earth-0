@@ -641,4 +641,57 @@
 
 **不要做**：❌ 把运行时修改写回 JSON 文件（存档走 state/ 保存）。❌ 新增 org 字段后不改 hydration 逻辑。
 
-**相关代码**：`engine/state.ts`（org 加载+h injection）, `worldpacks/oregairu/orgs/`（数据文件）
+**相关代码**：`engine/state.ts`（org 加载+hydration）, `worldpacks/oregairu/orgs/`（数据文件）
+
+---
+
+## 30. 角色服装两层描述：outfit.desc（LLM 查） + equipment.flavor（玩家看）
+
+**是什么**：每个 outfit key 下加 `desc` 字段（整套搭配感，80-150字），每件 equipment 加 `flavor` 字段（单件质感，20-60字）。两者读者不同、粒度不同、互不替代。
+
+**为什么**：
+- 引擎渲染穿着时（`getNPCOutfitDesc`）只输出 slot 短名——`desc` 和 `hair` 被显式跳过（`state.ts:2775`），不浪费渲染 token
+- TUI 状态面板（`runStatus`）显示每件装备时拼 `name — flavor`——玩家能直接看到单件细节
+- `lookup_character` 输出 `desc` 供 LLM 还原角色形象
+- `flavor` 跟装备走——脱了那件就看不到；`desc` 是全套一体的，不受单件装卸影响
+- 防止 LLM 把 outfit slot 写成长文——slot 必须 ≤10 字，长描述进 `desc`
+
+**outfit 还加 `hair` 字段**：每套 outfit 对应不同发型（`state.ts:2775` 同样跳过 `hair`）。校服披散、泳装高马尾、睡衣麻花辫——跟着 outfit 切换。
+
+**放弃了什么**：`desc` 和 `hair` 不在状态面板显示——玩家看不到。状态面板只能看到 equipment flavor。
+
+**不要做**：❌ 把 flavor 写进 outfit slot。❌ 把 80 字的长文放进 `top` 字段。❌ equipment 只写 name 不写 flavor。
+
+**相关代码**：`engine/state.ts:2720-2787`（getNPCOutfitDesc）, `engine/state.ts:2775`（desc/hair 跳过逻辑）, `tools/helpers.ts:716`（flavorMap.get + item.flavor fallback）
+
+---
+
+## 31. outfits_by_age：年龄自适应服装映射
+
+**是什么**：`characters.json` 的新字段 `outfits_by_age`——把年龄映射到 outfit key，让 NPC 在不同年龄穿不同衣服。
+
+**为什么**：
+- 雪乃 base_age=16 穿总武高制服，但玩家 6 岁开局→引擎把雪乃降龄为 6 岁→没有 `outfits_by_age` 的话穿兜底文字 `"115cm，穿着儿童便服（6岁）"`
+- 有 `outfits_by_age` 后：`{"6": "child", "12": "teen", "16": "school"}` → 引擎按年龄自动选 `outfits.child`
+- 同时需要创建对应的 outfit key（`child`, `teen` 等）——不仅有衣服，还有那个年龄的发型（通过 `hair` 字段）
+
+**降级行为**：`ageGap > 3` 且无 `outfits_by_age` → 通用兜底文字（`state.ts:2732-2737`）。当前覆盖率：0/138。
+
+**不要做**：❌ 加了 `outfits_by_age` 但不创建对应的 outfit key。❌ 假设 LLM 会自动生成——提示词已包含此字段，但存量角色没有。
+
+**相关代码**：`engine/state.ts:2741-2747`（outfits_by_age 读取）
+
+---
+
+## 32. character_stages.json 和 personality_stages 是两条独立链路
+
+**是什么**：`character_stages.json`（23/138 覆盖）和 `characters.json` 的 `personality_stages`（123/138 覆盖）——不同读者、不同键格式、不同内容。
+
+**为什么**：
+- `character_stages`：阶段键 `"幼儿_小学"` `"中学"` `"高中"` `"成年"` → Phase 3 场景 NPC 标签（`state.ts:1296`）。一句话标签如 "死鱼眼。被强制加入侍奉部。"
+- `personality_stages`：年龄数字键 `"6"` `"12"` `"16"` `"25"` → NPC Agent 内心独白（`state.ts:866→924`）。多段心理描述，几段话都可以。
+- 两条链路降级互不影响：`personality_stages` 缺失→fallback `personality_brief`；`character_stages` 缺失→场景中该 NPC 无标签。
+
+**不要做**：❌ 在两个文件里写相同的内容。❌ 假设其中一个废弃了。
+
+**相关代码**：`engine/state.ts:866-876`（resolvePersonality）, `engine/state.ts:1285-1329`（npc-details collector）

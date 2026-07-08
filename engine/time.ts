@@ -190,6 +190,164 @@ export function getClockParts(t: TimeState): ClockParts {
   };
 }
 
+/** 从 minute_of_day 判定当前课节（1-6限/课间/昼休み/放課後/课前）。
+ *  返回 null 表示不在上课时间段内。 */
+export function getCurrentPeriod(minuteOfDay: number, dayOfWeek: string): {
+  period: number | null;
+  phase: "授業中" | "休み時間" | "昼休み" | "放課後" | "课前";
+  minutesUntilNext: number;
+} {
+  const periods = [
+    { p: 1, start: 8 * 60 + 40, end: 9 * 60 + 30 },
+    { p: 2, start: 9 * 60 + 40, end: 10 * 60 + 30 },
+    { p: 3, start: 10 * 60 + 40, end: 11 * 60 + 30 },
+    { p: 4, start: 11 * 60 + 40, end: 12 * 60 + 30 },
+    { p: 5, start: 13 * 60 + 20, end: 14 * 60 + 10 },
+    { p: 6, start: 14 * 60 + 20, end: 15 * 60 + 10 },
+  ];
+  // 水曜只有1-4限
+  const maxPeriod = dayOfWeek === "水" ? 4 : 6;
+
+  // 课前
+  if (minuteOfDay < periods[0].start) {
+    return { period: null, phase: "课前", minutesUntilNext: periods[0].start - minuteOfDay };
+  }
+
+  for (let i = 0; i < periods.length; i++) {
+    const p = periods[i];
+    if (p.p > maxPeriod) break;
+    if (minuteOfDay >= p.start && minuteOfDay < p.end) {
+      return { period: p.p, phase: "授業中", minutesUntilNext: p.end - minuteOfDay };
+    }
+    // Between periods = 课间
+    if (i < periods.length - 1) {
+      const next = periods[i + 1];
+      if (next.p > maxPeriod) break;
+      if (minuteOfDay >= p.end && minuteOfDay < next.start) {
+        return { period: null, phase: "休み時間", minutesUntilNext: next.start - minuteOfDay };
+      }
+    }
+  }
+
+  // Lunch
+  if (minuteOfDay >= 12 * 60 + 30 && minuteOfDay < 13 * 60 + 20) {
+    return { period: null, phase: "昼休み", minutesUntilNext: 13 * 60 + 20 - minuteOfDay };
+  }
+
+  // After school
+  const lastEnd = periods[maxPeriod - 1].end;
+  if (minuteOfDay >= lastEnd) {
+    return { period: null, phase: "放課後", minutesUntilNext: 0 };
+  }
+
+  return { period: null, phase: "放課後", minutesUntilNext: 0 };
+}
+
+/** 清洗 class_config 中带备注的班主任名（如"羽生真由梨（副担任）"→"羽生真由梨"）。
+ *  "（空缺...）"返回空字符串。 */
+function cleanHomeroom(raw: string): string {
+  if (!raw) return "";
+  // 全角括号备注：去掉括号内容
+  let s = raw.replace(/（[^）]*）/g, "").trim();
+  // 半角括号
+  s = s.replace(/\([^)]*\)/g, "").trim();
+  // "空缺"系列 → ""
+  if (s === "空缺" || s.startsWith("空缺")) return "";
+  return s;
+}
+
+/** 通过学生所在班级解析课程表key（班主任名）。持ち上がり制対応。
+ *  classConfig = soubu_high.json 的 class_config.grades */
+export function resolveStudentTimetableKey(
+  grade: number | undefined,
+  homeroom: string | undefined,
+  classConfig: any
+): string | null {
+  if (!grade || !homeroom || !classConfig) return null;
+  const yearKey = `${grade}年`;
+  const yearData = classConfig[yearKey];
+  if (!yearData?.classes?.[homeroom]) return null;
+  const raw = yearData.classes[homeroom].homeroom;
+  if (!raw) return null;
+  return cleanHomeroom(raw) || null;
+}
+
+/** 查课程表，返回[現在]和[次]两行文本（供 Phase 2/3 注入）。
+ *  timetableKey = 班主任名（如"平冢静"）。v2: 按教师索引，持ち上がり制対応。
+ *  返回空字符串表示当前不在上课或无课表。 */
+export function buildPeriodLines(
+  timetableKey: string,
+  minuteOfDay: number,
+  dayOfWeek: string,
+  timetable: any
+): string {
+  if (!timetable || !timetable.timetables) return "";
+  const classData = timetable.timetables[timetableKey];
+  if (!classData) return timetable.fallback?.text || "";
+
+  const dayTimetable = classData[dayOfWeek];
+  if (!dayTimetable) return "";
+
+  const periodInfo = getCurrentPeriod(minuteOfDay, dayOfWeek);
+  const labels = timetable.change_labels || {};
+  const size = classData.class_size || "?";
+
+  let lines = "";
+
+  // 当前课节
+  if (periodInfo.phase === "授業中" && periodInfo.period) {
+    const current = dayTimetable.find((p: any) => p.period === periodInfo.period);
+    if (current) {
+      const teacher = current.teacher || "（担当教員）";
+      const room = current.room || "教室";
+      // 计算距离下课还有多少分钟
+      const remaining = periodInfo.minutesUntilNext;
+      const timeHint = remaining <= 5 ? "（まもなくチャイム）" :
+                       remaining <= 10 ? `（あと${remaining}分）` : "";
+      lines += `[現在] ${periodInfo.period}限 ${current.subject} | ${teacher} | ${room} | ${size}人${timeHint}`;
+    }
+  } else if (periodInfo.phase === "休み時間") {
+    // 课间：显示下一节
+    lines += `[現在] 休み時間（あと${periodInfo.minutesUntilNext}分）`;
+  } else if (periodInfo.phase === "昼休み") {
+    lines += `[現在] 昼休み（あと${periodInfo.minutesUntilNext}分）`;
+  } else if (periodInfo.phase === "课前") {
+    lines += `[現在] 朝·HR前（あと${periodInfo.minutesUntilNext}分でチャイム）`;
+  } else if (periodInfo.phase === "放課後") {
+    lines += `[現在] 放課後（部活·帰宅）`;
+  }
+
+  // 下一节（上课中时显示下节；课间/午休不重复显示——因为课间的"次"就是马上要上的那节）
+  if (periodInfo.phase === "授業中" && periodInfo.period) {
+    const nextPeriod = periodInfo.period! + 1;
+    const next = dayTimetable.find((p: any) => p.period === nextPeriod);
+    if (next) {
+      const label = labels[next.subject] || "";
+      const labelStr = label ? ` | ${label}` : "";
+      lines += lines ? " " : "";
+      lines += `次:${nextPeriod}限 ${next.subject} | ${next.teacher || "?"}${labelStr}`;
+    }
+  }
+
+  if (periodInfo.phase === "休み時間" || periodInfo.phase === "昼休み" || periodInfo.phase === "课前") {
+    // Find what's coming next
+    const targetPeriod = periodInfo.phase === "昼休み" ? 5 :
+                         periodInfo.phase === "课前" ? 1 :
+                         (getCurrentPeriod(minuteOfDay + periodInfo.minutesUntilNext, dayOfWeek).period || 1);
+    if (targetPeriod) {
+      const next = dayTimetable.find((p: any) => p.period === targetPeriod);
+      if (next) {
+        const label = labels[next.subject] || "";
+        const labelStr = label ? ` | ${label}` : "";
+        const sep = lines ? " " : "";
+        lines += `${sep}次:${targetPeriod}限 ${next.subject} | ${next.teacher || "?"}${labelStr}`;
+      }
+    }
+  }
+
+  return lines;
+}
+
 /** 初始时间状态 */
 export const INITIAL_TIME_STATE: TimeState = {
   game_date: "2018-04-07",

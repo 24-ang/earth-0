@@ -1594,6 +1594,49 @@ export async function buildStatePrompt(): Promise<string> {
   if (todayCal) {
     tpl += `\n[日历] 今日特殊: ${todayCal}`;
   }
+  // 课程表注入（玩家在学校时）
+  if (p.location.includes("総武高") || p.location.includes("总武高") || p.location.includes("教室") || p.location.includes("校") || p.location.includes("部室") || p.location.includes("体育") || p.location.includes("プール")) {
+    try {
+      const fs = await import("node:fs");
+      const path = await import("node:path");
+      const ttPath = path.resolve(process.cwd(), "worldpacks", gameState.activeWorld || "oregairu", "timetable.json");
+      const orgPath = path.resolve(process.cwd(), "worldpacks", gameState.activeWorld || "oregairu", "orgs", "soubu_high.json");
+      if (fs.existsSync(ttPath)) {
+        const tt = JSON.parse(fs.readFileSync(ttPath, "utf-8"));
+        let timetableKey = "";
+        // v2: Resolve via class_config (持ち上がり制対応)
+        if (fs.existsSync(orgPath)) {
+          const org = JSON.parse(fs.readFileSync(orgPath, "utf-8"));
+          const cc = org.class_config?.grades;
+          if (cc) {
+            const playerGrade = (p as any).grade || 2; // default 2年生
+            const playerHR = (p as any).homeroom || null;
+            const yearKey = `${playerGrade}年`;
+            const yearData = cc[yearKey];
+            if (playerHR && yearData?.classes?.[playerHR]) {
+              timetableKey = yearData.classes[playerHR].homeroom;
+            }
+          }
+        }
+        // Fallback: search all timetables for a matching student flag
+        if (!timetableKey) {
+          for (const fk of Object.keys(gameState.flags || {})) {
+            if (fk.startsWith("hr_teacher_") && gameState.flags[fk]) {
+              timetableKey = fk.replace("hr_teacher_", "");
+              break;
+            }
+          }
+        }
+        if (timetableKey) {
+          const { buildPeriodLines } = await import("./time.ts");
+          const periodLine = buildPeriodLines(timetableKey, gameState.time.minute_of_day, gameState.time.day_of_week, tt);
+          if (periodLine) {
+            tpl += `\n[课堂] ${periodLine}`;
+          }
+        }
+      }
+    } catch (_e) { /* timetable 加载失败不阻塞 */ }
+  }
   // 世界常识注入 (P2)
   try {
     const { getTriggeredLore } = await import("./lore.ts");
@@ -2663,10 +2706,18 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
     if (!(src as any).outfits) (src as any).outfits = {};
     (src as any).outfits[outfitKey] = { ...def };
     npc.currentOutfit = outfitKey as any;
+    // equipment_by_outfit 联动
+    if ((src as any).equipment_by_outfit?.[outfitKey]) {
+      npc.equipment = structuredClone((src as any).equipment_by_outfit[outfitKey]);
+    }
     const desc = Object.values(def).join("、");
     return `${npcName} → ${outfitKey}（自动生成）: ${desc}`;
   }
   npc.currentOutfit = outfitKey as any;
+  // equipment_by_outfit 联动：切换 outfit 时同步替换 NPC 装备（含单品 flavor）
+  if ((src as any).equipment_by_outfit?.[outfitKey]) {
+    npc.equipment = structuredClone((src as any).equipment_by_outfit[outfitKey]);
+  }
   const items = src.outfits[outfitKey];
   const desc = Object.values(items).join("、");
   return `${npcName} → ${outfitKey}: ${desc}`;

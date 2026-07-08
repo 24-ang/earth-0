@@ -540,4 +540,59 @@ Vicky 系统的核心哲学："引擎算账，LLM 写故事"。
 
 ---
 
-> 最后更新：2026-07-07。新设计决策追加到 `docs/decisions.md`，大方向变化更新本文。
+## 十四、角色数据架构：双文件 + 两层服装 + 年龄自适应
+
+### 14.1 真相来源
+
+所有角色数据的主文件在 `worldpacks/oregairu/`，`data/` 下同名文件是 CJS 静态 import 兜底——**改了也要同步**：
+
+| 文件 | 引擎加载 | 内容 |
+|------|---------|------|
+| `characters.json` | `loadActiveWorld` → `characters` 数组 | 138 角色全字段 |
+| `character_stages.json` | `loadActiveWorld` → `charStages` 对象 | 23 角色 × 4 人生阶段标签 |
+| `sex_profiles.json` | `sex.ts` 动态 import | 性系统参数 |
+
+### 14.2 两套人格描述各司其职
+
+`characters.json` 的 `personality_stages` 和 `character_stages.json` **不是冗余——是两条独立链路**：
+
+- `personality_stages`（年龄键 `"6"` `"12"` `"16"` `"25"`）：注入 NPC Agent prompt（`state.ts:866→924`），是 NPC 的内心独白——几段话都行。
+- `character_stages`（阶段键 `"幼儿_小学"` `"中学"` `"高中"` `"成年"`）：注入 Phase 3 场景描述（`state.ts:1296`），是玩家看到的 NPC 标签——一句话。
+
+两者内容**不应该一样**。引擎优雅降级：`personality_stages` 缺失→fallback `personality_brief`；`character_stages` 缺失→场景中该 NPC 无阶段标签。
+
+### 14.3 服装三层描述
+
+服装数据存在一个位置，但有三条读取路径：
+
+| 字段 | 读者 | 引擎行为 |
+|------|------|---------|
+| `outfits.work.top` / `bottom` / ... | Phase 3 渲染 | 输出 `穿着: 白色POLO衫、运动长裤` |
+| `outfits.work.desc` | LLM（lookup_character） | `getNPCOutfitDesc()` 自动跳过——不浪费渲染 token |
+| `outfits.work.hair` | LLM | 同上——跳过 |
+| `equipment.top.flavor` | 玩家（TUI 状态面板） | 显示 `[上衣] 白色POLO衫 — 高透气速干面料…` |
+
+`desc` 和 `hair` 被 `state.ts:2775` 跳过——不会被当成一件衣服。`flavor` 跟装备走——脱了看不到。
+
+### 14.4 outfits_by_age：年龄自适应服装
+
+`outfits_by_age` 是年龄→outfit key 的映射。玩家 6 岁开局时 NPC 穿什么——靠它：
+
+```json
+"outfits_by_age": { "6": "child", "12": "teen", "16": "school" },
+"outfits": {
+  "child": { "hair": "双马尾红色发圈", "top": "小学校服", "desc": "…" },
+  "teen":  { "hair": "黑长直无蝴蝶结", "top": "中学制服", "desc": "…" },
+  "school": { "hair": "黑长直红丝带", "top": "总武高制服", "desc": "…" }
+}
+```
+
+当前覆盖率：0/138。降级行为：`ageGap > 3` 且无 `outfits_by_age` → `"115cm，穿着儿童便服（6岁）"` 兜底文字 (`state.ts:2732-2737`)。
+
+### 14.5 equipment.effects 是引擎属性
+
+`effects` 数组不是装饰文本——引擎系统读它。`calcAC()` 读 `ac_bonus`，`phone.ts` 读 `communication`，`state-grid.ts` 读 `unlock`。普通衣服填 `[]` 正确；有功能的装备（防弹衣、钥匙、手机）必须填对效果类型。
+
+---
+
+> 最后更新：2026-07-08。新设计决策追加到 `docs/decisions.md`，大方向变化更新本文。

@@ -321,6 +321,15 @@ export default {
         if (schoolFlag) {
           gameState.player.flags[schoolFlag] = true;
           gameState.player.flags["student"] = true;
+          // ── 学年标记（从年龄推断，与学校沉浸系统联动）──
+          const grade = playerAge <= 15 ? 1 : playerAge <= 16 ? 2 : playerAge <= 17 ? 3 : 3;
+          gameState.flags[`grade_${grade}`] = true;  // gameState.flags 供 timeline trigger 读取
+          gameState.flags["student"] = true;
+          gameState.flags["academic_track_未定"] = true;
+          gameState.player.flags[`grade_${grade}`] = true;
+          gameState.player.flags["academic_track_未定"] = true;
+          // ── 课程表：默认2F班=平冢静（主役班级。玩家可后续修改）──
+          gameState.flags["hr_teacher_平冢静"] = true;
         }
       } catch (e: any) {
         console.error("init_profile: 入学记忆生成失败", e.message || String(e));

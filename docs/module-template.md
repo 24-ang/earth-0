@@ -83,6 +83,9 @@ if (gameState.xxxCondition) {
 
 | 数据类型 | 位置 | 格式 |
 |---------|------|------|
+| **角色卡** | `worldpacks/{世界}/characters.json`（优先）；`data/characters.json` 仅兜底 | 数组，每元素含 name/source/outfits/equipment/body/... |
+| **角色阶段人格** | `worldpacks/{世界}/character_stages.json`（优先）；`data/character_stages.json` 仅兜底 | 对象，key=角色名，value=阶段对象 `{"高中":"独居…"}` |
+| **性档案** | `worldpacks/{世界}/sex_profiles.json`（优先）；`data/sex_profiles.json` 仅兜底 | 对象，key=角色名，value=性行为参数 |
 | 静态配置 | `data/模块名.json`（跨世界）或 `worldpacks/{世界}/模块名.json`（世界专属） | JSON 对象或数组 |
 | 剧情时间线 | `worldpacks/{世界}/timelines/弧名.json`（优先）；`data/timelines/` 仅兜底模板 | 单条 TimelineEvent |
 | 日历事件 | `worldpacks/{世界}/calendar.json`（优先）；`data/calendar/` 仅兜底模板 | CalendarEntry 数组 |
@@ -256,3 +259,88 @@ contribute_to_org: "../tools/action/contribute_to_org.ts",
 ```
 
 **缺失任何一步 → LLM 不知道该工具存在 → 永远不会调用。**
+
+---
+
+## 约定 6：角色卡字段规范 (characters.json)
+
+角色卡是 138 个 NPC 的唯一真相来源。以下字段规格直接影响引擎渲染、状态面板和 LLM 行为。
+
+### 6.1 服装两层描述
+
+| 层级 | 字段 | 读的人 | 粒度 | 引擎行为 |
+|------|------|--------|------|---------|
+| `outfits.work.desc` | outfits 每套下 | LLM（lookup_character） | 整套搭配感（80-150字） | `getNPCOutfitDesc()` 自动跳过 → 不费 tk |
+| `equipment.top.flavor` | equipment 每件下 | 玩家（TUI 状态面板） | 单件质感（20-60字） | 状态面板直接显示 `[上衣] 名称 — flavor` |
+| `outfits.work.hair` | outfits 每套下 | LLM | 这套对应的发型（10-20字） | `getNPCOutfitDesc()` 跳过 → 跟 desc 一样 |
+
+```json
+{
+  "outfits": {
+    "work": {
+      "hair": "棕色高马尾，利落束在脑后",
+      "top": "白色POLO衫",
+      "bottom": "运动长裤",
+      "desc": "POLO衫下摆扎进紧身运动裤中，因极其突出的巨乳使衣料紧绷…"
+    }
+  },
+  "equipment": {
+    "top": {
+      "name": "白色POLO衫",
+      "flavor": "高透气速干面料。胸前因尺码过饱满有明显拉扯紧绷感。"
+    }
+  }
+}
+```
+
+**每件 equipment 的 flavor 跟装备走**——脱了那件就看不到 flavor。outfit 的 desc 是全套一体的。
+
+### 6.2 outfits_by_age：按年龄切换服装
+
+角色 base_age=16 穿校服，玩家 6 岁开局时引擎把 NPC 降龄为 6 岁——穿什么？
+
+```json
+"outfits_by_age": {
+  "6": "child",
+  "12": "teen",
+  "16": "school"
+},
+"outfits": {
+  "child": { "hair": "双马尾红色发圈", "top": "小学校服" },
+  "teen":  { "hair": "黑长直无蝴蝶结", "top": "中学制服" },
+  "school": { "hair": "黑长直披散红丝带", "top": "总武高制服" }
+}
+```
+
+**降级**：无 `outfits_by_age` 且 ageGap > 3 → 引擎输出 `"115cm，穿着儿童便服（6岁）"` 兜底文字 (`state.ts:2732-2737`)。
+
+### 6.3 character_stages.json vs personality_stages
+
+| | character_stages.json | characters.json personality_stages |
+|---|---|---|
+| **键格式** | 阶段标签 `"幼儿_小学"` `"中学"` `"高中"` `"成年"` | 年龄数字 `"6"` `"12"` `"16"` `"25"` |
+| **注入目标** | Phase 3 场景 NPC 标签 | NPC Agent 内心独白 |
+| **读取代码** | `state.ts:1296` | `state.ts:866→924` |
+| **内容特征** | 短标签 "死鱼眼。被强制加入侍奉部。" | 多段心理 "软糯呆板…内心敏感脆弱…" |
+
+**两套独立运行，内容不应相同**。
+
+### 6.4 equipment.effects
+
+`effects` 是引擎属性系统——不是装饰：
+
+| 效果类型 | 引擎用途 |
+|---------|---------|
+| `ac_bonus` | `calcAC()` 加护甲值 |
+| `damage_reduction` | `combat.ts` 减伤 |
+| `unlock` | `state-grid.ts` 钥匙开门 |
+| `disguise_tag` | `state.ts:1104` 伪装身份 |
+| `communication` | `phone.ts` 判断有没有手机 |
+| `pocket` | `state.ts:1951` 衣服口袋加容量 |
+
+普通衣服 `effects: []` 没问题。有游戏功能的装备（防弹衣、钥匙、手机）必须填对。
+
+### 6.5 生成提示词
+
+- 新建角色：`docs/角色卡生成提示词.md`（300+ 字段完整版，发给 LLM 带图）
+- 修补服装细节：`docs/角色卡服装装备修正提示词.md`（只输出 outfits+equipment 补丁）

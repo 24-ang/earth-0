@@ -1,0 +1,1209 @@
+{
+  "_note": "课程表按班主任索引（持ち上がり制対応）。学生查表: grade+homeroom → class_config → homeroom teacher → 此表。学年更新时只需改class_config，课程表不变。",
+  "_version": 2,
+  "periods": {
+    "1": {
+      "start": "8:40",
+      "end": "9:30"
+    },
+    "2": {
+      "start": "9:40",
+      "end": "10:30"
+    },
+    "3": {
+      "start": "10:40",
+      "end": "11:30"
+    },
+    "4": {
+      "start": "11:40",
+      "end": "12:30"
+    },
+    "5": {
+      "start": "13:20",
+      "end": "14:10"
+    },
+    "6": {
+      "start": "14:20",
+      "end": "15:10"
+    }
+  },
+  "timetables": {
+    "平冢静": {
+      "class_size": 28,
+      "homeroom_teacher": "平冢静",
+      "月": [
+        {
+          "period": 1,
+          "subject": "现代文",
+          "teacher": "平冢静",
+          "room": "2F教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2F教室"
+        },
+        {
+          "period": 3,
+          "subject": "英语II",
+          "teacher": "白滨真纪",
+          "room": "2F教室"
+        },
+        {
+          "period": 4,
+          "subject": "化学",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        },
+        {
+          "period": 5,
+          "subject": "日本史B",
+          "teacher": "大森和彦",
+          "room": "2F教室"
+        },
+        {
+          "period": 6,
+          "subject": "HR",
+          "teacher": "平冢静",
+          "room": "2F教室"
+        }
+      ],
+      "火": [
+        {
+          "period": 1,
+          "subject": "英语II",
+          "teacher": "白滨真纪",
+          "room": "2F教室"
+        },
+        {
+          "period": 2,
+          "subject": "古典",
+          "teacher": "黑崎弥生",
+          "room": "2F教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2F教室"
+        },
+        {
+          "period": 4,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2F教室"
+        },
+        {
+          "period": 5,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 6,
+          "subject": "物理基础",
+          "teacher": "榊原賢治",
+          "room": "2F教室"
+        }
+      ],
+      "水": [
+        {
+          "period": 1,
+          "subject": "现代文",
+          "teacher": "平冢静",
+          "room": "2F教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2F教室"
+        },
+        {
+          "period": 3,
+          "subject": "公民",
+          "teacher": null,
+          "room": "2F教室"
+        },
+        {
+          "period": 4,
+          "subject": "英语II",
+          "teacher": "白滨真纪",
+          "room": "2F教室"
+        },
+        {
+          "period": 5,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        },
+        {
+          "period": 6,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        }
+      ],
+      "木": [
+        {
+          "period": 1,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2F教室"
+        },
+        {
+          "period": 2,
+          "subject": "英语II",
+          "teacher": "白滨真纪",
+          "room": "2F教室"
+        },
+        {
+          "period": 3,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 4,
+          "subject": "古典",
+          "teacher": "黑崎弥生",
+          "room": "2F教室"
+        },
+        {
+          "period": 5,
+          "subject": "日本史B",
+          "teacher": "大森和彦",
+          "room": "2F教室"
+        },
+        {
+          "period": 6,
+          "subject": "情報",
+          "teacher": "新田裕也",
+          "room": "电脑室"
+        }
+      ],
+      "金": [
+        {
+          "period": 1,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2F教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2F教室"
+        },
+        {
+          "period": 3,
+          "subject": "英语II",
+          "teacher": "白滨真纪",
+          "room": "2F教室"
+        },
+        {
+          "period": 4,
+          "subject": "物理基础",
+          "teacher": "榊原賢治",
+          "room": "2F教室"
+        },
+        {
+          "period": 5,
+          "subject": "现代文",
+          "teacher": "平冢静",
+          "room": "2F教室"
+        },
+        {
+          "period": 6,
+          "subject": "LHR",
+          "teacher": "平冢静",
+          "room": "2F教室"
+        }
+      ]
+    },
+    "桐须真冬": {
+      "class_size": 25,
+      "homeroom_teacher": "桐须真冬",
+      "月": [
+        {
+          "period": 1,
+          "subject": "英語演習",
+          "teacher": "白滨真纪",
+          "room": "2J教室"
+        },
+        {
+          "period": 2,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2J教室"
+        },
+        {
+          "period": 3,
+          "subject": "第二外国語(中)",
+          "teacher": null,
+          "room": "2J教室"
+        },
+        {
+          "period": 4,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2J教室"
+        },
+        {
+          "period": 5,
+          "subject": "古典",
+          "teacher": "黑崎弥生",
+          "room": "2J教室"
+        },
+        {
+          "period": 6,
+          "subject": "HR",
+          "teacher": "桐须真冬",
+          "room": "2J教室"
+        }
+      ],
+      "火": [
+        {
+          "period": 1,
+          "subject": "国際関係論",
+          "teacher": null,
+          "room": "2J教室"
+        },
+        {
+          "period": 2,
+          "subject": "英語演習",
+          "teacher": "白滨真纪",
+          "room": "2J教室"
+        },
+        {
+          "period": 3,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2J教室"
+        },
+        {
+          "period": 4,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2J教室"
+        },
+        {
+          "period": 5,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 6,
+          "subject": "化学",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        }
+      ],
+      "水": [
+        {
+          "period": 1,
+          "subject": "英語演習",
+          "teacher": "白滨真纪",
+          "room": "2J教室"
+        },
+        {
+          "period": 2,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2J教室"
+        },
+        {
+          "period": 3,
+          "subject": "比較文化",
+          "teacher": null,
+          "room": "2J教室"
+        },
+        {
+          "period": 4,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2J教室"
+        },
+        {
+          "period": 5,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        },
+        {
+          "period": 6,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        }
+      ],
+      "木": [
+        {
+          "period": 1,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2J教室"
+        },
+        {
+          "period": 2,
+          "subject": "英語演習",
+          "teacher": "白滨真纪",
+          "room": "2J教室"
+        },
+        {
+          "period": 3,
+          "subject": "第二外国語(中)",
+          "teacher": null,
+          "room": "2J教室"
+        },
+        {
+          "period": 4,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2J教室"
+        },
+        {
+          "period": 5,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 6,
+          "subject": "情報",
+          "teacher": "新田裕也",
+          "room": "电脑室"
+        }
+      ],
+      "金": [
+        {
+          "period": 1,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2J教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2J教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語演習",
+          "teacher": "白滨真纪",
+          "room": "2J教室"
+        },
+        {
+          "period": 4,
+          "subject": "物理基础",
+          "teacher": "榊原賢治",
+          "room": "2J教室"
+        },
+        {
+          "period": 5,
+          "subject": "国際関係論",
+          "teacher": null,
+          "room": "2J教室"
+        },
+        {
+          "period": 6,
+          "subject": "LHR",
+          "teacher": "桐须真冬",
+          "room": "2J教室"
+        }
+      ]
+    },
+    "大森和彦": {
+      "class_size": 30,
+      "homeroom_teacher": "大森和彦",
+      "月": [
+        {
+          "period": 1,
+          "subject": "日本史B",
+          "teacher": "大森和彦",
+          "room": "2A教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II·B",
+          "teacher": "御堂咲子",
+          "room": "2A教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2A教室"
+        },
+        {
+          "period": 4,
+          "subject": "古典",
+          "teacher": "黑崎弥生",
+          "room": "2A教室"
+        },
+        {
+          "period": 5,
+          "subject": "化学",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        },
+        {
+          "period": 6,
+          "subject": "HR",
+          "teacher": "大森和彦",
+          "room": "2A教室"
+        }
+      ],
+      "火": [
+        {
+          "period": 1,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2A教室"
+        },
+        {
+          "period": 2,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2A教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学II·B",
+          "teacher": "御堂咲子",
+          "room": "2A教室"
+        },
+        {
+          "period": 4,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2A教室"
+        },
+        {
+          "period": 5,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 6,
+          "subject": "物理",
+          "teacher": "榊原賢治",
+          "room": "2A教室"
+        }
+      ],
+      "水": [
+        {
+          "period": 1,
+          "subject": "数学II·B",
+          "teacher": "御堂咲子",
+          "room": "2A教室"
+        },
+        {
+          "period": 2,
+          "subject": "日本史B",
+          "teacher": "大森和彦",
+          "room": "2A教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2A教室"
+        },
+        {
+          "period": 4,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2A教室"
+        },
+        {
+          "period": 5,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        },
+        {
+          "period": 6,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        }
+      ],
+      "木": [
+        {
+          "period": 1,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2A教室"
+        },
+        {
+          "period": 2,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2A教室"
+        },
+        {
+          "period": 3,
+          "subject": "日本史B",
+          "teacher": "大森和彦",
+          "room": "2A教室"
+        },
+        {
+          "period": 4,
+          "subject": "数学II·B",
+          "teacher": "御堂咲子",
+          "room": "2A教室"
+        },
+        {
+          "period": 5,
+          "subject": "化学",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        },
+        {
+          "period": 6,
+          "subject": "情報",
+          "teacher": "新田裕也",
+          "room": "电脑室"
+        }
+      ],
+      "金": [
+        {
+          "period": 1,
+          "subject": "古典",
+          "teacher": "黑崎弥生",
+          "room": "2A教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II·B",
+          "teacher": "御堂咲子",
+          "room": "2A教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2A教室"
+        },
+        {
+          "period": 4,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2A教室"
+        },
+        {
+          "period": 5,
+          "subject": "物理",
+          "teacher": "榊原賢治",
+          "room": "2A教室"
+        },
+        {
+          "period": 6,
+          "subject": "LHR",
+          "teacher": "大森和彦",
+          "room": "2A教室"
+        }
+      ]
+    },
+    "白滨真纪": {
+      "class_size": 28,
+      "homeroom_teacher": "白滨真纪",
+      "月": [
+        {
+          "period": 1,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2C教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2C教室"
+        },
+        {
+          "period": 3,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2C教室"
+        },
+        {
+          "period": 4,
+          "subject": "日本史B",
+          "teacher": "大森和彦",
+          "room": "2C教室"
+        },
+        {
+          "period": 5,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 6,
+          "subject": "HR",
+          "teacher": "白滨真纪",
+          "room": "2C教室"
+        }
+      ],
+      "火": [
+        {
+          "period": 1,
+          "subject": "古典",
+          "teacher": "黑崎弥生",
+          "room": "2C教室"
+        },
+        {
+          "period": 2,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2C教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2C教室"
+        },
+        {
+          "period": 4,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2C教室"
+        },
+        {
+          "period": 5,
+          "subject": "化学",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        },
+        {
+          "period": 6,
+          "subject": "物理基础",
+          "teacher": "榊原賢治",
+          "room": "2C教室"
+        }
+      ],
+      "水": [
+        {
+          "period": 1,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2C教室"
+        },
+        {
+          "period": 2,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2C教室"
+        },
+        {
+          "period": 3,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2C教室"
+        },
+        {
+          "period": 4,
+          "subject": "美術",
+          "teacher": "羽生真由梨",
+          "room": "美术室"
+        },
+        {
+          "period": 5,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        }
+      ],
+      "木": [
+        {
+          "period": 1,
+          "subject": "日本史B",
+          "teacher": "大森和彦",
+          "room": "2C教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2C教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2C教室"
+        },
+        {
+          "period": 4,
+          "subject": "古典",
+          "teacher": "黑崎弥生",
+          "room": "2C教室"
+        },
+        {
+          "period": 5,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 6,
+          "subject": "情報",
+          "teacher": "新田裕也",
+          "room": "电脑室"
+        }
+      ],
+      "金": [
+        {
+          "period": 1,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "2C教室"
+        },
+        {
+          "period": 2,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "2C教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学II",
+          "teacher": "御堂咲子",
+          "room": "2C教室"
+        },
+        {
+          "period": 4,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "2C教室"
+        },
+        {
+          "period": 5,
+          "subject": "化学",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        },
+        {
+          "period": 6,
+          "subject": "LHR",
+          "teacher": "白滨真纪",
+          "room": "2C教室"
+        }
+      ]
+    },
+    "牧野": {
+      "class_size": 30,
+      "homeroom_teacher": "牧野",
+      "月": [
+        {
+          "period": 1,
+          "subject": "数学I",
+          "teacher": null,
+          "room": "1B教室"
+        },
+        {
+          "period": 2,
+          "subject": "国語総合",
+          "teacher": "黑崎弥生",
+          "room": "1B教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語I",
+          "teacher": "白滨真纪",
+          "room": "1B教室"
+        },
+        {
+          "period": 4,
+          "subject": "化学基础",
+          "teacher": "牧野",
+          "room": "1B教室"
+        },
+        {
+          "period": 5,
+          "subject": "世界史A",
+          "teacher": "桐须真冬",
+          "room": "1B教室"
+        },
+        {
+          "period": 6,
+          "subject": "HR",
+          "teacher": "牧野",
+          "room": "1B教室"
+        }
+      ],
+      "火": [
+        {
+          "period": 1,
+          "subject": "国語総合",
+          "teacher": "黑崎弥生",
+          "room": "1B教室"
+        },
+        {
+          "period": 2,
+          "subject": "英語I",
+          "teacher": "白滨真纪",
+          "room": "1B教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学I",
+          "teacher": null,
+          "room": "1B教室"
+        },
+        {
+          "period": 4,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 5,
+          "subject": "日本史A",
+          "teacher": "大森和彦",
+          "room": "1B教室"
+        },
+        {
+          "period": 6,
+          "subject": "物理基础",
+          "teacher": "榊原賢治",
+          "room": "1B教室"
+        }
+      ],
+      "水": [
+        {
+          "period": 1,
+          "subject": "数学I",
+          "teacher": null,
+          "room": "1B教室"
+        },
+        {
+          "period": 2,
+          "subject": "化学基础",
+          "teacher": "牧野",
+          "room": "1B教室"
+        },
+        {
+          "period": 3,
+          "subject": "美術I",
+          "teacher": "羽生真由梨",
+          "room": "美术室"
+        },
+        {
+          "period": 4,
+          "subject": "英語I",
+          "teacher": "白滨真纪",
+          "room": "1B教室"
+        },
+        {
+          "period": 5,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        }
+      ],
+      "木": [
+        {
+          "period": 1,
+          "subject": "英語I",
+          "teacher": "白滨真纪",
+          "room": "1B教室"
+        },
+        {
+          "period": 2,
+          "subject": "国語総合",
+          "teacher": "黑崎弥生",
+          "room": "1B教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学I",
+          "teacher": null,
+          "room": "1B教室"
+        },
+        {
+          "period": 4,
+          "subject": "世界史A",
+          "teacher": "桐须真冬",
+          "room": "1B教室"
+        },
+        {
+          "period": 5,
+          "subject": "水泳",
+          "teacher": "藤崎穗成美",
+          "room": "游泳池"
+        },
+        {
+          "period": 6,
+          "subject": "情報",
+          "teacher": "新田裕也",
+          "room": "电脑室"
+        }
+      ],
+      "金": [
+        {
+          "period": 1,
+          "subject": "化学基础",
+          "teacher": "牧野",
+          "room": "1B教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学I",
+          "teacher": null,
+          "room": "1B教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語I",
+          "teacher": "白滨真纪",
+          "room": "1B教室"
+        },
+        {
+          "period": 4,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 5,
+          "subject": "国語総合",
+          "teacher": "黑崎弥生",
+          "room": "1B教室"
+        },
+        {
+          "period": 6,
+          "subject": "LHR",
+          "teacher": "牧野",
+          "room": "1B教室"
+        }
+      ]
+    },
+    "榊原賢治": {
+      "class_size": 28,
+      "homeroom_teacher": "榊原賢治",
+      "月": [
+        {
+          "period": 1,
+          "subject": "物理II",
+          "teacher": "榊原賢治",
+          "room": "3C教室"
+        },
+        {
+          "period": 2,
+          "subject": "数学III",
+          "teacher": "御堂咲子",
+          "room": "3C教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "3C教室"
+        },
+        {
+          "period": 4,
+          "subject": "化学II",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        },
+        {
+          "period": 5,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "3C教室"
+        },
+        {
+          "period": 6,
+          "subject": "HR",
+          "teacher": "榊原賢治",
+          "room": "3C教室"
+        }
+      ],
+      "火": [
+        {
+          "period": 1,
+          "subject": "数学III",
+          "teacher": "御堂咲子",
+          "room": "3C教室"
+        },
+        {
+          "period": 2,
+          "subject": "物理II",
+          "teacher": "榊原賢治",
+          "room": "3C教室"
+        },
+        {
+          "period": 3,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "3C教室"
+        },
+        {
+          "period": 4,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "3C教室"
+        },
+        {
+          "period": 5,
+          "subject": "保健体育",
+          "teacher": "藤崎穗成美",
+          "room": "体育馆"
+        },
+        {
+          "period": 6,
+          "subject": "化学II",
+          "teacher": "牧野",
+          "room": "3C教室"
+        }
+      ],
+      "水": [
+        {
+          "period": 1,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "3C教室"
+        },
+        {
+          "period": 2,
+          "subject": "物理II",
+          "teacher": "榊原賢治",
+          "room": "3C教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学III",
+          "teacher": "御堂咲子",
+          "room": "3C教室"
+        },
+        {
+          "period": 4,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "3C教室"
+        },
+        {
+          "period": 5,
+          "subject": "部活",
+          "teacher": null,
+          "room": null
+        }
+      ],
+      "木": [
+        {
+          "period": 1,
+          "subject": "物理II",
+          "teacher": "榊原賢治",
+          "room": "3C教室"
+        },
+        {
+          "period": 2,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "3C教室"
+        },
+        {
+          "period": 3,
+          "subject": "数学III",
+          "teacher": "御堂咲子",
+          "room": "3C教室"
+        },
+        {
+          "period": 4,
+          "subject": "化学II",
+          "teacher": "牧野",
+          "room": "理科实验室"
+        },
+        {
+          "period": 5,
+          "subject": "世界史B",
+          "teacher": "桐须真冬",
+          "room": "3C教室"
+        },
+        {
+          "period": 6,
+          "subject": "情報",
+          "teacher": "新田裕也",
+          "room": "电脑室"
+        }
+      ],
+      "金": [
+        {
+          "period": 1,
+          "subject": "数学III",
+          "teacher": "御堂咲子",
+          "room": "3C教室"
+        },
+        {
+          "period": 2,
+          "subject": "化学II",
+          "teacher": "牧野",
+          "room": "3C教室"
+        },
+        {
+          "period": 3,
+          "subject": "物理II",
+          "teacher": "榊原賢治",
+          "room": "3C教室"
+        },
+        {
+          "period": 4,
+          "subject": "英語II",
+          "teacher": "白滨真纪",
+          "room": "3C教室"
+        },
+        {
+          "period": 5,
+          "subject": "現代文",
+          "teacher": "平冢静",
+          "room": "3C教室"
+        },
+        {
+          "period": 6,
+          "subject": "LHR",
+          "teacher": "榊原賢治",
+          "room": "3C教室"
+        }
+      ]
+    }
+  },
+  "class_sizes": {
+    "平冢静": 28,
+    "桐须真冬": 25,
+    "大森和彦": 30,
+    "白滨真纪": 28,
+    "牧野": 30,
+    "榊原賢治": 28
+  },
+  "change_labels": {
+    "_note": "课节切换时引擎自动加的结论标签——LLM不需要推理，直接读结论",
+    "体育": "要着替え(体操服)→更衣室",
+    "保健体育": "要着替え(体操服)→更衣室",
+    "水泳": "要着替え(水着)→プール更衣室",
+    "化学": "要移動→理科实验室",
+    "物理": "要移動→理科实验室",
+    "物理基础": "要移動→理科实验室",
+    "化学基础": "要移動→理科实验室",
+    "化学II": "要移動→理科实验室",
+    "物理II": "要移動→理科实验室",
+    "生物": "要移動→理科实验室",
+    "情報": "要移動→电脑室",
+    "美術I": "要移動→美术室",
+    "美術": "要移動→美术室",
+    "音楽": "要移動→音乐室",
+    "HR": "そのまま",
+    "LHR": "そのまま"
+  },
+  "fallback": {
+    "_note": "玩家班级在timetable中找不到时，LLM走兜底",
+    "text": "（该班课表未载入。上课时间——你在教室里，老师在讲课。具体科目和教师查任课表。）"
+  }
+}

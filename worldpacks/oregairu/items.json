@@ -536,7 +536,8 @@
         }
       ],
       "state": "intact",
-      "volume": 0.5
+      "volume": 0.5,
+      "flavor": "经典蓝水洗牛仔裤，裤脚轻微磨损。每周穿三天——洗了太多次已经微微泛白。"
     },
     "短裙": {
       "name": "短裙",
@@ -560,7 +561,8 @@
         }
       ],
       "state": "intact",
-      "volume": 0.5
+      "volume": 0.5,
+      "flavor": "网面跑鞋，鞋底纹路已经磨平了。"
     },
     "皮鞋": {
       "name": "皮鞋",
@@ -570,6 +572,371 @@
       "effects": [],
       "state": "intact",
       "volume": 0.5
+    },
+    "总武高制服外套": {
+      "name": "总武高制服外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "黑色校服外套，左胸绣有校徽。室外披着，室内脱掉搭在椅背上或换针织开衫。"
+    },
+    "黑色校服外套": {
+      "name": "黑色校服外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "黑色校服外套，左胸绣有校徽。肩部微微起毛——每天背书包磨的。"
+    },
+    "中学制服外套": {
+      "name": "中学制服外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "深蓝色中学制服外套，袖口有点短了——正在长身体的年纪。"
+    },
+    "小学校服": {
+      "name": "小学校服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.4,
+      "flavor": "整洁的白色上衣配深蓝短裤或背带裙。领口别着姓名牌，背后是黄色安全书包套。"
+    },
+    "白色衬衫": {
+      "name": "白色衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "标准白色长袖衬衫，面料挺括。领口扣至最上一颗——校规要求的。"
+    },
+    "白大褂": {
+      "name": "白大褂",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "实验室白大褂，左胸口袋插着几支笔。袖口有洗不掉的咖啡渍。"
+    },
+    "长袖白衬衫": {
+      "name": "长袖白衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "白衬衫，系红色领结。室内解开最上面两颗扣子，松开领结。洗后熨过但没熨太仔细。"
+    },
+    "总武高百褶裙": {
+      "name": "总武高百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.4,
+      "flavor": "黑白条纹百褶短裙，褶子熨得笔直。裙摆随步伐摆动，与袜口之间留出让视线自然停留的间隙。"
+    },
+    "深灰西裤": {
+      "name": "深灰西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "标准深灰色西裤，裤线笔直。膝盖处微微发亮——日复一日站在讲台前磨的。"
+    },
+    "黑色西裤": {
+      "name": "黑色西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "黑色商务西裤，裤腿略长堆在鞋面上。疏于打理，满是褶皱。"
+    },
+    "黑色过膝袜": {
+      "name": "黑色过膝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "棉质过膝袜，裹住小腿线条。袜口刚好卡在膝盖上方，偶尔往下滑——趁没人注意时迅速拉回去。"
+    },
+    "黑色短袜": {
+      "name": "黑色短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "紧贴脚踝的纯棉短袜。吸汗耐磨，边缘洗得有点松。"
+    },
+    "白色短袜": {
+      "name": "白色短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "白色纯棉短袜，袜口有一圈细条纹。洗了太多次，白色的亮度已经暗了。"
+    },
+    "肉色丝袜": {
+      "name": "肉色丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.04,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "轻薄哑光肉色连裤袜，紧紧贴合双腿。质地细腻均匀，规矩地隐藏在西装裤管之下。"
+    },
+    "黑色丝袜": {
+      "name": "黑色丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.04,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "薄款半透明黑色连裤袜。穿着时小心翼翼——刮到桌角就是一道抽丝。"
+    },
+    "学生皮鞋": {
+      "name": "学生皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.4,
+      "flavor": "黑色平底皮鞋，鞋面打蜡保持光亮。鞋底磨损很浅。"
+    },
+    "黑色皮鞋": {
+      "name": "黑色皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "黑色系带皮鞋，鞋跟外侧磨损——走路外八字。鞋面有细密龟裂，从不擦鞋。"
+    },
+    "乐福鞋": {
+      "name": "乐福鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "棕色乐福鞋，鞋面有光泽。一脚蹬——脱鞋的时候用后跟蹭前跟。"
+    },
+    "拖鞋": {
+      "name": "拖鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "软底塑料拖鞋，鞋底已经踩薄了。走起路来啪嗒啪嗒响。"
+    },
+    "白色棉质胸罩": {
+      "name": "白色棉质胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "白色纯棉胸罩，肩带纤细。无钢圈——不需要太多支撑，穿着它的理由只是不穿会很失礼。"
+    },
+    "黑色蕾丝内衣": {
+      "name": "黑色蕾丝内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "精致黑色蕾丝包边，带稳固钢圈支撑。与成熟大胆的外在风格相得益彰。"
+    },
+    "运动内衣": {
+      "name": "运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.15,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "宽肩带高强度防震运动内衣。弹性极佳，但剧烈运动时依然感受到紧绷与分量。"
+    },
+    "白色棉质内裤": {
+      "name": "白色棉质内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "白色纯棉低腰内裤，没有任何花纹和蕾丝。棉质已微微起绒，贴身舒适。"
+    },
+    "黑色蕾丝内裤": {
+      "name": "黑色蕾丝内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "与内衣成套的性感黑色蕾丝内裤，轻薄透气，侧边半透明镂空。"
+    },
+    "男士平角内裤": {
+      "name": "男士平角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "藏青色纯棉平角内裤，腰口松紧带已没弹性。妻子三年前买的——从没自己买过。"
+    },
+    "红色蝴蝶结丝带": {
+      "name": "红色蝴蝶结丝带",
+      "type": "clothing",
+      "slot": "head",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "红色蝴蝶结丝带，头发两侧各一个。妈妈说小时候绑的，就一直绑到现在。"
+    },
+    "竞技连体泳衣": {
+      "name": "竞技连体泳衣",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.15,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2,
+      "flavor": "深蓝色高开叉竞技泳衣，氯水泡得面料微白发硬。肩带细窄，穿久了会在肩上勒出两道红印。"
+    },
+    "体操服": {
+      "name": "体操服",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "白色短袖体操服，出汗后微微贴在身上，勾勒纤细腰线。"
+    },
+    "运动短裤": {
+      "name": "运动短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "深蓝色运动短裤，侧面白色双杠。松紧带弹性良好。"
+    },
+    "西装": {
+      "name": "西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "标准黑色/深灰西装外套，剪裁保守。肩部微起毛——每天背着通勤包磨的。"
+    },
+    "总武高制服": {
+      "name": "总武高制服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.5,
+      "flavor": "黑色校服外套，左胸绣有校徽。室外披着，室内脱掉。"
+    },
+    "校服裤子": {
+      "name": "校服裤子",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.4,
+      "flavor": "标准深灰校服西裤。膝盖处微微发亮——日复一日坐在课桌前磨的。"
+    },
+    "长裙": {
+      "name": "长裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.4,
+      "flavor": "过膝长裙，面料柔软垂顺。走起路来裙摆优雅地摆动。"
+    },
+    "白色长袖翻领衬衫": {
+      "name": "白色长袖翻领衬衫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "高档聚酯纤维面料衬衫，领口熨得挺括。虽然版型保守，但胸前衣襟仍被绷得紧凑。"
+    },
+    "短裤": {
+      "name": "短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "宽松休闲短裤，松紧腰带。夏天穿——比长裤自在多了。"
+    },
+    "单肩通学包": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "volume": 0.4,
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已经磨出光泽——用了好几年了。通常装着一两本正在读的文库本和笔记。"
     }
   },
   "总武高制服外套": {

@@ -1,0 +1,125 @@
+{
+  "id": "honami_pool_first",
+  "title": "泳池边の補講 (穗成美线·初遇)",
+  "source": "原创 (Anteiru あんている inspiration)",
+  "_note": "水上諒真 = 穗成美线的'原定男主'。本 timeline 的场景中水上总会先到一步——如果玩家不介入，他在泳池边和穗成美独处的那几分钟就是他的。",
+  "trigger": {
+    "min_day": 5,
+    "max_day": 180,
+    "location": "游泳池",
+    "time_of_day": [
+      "evening"
+    ],
+    "min_age": 15,
+    "player_stage": "高中"
+  },
+  "expires_days": 14,
+  "repeatable": false,
+  "hook": {
+    "source_npc": "藤崎穗成美",
+    "hook_text": "训练结束后的泳池已经没人了——灯关了一半。但{{player.surname}}回来拿落下的毛巾时，发现池边还有两个人。水上諒真——游泳部的王牌——正站在跳台旁边，穗成美在他身后一两步的距离，一只手扶着他的肩膀调整他的起跳姿势。'重心を前に——そう。そのまま。'她的声音比训练时温柔得多。水上整个人僵住了——不是因为起跳姿势困难。{{player.surname}}决定：",
+    "urgency": "low"
+  },
+  "beats": [
+    {
+      "id": "pool_observe_or_interrupt",
+      "label": "池边的两人",
+      "prompt": "穗成美的手还搭在水上的肩上——她没有注意到{{player.surname}}。水上的耳朵在池边灯光下红得明显。「よし、じゃあ試しに飛んでみろ——」水上入水的瞬间，她转过身，看到了{{player.surname}}。哨子从她嘴里掉下来。「ビーッ ——あ、あんた……いつからそこに！？」水上从水里冒出头，看到{{player.surname}}，表情里闪过一丝微妙的东西——不是敌意，是那种'自己的秘密基地被人发现了'的紧张感。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "坦然说明自己是来拿落下的东西的——外加一句对两人训练态度的赞赏",
+          "effects": {
+            "affection": {
+              "藤崎穗成美": 8,
+              "水上諒真": 5
+            },
+            "flags": {
+              "met_honami": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "直接问能不能也看一下自己的泳姿——反正教练已经在池边了",
+          "effects": {
+            "affection": {
+              "藤崎穗成美": 10,
+              "水上諒真": -5
+            },
+            "flags": {
+              "met_honami": true,
+              "honami_coach_offer": true
+            }
+          },
+          "next_beat": "honami_swim_talk"
+        },
+        {
+          "pick": "开玩笑说'水上，你耳朵好红啊'",
+          "effects": {
+            "affection": {
+              "藤崎穗成美": 5,
+              "水上諒真": 10
+            },
+            "flags": {
+              "met_honami": true,
+              "honami_mizukami_teased": true
+            }
+          },
+          "next_beat": "honami_swim_talk"
+        }
+      ]
+    },
+    {
+      "id": "honami_swim_talk",
+      "label": "三个人的泳池",
+      "prompt": "水上从泳池里撑上来，甩了甩湿漉漉的头发——眼睛快速扫了一眼{{player.surname}}和穗成美之间的距离，然后移开了。穗成美把哨子重新挂好，双手抱胸（这个动作让她泳衣的轮廓更加明显——她自己完全没注意到）。'……まあいい。見られたのはしょうがない。で——泳ぎを見てほしいのか？' 她吹了一声短哨。「じゃあお前たち、交互に100m。私がタイムを見る。遅い方には追加メニューな。」——她的教练开关打开了一小半。残り半分は、まだ少し顔が赤い。{{player.surname}}决定：",
+      "outcomes": [
+        {
+          "pick": "认真游——把她当真正的教练对待",
+          "effects": {
+            "affection": {
+              "藤崎穗成美": 15,
+              "水上諒真": 5
+            },
+            "flags": {
+              "honami_coaching": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "在水里和水上聊天——问他训练的事、他对藤崎先生的看法",
+          "effects": {
+            "affection": {
+              "水上諒真": 10
+            },
+            "flags": {
+              "honami_mizukami_bond": true
+            }
+          },
+          "next_beat": null
+        },
+        {
+          "pick": "游完后对穗成美说'你刚才教水上的时候语气特别温柔——对他有意思？'",
+          "effects": {
+            "affection": {
+              "藤崎穗成美": -10
+            },
+            "flags": {
+              "honami_teased_too_hard": true
+            }
+          },
+          "next_beat": null
+        }
+      ]
+    }
+  ],
+  "on_expire": {
+    "narrative": "{{player.surname}}决定不去打扰他们。从更衣室的窗户可以看到——穗成美又纠正了水上的一次入水动作。水上的耳朵还是红的。他们之间有三步的距离和整个泳池的水面——看起来很近，但水上的红耳朵在说：这三步他走了一个夏天还没走完。",
+    "effects": {
+      "flags": {
+        "honami_pool_missed": true
+      }
+    }
+  }
+}

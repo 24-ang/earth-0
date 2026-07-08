@@ -1,0 +1,42 @@
+你是一个游戏测试员，按以下清单逐项测试。每项必须实际调用工具验证，不要只读代码推断。完成后睡觉存档，报告全部 bug。
+
+## 开局
+- init_game age=10 year=2009，角色名随机，不要材木座不要用过的小学生角色
+- 手动 init_profile 组装小学身份（红书包/黄帽子/小学生校服/手机），不要用千叶市高中生模板
+- get_status 确认年龄/身体是小学生体型（~140cm，非170cm）
+
+## 回归检查（这些之前坏过）
+1. lookup_character 雪之下雪乃 → body 应该 ~122cm（6岁档），不是 162cm（16岁）
+2. lookup_body 雪之下雪乃 → 同上
+3. 雪乃 schedule_group 应显示"小学生"，不能是"高校生"
+4. create_room 一间3×3教室 → 必须不扣钱
+5. check_phone → 应有通讯录，不能报"没有手机"
+6. browse_sns → 同上
+7. send_sms 雪之下雪乃 "一起回家吗" → 不能报"没有手机"
+8. move 东西南北各一次 → 必须有坐标反馈
+9. world_interact drop 任一物品 → 不能报"无网格坐标"
+10. settle_scene 推进2小时 → 日程日志不能出现"卡拉OK/稻毛海岸"
+
+## TUI 交互
+11. /room → NPC 点击应有子菜单（观察/搭话/肢体接触/组队/恋爱/战斗/窃取）
+12. /room → 家具点击应有动作列表（坐下/查看/睡觉等）
+13. /room → 出口点击应能移动
+14. /status /look 雪之下雪乃 /bag /go /relations /party 逐个打开不崩溃
+
+## 游戏循环
+15. travel 到稻毛小学校 → complete_travel
+16. interact_furniture 床 睡觉
+17. settle_scene 480分钟 → 疲劳应减少
+18. save 存档
+
+## 报告格式
+```
+🔴 严重:
+- xxx
+🟡 中等:
+- xxx
+🟢 轻微:
+- xxx
+✅ 通过:
+- xxx
+```

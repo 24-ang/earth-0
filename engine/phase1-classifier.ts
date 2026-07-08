@@ -169,12 +169,34 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     return buildStartupPrompt(playerInput);
   }
 
+  // ── 学校课时标签（极简——只告诉 GM 现在是上课/课间/午休/放学）──
+  let schoolLabel = "";
+  if (location.includes("総武高") || location.includes("总武高") || location.includes("教室") ||
+      location.includes("体育") || location.includes("プール") || location.includes("校")) {
+    try {
+      const { getCurrentPeriod } = require("./time.ts");
+      const pi = getCurrentPeriod(gs.time.minute_of_day, gs.time.day_of_week);
+      if (pi.phase === "授業中" && pi.period) {
+        schoolLabel = `[学校] 授業中(${pi.period}限) | あと${pi.minutesUntilNext}分でチャイム`;
+      } else if (pi.phase === "休み時間") {
+        schoolLabel = `[学校] 休み時間 | あと${pi.minutesUntilNext}分で${pi.period ?? (gs.time.minute_of_day < 12 * 60 + 30 ? "次限" : "昼休み")}開始`;
+      } else if (pi.phase === "昼休み") {
+        schoolLabel = `[学校] 昼休み | あと${pi.minutesUntilNext}分`;
+      } else if (pi.phase === "课前") {
+        schoolLabel = `[学校] 朝·HR前 | あと${pi.minutesUntilNext}分`;
+      } else if (pi.phase === "放課後") {
+        schoolLabel = `[学校] 放課後`;
+      }
+    } catch (_e2) { /* ignore */ }
+  }
+
   return [
     "你是意图分类器 + 场景导演。只输出 JSON，不要解释。",
 
     `玩家输入: "${playerInput}"`,
     `当前位置: ${location}`,
     `在场 NPC: ${npcList}`,
+    schoolLabel,
     hasShop ? `注意: 此地点有商店，玩家可以买卖物品。` : "",
     hasFurniture ? `可交互家具: ${furnitureNames}` : "",
 
@@ -182,6 +204,8 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "场景导演规则（第0优先级）:",
     "  走进任何空间时，先想——这个时间·这个地点·应该有什么人？",
     "  教室上课→同学+老师。午休→散步的学生。商店街→店员+顾客。车站→乘客。",
+    "  教室人数参考：普通班~28人、特進班~30人、国際教養班~25人。spawn 3-5个有名字的群演即可，",
+    "  其余学生作为'背景中的其他同学'存在于叙事中——不需要每人一个 spawn。",
     "  用 spawn_temp_npc 逐个创建群演（3-5个足够）。不要让世界空的。",
     "",
     "工具分类（不复制参数细节——参数在工具自身定义里）:",
@@ -193,7 +217,8 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "  ⚔️ 冲突: combat_action, steal_item, intimate_touch, inflict_damage, identity_check",
     "  🎒 物品: use_item, equip_item",
     "  🚗 载具: mount_vehicle, dismount_vehicle",
-    "  📋 管理: schedule_override, table_crud, add_memory_tag, add_calendar_event",
+    "  📖 自习: study（指定科目+小时数，自动检定+推进时间）",
+"  📋 管理: schedule_override, table_crud, add_memory_tag, add_calendar_event",
     "  🏛️ 组织/势力: create_organization（动态创建社团/帮派/圈子——引擎数据驱动）, lookup_org（查势力详情，声望决定可见度）, contribute_to_org（向势力捐款/完成任务/背叛/招募成员）",
     "  🏗️ 地点: create_location（创建新地点并注入skybox属性——繁荣度/稳定度/体制/经济类型/外交立场）",
     "  🆕 新游戏: init_game（仅当玩家明确说「新游戏」「重新开始」——「我是XX」不是新游戏）",
@@ -205,6 +230,19 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "  - 某NPC的发言信息密度极高（告白/拒绝/说漏嘴/试探失败）→ replay_pov 标记该NPC",
     "  - 玩家设定了一个大事件背景（灾难/战争/全球事件）→ create_story_hook链 + intermission 从权威/组织视角展现事件规模",
     "  - 日常闲聊、普通互动、信息量低的对话 → 不需要镜头工具",
+    "",
+    "学校场景指引（玩家身份为学生、位置在总武高时自然适用——不需要检查flag，看位置即可）:",
+    "  📖 上课时间：可以调用 create_story_hook 生成课堂mini事件——被点名、小组讨论、临时小测验、",
+    "    走神注意到窗外的事。不要每次上课都生成——只在玩家输入暗示'好无聊'或有社交机会时生成1个。",
+    "  📝 考试周（日历 advance_hook 提示考试临近时）：可以生成复习/补习钩子——",
+    "    找NPC一起复习、被老师叫去补课、在图书馆占座。每个考试周最多1-2个钩子，不要更多。",
+    "  🌙 放学后：如果玩家在图书室/教室/部室，可以生成自习钩子——",
+    "    偶遇也在自习的NPC、被前辈塞参考书、发现书架上有趣的旧书。",
+    "  🤝 NPC补习：如果玩家和成绩好的NPC（雪乃/桐须真冬/大森/御堂等）已有互动基础",
+    "    +考试临近→可以生成该NPC主动说出'要不要一起复习'的钩子。",
+    "  🚫 不要做的事：不要替玩家选文理/选课/填志愿——只提供场景，不等回应绝不自行推进。",
+    "    不要逢上课就扔钩子——玩家可能只想说'我去上课'然后就推进时间。",
+    "  🎒 自习动作：如果玩家说'复习/自习/看书'，用 study 工具——它会自动检定、推进时间、设flag。",
     "",
     "分类规则:",
     "  1. 理解玩家真实意图，不要机械匹配关键词",
