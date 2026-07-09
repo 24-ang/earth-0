@@ -9,6 +9,7 @@ import charactersStatic from "../data/characters.json" with { type: "json" };
 import roomsStatic from "../data/rooms.json" with { type: "json" };
 import { lookupRegion, setAcademicYearOffset } from "./router.ts";
 import charStagesStatic from "../data/character_stages.json" with { type: "json" };
+import { validateCharacters as validateCharactersFn } from "./validate-characters.ts";
 import fs from "node:fs";
 import path from "node:path";
 import titleRulesStatic from "../data/title_rules.json" with { type: "json" };
@@ -183,6 +184,31 @@ function loadWorldpackDirRecursive(dirName: string, flatFileName: string): Recor
     catch (e) { console.error(`loadWorldpackDirRecursive: 解析 data/${flatFileName} 失败`, e); }
   }
   return result;
+}
+
+/** 加载 worldpacks/{world}/characters/ 目录（每文件一个角色对象）→ 数组。
+ *  无目录/空 → 返回 null（调用方回退旧平面 characters.json）。 */
+function loadCharactersFromDir(): any[] | null {
+  const dir = path.resolve(process.cwd(), "worldpacks", activeWorldName, "characters");
+  if (!fs.existsSync(dir)) return null;
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json") && !f.startsWith("_"));
+  if (!files.length) return null;
+  const arr: any[] = [];
+  for (const f of files) {
+    try { arr.push(JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"))); }
+    catch (e) { console.error(`loadCharactersFromDir: 解析 characters/${f} 失败`, e); }
+  }
+  return arr.length ? arr : null;
+}
+
+/** 从角色对象投影 charStages（stages/stages_if 已内联进单角色文件）。空 → 调用方回退旧文件。 */
+function deriveCharStages(chars: any[]): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const c of chars) {
+    if (c?.stages) out[c.name] = c.stages;
+    if (c?.stages_if) out[c.name + "_if"] = c.stages_if;
+  }
+  return out;
 }
 
 export let gameState: GameState = createInitialState();
@@ -875,23 +901,28 @@ export function getNpcCurrentAge(npcBaseAge: number): number {
 
 /** 根据 NPC 当前年龄从 schedule_group_by_age 解析正确的日程组 */
 function resolveScheduleGroup(src: any, currentAge: number): string {
+  let g: string;
   const byAge: Record<string, string> | undefined = src?.schedule_group_by_age;
   if (byAge && Object.keys(byAge).length > 0) {
     const keys = Object.keys(byAge).map(Number).sort((a, b) => a - b);
-    let best = byAge[String(keys[0]!)]!;
+    g = byAge[String(keys[0]!)]!;
     for (const k of keys) {
-      if (k <= currentAge) best = byAge[String(k)]!;
+      if (k <= currentAge) g = byAge[String(k)]!;
       else break;
     }
-    return best;
+  } else {
+    // 无 by_age 映射表 → 按当前年龄推断（修复"小学生"标签钉死 bug）
+    if (currentAge <= 6) g = "自由人";           // 学龄前：在家，无固定日程，具体一天交叙事发挥（不武断塞"小学生"）
+    else if (currentAge <= 12) g = "小学生";
+    else if (currentAge <= 15) g = "中学生";
+    else if (currentAge <= 18) g = "高校生";
+    else if (currentAge <= 22) g = "大学生";
+    else g = src?.schedule_group || "自由人";
   }
-  // 无 by_age 映射表 → 按当前年龄推断（修复"小学生"标签钉死 bug）
-  if (currentAge <= 6) return "幼儿";
-  if (currentAge <= 12) return "小学生";
-  if (currentAge <= 15) return "中学生";
-  if (currentAge <= 18) return "高校生";
-  if (currentAge <= 22) return "大学生";
-  return src?.schedule_group || "社会人";
+  // 结构性不变量：引擎【绝不】产出不存在于 schedule_templates 的组名，否则日程解析为空/崩。
+  // 兜底出来的（或角色数据里的）非法组 → 钳到 自由人。防"幼儿""社会人""海外"等复发。
+  const templates = scheduleTemplates as any;
+  return (templates && templates[g]) ? g : "自由人";
 }
 
 /** 按年龄缩放属性。身体属性按年龄比例缩放，心智属性保持 baseline */
@@ -1019,6 +1050,17 @@ export function getPlayerStatusNarrative(p: PlayerState): string {
   return desc;
 }
 
+/** 判断某身体区域（由若干装备槽位覆盖）是否"暴露"，即可被他人看到性征。
+ *  规则区分两种"空"：
+ *   - 槽位有遮盖物（item 对象）→ 没暴露；
+ *   - 槽位全部是 undefined（从未交互过，通常是"衣服数据没填"）→ 视为默认穿着，没暴露；
+ *   - 无遮盖物、且至少一个槽位被显式设为 null（剧情里被脱下）→ 才算暴露。
+ *  这样"衣服数据缺失"不会被误判成"全裸"（P0#3）；只有真正被脱光才注入裸露描述。 */
+function isBodyRegionExposed(...slots: any[]): boolean {
+  if (slots.some(s => s && typeof s === "object")) return false;  // 有遮盖物 → 穿着
+  return slots.some(s => s === null);                             // 无遮盖物：仅显式 null(被脱) 才暴露
+}
+
 /** 根据装备覆盖检测玩家身体暴露情况，返回 NPC 可感知的性征描述（生殖器/胸部/阴毛等）。
  *  原则：物理可见性驱动——脱了就能看到，不脱就看不到。与 mode（gal/sex/rpg）无关。 */
 export function getVisibleBodyDescription(): string {
@@ -1026,8 +1068,8 @@ export function getVisibleBodyDescription(): string {
   const eq = p.equipment || {};
 
   // 覆盖检测：所有覆盖该区域的槽位都为空 → 暴露
-  const bottomCovered = !!(eq.bottom || eq.inner_bot);
-  const topCovered = !!(eq.top || eq.shirt || eq.inner_top);
+  const bottomCovered = !isBodyRegionExposed(eq.bottom, eq.inner_bot);
+  const topCovered = !isBodyRegionExposed(eq.top, eq.shirt, eq.inner_top);
 
   if (bottomCovered && topCovered) return ""; // 全身穿着整齐，无需额外注入
 
@@ -1075,8 +1117,8 @@ export function getNPCVisibleBodyDescription(npcName: string): string {
   if (!npc) return "";
   const eq = npc.equipment || {};
 
-  const bottomCovered = !!(eq.bottom || eq.inner_bot);
-  const topCovered = !!(eq.top || eq.shirt || eq.inner_top);
+  const bottomCovered = !isBodyRegionExposed(eq.bottom, eq.inner_bot);
+  const topCovered = !isBodyRegionExposed(eq.top, eq.shirt, eq.inner_top);
 
   if (bottomCovered && topCovered) return "";
 
@@ -2356,21 +2398,76 @@ function affectionToStage(val: number): Relationship["stage"] {
 // --- NPC 运行时状态 ---
 
 /** 从 items.json 查找同名物品，补全 effects */
-function fillEffectsFromCatalog(equipment: Record<string, any>): Record<string, any> {
+const OUTFIT_NON_SLOT = new Set(["hair", "desc", "head"]);
+
+/** 把 itemsCatalog 拍平成 name→item Map。处理两种结构：
+ *  顶层直接条目（key=物品名，value 含 name/type）+ 分类容器（weapons/clothing… 内含多个物品）。 */
+function buildCatalogLookup(): Map<string, any> {
   const lookup = new Map<string, any>();
-  for (const cat of Object.values(itemsCatalog)) {
-    for (const [name, item] of Object.entries(cat as any)) {
-      lookup.set(name, item);
+  for (const [key, val] of Object.entries(itemsCatalog as any)) {
+    if (!val || typeof val !== "object") continue;
+    if ((val as any).name && (val as any).type) {
+      lookup.set(key, val);                                   // 顶层直接物品
+    } else {
+      for (const [name, item] of Object.entries(val as any)) {
+        if (item && typeof item === "object") lookup.set(name, item);  // 分类内物品
+      }
     }
   }
+  return lookup;
+}
+
+/** 用目录补全装备的引擎属性（effects/pocket/weight/volume），但【角色手写 flavor 优先】。
+ *  这样 items.json 补服装骨架后，不覆盖 135 个角色手写的专属 flavor（decision #30）。 */
+function fillEffectsFromCatalog(equipment: Record<string, any>): Record<string, any> {
+  const lookup = buildCatalogLookup();
   const result: Record<string, any> = {};
   for (const [slot, item] of Object.entries(equipment)) {
     if (!item) { result[slot] = null; continue; }
     const catalog = lookup.get(item.name);
-    result[slot] = catalog ? { ...structuredClone(catalog), state: item.state || "intact" } : item;
+    result[slot] = catalog
+      ? { ...structuredClone(catalog),
+          flavor: (item as any).flavor ?? (catalog as any).flavor,        // 角色手写优先
+          effects: (item as any).effects ?? (catalog as any).effects ?? [],
+          state: (item as any).state || "intact" }
+      : item;
   }
   return result;
 }
+
+/** 从 outfit 定义（{hair,desc,top,bottom,…}）构建装备槽 Item 表：
+ *  槽位名字 → items.json 查（拿 effects/pocket/weight）→ 查不到则合成兜底 clothing Item。
+ *  用于 setNPCOutfit 给【所有角色】填 equipment（不再只有 equipment_by_outfit 的雪乃）。 */
+function buildEquipmentFromOutfit(outfitDef: any): Record<string, any> {
+  const out: Record<string, any> = {};
+  if (!outfitDef) return out;
+  const lookup = buildCatalogLookup();
+  for (const [slot, name] of Object.entries(outfitDef)) {
+    if (OUTFIT_NON_SLOT.has(slot) || typeof name !== "string") continue;
+    const cat = lookup.get(name);
+    out[slot] = cat
+      ? { ...structuredClone(cat), state: "intact" }
+      : { name, type: "clothing", slot, effects: [], state: "intact" };  // 兜底：至少有名字
+  }
+  return out;
+}
+
+/** 换装时同步 npc.equipment：清旧 outfit 独有的槽位（脱旧衣），写新 outfit 的槽位。
+ *  两个 outfit 都没定义的槽位（武器/工具）不碰。数据源优先 equipment_by_outfit（雪乃深耕），
+ *  否则从 outfit 槽位名字经目录构建（所有角色通用）——修 set_npc_outfit display/data 脱节。 */
+function applyOutfitEquipment(npc: any, src: any, oldOutfit: string, outfitKey: string): void {
+  const newEquip = src?.equipment_by_outfit?.[outfitKey] ?? buildEquipmentFromOutfit(src?.outfits?.[outfitKey]);
+  if (!newEquip || !Object.keys(newEquip).length) return;
+  const oldEquip = src?.equipment_by_outfit?.[oldOutfit] ?? buildEquipmentFromOutfit(src?.outfits?.[oldOutfit]);
+  const oldSlots = new Set(Object.keys(oldEquip || {}));
+  const newSlots = new Set(Object.keys(newEquip));
+  for (const slot of oldSlots) if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
+  for (const slot of newSlots) {
+    const item = (newEquip as any)[slot];
+    (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
+  }
+}
+
 
 /** 注册 LLM 动态创建的角色。返回描述或错误。 */
 export function registerDynamicCharacter(name: string, data: Record<string, any>): string {
@@ -2752,39 +2849,14 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
     (src as any).outfits[outfitKey] = { ...def };
     const oldOutfit = npc.currentOutfit || "school";
     npc.currentOutfit = outfitKey as any;
-    // equipment_by_outfit 联动：清旧 outfit 的槽位，合新 outfit 的槽位
-    // 两个 outfit 都没定义的槽位不碰（保留武器/工具等）
-    const oldSlots = new Set(Object.keys((src as any).equipment_by_outfit?.[oldOutfit] || {}));
-    if ((src as any).equipment_by_outfit?.[outfitKey]) {
-      const newEquip = (src as any).equipment_by_outfit[outfitKey];
-      const newSlots = new Set(Object.keys(newEquip));
-      for (const slot of oldSlots) {
-        if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
-      }
-      for (const slot of newSlots) {
-        const item = newEquip[slot];
-        (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
-      }
-    }
+    applyOutfitEquipment(npc, src, oldOutfit, outfitKey);
     const desc = Object.values(def).join("、");
     _outfitChanges.push({ npc: npcName, from: oldOutfit, to: outfitKey, desc });
     return `${npcName} → ${outfitKey}（自动生成）: ${desc}`;
   }
   const oldOutfitMain = npc.currentOutfit || "school";
   npc.currentOutfit = outfitKey as any;
-  // equipment_by_outfit 联动：清旧 outfit 的槽位，合新 outfit 的槽位
-  const oldSlotsMain = new Set(Object.keys((src as any).equipment_by_outfit?.[oldOutfitMain] || {}));
-  if ((src as any).equipment_by_outfit?.[outfitKey]) {
-    const newEquip = (src as any).equipment_by_outfit[outfitKey];
-    const newSlots = new Set(Object.keys(newEquip));
-    for (const slot of oldSlotsMain) {
-      if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
-    }
-    for (const slot of newSlots) {
-      const item = newEquip[slot];
-      (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
-    }
-  }
+  applyOutfitEquipment(npc, src, oldOutfitMain, outfitKey);
   const items = src.outfits[outfitKey];
   const desc = Object.values(items).join("、");
   _outfitChanges.push({ npc: npcName, from: oldOutfitMain, to: outfitKey, desc });
@@ -4662,9 +4734,12 @@ export function loadActiveWorld(worldName?: string): void {
       return fallback;
     };
 
-    characters = loadJSON("characters.json", charactersStatic);
+    // 角色：优先扫 characters/ 目录（每人一文件，真相源），回退旧平面文件
+    characters = loadCharactersFromDir() ?? loadJSON("characters.json", charactersStatic);
     rooms = loadJSON("rooms.json", roomsStatic);
-    charStages = loadJSON("character_stages.json", charStagesStatic);
+    // charStages 从角色对象投影（stages/stages_if 已内联）；空则回退旧平面文件
+    const _derivedStages = deriveCharStages(characters);
+    charStages = Object.keys(_derivedStages).length ? _derivedStages : loadJSON("character_stages.json", charStagesStatic);
     titleRules = loadJSON("title_rules.json", titleRulesStatic);
     namelessNpcTemplates = loadJSON("nameless_npc_templates.json", namelessNpcTemplatesStatic);
     economyConfig = loadJSON("economy.json", economyConfigStatic);
@@ -4683,7 +4758,20 @@ export function loadActiveWorld(worldName?: string): void {
     scheduleTemplates = loadJSON("schedule_templates.json", scheduleTemplatesStatic);
     roomTemplates = loadJSON("room_templates.json", roomTemplatesStatic);
     residenceTemplates = loadJSON("residence_templates.json", residenceTemplatesStatic);
-    sexProfilesData = loadJSON("sex_profiles.json", null);
+    // sex profiles 从角色对象投影（sex_profile 已内联为完整对象）；空则回退旧平面文件
+    const _derivedSex: Record<string, any> = {};
+    for (const c of characters) if (c?.sex_profile && typeof c.sex_profile === "object") _derivedSex[c.name] = c.sex_profile;
+    sexProfilesData = Object.keys(_derivedSex).length ? _derivedSex : loadJSON("sex_profiles.json", null);
+
+    // 启动校验：只报硬错误（缺必填/非法组/孤儿），warn/info 是 backlog 不刷屏（铁律：bug 要看得见）
+    try {
+      const vr = validateCharactersFn(characters, new Set(Object.keys(scheduleTemplates || {})));
+      const errs = vr.issues.filter((i) => i.severity === "error");
+      if (errs.length) {
+        console.error(`⚠ 角色校验发现 ${errs.length} 个硬错误:`);
+        for (const e of errs.slice(0, 20)) console.error(`   [${e.name}] ${e.detail}`);
+      }
+    } catch (e) { console.error("loadActiveWorld: 角色校验失败", e); }
 
     // Step 7: 组织/势力系统数据加载 (纯动态从 orgs/ 扫描，去中心化)
     if (gameState) {

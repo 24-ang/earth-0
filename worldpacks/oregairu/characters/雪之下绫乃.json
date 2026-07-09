@@ -1,0 +1,215 @@
+{
+  "name": "雪之下绫乃",
+  "source": "我的青春恋爱物语果然有问题。",
+  "base_age": 36,
+  "gender": "female",
+  "appearance_brief": "黑色长发盘髻，眉眼妩媚。和雪乃外表相似但气质更成熟强势。保养极好，看起来像三十出头。偏爱素雅和服。",
+  "hair_color": "黑色",
+  "hair_style": "长发盘髻",
+  "body": {
+    "height_cm": 162,
+    "weight_kg": 50,
+    "build": "纤细",
+    "cup": "D",
+    "measurements": {
+      "bust": 88,
+      "waist": 58,
+      "hips": 90
+    },
+    "leg_type": "修长",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "蜜桃",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 5,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "26": {
+      "height_cm": 162,
+      "weight_kg": 50,
+      "build": "纤细",
+      "cup": "D",
+      "measurements": {
+        "bust": 88,
+        "waist": 58,
+        "hips": 90
+      },
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "diet": "正常",
+      "exercise": "日常活动",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "40": {
+      "height_cm": 160,
+      "weight_kg": 52,
+      "build": "标准",
+      "cup": "D",
+      "measurements": {
+        "bust": 90,
+        "waist": 60,
+        "hips": 92
+      },
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "diet": "正常",
+      "exercise": "日常活动",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 3,
+    "敏捷": 4,
+    "体质": 4,
+    "智力": 17,
+    "感知": 15,
+    "魅力": 16
+  },
+  "skills": {
+    "口才": 9,
+    "交易": 8
+  },
+  "hp": {
+    "current": 9,
+    "max": 9
+  },
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "千叶_雪之下邸",
+  "sex_profile": {
+    "baselineDesire": 50,
+    "attitude": "主动",
+    "experience": "熟练",
+    "female": {
+      "breast": {
+        "cup": "D",
+        "shape": "水滴",
+        "nipple_size": "普通",
+        "nipple_color": "浅褐",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "蝴蝶",
+        "labia_size": "普通",
+        "depth_cm": 14,
+        "tightness": "普通",
+        "inner_color": "玫瑰",
+        "feel": "名器"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "黑色",
+        "style": "自然"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 3,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 8,
+        "development": 4,
+        "preference": "喜欢"
+      },
+      "腰": {
+        "sensitivity": 7,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "腿": {
+        "sensitivity": 7,
+        "development": 3,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 7,
+        "development": 4,
+        "preference": "喜欢"
+      },
+      "肛": {
+        "sensitivity": 5,
+        "development": 2,
+        "preference": "普通"
+      }
+    },
+    "cycleDay": 8,
+    "climaxThreshold": 55,
+    "likes": [
+      "掌控节奏",
+      "被服从",
+      "耳边的恭维"
+    ],
+    "dislikes": [
+      "被动",
+      "敷衍",
+      "被挑战权威"
+    ]
+  },
+  "schedule_group": "自由人",
+  "schedule_overrides": {},
+  "anchors": {
+    "private": "雪之下家真正掌舵人，丈夫是傀儡。政治动物，喜欢掌控一切。性格强势，说一不二。雪乃的死穴——导致雪乃独居搬出。对阳乃寄予厚望。外表端庄一丝不苟，擅长茶道花道。称呼平冢静为「小静」。曾反对雪乃办毕业舞会，后在交锋中认可了八幡。和雪乃外表相似但感性更像阳乃。"
+  },
+  "funds": 350000,
+  "schedule_group_by_age": {
+    "12": "中学生",
+    "15": "高校生",
+    "18": "大学生",
+    "22": "自由人"
+  },
+  "social_class": "大资产阶级",
+  "personal_axes": {
+    "经济立场": 4,
+    "政治立场": 4
+  },
+  "stages": {
+    "成年": "雪之下家真正的掌舵人。政治动物，喜欢掌控一切。说话端庄一丝不苟，大家族主母风范。对长女阳乃寄予厚望，对次女雪乃既失望又担忧。外表和雪乃相似，感性更像阳乃。强势不容置疑，但在认可的人面前会展现另一面。"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "name": "秋野樱",
+  "source": "喜欢本大爷的竟然只有你一个？",
+  "base_age": 17,
+  "gender": "female",
+  "appearance_brief": "女生，身高 165cm。来自《喜欢本大爷的竟然只有你一个？》。",
+  "hair_color": "棕色",
+  "hair_style": "短发",
+  "outfits": {
+    "school": {
+      "top": "制服外套",
+      "shirt": "校服衬衫",
+      "bottom": "裙子",
+      "feet": "皮鞋"
+    }
+  },
+  "body": {
+    "height_cm": 165,
+    "weight_kg": 50,
+    "build": "高挑",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 6,
+    "体质": 6,
+    "智力": 10,
+    "感知": 10,
+    "魅力": 11
+  },
+  "skills": {},
+  "personality_brief": "来自《喜欢本大爷的竟然只有你一个？》的角色。",
+  "personality_stages": {
+    "6": "普通的成长童年。"
+  },
+  "speech_style": "礼貌温和的平辈语气。",
+  "anchors": {
+    "emotional": "来自《喜欢本大爷的竟然只有你一个？》的登场人物。"
+  },
+  "likes": [
+    "日常"
+  ],
+  "dislikes": [
+    "麻烦"
+  ],
+  "default_location": "千葉駅前",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "17": "高校生"
+  },
+  "schedule_group": "高校生",
+  "funds": 2000,
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "17": "千葉駅前"
+  },
+  "grade": 3,
+  "homeroom": "B",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

@@ -279,43 +279,97 @@ export interface PlayerState {
 
 
 // --- 静态角色数据结构 ---
+/** 一套服装：槽位→Item名字（引擎 getNPCOutfitDesc 读 slot 短名，desc/hair 跳过不渲染）。
+ *  slot 值必须 ≤10 字（长描述进 desc）。 */
+export interface OutfitDef {
+  hair?: string;   // 这套对应的发型（10-20字），getNPCOutfitDesc 跳过
+  desc?: string;   // 整套搭配感（80-150字），供 lookup_character，getNPCOutfitDesc 跳过
+  [slot: string]: string | undefined;  // top/bottom/legs/feet/inner_top/inner_bot/shirt/acc/back → Item 名字
+}
+
+/**
+ * 角色卡：139 个 NPC 的唯一真相来源。
+ *
+ * 字段分层（覆盖率见 docs/decisions.md #30/#32 及校验器输出）：
+ * - 必填（100%，人人都有）：name/source/base_age/gender/appearance_brief/body/attributes/
+ *   default_location/schedule_group/social_class/personal_axes
+ * - 其余全部可选，注释标明"缺了引擎怎么兜底"。校验器 validate-characters.ts 负责扫描缺件/矛盾/孤儿。
+ *
+ * ⚠️ 两条易混淆的独立链路（#32，内容不应相同）：
+ * - personality_stages（年龄键"6"/"16"）→ NPC Agent 内心独白（state.ts:866→924）
+ * - stages（阶段键"高中"）→ Phase 3 场景标签（state.ts:1296，源自 character_stages.json）
+ */
 export interface StaticCharacter {
+  // ── 必填：核心身份（100% 覆盖）──
   name: string;
-  source: string;
-  base_age?: number;
+  source: string;                        // 出处作品
+  base_age: number;                      // 设定基准年龄，引擎按玩家开局年龄缩放
   gender: string;
-  appearance_brief: string;
-  hair_color?: string;   // "黑色" | "茶色" | "橘棕色" | "银色" | ...
-  hair_style?: string;   // "长直" | "波浪卷发" | "短发" | "马尾" | ...
-  eye_color?: string;    // "蓝色" | "紫色" | "湖水蓝" | ...
-  hair_accessories?: string; // "红色蝴蝶结丝带" | "红丝带" | ...
+  appearance_brief: string;              // 一句话外观（outfits 缺失时的兜底描述）
+  body: BodyMeasurements;
+  attributes: Attributes;
+  default_location: string;              // 默认所在地
+  schedule_group: string;                // 日程组名，必须 ∈ schedule_templates.json 组名
+  social_class: string;
+  personal_axes: Record<string, number>; // { 经济立场, 政治立场 } -5~+5
+
+  // ── 外观细节（缺 → 用 appearance_brief / body 兜底）──
+  hair_color?: string;
+  hair_style?: string;
+  eye_color?: string;
+  hair_accessories?: string;
   appearance_by_age?: Record<string, {
     hair_color?: string;
     hair_style?: string;
     eye_color?: string;
     hair_accessories?: string;
   }>;
-  body: BodyMeasurements;
-  body_by_age?: Record<string, Partial<BodyMeasurements>>;
-  attributes?: Attributes;
+  body_by_age?: Record<string, Partial<BodyMeasurements>>;  // 缺 → ageGap>3 时走通用兜底文字
+
+  // ── 人格与台词（两条独立链路，见上方注释）──
+  personality_brief?: string;            // 一句话人格（personality_stages 缺失时的 fallback）
+  personality_stages?: Record<string, string>;  // 年龄键 → 内心独白；缺 → fallback personality_brief
+  stages?: Record<string, string>;       // 阶段键 → Phase 3 场景标签（原 character_stages.json）；缺 → 无标签
+  stages_if?: Record<string, string>;    // if 线剧情人格变体；由 flag 触发（原 {name}_if）
+  speech_style?: string;                 // 说话风格
+  likes?: string[];
+  dislikes?: string[];
+  anchors?: Record<string, string>;      // { emotional, intimate, private } 关系锚点
+
+  // ── 数值与装备 ──
   skills?: Record<string, number>;
   hp?: { current: number; max: number };
-  equipment?: EquipmentSlots;
+  ac?: number;
+  equipment?: EquipmentSlots;            // 手写装备（含专属 flavor）；引擎 fillEffectsFromCatalog 补属性
   inventory?: Item[];
-  tags?: string[];
-  default_location?: string;
+  funds?: number;
+
+  // ── 服装 ──
+  outfits?: Record<string, OutfitDef>;   // 场景服装集；缺 → getNPCOutfitDesc 回退 appearance_brief
+  outfits_by_age?: Record<string, string>;  // 年龄→outfit key；缺且 ageGap>3 → 通用兜底文字
+  /** @deprecated 只雪乃1人，Phase 2 迁入 items.json 后删除。与 outfits 已产生矛盾。 */
+  equipment_by_outfit?: Record<string, Record<string, any>>;
+
+  // ── 日程与位置 ──
   grid_pos?: [number, number];
-  schedule_group?: string;
+  schedule?: any;                        // 少数角色的自定义日程（5/139）
   schedule_overrides?: Record<string, string>;
   schedule_group_by_age?: Record<string, string>;
-  default_location_by_age?: Record<string, string>;  // 住址随年龄变化（如 6岁→千葉_雪之下邸, 15岁→海浜幕張）
-  funds?: number;
-  drives_by_age?: Record<string, { drives: string[]; goal: string }>;  // 自主意图（按年龄段）
-  // P3 新增
+  default_location_by_age?: Record<string, string>;  // 住址随年龄变化
+  drives_by_age?: Record<string, { drives: string[]; goal: string }>;
+
+  // ── 学校（校园角色）──
+  grade?: number;
+  homeroom?: string;
+
+  // ── 性档案（原为指向自身名字的字符串指针；Phase 1 后存完整对象）──
+  sex_profile?: SexProfile;
+
+  // ── 事实分级（P3）──
   public_facts?: CharacterFact[];
   private_facts?: CharacterFact[];
-  social_class?: string;
-  personal_axes?: Record<string, number>;
+
+  tags?: string[];
 }
 
 /** 玩家在组织中的身份 */

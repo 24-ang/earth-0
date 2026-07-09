@@ -1,0 +1,94 @@
+{
+  "name": "仲町千佳",
+  "source": "我的青春恋爱物语果然有问题。",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "黑发双马尾，海滨高中的女高中生。常与折本香织在一起。",
+  "hair_color": "黑色",
+  "hair_style": "双马尾",
+  "outfits": {
+    "school": {
+      "top": "制服外套",
+      "shirt": "校服衬衫",
+      "bottom": "百褶裙",
+      "feet": "皮鞋"
+    }
+  },
+  "body": {
+    "height_cm": 158,
+    "weight_kg": 46,
+    "build": "普通",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 5,
+    "体质": 5,
+    "智力": 9,
+    "感知": 9,
+    "魅力": 11
+  },
+  "skills": {
+    "社交": 5,
+    "时尚": 6
+  },
+  "personality_brief": "性格活泼、带点轻浮和随大流的女高中生。喜欢聊八卦和帅哥，是折本香织的好友与随从，对阴郁的人有排斥心理。",
+  "personality_stages": {
+    "6": "普通小学生。",
+    "12": "初中时追随现充潮流，喜欢看时尚杂志。",
+    "16": "海滨综合高中学生。常与折本香织结伴聊天，喜欢对男生的现充度评头论足。"
+  },
+  "speech_style": "轻佻、使用大量的流行缩写和拟声词（如「超——」「真的假的」），喜欢咯咯发笑。",
+  "anchors": {
+    "emotional": "标准的平庸辣妹模仿者，对潮流极度敏感，说话不经大脑，容易给老实人带来尴尬伤害。"
+  },
+  "likes": [
+    "聊八卦",
+    "逛街买衣服",
+    "卡拉OK",
+    "帅哥"
+  ],
+  "dislikes": [
+    "阴沉的气氛",
+    "死鱼眼",
+    "学习"
+  ],
+  "default_location": "千叶市街",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "16": "高校生"
+  },
+  "schedule_group": "高校生",
+  "funds": 2000,
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "16": "千叶市街"
+  },
+  "grade": 1,
+  "homeroom": "C",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

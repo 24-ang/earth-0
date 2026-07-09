@@ -1,0 +1,289 @@
+{
+  "name": "如月真绫",
+  "source": "如月真绫的诱惑",
+  "base_age": 17,
+  "gender": "female",
+  "appearance_brief": "栗色及腰长发，发尾微卷。知性成熟，身材丰满。游泳部。",
+  "hair_color": "栗色",
+  "hair_style": "及腰长发、发尾微卷",
+  "body": {
+    "height_cm": 166,
+    "weight_kg": 54,
+    "build": "丰满",
+    "measurements": {
+      "bust": 94,
+      "waist": 60,
+      "hips": 92
+    },
+    "cup": "E",
+    "leg_type": "结实",
+    "body_shape": {
+      "chest": "吊钟",
+      "hips": "蜜桃",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 8,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "规律运动"
+  },
+  "body_by_age": {
+    "7": {
+      "height_cm": 128,
+      "weight_kg": 27,
+      "build": "纤细",
+      "leg_type": "纤细",
+      "diet": "正常",
+      "exercise": "规律运动",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 8,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 152,
+      "weight_kg": 44,
+      "build": "标准",
+      "cup": "C",
+      "measurements": {
+        "bust": 82,
+        "waist": 58,
+        "hips": 86
+      },
+      "leg_type": "结实",
+      "diet": "正常",
+      "exercise": "规律运动",
+      "body_shape": {
+        "chest": "半球",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 8,
+        "texture": "细腻"
+      }
+    },
+    "16": {
+      "height_cm": 164,
+      "weight_kg": 52,
+      "build": "丰满",
+      "cup": "E",
+      "measurements": {
+        "bust": 92,
+        "waist": 60,
+        "hips": 90
+      },
+      "leg_type": "结实",
+      "diet": "正常",
+      "exercise": "规律运动",
+      "body_shape": {
+        "chest": "吊钟",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 8,
+        "texture": "细腻"
+      }
+    },
+    "20": {
+      "height_cm": 166,
+      "weight_kg": 54,
+      "build": "丰满",
+      "cup": "E",
+      "measurements": {
+        "bust": 94,
+        "waist": 60,
+        "hips": 92
+      },
+      "leg_type": "结实",
+      "diet": "正常",
+      "exercise": "规律运动",
+      "body_shape": {
+        "chest": "吊钟",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 8,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 5,
+    "体质": 5,
+    "智力": 8,
+    "感知": 9,
+    "魅力": 15
+  },
+  "skills": {
+    "口才": 6,
+    "运动": 5
+  },
+  "hp": {
+    "current": 9,
+    "max": 9
+  },
+  "equipment": {
+    "top": {
+      "name": "居家针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "bottom": {
+      "name": "长裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact"
+    },
+    "feet": {
+      "name": "拖鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "稲毛海岸",
+  "schedule_group": "高校生",
+  "schedule_group_by_age": {
+    "7": "小学生",
+    "12": "中学生",
+    "15": "总武高学生",
+    "18": "大学生"
+  },
+  "schedule_overrides": {},
+  "grid_pos": null,
+  "anchors": {
+    "emotional": "知性成熟的校园女神，温柔体贴但喜欢捉弄弟弟。表面上无微不至的好姐姐，私下是小恶魔，享受弟弟的反应。对佑宠溺又爱逗弄，对<user>（最小的弟弟）温柔但有距离感",
+    "intimate": "在家人面前会放松——洗完澡披着浴巾从浴室出来，不介意被佑看到。睡觉喜欢抱枕头。早起时头发乱糟糟的，跟平时女神形象反差很大",
+    "private": "如月家长女。栗色及腰长发，发尾微卷。学校游泳部。隐藏姐弟关系——全校只有闺蜜北条彩香和教导主任佐佐木知道她和佑/玩家的真实关系。父亲翔太是投行高管常不在家，母亲绫乃是国际空姐也常飞。家里常常只有姐弟三人。真绫的房间在二楼走廊尽头，衣柜里堆满精致衣裙，梳妆台上摆满化妆品"
+  },
+  "sex_profile": {
+    "baselineDesire": 40,
+    "attitude": "期待",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "E",
+        "shape": "吊钟",
+        "nipple_size": "普通",
+        "nipple_color": "粉色",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "普通",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "修剪"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 12,
+    "climaxThreshold": 40,
+    "likes": [
+      "被注视",
+      "温柔的触摸",
+      "在水边"
+    ],
+    "dislikes": [
+      "粗暴",
+      "在学校被发现"
+    ]
+  },
+  "funds": 4000,
+  "appearance_by_age": {
+    "7": {
+      "hair_style": "短发"
+    },
+    "12": {
+      "hair_style": "中长发"
+    }
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "stages": {
+    "幼儿_小学": "漂亮活泼的女孩。喜欢照顾弟弟们——尤其是佑。游泳快，已经开始展现出运动天赋。在家是暖心小棉袄，在学校是老师喜欢的好学生。",
+    "中学": "加入游泳部，成绩突出。越来越漂亮，开始意识到自己的吸引力。对佑的保护欲变得更强——近乎占有欲。在学校隐藏和佑的姐弟关系。学会在外人面前维持「完美优等生」的形象。",
+    "高中": "校园女神。游泳部王牌。知性成熟、温柔体贴，处理人际关系如行云流水。但一进家门优等生人设就消失——变成慵懒的小恶魔，喜欢用各种方式捉弄佑，观察他的反应。在家人面前毫不设防：洗完澡披着浴巾走来走去、早起头发乱糟糟。对<user>（最小的弟弟）温柔但有距离感。",
+    "成年": "独立温柔。可能在做法律相关工作（目标曾是东大法律系）。以弟弟们为傲。依然喜欢捉弄他们，但分寸更成熟。"
+  }
+}

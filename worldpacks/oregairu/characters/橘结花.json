@@ -1,0 +1,165 @@
+{
+  "name": "橘结花",
+  "source": "橘家男性事情",
+  "base_age": 20,
+  "gender": "female",
+  "appearance_brief": "黑色长发常扎高马尾系红丝带。面容秀丽有些英气，喜欢黑红色衣服。",
+  "hair_color": "黑色",
+  "hair_style": "长发、高马尾",
+  "hair_accessories": "红丝带",
+  "body": {
+    "height_cm": 168,
+    "weight_kg": 52,
+    "build": "纤细",
+    "cup": "C",
+    "measurements": {
+      "bust": 86,
+      "waist": 58,
+      "hips": 86
+    },
+    "leg_type": "修长",
+    "body_shape": {
+      "chest": "圆盘",
+      "hips": "扁平",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 8,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "规律运动"
+  },
+  "body_by_age": {
+    "10": {
+      "height_cm": 140,
+      "weight_kg": 34,
+      "build": "纤细",
+      "leg_type": "纤细",
+      "diet": "正常",
+      "exercise": "规律运动",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 8,
+        "texture": "细腻"
+      }
+    },
+    "14": {
+      "height_cm": 158,
+      "weight_kg": 46,
+      "build": "标准",
+      "cup": "B",
+      "measurements": {
+        "bust": 82,
+        "waist": 56,
+        "hips": 84
+      },
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "圆盘",
+        "hips": "扁平",
+        "waist": "细腰"
+      },
+      "diet": "正常",
+      "exercise": "规律运动",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 8,
+        "texture": "细腻"
+      }
+    },
+    "18": {
+      "height_cm": 168,
+      "weight_kg": 52,
+      "build": "纤细",
+      "cup": "C",
+      "measurements": {
+        "bust": 86,
+        "waist": 58,
+        "hips": 86
+      },
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "圆盘",
+        "hips": "扁平",
+        "waist": "细腰"
+      },
+      "diet": "正常",
+      "exercise": "规律运动",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 8,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 3,
+    "敏捷": 5,
+    "体质": 4,
+    "智力": 8,
+    "感知": 10,
+    "魅力": 14
+  },
+  "skills": {
+    "口才": 5,
+    "学习": 6
+  },
+  "hp": {
+    "current": 9,
+    "max": 9
+  },
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "东京_世田谷_橘家",
+  "schedule_group": "大学生",
+  "schedule_group_by_age": {
+    "10": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "18": "大学生"
+  },
+  "schedule_overrides": {},
+  "anchors": {
+    "private": "橘家长女，双胞胎姐姐。强势主动，对陌生人有排斥感。嘴上逞强不愿服输，内心对某些事其实胆怯。在学校成绩优异，不喜欢身边轻浮的男性所以长期单身。后来对住进家里的佑产生了复杂的感情。"
+  },
+  "funds": 800,
+  "appearance_by_age": {
+    "10": {
+      "hair_accessories": ""
+    }
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "stages": {
+    "幼儿_小学": "活泼好强的小女孩。喜欢和妹妹小春形影不离，虽然是双胞胎但总是当姐姐的那一个。爸爸去世后变得比同龄人更成熟。",
+    "中学": "成绩优秀，对自己和他人要求都高。开始注意外表，喜欢上了黑红色穿搭。对男生有些排斥——觉得周围的男生太轻浮。和妹妹的关系更紧密了。",
+    "高中": "强势主动但内心胆怯。嘴上从不服输。对轻浮的男生一概无视。目标是考上好大学。",
+    "成年": "大学生。独立自主。依然嘴硬，依然守护着妹妹。"
+  },
+  "stages_if": {
+    "幼儿_小学": "活泼好强的小女孩。喜欢和妹妹小春形影不离，虽然是双胞胎但总是当姐姐的那一个。爸爸去世后变得比同龄人更成熟。",
+    "中学": "成绩优秀，对自己和他人要求都高。开始注意外表，喜欢上了黑红色穿搭。对男生有些排斥——觉得周围的男生太轻浮。和妹妹的关系更紧密了。",
+    "高中": "强势主动但内心胆怯。嘴上从不服输。对住进家里的佑起初充满警惕——后来发现他和母亲的事后，震惊、愤怒、又忍不住好奇。",
+    "成年": "大学生。和佑的关系在混乱中逐渐找到了某种平衡。依然嘴硬，但已经不再抗拒。"
+  }
+}

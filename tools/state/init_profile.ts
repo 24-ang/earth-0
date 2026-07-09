@@ -370,18 +370,36 @@ export default {
         const char = stateMod.findCharacter(gameState.player.name);
         if (char) {
           const corrections: string[] = [];
-          // 体型——角色数据是权威源
+          // 年龄门卫：玩家开局年龄可能 ≠ 角色 base_age（如 6 岁开局玩八幡）。
+          // 身体/属性必须按玩家实际年龄，不能盲目套角色卡 base_age 的成人数据（P0#1 身体错位）。
+          const playerAge = gameState.player.age;
+          const baseAge = char.base_age ?? playerAge;
+          const ageGap = Math.abs(playerAge - baseAge);
+          // 体型——有 body_by_age 按年龄段取；否则仅当年龄接近才用角色身体，
+          // 年龄差大（如儿童开局）保留 init_game 已设的年龄适配身体，不套成人身材。
           if (char.body && typeof char.body === "object") {
-            const old = `${gameState.player.body.height_cm}cm/${gameState.player.body.weight_kg}kg/${gameState.player.body.build}`;
-            gameState.player.body = { ...gameState.player.body, ...char.body };
-            const b = gameState.player.body;
-            const nu = `${b.height_cm}cm/${b.weight_kg}kg/${b.build}`;
-            if (old !== nu) corrections.push(`体型: ${old} → ${nu}`);
+            let bodyToApply: any = null;
+            if (char.body_by_age) bodyToApply = stateMod.getBodyForAge(char, playerAge);
+            else if (ageGap <= 3) bodyToApply = char.body;
+            if (bodyToApply) {
+              const old = `${gameState.player.body.height_cm}cm/${gameState.player.body.weight_kg}kg/${gameState.player.body.build}`;
+              gameState.player.body = { ...gameState.player.body, ...bodyToApply };
+              const b = gameState.player.body;
+              const nu = `${b.height_cm}cm/${b.weight_kg}kg/${b.build}`;
+              if (old !== nu) corrections.push(`体型: ${old} → ${nu}`);
+            } else {
+              corrections.push(`体型未覆盖（玩家${playerAge}岁 vs 角色${baseAge}岁且无 body_by_age，保留年龄适配体型）`);
+            }
           }
-          // 属性
+          // 属性——仅当玩家年龄接近角色 base_age 才用角色属性覆盖；
+          // 儿童开局（年龄差大）保留 init_game 的年龄适配属性，不套成人数值。
           if (char.attributes && typeof char.attributes === "object") {
-            gameState.player.attributes = { ...gameState.player.attributes, ...char.attributes };
-            corrections.push(`属性已按角色数据覆盖`);
+            if (ageGap <= 3) {
+              gameState.player.attributes = { ...gameState.player.attributes, ...char.attributes };
+              corrections.push(`属性已按角色数据覆盖`);
+            } else {
+              corrections.push(`属性未覆盖（玩家${playerAge}岁 vs 角色${baseAge}岁，保留年龄适配属性）`);
+            }
           }
           // 技能合并（角色技能优先）
           if (char.skills && typeof char.skills === "object") {

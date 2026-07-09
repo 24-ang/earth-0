@@ -1,0 +1,185 @@
+{
+  "name": "橘美花莉",
+  "source": "2.5次元的诱惑",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "栗色双马尾、玫红色眼睛。全校公认的现充美少女，模特身材，左侧马尾粉色蝴蝶结。",
+  "hair_color": "栗色",
+  "hair_style": "双马尾",
+  "eye_color": "玫红色",
+  "hair_accessories": "粉色蝴蝶结",
+  "outfits": {
+    "school": {
+      "top": "总武高制服外套",
+      "bottom": "百褶裙（比标准更短）",
+      "legs": "白色短袜",
+      "feet": "小皮鞋",
+      "acc": "粉色蝴蝶结、耳环",
+      "desc": "制服外套搭米色针织衫，百褶裙比标准短一截，整条腿大面积露出。"
+    }
+  },
+  "body": {
+    "height_cm": 160,
+    "weight_kg": 46,
+    "build": "纤细",
+    "cup": "B",
+    "leg_type": "修长",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 5,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 3,
+    "敏捷": 5,
+    "体质": 4,
+    "智力": 7,
+    "感知": 10,
+    "魅力": 16
+  },
+  "skills": {
+    "口才": 7,
+    "运动": 4,
+    "手工": 5
+  },
+  "personality_brief": "全校公认的优雅现充美少女——高岭之花长袖善舞。本质是沉重专一的败犬系青梅：为战胜2D女生恶补宅知识，为攻略奥村以美美身份出道Cosplay。傲娇+恋爱脑+病娇潜质。",
+  "personality_stages": {
+    "6": "活泼自信的小女孩，和邻居奥村是青梅竹马。曾向他展示裙子被以只爱2D无视——这句话成为她此后十年的人生驱动力。",
+    "12": "立志超越2D女生。因模仿动画摔倒羞耻而封印宅属性。开始以成为完美的现充美少女为目标。",
+    "16": "全校公认的现充美少女。以美美之名在漫展出道试图用Cosplay攻略奥村。加入漫研社后与理利沙成为情敌兼挚友兼搭档。表面优雅内心狂暴。"
+  },
+  "speech_style": "平时说话有现充女生的自信和轻快。面对奥村时语气变得急切害羞或带有沉重的压迫感。内心独白极其丰富——经常在心里疯狂吐槽或自我攻略。",
+  "anchors": {
+    "emotional": "表面高岭之花，内核为爱暴走的败犬系青梅。为战胜2D女生这个情敌拼了十年。傲娇是保护色，恋爱脑是底层代码。被无视会低沉一整天，被夸奖会开心到飞起但嘴上绝对不承认。",
+    "intimate": "对奥村的感情沉重而专一。会用Cosplay、模特工作甚至学习成绩来证明自己比2D女生更值得被爱。嫉妒心强但努力克制，和理利沙是情敌也是最重要的搭档。",
+    "private": "童年被奥村以只爱2D拒绝是核心创伤。模仿动画摔倒的经历让她封印宅属性多年。所有的外在成就都指向同一个目标——让奥村爱上现实中的自己。"
+  },
+  "likes": [
+    "奥村正宗",
+    "时尚",
+    "Cosplay",
+    "被夸奖"
+  ],
+  "dislikes": [
+    "2D女生（情敌）",
+    "被奥村无视",
+    "输给理利沙",
+    "虫子"
+  ],
+  "default_location": "海浜幕張",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "16": "高校生",
+    "18": "大学生"
+  },
+  "schedule_group": "高校生",
+  "funds": 8000,
+  "sex_profile": {
+    "baselineDesire": 45,
+    "attitude": "主动",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "B",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "粉色",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "玫瑰",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "褐色",
+        "style": "修剪"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 9,
+    "climaxThreshold": 40,
+    "likes": [
+      "被注视",
+      "赢过情敌",
+      "被夸可爱",
+      "主动进攻"
+    ],
+    "dislikes": [
+      "被无视",
+      "被比较",
+      "输给情敌"
+    ]
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "16": "海浜幕張"
+  },
+  "grade": 1,
+  "homeroom": "D",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}
