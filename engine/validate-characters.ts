@@ -123,13 +123,19 @@ async function main() {
   const wp = path.resolve(process.cwd(), "worldpacks", "oregairu");
   const readJSON = (f: string) => JSON.parse(fs.readFileSync(path.join(wp, f), "utf-8"));
 
-  const chars = readJSON("characters.json");
-  const stages = readJSON("character_stages.json");
-  const sexProfiles = readJSON("sex_profiles.json");
-  const sched = readJSON("schedule_templates.json");
-  const validGroups = new Set(Object.keys(sched));
+  // 优先从 characters/ 目录读（每人一文件=真相源，stages/sex_profile 已内联）；无目录回退旧平面文件
+  let chars: any[];
+  const dir = path.join(wp, "characters");
+  if (fs.existsSync(dir)) {
+    chars = fs.readdirSync(dir)
+      .filter((f: string) => f.endsWith(".json") && !f.startsWith("_"))
+      .map((f: string) => JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8")));
+  } else {
+    chars = readJSON("characters.json");
+  }
+  const validGroups = new Set(Object.keys(readJSON("schedule_templates.json")));
 
-  const r = validateCharacters(chars, validGroups, stages, sexProfiles);
+  const r = validateCharacters(chars, validGroups);
 
   const byCode: Record<string, CharIssue[]> = {};
   for (const i of r.issues) (byCode[i.code] ??= []).push(i);
