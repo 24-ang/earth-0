@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "steal_item", label: "偷窃",
-    description: "偷NPC物品。她有没有交你判断(引擎会合成)。偷钱包填cash。失败→好感-20+alert。",
+    description: "偷NPC随身小件(钱包/手机/钥匙)。大件(车/家具/电器)无法顺手牵羊→直接叙事拒绝勿调此工具。她有没有交你判断(引擎合成)。偷钱包可填cash(引擎封顶她余额)。失败→好感-20+alert。",
     parameters: Type.Object({ target: Type.String({ description: "偷窃目标 NPC 名" }), item: Type.String({ description: "要偷的物品名" }), cash: Type.Optional(Type.Number({ description: "若偷钱包/含现金容器，估计里面有多少现金；引擎封顶在对方实际金钱" })) }),
     async execute(_id, params, _s, _o, _ctx) {
       const { gameState, stealItem, saveState, updateRelation, updateReputation, getNearbyNPCs, getRoom } = await import("../../engine/state.ts");
