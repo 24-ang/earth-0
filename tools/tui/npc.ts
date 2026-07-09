@@ -96,7 +96,7 @@ async function showStealMenu(name: string, done: () => void, ctx: any) {
   const items: any[] = [];
 
   items.push({
-    label: `💰 钱包 (现金: ¥${npcState.funds})`, detail: "尝试摸钱包",
+    label: `💰 钱包 (现金: ¥${npcState.cash ?? 0})`, detail: "尝试摸钱包",
     action: async (d: () => void) => {
       const r = stealFunds(gameState.player, name);
       let consequence = "";
@@ -179,7 +179,7 @@ export async function showNPCInteractionMenu(name: string, ctx: any) {
           const rawAff = rel?.affection ?? 0;
           if (obsLv >= 1 || psychLv >= 1) { lines.push(`💕 好感: ${rawAff}/100 (${rel?.stage ?? "陌生"})${rel?.romance ? " " + rel.romance : ""}`); }
           else { lines.push(`💕 关系: ${rel?.stage ?? "陌生"}${rel?.romance ? " " + rel.romance : ""}`); }
-          if (obsLv >= 2 || psychLv >= 2) { lines.push(`💰 资金: ¥${npcState.funds}`); const eq = Object.entries(npcState.equipment).filter(([_, v]) => v); if (eq.length > 0) lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`); lines.push(`🎒 背包: ${npcState.inventory?.length > 0 ? npcState.inventory.map((it: any) => it.name).join(", ") : "(空)"}`); }
+          if (obsLv >= 2 || psychLv >= 2) { lines.push(`💰 总身家: ¥${(npcState.cash ?? 0) + (npcState.wealth ?? 0)} (现金¥${npcState.cash ?? 0})`); const eq = Object.entries(npcState.equipment).filter(([_, v]) => v); if (eq.length > 0) lines.push(`⚔️ 装备: ${eq.map(([s, it]) => `${s}:${it!.name}`).join(" ")}`); lines.push(`🎒 背包: ${npcState.inventory?.length > 0 ? npcState.inventory.map((it: any) => it.name).join(", ") : "(空)"}`); }
           if (obsLv >= 3 || psychLv >= 2) { if (char.attributes) { const a = char.attributes; lines.push(`📊 属性: 力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`); } if (body?.measurements) { lines.push(`📐 三围: ${body.measurements.bust}-${body.measurements.waist}-${body.measurements.hips} / ${body.cup || "?"}cup`); } if (char.anchors?.private && obsLv >= 3) { lines.push(`✍️ 设定: ${char.anchors.private.slice(0, 120)}`); } }
           if (psychLv >= 2 && gameState.layer1Enabled) { try { const { getOrCreateSexState } = await import("../../engine/state.ts"); const sState = await getOrCreateSexState(name); if (sState) { lines.push(`💓 欲望: ${sState.desire}/100`); lines.push(`🔥 兴奋: ${sState.arousal}/100`); if (sState.thoughts?.length > 0) { lines.push(`💭 心里话: ${sState.thoughts.slice(-2).map((t: any) => t.text).join(" | ")}`); } } } catch (_) {} }
           await showPanel(ctx, char.name, lines);
@@ -188,7 +188,7 @@ export async function showNPCInteractionMenu(name: string, ctx: any) {
           const ns = getOrCreateNPC(name);
           const rel = gameState.player.relationships[name];
           if (obsLv >= 1 && rel) lines.push(`💕 好感: ${rel.affection}/100`);
-          if (obsLv >= 2) { lines.push(`💰 资金: ¥${ns.funds}`); lines.push(`🎒 背包: ${ns.inventory?.length > 0 ? ns.inventory.map((it: any) => it.name).join(", ") : "(空)"}`); }
+          if (obsLv >= 2) { lines.push(`💰 总身家: ¥${(ns.cash ?? 0) + (ns.wealth ?? 0)} (现金¥${ns.cash ?? 0})`); lines.push(`🎒 背包: ${ns.inventory?.length > 0 ? ns.inventory.map((it: any) => it.name).join(", ") : "(空)"}`); }
           await showPanel(ctx, name, lines);
         }
       }

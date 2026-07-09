@@ -502,6 +502,15 @@ export function loadState(filepath?: string): boolean {
     delete gameState.npcs[gameState.player.name];
   }
   setAcademicYearOffset(gameState.academic_year_offset ?? 0);
+  // 迁移老存档 NPC funds→cash+wealth（现金 vs 财产拆分）
+  for (const [_, npc] of Object.entries(gameState.npcs || {})) {
+    const n = npc as any;
+    if (n.funds !== undefined && n.cash === undefined) {
+      n.cash = Math.min(5000, Math.floor(n.funds * 0.15));
+      n.wealth = n.funds;
+      delete n.funds;
+    }
+  }
   gameState._toolsLocked = false; // 绝不让存档中的锁标志复活
   if (gameState.player && gameState.player.attributes) {
     gameState.player.attributes.幸运 ??= 10;
@@ -2784,7 +2793,10 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
       scheduleGroup: hydrated?.scheduleGroup || resolveScheduleGroup(src, npcAge),
       scheduleOverrides: src?.schedule_overrides,
       currentOutfit: "school",
-      funds: src?.funds !== undefined ? src.funds : 1000,
+      // 现金 vs 财产分离：角色卡 funds 是总身家，随身现金只取一小部分。
+      // 富人钱包多些但不上万（谁兜里揣 120 万？），穷人钱包少但总身家如实低。
+      cash: src?.funds ? Math.min(5000, Math.floor(src.funds * 0.15)) : 1000,
+      wealth: src?.funds !== undefined ? src.funds : 1000,
       memoryTags: [],
       hp: { current: currentHP, max: maxHP },
       alive: true,
@@ -3756,10 +3768,13 @@ export function sellItem(itemName: string, price: number, buyerName?: string, sh
   const premium = Math.round(scaledPrice * chaBonus * 0.005);
   const finalPrice = Math.min(scaledPrice + premium, scaledPrice * 1.1);
   const currencySymbol = getCurrency();
+  // 卖方：NPC 作为买家时用总身家（银行存款+现金）付款，先扣现金再扣存款
   if (buyerName) {
     const npc = getOrCreateNPC(buyerName);
-    if (npc.funds < finalPrice) return `${buyerName}只有${currencySymbol}${npc.funds}，买不起${currencySymbol}${finalPrice}的${itemName}`;
-    npc.funds -= finalPrice;
+    const total = npc.cash + npc.wealth;
+    if (total < finalPrice) return `${buyerName}只有${currencySymbol}${total}，买不起${currencySymbol}${finalPrice}的${itemName}`;
+    if (npc.cash >= finalPrice) { npc.cash -= finalPrice; }
+    else { npc.wealth -= (finalPrice - npc.cash); npc.cash = 0; }
   }
   gameState.player.inventory.splice(idx, 1);
   gameState.player.funds += finalPrice;
@@ -4409,11 +4424,11 @@ export function getRegionContext(location: string): string {
 
 // --- 偷窃 ---
 
-/** 从 NPC 偷钱 */
+/** 从 NPC 偷现金（只能偷钱包里的，偷不走银行存款） */
 export function stealFunds(player: PlayerState, targetName: string): StealResult {
   const npc = getOrCreateNPC(targetName);
-  if (npc.funds <= 0) {
-    return { success: false, caught: false, narrative: targetName + "身无分文。", roll: { kept: 0, mod: 0, total: 0, dc: 0 } };
+  if (npc.cash <= 0) {
+    return { success: false, caught: false, narrative: targetName + "钱包里没钱。", roll: { kept: 0, mod: 0, total: 0, dc: 0 } };
   }
   const dex = player.attributes.敏捷 + getEquipmentBonus(player.equipment, "attribute_bonus", "敏捷");
   const stealth = player.skills["潜行"]?.level ?? 0;
@@ -4424,12 +4439,12 @@ export function stealFunds(player: PlayerState, targetName: string): StealResult
   const success = d === 20 || total >= dc;
   const caught = d === 1;
   if (success && !caught) {
-    const stolen = Math.floor(Math.random() * npc.funds * 0.8) + 1;
-    const actual = Math.min(stolen, npc.funds);
-    npc.funds -= actual;
+    const stolen = Math.floor(Math.random() * npc.cash * 0.8) + 1;
+    const actual = Math.min(stolen, npc.cash);
+    npc.cash -= actual;
     player.funds += actual;
     const currencySymbol = getCurrency();
-    return { success: true, caught: false, narrative: "从" + targetName + "身上偷到了" + currencySymbol + actual + "。", roll: { kept: d, mod, total, dc } };
+    return { success: true, caught: false, narrative: "从" + targetName + "钱包里偷到了" + currencySymbol + actual + "。", roll: { kept: d, mod, total, dc } };
   }
   if (caught) {
     return { success: false, caught: true, narrative: "手被" + targetName + "抓住了。", roll: { kept: d, mod, total, dc } };
@@ -4504,11 +4519,11 @@ export function stealItem(
     } else {
       ((npc as any)._stolenNames ??= []).push(itemName);
     }
-    // 现金：LLM 提议钱包/容器里有多少钱，引擎封顶在 NPC 实际 funds（钱不凭空生）
+    // 现金：LLM 提议偷到的容器内有多少钱，引擎封顶在实际随身现金（偷不走银行存款）
     let cashMsg = "";
-    if (cashAmount && cashAmount > 0 && npc.funds > 0) {
-      const actual = Math.min(Math.round(cashAmount), npc.funds);
-      npc.funds -= actual;
+    if (cashAmount && cashAmount > 0 && npc.cash > 0) {
+      const actual = Math.min(Math.round(cashAmount), npc.cash);
+      npc.cash -= actual;
       player.funds += actual;
       cashMsg = ` 内含${getCurrency()}${actual}`;
     }

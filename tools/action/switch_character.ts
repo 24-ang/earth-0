@@ -71,7 +71,7 @@ export default {
       p.abilities = JSON.parse(JSON.stringify(npc.abilities || {}));
       p.inventory = JSON.parse(JSON.stringify(npc.inventory || []));
       p.equipment = JSON.parse(JSON.stringify(npc.equipment || {}));
-      p.funds = npc.funds ?? 0;
+      p.funds = (npc.cash ?? 0) + (npc.wealth ?? 0);  // 切换角色时玩家接管 NPC 的全部身家
       p.location = npc.currentRoom;
       p.gridPos = npc.gridPos ? [...npc.gridPos] : null;
 

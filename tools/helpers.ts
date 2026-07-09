@@ -1347,8 +1347,9 @@ export async function parseNpcIntent(npcName: string, text: string): Promise<voi
       case "hire_help": {
         // NPC 花钱雇帮手（扣 NPC 资金，spawn 临时 NPC）
         const cost = intent.cost || 500;
-        if (npc.funds >= cost) {
-          npc.funds -= cost;
+        if ((npc.wealth ?? 0) + (npc.cash ?? 0) >= cost) {
+          if (npc.cash >= cost) { npc.cash -= cost; }
+          else { npc.wealth -= (cost - (npc.cash ?? 0)); npc.cash = 0; }
           now.setHours(now.getHours() + 12);
           npc.pendingOverride = {
             location: intent.target || playerLoc,

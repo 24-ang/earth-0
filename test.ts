@@ -1044,25 +1044,29 @@ test("add_memory_tag → NPC memoryTags 包含标签", async () => {
 
 // ── Phase 6: NPC 资金系统 ──
 console.log("\n── NPC 资金系统 ──");
-test("getOrCreateNPC 初始化 funds from characters.json", () => {
+test("getOrCreateNPC 初始化 cash+wealth (funds已拆分)", () => {
   resetState();
   const npc = getOrCreateNPC("雪之下雪乃");
-  if (npc.funds !== 30000) throw new Error(`雪乃应有30,000初始资金，实际: ${npc.funds}`);
+  // 雪乃卡 funds=30000 → cash 取 15% 封顶5000 → 4500; wealth=30000
+  if (npc.wealth !== 30000) throw new Error(`雪乃 wealth 应为30000，实际: ${npc.wealth}`);
+  if (npc.cash === undefined || npc.cash === null) throw new Error(`雪乃 cash 不应为空`);
+  if (npc.cash > 5000) throw new Error(`雪乃 cash 不应超过封顶5000，实际: ${npc.cash}`);
 });
 
-test("sellItem 指定buyer→扣NPC钱+校验资金不足", () => {
+test("sellItem 指定buyer→扣NPC钱+校验资金不足(cash/wealth)", () => {
   resetState();
   buyItem("绷带", 200);
   const npc = getOrCreateNPC("由比滨结衣");
-  npc.funds = 100;
-  // 钱不够 → 拒绝
+  // 钱不够：总身家只有100 → 拒绝
+  npc.cash = 100; npc.wealth = 0;
   const r1 = sellItem("绷带", 500, "由比滨结衣");
   if (!r1.includes("买不起")) throw new Error(`应拒绝不够钱: ${r1}`);
-  // 钱够 → 成功扣NPC
-  npc.funds = 500;
+  // 钱够：总身家10000 → 成功扣；先扣cash，再扣wealth
+  npc.cash = 100; npc.wealth = 9900;
   const r2 = sellItem("绷带", 300, "由比滨结衣");
   if (!r2.includes("卖了")) throw new Error(`出售失败: ${r2}`);
-  if (npc.funds !== 200) throw new Error(`NPC应扣300，剩余200，实际: ${npc.funds}`);
+  if (npc.cash !== 0) throw new Error(`现金100应付完，应为0，实际: ${npc.cash}`);
+  if (npc.wealth !== 9700) throw new Error(`财富应扣200(300-100现金)，应为9700，实际: ${npc.wealth}`);
 });
 
 test("sellItem 不指定buyer→正常出售不扣NPC", () => {
@@ -1091,13 +1095,13 @@ test("stealFunds 从NPC偷钱→NPC钱减少+玩家钱增加", () => {
   }
 });
 
-test("stealFunds NPC没钱→拒绝", () => {
+test("stealFunds NPC没钱→拒绝(cash=钱包现金)", () => {
   resetState();
   const npc = getOrCreateNPC("由比滨结衣");
-  npc.funds = 0;
+  npc.cash = 0;
   const r = stealFunds(gameState.player, "由比滨结衣");
-  if (r.success) throw new Error("NPC没钱不该成功");
-  if (!r.narrative.includes("身无分文")) throw new Error(`应提示身无分文: ${r.narrative}`);
+  if (r.success) throw new Error("NPC钱包没钱不该成功");
+  if (!r.narrative.includes("没钱")) throw new Error(`应提示没钱: ${r.narrative}`);
 });
 
 test("transfer_item 金钱:数字→双方资金变动", async () => {

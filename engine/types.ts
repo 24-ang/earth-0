@@ -438,7 +438,8 @@ export interface NPCRuntimeState {
   action: string;                  // 当前动作，LLM可更新
   scheduleGroup: string;           // 日程模板标签
   scheduleOverrides?: Record<string, string>;
-  funds: number;                   // NPC 现金
+  cash: number;                    // NPC 随身现金（钱包里揣的，能被偷，几千~几万）
+  wealth: number;                  // NPC 总流动资产（含银行存款，偷不走，买大件用）
   memoryTags: MemoryTag[];
   shortTermBuffer?: {
     recentExchanges: string[];   // 最近的原始对话流缓存（上限 10 条）
