@@ -246,9 +246,16 @@ test("buyItem 绷带", () => {
   if (gameState.player.funds >= before) throw new Error("钱没扣");
 });
 
-test("buyItem 拒绝无效物品", () => {
+test("buyItem 目录外物品合成购买(去白名单，不再拒无效)", () => {
+  const beforeFunds = gameState.player.funds;
+  const beforeInv = gameState.player.inventory.length;
+  gameState.player.funds = 999999;
   const r = buyItem("不存在的东西", 100);
-  if (!r.includes("有效物品")) throw new Error("应拒绝无效物品");
+  gameState.player.funds = beforeFunds;
+  gameState.player.inventory.length = beforeInv; // 移除测试买入的物品，不污染后续
+  // 软化后：物品存不存在/店卖不卖是叙事判断（LLM 的活），引擎合成并成交，不再拒"无效物品"
+  if (r.includes("有效物品")) throw new Error("软化后不应再以'无效物品'拒绝: " + r);
+  if (!r.includes("买了")) throw new Error("目录外物品应被合成购买: " + r);
 });
 
 test("buyItem 拒绝不合理价格", () => {

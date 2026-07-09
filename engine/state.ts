@@ -3674,14 +3674,18 @@ function getPriceMultiplier(): number {
 
 function validatePrice(itemName: string, price: number): string | null {
   let itemType = "tool";
+  let found = false;
   for (const [cat, items] of Object.entries(itemsCatalog)) {
     if ((items as any)[itemName]) {
       itemType = cat === "consumables" ? "consumable" : cat === "weapons" ? "weapon" : cat === "armor" ? "armor" : cat === "clothing" ? "clothing" : "tool";
+      found = true;
       break;
     }
   }
   const mult = getPriceMultiplier();
-  const [baseMin, baseMax] = PRICE_RANGE[itemType] || [10, 50000];
+  // 目录外物品（LLM 现编/合成，如"笔记本电脑"）：引擎不知其"合理价"——那是叙事判断，交 LLM。
+  // 只防非正/离谱天价，不套按类型的窄区间（否则会把贵重物卡在便宜类的上限里）。
+  const [baseMin, baseMax] = found ? (PRICE_RANGE[itemType] || [10, 50000]) : [1, 10_000_000];
   const min = Math.round(baseMin * mult);
   const max = Math.round(baseMax * mult);
   const currencySymbol = getCurrency();
@@ -3696,38 +3700,20 @@ export function buyItem(itemName: string, price: number, shopName?: string): str
     if ((cat as any)[itemName]) { itemData = (cat as any)[itemName]; break; }
   }
 
-  // 货架校验：如果指定了商店，检查该商店是否售卖此物品
-  if (shopName) {
-    const activeShops: Record<string, { items: string[] }> =
-      (gameState as any).shops && Object.keys((gameState as any).shops).length > 0
-        ? (gameState as any).shops   // 运行时货架（restock_shop写入）
-        : shops;                     // 文件货架（worldpack/data/shops.json）
-    // 模糊匹配商店名：LLM 可能传 "住宅区便利店" 而 key 是 "便利店"
-    let shopEntry = activeShops[shopName];
-    if (!shopEntry || !Array.isArray(shopEntry.items)) {
-      const shopKeys = Object.keys(activeShops);
-      const fuzzyKey = shopKeys.find(k => shopName.includes(k) || k.includes(shopName));
-      if (fuzzyKey) shopEntry = activeShops[fuzzyKey];
-    }
-    if (!shopEntry || !Array.isArray(shopEntry.items)) {
-      return `${shopName}没有货架信息`;
-    }
-    if (!shopEntry.items.includes(itemName)) {
-      return `${shopName}不卖${itemName}`;
-    }
-    // 物品在货架上但不在 itemsCatalog 中 → 自动生成基本物品数据
-    if (!itemData) {
-      itemData = {
-        name: itemName,
-        type: "consumable",
-        slot: "back",
-        weight: 0.2,
-        effects: [],
-        state: "intact",
-        volume: 0.3,
-        flavor: `${shopName}售卖的${itemName}`,
-      };
-    }
+  // 货架不再硬拒——"这店卖不卖 X"是叙事判断（LLM 的活，不是守恒量）。
+  // 引擎只守价格/钱/物；shopName 仅用于 flavor 叙事。
+  // 物品不在 itemsCatalog（含 LLM 现编的商品）→ 合成基础数据。
+  if (!itemData) {
+    itemData = {
+      name: itemName,
+      type: "consumable",
+      slot: "back",
+      weight: 0.2,
+      effects: [],
+      state: "intact",
+      volume: 0.3,
+      flavor: shopName ? `${shopName}售卖的${itemName}` : itemName,
+    };
   }
 
   if (!itemData) return `LLM必须指定有效物品名`;
@@ -3756,20 +3742,8 @@ export function sellItem(itemName: string, price: number, buyerName?: string, sh
   const idx = gameState.player.inventory.findIndex(i => i.name === itemName);
   if (idx < 0) return `背包里没有${itemName}`;
 
-  // 货架校验：如果指定了商店，检查该商店是否接收此物品类型
-  if (shopName) {
-    const activeShops: Record<string, { items: string[] }> =
-      (gameState as any).shops && Object.keys((gameState as any).shops).length > 0
-        ? (gameState as any).shops
-        : shops;
-    const shopEntry = activeShops[shopName];
-    if (!shopEntry || !Array.isArray(shopEntry.items)) {
-      return `${shopName}没有货架信息`;
-    }
-    if (!shopEntry.items.includes(itemName)) {
-      return `${shopName}不收${itemName}`;
-    }
-  }
+  // 卖给谁/店收不收——叙事判断交 LLM，引擎不拦（原货架"不收"硬拒已移除）。
+  // 守恒仍在：上面已校验"背包里得真有这件"，下面校验价格 + 买家钱够。
 
   const err = validatePrice(itemName, price);
   if (err) return err;
@@ -4466,14 +4440,16 @@ export function stealFunds(player: PlayerState, targetName: string): StealResult
 export function stealItem(
   player: PlayerState,
   targetName: string,
-  itemName: string
+  itemName: string,
+  cashAmount?: number
 ): StealResult {
   const npc = getOrCreateNPC(targetName);
-  
+  const zeroRoll = { kept: 0, mod: 0, total: 0, dc: 0 };
+
   // 找物品
   let item: Item | undefined;
   let fromInventory = false;
-  
+
   item = npc.inventory.find(i => i.name === itemName);
   if (item) fromInventory = true;
   else {
@@ -4481,39 +4457,69 @@ export function stealItem(
       if (v && v.name === itemName) { item = v; break; }
     }
   }
-  
+
+  // "她身上有没有这东西"是叙事判断——GM 既然调了 steal，就是已判断合理。引擎不硬拒，合成。
+  // catalog 里有 → 用真实数据（含真实体积/重量）；没有 → 合成小型可揣物。
+  let synthesized = false;
   if (!item) {
-    return { success: false, caught: false, narrative: `${targetName}身上没有${itemName}。`, roll: { kept: 0, mod: 0, total: 0, dc: 0 } };
+    // 合成物防重复：同一样东西顺过一次就真没了，不能刷第二个
+    if ((npc as any)._stolenNames?.includes(itemName)) {
+      return { success: false, caught: false, narrative: `${targetName}身上已经没有${itemName}了。`, roll: zeroRoll };
+    }
+    const cat = buildCatalogLookup().get(itemName);
+    item = cat
+      ? { ...structuredClone(cat), state: "intact" }
+      : { name: itemName, type: "tool", slot: "back", weight: 0.2, volume: 0.3, effects: [], state: "intact", flavor: `从${targetName}处顺来的${itemName}` } as any;
+    synthesized = true;
   }
-  
-  // 检定
+
+  // 引擎守恒：太大顺不走 → 判失败（不掷骰），交渲染写成叙事（防"偷兰博基尼塞进背包"）。
+  // 仅对 catalog 里有真实体积的大件生效；合成的未知物默认小型，靠 LLM 判断"该不该偷"兜第一道。
+  const CARRY_VOLUME_LIMIT = 50; // 顺手牵羊体积上限（升）：超过=家具/车辆/大件，带不走
+  if ((item!.volume ?? 0) > CARRY_VOLUME_LIMIT) {
+    return { success: false, caught: false, narrative: `「${itemName}」太大，没法顺手带走。`, roll: zeroRoll };
+  }
+
+  // 检定（引擎算，LLM 碰不到）
   const dex = player.attributes.敏捷 + getEquipmentBonus(player.equipment, "attribute_bonus", "敏捷");
   const stealth = player.skills["潜行"]?.level ?? 0;
   const mod = attrMod(dex) + stealth;
   const d = Math.floor(Math.random() * 20) + 1;
-  const dc = item.weight > 0.5 ? 16 : item.weight > 0.2 ? 12 : 8;
+  const dc = item!.weight > 0.5 ? 16 : item!.weight > 0.2 ? 12 : 8;
   const total = d + mod;
   const success = d === 20 || total >= dc;
   const caught = d === 1;
-  
+
   if (success && !caught) {
-    // 成功：移出NPC，加入玩家
-    if (fromInventory) {
-      const idx = npc.inventory.findIndex(i => i.name === itemName);
-      if (idx >= 0) npc.inventory.splice(idx, 1);
-    } else {
-      for (const [k, v] of Object.entries(npc.equipment)) {
-        if (v && v.name === itemName) { npc.equipment[k] = null; break; }
+    // 成功：真实存在的物品从 NPC 容器移出（合成物本就不在其容器里，改记入"已被顺走"）
+    if (!synthesized) {
+      if (fromInventory) {
+        const idx = npc.inventory.findIndex(i => i.name === itemName);
+        if (idx >= 0) npc.inventory.splice(idx, 1);
+      } else {
+        for (const [k, v] of Object.entries(npc.equipment)) {
+          if (v && v.name === itemName) { npc.equipment[k] = null; break; }
+        }
       }
+    } else {
+      ((npc as any)._stolenNames ??= []).push(itemName);
+    }
+    // 现金：LLM 提议钱包/容器里有多少钱，引擎封顶在 NPC 实际 funds（钱不凭空生）
+    let cashMsg = "";
+    if (cashAmount && cashAmount > 0 && npc.funds > 0) {
+      const actual = Math.min(Math.round(cashAmount), npc.funds);
+      npc.funds -= actual;
+      player.funds += actual;
+      cashMsg = ` 内含${getCurrency()}${actual}`;
     }
     player.inventory.push(structuredClone(item!));
     return {
       success: true, item: item!, caught: false,
-      narrative: `从${targetName}身上偷到了「${itemName}」。`,
+      narrative: `从${targetName}身上偷到了「${itemName}」${cashMsg}。`,
       roll: { kept: d, mod, total, dc },
     };
   }
-  
+
   if (caught) {
     return {
       success: false, caught: true,
@@ -4521,7 +4527,7 @@ export function stealItem(
       roll: { kept: d, mod, total, dc },
     };
   }
-  
+
   return {
     success: false, caught: false,
     narrative: `没能摸到「${itemName}」——${targetName}动了一下。`,
