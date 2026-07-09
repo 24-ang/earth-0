@@ -4507,7 +4507,7 @@ export function stealItem(
   let synthesized = false;
   if (!item) {
     // 合成物防重复：同一样东西顺过一次就真没了，不能刷第二个
-    if ((npc as any)._stolenNames?.includes(itemName)) {
+    if (Array.isArray((npc as any)._stolenNames) && (npc as any)._stolenNames.includes(itemName)) {
       return { success: false, caught: false, narrative: `${targetName}身上已经没有${itemName}了。`, roll: zeroRoll };
     }
     const cat = buildCatalogLookup().get(itemName);
@@ -4546,7 +4546,9 @@ export function stealItem(
         }
       }
     } else {
-      ((npc as any)._stolenNames ??= []).push(itemName);
+    // 合成物记入"已被顺走"，防重复偷
+    if (!(npc as any)._stolenNames) (npc as any)._stolenNames = [];
+    (npc as any)._stolenNames.push(itemName);
     }
     // 现金：LLM 提议偷到的容器内有多少钱，引擎封顶在实际随身现金（偷不走银行存款）
     let cashMsg = "";
