@@ -912,7 +912,8 @@ function resolveScheduleGroup(src: any, currentAge: number): string {
     }
   } else {
     // 无 by_age 映射表 → 按当前年龄推断（修复"小学生"标签钉死 bug）
-    if (currentAge <= 12) g = "小学生";        // 无更低龄模板，小学生为地板（幼儿园模板见 backlog）
+    if (currentAge <= 6) g = "自由人";           // 学龄前：在家，无固定日程，具体一天交叙事发挥（不武断塞"小学生"）
+    else if (currentAge <= 12) g = "小学生";
     else if (currentAge <= 15) g = "中学生";
     else if (currentAge <= 18) g = "高校生";
     else if (currentAge <= 22) g = "大学生";
@@ -1049,6 +1050,17 @@ export function getPlayerStatusNarrative(p: PlayerState): string {
   return desc;
 }
 
+/** 判断某身体区域（由若干装备槽位覆盖）是否"暴露"，即可被他人看到性征。
+ *  规则区分两种"空"：
+ *   - 槽位有遮盖物（item 对象）→ 没暴露；
+ *   - 槽位全部是 undefined（从未交互过，通常是"衣服数据没填"）→ 视为默认穿着，没暴露；
+ *   - 无遮盖物、且至少一个槽位被显式设为 null（剧情里被脱下）→ 才算暴露。
+ *  这样"衣服数据缺失"不会被误判成"全裸"（P0#3）；只有真正被脱光才注入裸露描述。 */
+function isBodyRegionExposed(...slots: any[]): boolean {
+  if (slots.some(s => s && typeof s === "object")) return false;  // 有遮盖物 → 穿着
+  return slots.some(s => s === null);                             // 无遮盖物：仅显式 null(被脱) 才暴露
+}
+
 /** 根据装备覆盖检测玩家身体暴露情况，返回 NPC 可感知的性征描述（生殖器/胸部/阴毛等）。
  *  原则：物理可见性驱动——脱了就能看到，不脱就看不到。与 mode（gal/sex/rpg）无关。 */
 export function getVisibleBodyDescription(): string {
@@ -1056,8 +1068,8 @@ export function getVisibleBodyDescription(): string {
   const eq = p.equipment || {};
 
   // 覆盖检测：所有覆盖该区域的槽位都为空 → 暴露
-  const bottomCovered = !!(eq.bottom || eq.inner_bot);
-  const topCovered = !!(eq.top || eq.shirt || eq.inner_top);
+  const bottomCovered = !isBodyRegionExposed(eq.bottom, eq.inner_bot);
+  const topCovered = !isBodyRegionExposed(eq.top, eq.shirt, eq.inner_top);
 
   if (bottomCovered && topCovered) return ""; // 全身穿着整齐，无需额外注入
 
@@ -1105,8 +1117,8 @@ export function getNPCVisibleBodyDescription(npcName: string): string {
   if (!npc) return "";
   const eq = npc.equipment || {};
 
-  const bottomCovered = !!(eq.bottom || eq.inner_bot);
-  const topCovered = !!(eq.top || eq.shirt || eq.inner_top);
+  const bottomCovered = !isBodyRegionExposed(eq.bottom, eq.inner_bot);
+  const topCovered = !isBodyRegionExposed(eq.top, eq.shirt, eq.inner_top);
 
   if (bottomCovered && topCovered) return "";
 
