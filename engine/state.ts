@@ -901,23 +901,27 @@ export function getNpcCurrentAge(npcBaseAge: number): number {
 
 /** 根据 NPC 当前年龄从 schedule_group_by_age 解析正确的日程组 */
 function resolveScheduleGroup(src: any, currentAge: number): string {
+  let g: string;
   const byAge: Record<string, string> | undefined = src?.schedule_group_by_age;
   if (byAge && Object.keys(byAge).length > 0) {
     const keys = Object.keys(byAge).map(Number).sort((a, b) => a - b);
-    let best = byAge[String(keys[0]!)]!;
+    g = byAge[String(keys[0]!)]!;
     for (const k of keys) {
-      if (k <= currentAge) best = byAge[String(k)]!;
+      if (k <= currentAge) g = byAge[String(k)]!;
       else break;
     }
-    return best;
+  } else {
+    // 无 by_age 映射表 → 按当前年龄推断（修复"小学生"标签钉死 bug）
+    if (currentAge <= 12) g = "小学生";        // 无更低龄模板，小学生为地板（幼儿园模板见 backlog）
+    else if (currentAge <= 15) g = "中学生";
+    else if (currentAge <= 18) g = "高校生";
+    else if (currentAge <= 22) g = "大学生";
+    else g = src?.schedule_group || "自由人";
   }
-  // 无 by_age 映射表 → 按当前年龄推断（修复"小学生"标签钉死 bug）
-  if (currentAge <= 6) return "幼儿";
-  if (currentAge <= 12) return "小学生";
-  if (currentAge <= 15) return "中学生";
-  if (currentAge <= 18) return "高校生";
-  if (currentAge <= 22) return "大学生";
-  return src?.schedule_group || "社会人";
+  // 结构性不变量：引擎【绝不】产出不存在于 schedule_templates 的组名，否则日程解析为空/崩。
+  // 兜底出来的（或角色数据里的）非法组 → 钳到 自由人。防"幼儿""社会人""海外"等复发。
+  const templates = scheduleTemplates as any;
+  return (templates && templates[g]) ? g : "自由人";
 }
 
 /** 按年龄缩放属性。身体属性按年龄比例缩放，心智属性保持 baseline */
