@@ -440,6 +440,7 @@ export interface NPCRuntimeState {
   scheduleOverrides?: Record<string, string>;
   cash: number;                    // NPC 随身现金（钱包里揣的，能被偷，几千~几万）
   wealth: number;                  // NPC 总流动资产（含银行存款，偷不走，买大件用）
+  _equipmentSource?: "card" | "auto"; // 装备来源（card=角色卡手写；auto=引擎自动生成，待 LLM 重编）
   memoryTags: MemoryTag[];
   shortTermBuffer?: {
     recentExchanges: string[];   // 最近的原始对话流缓存（上限 10 条）

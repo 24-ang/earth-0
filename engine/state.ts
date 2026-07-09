@@ -972,12 +972,15 @@ function hydrateNPCState(src: any, effectiveAge: number): {
   attributes: Record<string, number>;
   equipment: Record<string, any>;
   inventory: any[];
+  equipmentSource: "card" | "auto";
 } {
   const baseAge = src?.base_age ?? 16;
   const ageGap = Math.abs(effectiveAge - baseAge);
 
-  // 装备：优先按年龄分层取，缺数据时年龄差>3岁则跳过（防止7岁穿高中制服）
+  // 装备：优先按年龄分层取，缺数据时年龄差>3岁则跳过（防止7岁穿高中制服），
+  // 但不再留空——改用按年龄+性别的默认穿着（_equipmentSource="auto" 标记，待 LLM 重编）。
   let equipment: Record<string, any> = {};
+  let equipmentSource: "card" | "auto" = "card";
   if (src?.equipment_by_age) {
     const keys = Object.keys(src.equipment_by_age).map(Number).sort((a, b) => a - b);
     let best = keys[0];
@@ -985,8 +988,11 @@ function hydrateNPCState(src: any, effectiveAge: number): {
     equipment = structuredClone(src.equipment_by_age[String(best)] ?? {});
   } else if (ageGap <= 3) {
     equipment = structuredClone(src?.equipment ?? {});
-  } else {
-    console.warn(`hydrateNPCState: ${src?.name ?? "?"} age=${effectiveAge} vs base_age=${baseAge} (gap=${ageGap})，无 equipment_by_age 数据，跳过装备注入`);
+  }
+  // 兜底：无论什么原因装备为空 → 按年龄性别给默认穿着
+  if (!equipment || Object.keys(equipment).length === 0) {
+    equipment = makeDefaultEquipment(effectiveAge, src?.gender ?? "female");
+    equipmentSource = "auto";
   }
 
   // 库存：同上
@@ -1010,7 +1016,29 @@ function hydrateNPCState(src: any, effectiveAge: number): {
     attributes: scaleAttributesForAge(src, effectiveAge),
     equipment,
     inventory,
+    equipmentSource,
   };
+}
+
+/** 按年龄+性别生成默认穿着（装备数据缺失时的兜底，不是 LLM 的活）。
+ *  返回 { equipment, source:"auto" }——将来 LLM 见到 _equipmentSource="auto" 可按角色重编。 */
+function makeDefaultEquipment(age: number, gender: string): Record<string, any> {
+  const isFemale = gender === "female" || gender === "女";
+  const eq: Record<string, any> = {};
+  if (age <= 6) {
+    eq.top = { name: "儿童上衣", type: "clothing", slot: "top", weight: 0.15, effects: [], state: "intact" };
+    eq.bottom = { name: "儿童裤子", type: "clothing", slot: "bottom", weight: 0.15, effects: [], state: "intact" };
+  } else if (age <= 12) {
+    eq.top = { name: "小学生校服", type: "clothing", slot: "top", weight: 0.2, effects: [], state: "intact" };
+    eq.bottom = { name: isFemale ? "小学生裙子" : "小学生短裤", type: "clothing", slot: "bottom", weight: 0.2, effects: [], state: "intact" };
+  } else {
+    eq.top = { name: isFemale ? "女士上衣" : "男士上衣", type: "clothing", slot: "top", weight: 0.3, effects: [], state: "intact" };
+    eq.bottom = { name: isFemale ? "裙子" : "长裤", type: "clothing", slot: "bottom", weight: 0.3, effects: [], state: "intact" };
+  }
+  eq.inner_top = { name: isFemale ? "内衣" : "背心", type: "clothing", slot: "inner_top", weight: 0.05, effects: [], state: "intact" };
+  eq.inner_bot = { name: "内裤", type: "clothing", slot: "inner_bot", weight: 0.05, effects: [], state: "intact" };
+  eq.feet = { name: age <= 6 ? "小鞋子" : age <= 12 ? "学生鞋" : "便鞋", type: "clothing", slot: "feet", weight: 0.3, effects: [], state: "intact" };
+  return eq;
 }
 
 /** 设置玩家位置并自动发现新地点 */
@@ -2787,6 +2815,7 @@ export function getOrCreateNPC(name: string): NPCRuntimeState {
     gameState.npcs[name] = {
       inventory: hydrated?.inventory ?? (src ? structuredClone(src.inventory ?? []) : []),
       equipment: hydrated ? fillEffectsFromCatalog(hydrated.equipment) : (src ? fillEffectsFromCatalog(src.equipment ?? {}) : {}),
+      _equipmentSource: hydrated?.equipmentSource ?? (src?.equipment && Object.keys(src.equipment).length > 0 ? "card" : "auto"),
       currentRoom: src?.default_location || "",
       gridPos: src?.grid_pos || null,
       action: "",
