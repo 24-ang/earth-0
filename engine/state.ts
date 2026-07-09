@@ -2382,21 +2382,76 @@ function affectionToStage(val: number): Relationship["stage"] {
 // --- NPC 运行时状态 ---
 
 /** 从 items.json 查找同名物品，补全 effects */
-function fillEffectsFromCatalog(equipment: Record<string, any>): Record<string, any> {
+const OUTFIT_NON_SLOT = new Set(["hair", "desc", "head"]);
+
+/** 把 itemsCatalog 拍平成 name→item Map。处理两种结构：
+ *  顶层直接条目（key=物品名，value 含 name/type）+ 分类容器（weapons/clothing… 内含多个物品）。 */
+function buildCatalogLookup(): Map<string, any> {
   const lookup = new Map<string, any>();
-  for (const cat of Object.values(itemsCatalog)) {
-    for (const [name, item] of Object.entries(cat as any)) {
-      lookup.set(name, item);
+  for (const [key, val] of Object.entries(itemsCatalog as any)) {
+    if (!val || typeof val !== "object") continue;
+    if ((val as any).name && (val as any).type) {
+      lookup.set(key, val);                                   // 顶层直接物品
+    } else {
+      for (const [name, item] of Object.entries(val as any)) {
+        if (item && typeof item === "object") lookup.set(name, item);  // 分类内物品
+      }
     }
   }
+  return lookup;
+}
+
+/** 用目录补全装备的引擎属性（effects/pocket/weight/volume），但【角色手写 flavor 优先】。
+ *  这样 items.json 补服装骨架后，不覆盖 135 个角色手写的专属 flavor（decision #30）。 */
+function fillEffectsFromCatalog(equipment: Record<string, any>): Record<string, any> {
+  const lookup = buildCatalogLookup();
   const result: Record<string, any> = {};
   for (const [slot, item] of Object.entries(equipment)) {
     if (!item) { result[slot] = null; continue; }
     const catalog = lookup.get(item.name);
-    result[slot] = catalog ? { ...structuredClone(catalog), state: item.state || "intact" } : item;
+    result[slot] = catalog
+      ? { ...structuredClone(catalog),
+          flavor: (item as any).flavor ?? (catalog as any).flavor,        // 角色手写优先
+          effects: (item as any).effects ?? (catalog as any).effects ?? [],
+          state: (item as any).state || "intact" }
+      : item;
   }
   return result;
 }
+
+/** 从 outfit 定义（{hair,desc,top,bottom,…}）构建装备槽 Item 表：
+ *  槽位名字 → items.json 查（拿 effects/pocket/weight）→ 查不到则合成兜底 clothing Item。
+ *  用于 setNPCOutfit 给【所有角色】填 equipment（不再只有 equipment_by_outfit 的雪乃）。 */
+function buildEquipmentFromOutfit(outfitDef: any): Record<string, any> {
+  const out: Record<string, any> = {};
+  if (!outfitDef) return out;
+  const lookup = buildCatalogLookup();
+  for (const [slot, name] of Object.entries(outfitDef)) {
+    if (OUTFIT_NON_SLOT.has(slot) || typeof name !== "string") continue;
+    const cat = lookup.get(name);
+    out[slot] = cat
+      ? { ...structuredClone(cat), state: "intact" }
+      : { name, type: "clothing", slot, effects: [], state: "intact" };  // 兜底：至少有名字
+  }
+  return out;
+}
+
+/** 换装时同步 npc.equipment：清旧 outfit 独有的槽位（脱旧衣），写新 outfit 的槽位。
+ *  两个 outfit 都没定义的槽位（武器/工具）不碰。数据源优先 equipment_by_outfit（雪乃深耕），
+ *  否则从 outfit 槽位名字经目录构建（所有角色通用）——修 set_npc_outfit display/data 脱节。 */
+function applyOutfitEquipment(npc: any, src: any, oldOutfit: string, outfitKey: string): void {
+  const newEquip = src?.equipment_by_outfit?.[outfitKey] ?? buildEquipmentFromOutfit(src?.outfits?.[outfitKey]);
+  if (!newEquip || !Object.keys(newEquip).length) return;
+  const oldEquip = src?.equipment_by_outfit?.[oldOutfit] ?? buildEquipmentFromOutfit(src?.outfits?.[oldOutfit]);
+  const oldSlots = new Set(Object.keys(oldEquip || {}));
+  const newSlots = new Set(Object.keys(newEquip));
+  for (const slot of oldSlots) if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
+  for (const slot of newSlots) {
+    const item = (newEquip as any)[slot];
+    (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
+  }
+}
+
 
 /** 注册 LLM 动态创建的角色。返回描述或错误。 */
 export function registerDynamicCharacter(name: string, data: Record<string, any>): string {
@@ -2778,39 +2833,14 @@ export function setNPCOutfit(npcName: string, outfitKey: string): string {
     (src as any).outfits[outfitKey] = { ...def };
     const oldOutfit = npc.currentOutfit || "school";
     npc.currentOutfit = outfitKey as any;
-    // equipment_by_outfit 联动：清旧 outfit 的槽位，合新 outfit 的槽位
-    // 两个 outfit 都没定义的槽位不碰（保留武器/工具等）
-    const oldSlots = new Set(Object.keys((src as any).equipment_by_outfit?.[oldOutfit] || {}));
-    if ((src as any).equipment_by_outfit?.[outfitKey]) {
-      const newEquip = (src as any).equipment_by_outfit[outfitKey];
-      const newSlots = new Set(Object.keys(newEquip));
-      for (const slot of oldSlots) {
-        if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
-      }
-      for (const slot of newSlots) {
-        const item = newEquip[slot];
-        (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
-      }
-    }
+    applyOutfitEquipment(npc, src, oldOutfit, outfitKey);
     const desc = Object.values(def).join("、");
     _outfitChanges.push({ npc: npcName, from: oldOutfit, to: outfitKey, desc });
     return `${npcName} → ${outfitKey}（自动生成）: ${desc}`;
   }
   const oldOutfitMain = npc.currentOutfit || "school";
   npc.currentOutfit = outfitKey as any;
-  // equipment_by_outfit 联动：清旧 outfit 的槽位，合新 outfit 的槽位
-  const oldSlotsMain = new Set(Object.keys((src as any).equipment_by_outfit?.[oldOutfitMain] || {}));
-  if ((src as any).equipment_by_outfit?.[outfitKey]) {
-    const newEquip = (src as any).equipment_by_outfit[outfitKey];
-    const newSlots = new Set(Object.keys(newEquip));
-    for (const slot of oldSlotsMain) {
-      if (!newSlots.has(slot)) (npc.equipment as any)[slot] = null;
-    }
-    for (const slot of newSlots) {
-      const item = newEquip[slot];
-      (npc.equipment as any)[slot] = item ? structuredClone(item) : null;
-    }
-  }
+  applyOutfitEquipment(npc, src, oldOutfitMain, outfitKey);
   const items = src.outfits[outfitKey];
   const desc = Object.values(items).join("、");
   _outfitChanges.push({ npc: npcName, from: oldOutfitMain, to: outfitKey, desc });
