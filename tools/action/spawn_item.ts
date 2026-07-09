@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "spawn_item", label: "生成物品",
-    description: "剧情生成物品放入背包。须提供source和reason。",
+    description: "生成物品/为已有物品追加历史铭文(同名→flavor合并)。须提供source和reason。物品的flavor是其历史记录(赠予/破损修复/初次穿戴等)可通过此工具追加。",
     parameters: Type.Object({
       target: Type.String({ description: "接收者：'玩家' 或 NPC 名" }),
       item: Type.Object({

@@ -1425,8 +1425,9 @@ function ensureCollectors(): void {
           const ifCs = (charStages as any)[ifKey];
           let desc = cs[stageKey];
           if (ifCs?.[stageKey]) {
-            if (s().flags.tachibanaIF && ["橘京香","橘结花","橘小春"].includes(nname)) desc = ifCs[stageKey];
-            if (s().flags.osanaIF && ["樋口円香","浅仓透"].includes(nname)) desc = ifCs[stageKey];
+            // _if 线由数据声明——角色卡 if_flag 匹配启用的 flag 即切 if 版人格(去硬编码)
+            const ifFlag = (src as any).if_flag;
+            if (ifFlag && s().flags[ifFlag]) desc = ifCs[stageKey];
           }
           if (desc) lines.push(`[${nname}] ${desc}`);
         }
