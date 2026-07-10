@@ -6801,9 +6801,7 @@ test("Step6: 水曜 afternoon 短缩早放学", () => {
   const clubWed = templates["运动部员"]?.["水_afternoon"];
   if (!clubWed) throw new Error("运动部员 应存在 水_afternoon key");
 
-  // 社团部员 水曜 afternoon
-  const cultureWed = templates["社团部员"]?.["水_afternoon"];
-  if (!cultureWed) throw new Error("社团部员 应存在 水_afternoon key");
+  // 社团部员 已移除（0人使用）。水曜 afternoon 验证用运动部员即可。
 });
 
 test("Step6: 金曜 evening 社交高峰", () => {

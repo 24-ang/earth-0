@@ -21,7 +21,7 @@
     "reputation_group": "学生",
     "weekday_morning": "在学",
     "weekday_lunch": "在学 / 中庭 / 1F南走廊",
-    "weekday_afternoon": "在学 / 侍奉部",
+    "weekday_afternoon": "在学",
     "水_afternoon": "游戏厅（世嘉） / 卡拉OK馆 / 永旺梦乐城 / 书店（茑屋） / 商店街",
     "weekday_evening": "住宅街 / 家庭餐厅（萨莉亚） / 便利店（7-11） / 书店（茑屋）",
     "金_evening": "卡拉OK馆 / 游戏厅（世嘉） / 永旺梦乐城 / 家庭餐厅（乐雅） / 商店街",
@@ -31,7 +31,7 @@
     "reputation_group": "学生",
     "weekday_morning": "在学",
     "weekday_lunch": "在学 / 中庭 / 1F南走廊",
-    "weekday_afternoon": "在学 / 侍奉部",
+    "weekday_afternoon": "在学",
     "水_afternoon": "游戏厅（世嘉） / 卡拉OK馆 / 永旺梦乐城 / 书店（茑屋） / 商店街",
     "weekday_evening": "住宅街 / 家庭餐厅（萨莉亚） / 便利店（7-11） / 书店（茑屋）",
     "金_evening": "卡拉OK馆 / 游戏厅（世嘉） / 永旺梦乐城 / 家庭餐厅（乐雅） / 商店街",
@@ -41,7 +41,7 @@
     "reputation_group": "教师",
     "weekday_morning": "在学",
     "weekday_lunch": "中庭 / 1F南走廊",
-    "weekday_afternoon": "在学 / 侍奉部",
+    "weekday_afternoon": "在学",
     "weekday_evening": "拉面横丁 / 书店（淳久堂） / 住宅街",
     "金_evening": "拉面横丁 / 卡拉OK馆 / 千叶中央站 / 住宅街",
     "weekend": "永旺梦乐城 / 书店（淳久堂） / 千叶公园 / 住宅街"
@@ -79,16 +79,6 @@
     "weekday_afternoon": "商店街 / 永旺梦乐城",
     "weekday_evening": "住宅街 / 商店街",
     "weekend": "永旺梦乐城 / 商店街 / 住宅街"
-  },
-  "社团部员": {
-    "reputation_group": "学生",
-    "weekday_morning": "在学",
-    "weekday_lunch": "在学 / 中庭",
-    "weekday_afternoon": "侍奉部",
-    "水_afternoon": "侍奉部 / 游戏厅（世嘉）",
-    "weekday_evening": "住宅街 / 便利店（7-11） / 家庭餐厅（萨莉亚）",
-    "金_evening": "卡拉OK馆 / 家庭餐厅（乐雅） / 商店街 / 住宅街",
-    "weekend": "永旺梦乐城 / 游戏厅（世嘉） / 电影院（永旺影城） / 住宅街"
   },
   "大学生": {
     "reputation_group": "学生",

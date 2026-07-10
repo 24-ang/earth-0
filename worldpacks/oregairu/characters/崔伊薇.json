@@ -1,0 +1,190 @@
+{
+  "name": "崔伊薇",
+  "source": "Stellar Blade: BLOOD RAIN (Evie)",
+  "base_age": 16,
+  "gender": "female",
+  "nationality": "韩裔日本人（首尔出生，小学时搬来千叶海浜幕張）",
+  "occupation": "总武高2年J班学生·空手道部",
+  "appearance_brief": "极致反差的短发假小子。拥有纯真童颜、却拥有与身高骨架比例极不相称的夸张御姐级肉感曲线。",
+  "hair_color": "深棕色",
+  "hair_style": "右侧遮眼，略显凌乱湿润感的碎短发",
+  "eye_color": "琥珀色",
+  "hair_accessories": "",
+
+  "outfits": {
+    "school": {
+      "hair": "右侧遮眼，略显凌乱湿润感的碎短发",
+      "top": "总武高制服针织背心",
+      "bottom": "总武高深蓝百褶裙",
+      "legs": "白色纯棉泡泡袜",
+      "feet": "黑色制服皮鞋",
+      "inner_top": "白色运动内衣",
+      "inner_bot": "纯棉平角内裤",
+      "shirt": "白色长袖衬衫",
+      "desc": "总武高国际教养科J班的制服。因为上半身夸张的发育，即便是宽大的针织背心也被胸口高高顶起，白衬衫的纽扣紧绷得几乎要绷开。短裙下是包裹在微胖肉感大腿上的白色泡泡袜，整体呈现'小孩装大人'的不自知违和与纯欲色情感。"
+    },
+    "casual": {
+      "hair": "用发夹将挡眼的刘海随意别起",
+      "top": "修身白色背心",
+      "bottom": "灰色运动卫裤",
+      "feet": "复古运动鞋",
+      "inner_top": "无钢圈抹胸",
+      "inner_bot": "纯棉三角裤",
+      "desc": "紧身的白色棉质吊带背心将沉甸甸的胸部轮廓勾勒得淋漓尽致，下身则是松垮的低腰灰色卫裤，隐约露出纤细的腰线与圆润的胯部。她本想穿得像个假小子，却反而因为这种极端的松紧对比，让视线不自觉地集中在她夸张的腰臀比上。"
+    },
+    "sleep": {
+      "hair": "自然蓬松的短发",
+      "shirt": "大码黑色纯棉T恤",
+      "desc": "一件宽大到足以盖住大腿根部的黑色旧T恤，没有穿下装。领口因为沉重的胸部而向一侧倾斜，露出精致的锁骨与大片白皙的肌肤。"
+    }
+  },
+
+  "outfits_by_age": {
+    "6": "child",
+    "12": "teen",
+    "16": "school"
+  },
+
+  "body": {
+    "height_cm": 156,
+    "weight_kg": 51,
+    "build": "丰满",
+    "measurements": { "bust": 89, "waist": 59, "hips": 92 },
+    "cup": "E",
+    "leg_type": "修长",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "蜜桃",
+      "waist": "细腰"
+    },
+    "skin": { "base_tone": "白皙", "tan": 1, "texture": "细腻" },
+    "diet": "高蛋白偏食（极度喜欢棒棒糖与甜食）",
+    "exercise": "高强度极限格斗术训练"
+  },
+
+  "body_by_age": {
+    "6": { "height_cm": 115, "weight_kg": 20, "build": "纤细", "measurements": { "bust": 55, "waist": 50, "hips": 58 }, "cup": "扁平", "leg_type": "纤细", "body_shape": { "chest": "扁平", "hips": "扁平", "waist": "直筒" }, "skin": { "base_tone": "白皙", "tan": 1, "texture": "细腻" }, "diet": "正常", "exercise": "日常活动" },
+    "12": { "height_cm": 142, "weight_kg": 34, "build": "纤细", "measurements": { "bust": 68, "waist": 54, "hips": 71 }, "cup": "A", "leg_type": "纤细", "body_shape": { "chest": "圆盘", "hips": "扁平", "waist": "直筒" }, "skin": { "base_tone": "白皙", "tan": 1, "texture": "细腻" }, "diet": "正常", "exercise": "基础武术" },
+    "15": { "height_cm": 154, "weight_kg": 46, "build": "标准", "measurements": { "bust": 84, "waist": 58, "hips": 88 }, "cup": "D", "leg_type": "修长", "body_shape": { "chest": "水滴", "hips": "圆润", "waist": "细腰" }, "skin": { "base_tone": "白皙", "tan": 1, "texture": "细腻" }, "diet": "高蛋白", "exercise": "格斗术训练" },
+    "16": { "height_cm": 156, "weight_kg": 51, "build": "丰满", "measurements": { "bust": 89, "waist": 59, "hips": 92 }, "cup": "E", "leg_type": "修长", "body_shape": { "chest": "水滴", "hips": "蜜桃", "waist": "细腰" }, "skin": { "base_tone": "白皙", "tan": 1, "texture": "细腻" }, "diet": "高蛋白", "exercise": "空手道高强度训练" }
+  },
+
+  "attributes": {
+    "力量": 14, "敏捷": 16, "体质": 13,
+    "智力": 10, "感知": 15, "魅力": 17
+  },
+  "skills": {
+    "格斗": 9, "潜行": 7, "耐力": 6, "社交": 3
+  },
+
+  "hp": { "current": 26, "max": 26 },
+  "ac": 12,
+
+  "equipment": {
+    "top": { "name": "针织背心", "type": "clothing", "slot": "top", "weight": 0.3, "effects": [], "state": "intact", "flavor": "米色的总武高针织背心，面料柔软，但前胸部分被夸张地撑开，甚至让下摆有些缩水上提。" },
+    "bottom": { "name": "制服百褶裙", "type": "clothing", "slot": "bottom", "weight": 0.3, "effects": [], "state": "intact", "flavor": "深蓝色的学校标准短裙，因为饱满的蜜桃臀线条而将裙摆高高顶起，从后面看长度危险。" },
+    "legs": { "name": "泡泡袜", "type": "clothing", "slot": "legs", "weight": 0.1, "effects": [], "state": "intact", "flavor": "纯白色的松垮泡泡袜，堆叠在脚踝处，是她试图维持小孩子/假小子元气感的标志。" },
+    "feet": { "name": "制服皮鞋", "type": "clothing", "slot": "feet", "weight": 0.4, "effects": [], "state": "intact", "flavor": "标准的黑色牛皮乐福鞋，鞋底前端有因经常进行垫步、爆发性发力而留下的特有磨损痕迹。" },
+    "inner_top": { "name": "运动内衣", "type": "clothing", "slot": "inner_top", "weight": 0.1, "effects": [], "state": "intact", "flavor": "没有任何装饰的紧身灰色运动内衣，不带钢圈，纯粹是为了掩盖和固定过于丰满沉重的胸部，但反而因布料的紧绷和褶皱显得更加欲盖弥彰。" },
+    "inner_bot": { "name": "纯棉内裤", "type": "clothing", "slot": "inner_bot", "weight": 0.05, "effects": [], "state": "intact", "flavor": "边缘带有简单字母印花的灰色纯棉内裤，由于臀部围度过大而深陷在股沟之中。" }
+  },
+
+  "inventory": [
+    { "name": "智能手机", "type": "tool", "slot": "back", "weight": 0.18, "effects": [], "state": "intact", "flavor": "贴满韩流女团贴纸的最新款手机，相册里全是练习成熟穿搭的私密自拍。" },
+    { "name": "珍宝珠棒棒糖", "type": "food", "weight": 0.02, "effects": [], "state": "intact", "flavor": "可乐风味的带棍糖果。她总是含在嘴里，用灵巧的舌头和性感的嘴唇拨弄着塑料棍。" },
+    { "name": "皮质小钱包", "type": "tool", "weight": 0.05, "volume": 0.1, "effects": [], "state": "intact", "flavor": "里面有几张日元大钞、韩国身份证，以及一张父亲常驻千叶某跨国电子企业的高管工作证。" }
+  ],
+
+  "default_location": "海浜幕張",
+
+  "default_location_by_age": {
+    "6": "海浜幕張",
+    "12": "海浜幕張",
+    "15": "海浜幕張",
+    "16": "海浜幕張"
+  },
+
+  "grade": 2,
+  "homeroom": "J",
+
+  "schedule_group": "运动部员",
+  "schedule_group_by_age": {
+    "6": "小学生",
+    "12": "中学生",
+    "15": "高校生",
+    "16": "运动部员"
+  },
+
+  "schedule_overrides": {
+    "weekday_afternoon": "体育馆 / 操场",
+    "金_evening": "海浜幕張 / 千葉駅前",
+    "weekend": "海浜幕張 / 稲毛海岸 / 千葉駅前"
+  },
+
+  "funds": 450000,
+
+  "stages": {
+    "幼儿_小学": "在跨国家庭长大、备受保护的元气小女孩。",
+    "中学": "疯狂发育导致的身体异变，开始用中性打扮和粗暴的格斗训练逃避现实。",
+    "高中": "转入总武高国际教养J班，在'想当成熟女性证明自己'与'厌恶色情视线'之间疯狂拉扯。"
+  },
+  "stages_if": {},
+  "if_flag": "",
+
+  "sex_profile": {
+    "baselineDesire": 45,
+    "attitude": "表面上极度排斥、敏感且厌恶被当成色情对象，但内心深处对成熟的成年性关系充满不自知的向往和好奇。",
+    "experience": "零经验",
+    "female": {
+      "breast": { "cup": "E", "shape": "水滴", "nipple_color": "浅粉色", "nipple_size": "小" },
+      "vagina": { "type": "名器（紧致型）", "inner_color": "粉嫩" },
+      "labia_size": "小",
+      "clitoris": "极敏感",
+      "pubic_hair": { "amount": "稀少", "color": "深棕色", "style": "天然微卷" }
+    },
+    "bodyParts": { "胸": 85, "腿": 60, "阴部": 90, "舌头": 95 },
+    "cycleDay": 14,
+    "climaxThreshold": 65,
+    "likes": ["深吻", "被用力揉搓胸部", "跨坐式主导"],
+    "dislikes": ["下流的窥视", "被当成小孩子敷衍"]
+  },
+
+  "appearance_by_age": {
+    "12": { "hair_style": "假小子短发", "hair_color": "深棕色" },
+    "16": { "hair_style": "右侧遮眼，略显凌乱湿润感的碎短发", "hair_color": "深棕色" }
+  },
+
+  "personality_brief": "外表像个大大咧咧的纯情假小子，内心极度在意自己过于色情的身材，既想逃避凝视又渴望被视作熟女。",
+  "personality_stages": {
+    "12": "调皮、好动，完全不把自己当女孩子的纯粹假小子。",
+    "15": "面对突然暴涨的胸围感到恐慌，开始用宽松衣物遮掩，性格变得有些敏感易怒。",
+    "16": "陷入了深层矛盾：潜意识里用粗鲁的假小子行为防御外界男性的视线，但又不可遏制地对情侣与成年的性与恋爱话题产生向往，极度讨厌别人盯着自己，却又忍不住想在信任的人面前证明自己很有'女人味'。"
+  },
+
+  "speech_style": "语气爽朗利落，习惯用生硬但标准的日语敬语（大小姐教养），偶尔带有男孩子气的粗鲁。遇到男女话题时会结巴、视线乱瞟，习惯靠用力嚼碎口中的棒棒糖来掩饰害羞。情绪激动或傲娇时不自觉夹杂韩语小声抱怨（如'아니…'）。",
+  "likes": ["被夸奖成熟", "可乐味棒棒糖", "MMA", "重型摩托车"],
+  "dislikes": ["黏腻的视线", "紧身衣物", "体检和体育课时的视线"],
+
+  "public_facts": [
+    { "text": "J班的韩裔高管千金，虽然打扮成假小子，但那个夸张的腰臀比在男生私下讨论里的热度极高。", "level": "common" },
+    { "text": "和同班的雪之下雪乃关系微妙，似乎很羡慕对方那种'即便是平胸也能拥有的绝对凛然与成熟大人的气场'。", "level": "common" },
+    { "text": "嘴里永远含着一根珍宝珠棒棒糖，经常在走廊上用极其灵巧的舌尖拨弄糖棍，那个画面不知为何让全校男生都面红耳赤。", "level": "common" }
+  ],
+  "private_facts": [
+    { "text": "因为窄肩小骨架导致胸部负担太重，经常有严重的腰痛和肩颈酸痛，桌兜里经常藏着药贴。", "level": "close" },
+    { "text": "其实非常在意自己'童颜巨乳'导致像小孩装大人的怪异性感。背地里偷偷买了很多性感内衣和服装，却因为耻度太高只敢锁在衣柜最深处。独处如洗澡时会对着镜子一边嫌弃自己太色情，一边又忍不住跃跃欲试的摆出成熟女性的姿势和练习各种自认为有女人味的表情。", "level": "close" }
+  ],
+
+  "drives_by_age": {
+    "16": {
+      "drives": ["想要找到一个不单单看她身体、而是能真正把她当作成熟女性来尊重的依靠", "摆脱目前的身体自卑与外貌焦虑"],
+      "goal": "在高中毕业前，成功谈一场不掺杂纯粹肉欲、能真正认可她内在的恋爱。"
+    }
+  },
+
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 2,
+    "政治立场": -1
+  }
+}
