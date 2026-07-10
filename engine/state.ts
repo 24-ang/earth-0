@@ -80,14 +80,33 @@ export let SCHOOL_MAP = schoolMapData as any;
 export let CITY_MAP = cityMapData as any;
 let _landmarkToRegion = new Map<string, string>();  // city_map landmark→区域
 
-/** 将日程地名解析到真实区域。先查 ROOMS，不在则查 city_map landmark→区域映射。
- *  都不在→视为未注册 landmark，保留地名供叙事用，NPC 留在当前区域。 */
+/** 模糊匹配：locName 的任意子串是否命中 room 或 landmark。
+ *  如"拳击部"→"总武高"(拳击部在学校里)→NPC 放在学校区域。 */
+function fuzzyResolve(locName: string): string | null {
+  const parts = locName.split(/[\s\/、　+·\-()（）]+/).filter(p => p.length >= 2);
+  // 查 ROOMS
+  for (const rk of Object.keys(ROOMS)) {
+    for (const p of parts) { if (rk.includes(p)) return rk; }
+  }
+  // 查 city_map landmarks
+  for (const lm of _landmarkToRegion.keys()) {
+    for (const p of parts) { if (lm.includes(p)) return _landmarkToRegion.get(lm) || null; }
+  }
+  return null;
+}
+
+/** 将日程地名解析到真实区域。
+ *  ① ROOMS 精确匹配 → 房间名
+ *  ② city_map landmark 精确匹配 → 区域名,landmark 供叙事
+ *  ③ 模糊匹配(子串)→同② （如"拳击部"→命中含"社团"的 landmark→社团楼区域）
+ *  ④ 都未命中 → 保留原名作 landmark,NPC 留原地 */
 function resolveLocationToRegion(locName: string, fallbackRoom?: string): { room: string; landmark: string | null } {
   const rk = getRoomKey(locName);
   if (rk) return { room: rk, landmark: null };
   const region = _landmarkToRegion.get(locName);
   if (region) return { room: region, landmark: locName };
-  // 未注册地名→当 landmark 保留（供叙事层），NPC 待在 fallback 或原地
+  const fuzzy = fuzzyResolve(locName);
+  if (fuzzy) return { room: fuzzy, landmark: locName };
   if (fallbackRoom) return { room: fallbackRoom, landmark: locName };
   return { room: locName, landmark: locName };
 }
