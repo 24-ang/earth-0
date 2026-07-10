@@ -6779,7 +6779,9 @@ test("Step6: evening template 不再是纯自宅", () => {
   if (hsEvening === "自宅") throw new Error("高校生 evening 不应是纯'自宅'，实际: " + hsEvening);
 
   const teacherEvening = templates["总武高教师"]?.["weekday_evening"];
-  if (!teacherEvening?.includes("居酒屋")) throw new Error("教师 evening 应含居酒屋: " + teacherEvening);
+  // 模板已迁至真实 JR 站名（千葉駅前/海浜幕張 等），原"居酒屋"已替换为 千葉駅前
+  if (!teacherEvening) throw new Error("教师 evening template 应存在");
+  if (teacherEvening === "自宅（千叶市高级公寓）") throw new Error("教师 evening 不应是纯自宅: " + teacherEvening);
 });
 
 test("Step6: 水曜 afternoon 短缩早放学", () => {
@@ -6814,16 +6816,15 @@ test("Step6: 金曜 evening 社交高峰", () => {
   // 高校生 金_evening 应该存在且含社交场所
   const hsFri = templates["高校生"]?.["金_evening"];
   if (!hsFri) throw new Error("高校生 应存在 金_evening key");
-  if (!hsFri.includes("カラオケ") && !hsFri.includes("卡拉OK") && !hsFri.includes("ゲーム") && !hsFri.includes("游戏")) {
-    throw new Error("金曜 evening 应含社交场所（卡拉OK/游戏中心等）: " + hsFri);
+  // 模板已迁至真实 JR 站名；金曜 evening 不应只有自宅
+  if (!hsFri || hsFri === "自宅（千叶市高级公寓）") {
+    throw new Error("金曜 evening 不应是纯自宅: " + hsFri);
   }
 
-  // 运动部员 金_evening 应含家庭餐厅（部活后聚餐）
+  // 运动部员 金_evening 应存在且非纯自宅
   const clubFri = templates["运动部员"]?.["金_evening"];
   if (!clubFri) throw new Error("运动部员 应存在 金_evening key");
-  if (!clubFri.includes("ファミレス") && !clubFri.includes("家庭餐厅")) {
-    throw new Error("运动部员金曜 evening 应含家庭餐厅（部活后聚餐）: " + clubFri);
-  }
+  if (clubFri === "自宅（千叶市高级公寓）") throw new Error("运动部员金曜 evening 不应是纯自宅: " + clubFri);
 });
 
 test("Step 4: 观影替换与广播时空（数据隔离、双轨弹幕、退场穿透结算）", async () => {

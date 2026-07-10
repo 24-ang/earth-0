@@ -78,6 +78,17 @@ export let regionsData = regionsDataStatic as any;
 export let LOCATIONS_BASE = locationsData as any;
 export let SCHOOL_MAP = schoolMapData as any;
 export let CITY_MAP = cityMapData as any;
+let _landmarkToRegion = new Map<string, string>();  // city_map landmark→区域
+
+/** 将日程地名解析到真实区域。先查 ROOMS，不在则查 city_map landmark→区域映射。
+ *  { room } 是放 NPC 的地方，{ landmark } 供叙事层使用。 */
+function resolveLocationToRegion(locName: string): { room: string; landmark: string | null } {
+  const rk = getRoomKey(locName);
+  if (rk) return { room: rk, landmark: null };
+  const region = _landmarkToRegion.get(locName);
+  if (region) return { room: region, landmark: locName };
+  return { room: locName, landmark: null };
+}
 // 运行时地点覆盖层：LLM 动态创建的地点 { parentName: [childName, ...] }
 export let LOCATIONS_DELTA: Record<string, string[]> = {};
 
@@ -3943,7 +3954,9 @@ export async function updateNPCSchedules(): Promise<string[]> {
       if (ov.expiresAt && ov.expiresAt < gameState.time.game_date) {
         npc.pendingOverride = null;
       } else {
-        const matchedRoom = getRoomKey(ov.location) || ov.location;
+        const resolved = resolveLocationToRegion(ov.location);
+	        if (resolved.landmark) (npc as any)._currentLandmark = resolved.landmark;
+	        const matchedRoom = getRoomKey(resolved.room) || resolved.room;
         let finalRoom = matchedRoom;
         const cap = getRoomCapacity(finalRoom);
         roomCounts[finalRoom] ??= 0;
@@ -3959,7 +3972,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
           const old = npc.currentRoom;
           npc.currentRoom = finalRoom;
           npc.gridPos = ROOMS[finalRoom]?.origin || null;
-          npc.action = ov.action;
+          npc.action = resolved.landmark || ov.action;
           events.push(`${name}: ${old} → ${finalRoom}（${ov.reason}）`);
         }
         continue; // 跳过后续模板查询
@@ -4042,14 +4055,16 @@ export async function updateNPCSchedules(): Promise<string[]> {
       resolvedTarget = defaultLoc;
     }
 
-    let matchedRoom = getRoomKey(resolvedTarget);
+    const locResolved = resolveLocationToRegion(resolvedTarget);
+    if (locResolved.landmark) (npc as any)._currentLandmark = locResolved.landmark;
+    let matchedRoom = getRoomKey(locResolved.room);
     if (!matchedRoom) {
       // 不在网格中 → 世界级位置，直接移动
-      if (resolvedTarget && resolvedTarget !== npc.currentRoom) {
+      if (locResolved.room && locResolved.room !== npc.currentRoom) {
         const old = npc.currentRoom;
-        npc.currentRoom = resolvedTarget;
+        npc.currentRoom = locResolved.room;
         npc.gridPos = null;
-        events.push(`${name}: ${old} → ${resolvedTarget}`);
+        events.push(`${name}: ${old} → ${locResolved.room}${locResolved.landmark ? `（${locResolved.landmark}）` : ""}`);
       }
       continue;
     }
@@ -4799,6 +4814,15 @@ export function loadActiveWorld(worldName?: string): void {
     locationsData = loadJSON("locations.json", locationsDataStatic);
     schoolMapData = loadJSON("school_map.json", schoolMapDataStatic);
     cityMapData = loadJSON("city_map.json", cityMapDataStatic);
+    // 构建 landmark→区域 映射：日程模板可写"ゲームセンター"，引擎自动解析到对应区
+    _landmarkToRegion = new Map<string, string>();
+    if (cityMapData?.regions) {
+      for (const [region, data] of Object.entries(cityMapData.regions as Record<string, any>)) {
+        if (Array.isArray(data.landmarks)) for (const lm of data.landmarks) {
+          if (typeof lm === "string" && !_landmarkToRegion.has(lm)) _landmarkToRegion.set(lm, region);
+        }
+      }
+    }
     regionsData = loadJSON("regions.json", regionsDataStatic);
     regions = regionsData;
     itemsCatalog = loadJSON("items.json", itemsCatalogStatic);
