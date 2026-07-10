@@ -81,13 +81,15 @@ export let CITY_MAP = cityMapData as any;
 let _landmarkToRegion = new Map<string, string>();  // city_map landmark→区域
 
 /** 将日程地名解析到真实区域。先查 ROOMS，不在则查 city_map landmark→区域映射。
- *  { room } 是放 NPC 的地方，{ landmark } 供叙事层使用。 */
-function resolveLocationToRegion(locName: string): { room: string; landmark: string | null } {
+ *  都不在→视为未注册 landmark，保留地名供叙事用，NPC 留在当前区域。 */
+function resolveLocationToRegion(locName: string, fallbackRoom?: string): { room: string; landmark: string | null } {
   const rk = getRoomKey(locName);
   if (rk) return { room: rk, landmark: null };
   const region = _landmarkToRegion.get(locName);
   if (region) return { room: region, landmark: locName };
-  return { room: locName, landmark: null };
+  // 未注册地名→当 landmark 保留（供叙事层），NPC 待在 fallback 或原地
+  if (fallbackRoom) return { room: fallbackRoom, landmark: locName };
+  return { room: locName, landmark: locName };
 }
 // 运行时地点覆盖层：LLM 动态创建的地点 { parentName: [childName, ...] }
 export let LOCATIONS_DELTA: Record<string, string[]> = {};
@@ -3954,7 +3956,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
       if (ov.expiresAt && ov.expiresAt < gameState.time.game_date) {
         npc.pendingOverride = null;
       } else {
-        const resolved = resolveLocationToRegion(ov.location);
+        const resolved = resolveLocationToRegion(ov.location, npc.currentRoom);
 	        if (resolved.landmark) (npc as any)._currentLandmark = resolved.landmark;
 	        const matchedRoom = getRoomKey(resolved.room) || resolved.room;
         let finalRoom = matchedRoom;
@@ -4061,7 +4063,7 @@ export async function updateNPCSchedules(): Promise<string[]> {
       resolvedTarget = defaultLoc;
     }
 
-    const locResolved = resolveLocationToRegion(resolvedTarget);
+    const locResolved = resolveLocationToRegion(resolvedTarget, npc.currentRoom);
     if (locResolved.landmark) (npc as any)._currentLandmark = locResolved.landmark;
     let matchedRoom = getRoomKey(locResolved.room);
     if (!matchedRoom) {
