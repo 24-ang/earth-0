@@ -253,7 +253,11 @@ export default {
     ];
     const startLocation = params.location || DEFAULT_HOMES[Math.floor(Math.random() * DEFAULT_HOMES.length)];
     setPlayerLocation(startLocation);
-    gs.player.known_locations = [startLocation];
+    // 叠加而非覆盖——保留 createInitialState 预设的已知地点（如千葉駅前）
+    if (!gs.player.known_locations) gs.player.known_locations = [];
+    if (!gs.player.known_locations.includes(startLocation)) {
+      gs.player.known_locations.push(startLocation);
+    }
 
     // ── 世界 flag ──
     const activeWorld = gs.activeWorld || "oregairu";
