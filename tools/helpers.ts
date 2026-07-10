@@ -1237,14 +1237,21 @@ export function buildTodayContext(gs: any, npcName: string, npc: any, src: any):
     } catch (_e) { /* timetable 加载失败不阻塞 */ }
   }
 
+  const isLover = gs.player.relationships?.[npcName]?.romance === "恋人";
+
   const refPlaces = isStudent
     ? "自宅, 商店街, 千葉駅前, 稲毛海岸, カラオケ, 図書館, 本屋, ゲームセンター, ファミレス, コンビニ, 塾, 公園"
     : "自宅, 商店街, 千葉駅前, 居酒屋, ラーメン屋, ファミレス, 本屋, 公園";
+
+  const loverPlaces = isLover
+    ? "（你是玩家的恋人。放学后/周末可选择与恋人共处的地点：ラブホテル街, 海浜幕張の公園(夜景), カラオケ(個室), 稲毛海岸の防波堤, 映画館, 彼の自宅）"
+    : "";
 
   lines.push(`如果你的性格或今天状态让你有不同于预设日程的真实去向，请在输出末尾加一段 JSON（选填）:
 {"schedule_intent": {"location": "地点名", "action": "在做什么", "reason": "为什么去"}}
 另外，如果你发现玩家做了令你不安/愤怒/警惕的事，你可以声明反制意图（选填）:
 {"intent": {"type": "avoid_player"|"confront_player"|"inform_teacher"|"hire_help"|"none", "target": "NPC或地点", "reason": "理由", "cost": 金额(仅hire_help)}}
+${loverPlaces}
 可参考地点: ${refPlaces}`);
 
   return lines.join("\n");
