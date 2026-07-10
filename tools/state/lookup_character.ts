@@ -99,6 +99,19 @@ export default {
         outfitKeysStr = `\n\n[可切换服装卡] 当前: ${current} | 可用: ${keys.join(" / ")}`;
       }
 
+      // 组织身份（NPC memberships，与玩家同结构）
+      let orgStr = "";
+      const memberships = npc?.memberships;
+      if (memberships && memberships.length > 0) {
+        const lines: string[] = [];
+        for (const m of memberships) {
+          const o = gameState.organizations?.[m.orgId];
+          const tierLabel = m.rank >= 10 ? "领袖" : m.rank >= 7 ? "核心" : m.rank >= 4 ? "普通" : "边缘";
+          lines.push(`  ${o?.name || m.orgId} — ${m.role}（rank:${m.rank} ${tierLabel}）`);
+        }
+        orgStr = `\n\n[所属组织]\n${lines.join("\n")}`;
+      }
+
       // P3: Include character facts filtered by relationship level
       const rel = gameState.player.relationships[params.name];
       const stage = rel?.stage || "陌生";
@@ -118,6 +131,6 @@ export default {
         }
       }
 
-      return { content: [{ type: "text", text: JSON.stringify(aged, null, 2) + equipStr + outfitKeysStr + factStr }], details: { character: aged } };
+      return { content: [{ type: "text", text: JSON.stringify(aged, null, 2) + equipStr + outfitKeysStr + orgStr + factStr }], details: { character: aged } };
     },
   };

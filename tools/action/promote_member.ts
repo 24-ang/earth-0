@@ -16,7 +16,7 @@ export default {
     newRole: Type.Optional(Type.String({ description: "新职位名，如副会长,顾问。不填保留原职位" })),
   }),
   async execute(_id, params, _s, _o, _ctx) {
-    const { gameState, saveState } = await import("../../engine/state.ts");
+    const { gameState, saveState, getOrCreateNPC } = await import("../../engine/state.ts");
     const org = gameState.organizations?.[params.orgId];
     if (!org) return { content: [{ type: "text", text: "❌ 组织「" + params.orgId + "」不存在。" }], details: {} };
     if (org.archived) return { content: [{ type: "text", text: "❌ 「" + org.name + "」已解体消亡。" }], details: {} };
@@ -25,10 +25,25 @@ export default {
     const isPlayerTarget = params.targetNpc === playerName;
     const newRank = Math.max(0, Math.min(10, params.newRank));
 
+    // Helper: sync npc.memberships when NPC target
+    const syncNpcMembership = (npcName: string, action: "update" | "remove") => {
+      if (npcName === playerName) return;
+      const npc = getOrCreateNPC(npcName);
+      npc.memberships ??= [];
+      if (action === "remove") {
+        npc.memberships = npc.memberships.filter(m => m.orgId !== params.orgId);
+      } else {
+        const pm = npc.memberships.find(m => m.orgId === params.orgId);
+        if (pm) { pm.rank = newRank; if (params.newRole) pm.role = params.newRole; }
+        else { npc.memberships.push({ orgId: params.orgId, role: params.newRole || "成员", rank: newRank, joinedAt: gameState.time.game_date }); }
+      }
+    };
+
     // ── 开除 (newRank=0) ──
     if (newRank === 0) {
       org.members = (org.members || []).filter((m: any) => m.npcName !== params.targetNpc);
       if (isPlayerTarget) { gameState.player.memberships = gameState.player.memberships!.filter(m => m.orgId !== params.orgId); }
+      else { syncNpcMembership(params.targetNpc, "remove"); }
       saveState();
       return { content: [{ type: "text", text: "🚫 " + params.targetNpc + " 已被「" + org.name + "」除名。" }], details: {} };
     }
@@ -39,11 +54,11 @@ export default {
       const oldInOrg = org.members?.find((m: any) => m.npcName === oldLeader);
       if (oldInOrg) { oldInOrg.rank = 8; oldInOrg.role = params.newRole || "前领袖·顾问"; }
       org.leader = params.targetNpc;
-      // 新领袖
       const targetInOrg = org.members?.find((m: any) => m.npcName === params.targetNpc);
       if (targetInOrg) { targetInOrg.rank = 10; targetInOrg.role = params.newRole || "领袖"; }
       else { org.members ??= []; org.members.push({ npcName: params.targetNpc, role: params.newRole || "领袖", rank: 10 }); }
       if (isPlayerTarget) { const pm = gameState.player.memberships?.find(m => m.orgId === params.orgId); if (pm) { pm.rank = 10; pm.role = params.newRole || "领袖"; } }
+      else { syncNpcMembership(params.targetNpc, "update"); }
       saveState();
       return { content: [{ type: "text", text: "👑 「" + org.name + "」领袖之位从 " + oldLeader + " 传给 " + params.targetNpc + "。" }], details: { succession: { from: oldLeader, to: params.targetNpc } } };
     }
@@ -55,6 +70,7 @@ export default {
     }
     if (targetInOrg) { targetInOrg.rank = newRank; if (params.newRole) targetInOrg.role = params.newRole; }
     if (isPlayerTarget) { const pm = gameState.player.memberships?.find(m => m.orgId === params.orgId); if (pm) { pm.rank = newRank; if (params.newRole) pm.role = params.newRole; } }
+    else { syncNpcMembership(params.targetNpc, "update"); }
 
     // 如果目标 rank=10 → 自动设 leader
     if (newRank === 10) { org.leader = params.targetNpc; }
@@ -65,6 +81,6 @@ export default {
 
     saveState();
     const newRoleName = params.newRole || targetInOrg?.role || "成员";
-    return { content: [{ type: "text", text: "✅ " + params.targetNpc + " 在「" + org.name + "」的职位已更新为 " + (params.newRole || targetInOrg?.role || "成员") + "（rank: " + newRank + "）。LLM 请根据叙事判断此变动是否合理。" }], details: { target: params.targetNpc, newRank, newRole: newRoleName } };
+    return { content: [{ type: "text", text: "✅ " + params.targetNpc + " 在「" + org.name + "」的职位已更新为 " + newRoleName + "（rank: " + newRank + "）。" }], details: { target: params.targetNpc, newRank, newRole: newRoleName } };
   },
 };
