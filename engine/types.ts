@@ -310,6 +310,8 @@ export interface StaticCharacter {
   attributes: Attributes;
   default_location: string;              // 默认所在地
   schedule_group: string;                // 日程组名，必须 ∈ schedule_templates.json 组名
+  nationality?: string;                   // 国籍/出身（如"韩裔日本人""归国子女""千叶本地"）
+  occupation?: string;                    // 职业/身份（如"崔氏道场跆拳道师范""总武高学生"）
   social_class: string;
   personal_axes: Record<string, number>; // { 经济立场, 政治立场 } -5~+5
 
@@ -463,6 +465,7 @@ export interface NPCRuntimeState {
   current_drives?: string[];           // 当前驱动力（引擎从 drives_by_age 初始化，GM/NPC Agent 可更新）
   current_goal?: string;               // 当前目标（引擎从 drives_by_age 初始化）
   lifeEvents?: LifeEvent[];            // 进行中的人生事件（引擎追踪状态变化）
+  memberships?: OrgMembership[];       // NPC 所属的组织及职位（与玩家 memberships 同结构）
 }
 
 // --- 空间系统（棋盘格） ---
