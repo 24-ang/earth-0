@@ -4038,8 +4038,14 @@ export async function updateNPCSchedules(): Promise<string[]> {
     }
     if (!targetRoom || targetRoom === "自由") continue;
 
-    // 先决议世界级位置关键词，再走 getRoomKey（否则 getRoomKey("自宅") 会模糊匹配到别人的房间）
+    // 先决议世界级位置关键词，再走 getRoomKey
     let resolvedTarget = targetRoom;
+    if (targetRoom === "在学") {
+      const src = (characters as any[]).find((c: any) => c.name === name);
+      const g = (src as any)?.grade || 2;
+      const h = (src as any)?.homeroom || "F";
+      resolvedTarget = `${g}年${h}班`;
+    }
     if (targetRoom === "自宅" || targetRoom === "下校") {
       const src = (characters as any[]).find((c: any) => c.name === name);
       let defaultLoc = (src as any)?.default_location || npc.currentRoom || "";

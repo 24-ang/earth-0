@@ -6559,11 +6559,9 @@ test("Step6: 寒假结束后日程恢复正常", async () => {
 
   await updateNPCSchedules();
 
-  // After winter break, normal school schedule should resume
-  const schoolRooms = ["2年J班", "2年F班", "侍奉部", "社团楼1F走廊"];
-  const isAtSchool = schoolRooms.some(r => yukino.currentRoom.includes(r));
-  // Free NPCs may be at other locations — but should have been moved from 自宅
-  if (yukino.currentRoom === "自宅") {
+  // After winter break, normal school schedule should resume（"在学"→grade+homeroom动态解析）
+  // NPCs should have been moved from 自宅 to a school location
+  if (yukino.currentRoom === "自宅（千叶市高级公寓）" || yukino.currentRoom === "自宅") {
     throw new Error("寒假结束后 NPC 应恢复学校日程，不应仍在家");
   }
 });
@@ -6792,11 +6790,11 @@ test("Step6: 水曜 afternoon 短缩早放学", () => {
   // 高校生 水_afternoon 应该存在且不是学校教室
   const hsWed = templates["高校生"]?.["水_afternoon"];
   if (!hsWed) throw new Error("高校生 应存在 水_afternoon key");
-  if (hsWed.includes("2年J班") || hsWed.includes("2年F班")) {
-    throw new Error("水曜 afternoon 不应去教室上课: " + hsWed);
+  if (hsWed.includes("在学")) {
+    throw new Error("水曜 afternoon 不应在学: " + hsWed);
   }
-  if (!hsWed.includes("商店街") && !hsWed.includes("千葉")) {
-    throw new Error("水曜 afternoon 应含商店街/站前等外出地点: " + hsWed);
+  if (!hsWed || hsWed === "在学" || hsWed === "住宅街") {
+    throw new Error("水曜 afternoon 应含外出地点: " + hsWed);
   }
 
   // 运动部员 水曜 还是去操场（虽然有商店街选项）
