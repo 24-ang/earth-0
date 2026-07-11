@@ -1151,7 +1151,7 @@ export function getVisibleBodyDescription(): string {
       }
     } else if (profile.female) {
       const f = profile.female;
-      parts.push(`阴部${f.vagina.type}型 ${f.labia_size}阴唇 ${f.vagina.inner_color}`);
+      parts.push(`阴部${f.vagina.type}型 ${f.labia_size ?? f.vagina?.labia_size ?? ""}阴唇 ${f.vagina.inner_color}`);
       parts.push(`阴蒂${f.clitoris}`);
       if (f.pubic_hair) {
         parts.push(`阴毛${f.pubic_hair.amount} ${f.pubic_hair.color} ${f.pubic_hair.style}`);
@@ -1198,7 +1198,7 @@ export function getNPCVisibleBodyDescription(npcName: string): string {
       }
     } else if (profile.female) {
       const f = profile.female;
-      parts.push(`阴部${f.vagina.type}型 ${f.labia_size}阴唇 ${f.vagina.inner_color}`);
+      parts.push(`阴部${f.vagina.type}型 ${f.labia_size ?? f.vagina?.labia_size ?? ""}阴唇 ${f.vagina.inner_color}`);
       parts.push(`阴蒂${f.clitoris}`);
       if (f.pubic_hair) {
         parts.push(`阴毛${f.pubic_hair.amount} ${f.pubic_hair.color} ${f.pubic_hair.style}`);
