@@ -25,21 +25,17 @@ async function showTalkMenu(name: string, done: () => void, ctx: any) {
 }
 
 async function showTouchMenu(gameState: any, saveState: () => void, name: string, done: () => void, ctx: any) {
+  const { updateRelation } = await import("../../engine/state.ts");
   const aff = getAffection(gameState, name);
 
   function touchResult(success: boolean, label: string, reward: number, penalty: number): string {
+    // 统一走 updateRelation：正确的 history 对象格式 + 阶段更新（原来手拼 push 字符串会污染 /relations 历史）
     if (success) {
-      const rel = gameState.player.relationships[name] || (gameState.player.relationships[name] = { stage: "熟人", affection: 0, history: [], notes: "" });
-      rel.affection = Math.min(100, (rel.affection || 0) + reward);
-      if (!rel.history) rel.history = [];
-      rel.history.push(label);
+      updateRelation(gameState.player.relationships, name, reward, label);
       saveState();
       return `✓ 好感+${reward}`;
     } else {
-      const rel = gameState.player.relationships[name] || (gameState.player.relationships[name] = { stage: "熟人", affection: 0, history: [], notes: "" });
-      rel.affection = Math.max(0, (rel.affection || 0) - penalty);
-      if (!rel.history) rel.history = [];
-      rel.history.push(`${label}被拒`);
+      updateRelation(gameState.player.relationships, name, -penalty, `${label}被拒`);
       saveState();
       return `✗ 被拒绝，好感-${penalty}`;
     }
