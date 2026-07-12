@@ -6349,5 +6349,142 @@
         }
       ]
     ]
+  },
+  "稲毛海滩": {
+    "width": 6,
+    "height": 3,
+    "cellSize": 8,
+    "floor": 0,
+    "origin": [0, 0],
+    "capacity": 25,
+    "atmosphere": "稲毛海滩——退潮后的湿沙一直延伸到海边。混凝土防波堤上有人在垂钓，消波块之间浪花碎裂。海风裹着咸腥味，京叶线的电车声从背后的堤坝上传来。",
+    "cells": [
+      [
+        { "type": "exit", "block": false, "furniture": null, "label": "返回千葉駅前", "exitTo": "千葉駅前" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "防波堤", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "消波块", "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": null, "label": "沙滩" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "遮阳伞", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": null, "label": "浅滩" },
+        { "type": "floor", "block": false, "furniture": null, "label": "海浪" },
+        { "type": "floor", "block": false, "furniture": null, "label": "海浪" },
+        { "type": "floor", "block": false, "furniture": null, "label": "海浪" },
+        { "type": "floor", "block": false, "furniture": null, "label": "海浪" },
+        { "type": "floor", "block": false, "furniture": null, "label": "海浪" }
+      ]
+    ]
+  },
+  "栄町": {
+    "width": 8,
+    "height": 3,
+    "cellSize": 6,
+    "floor": 0,
+    "origin": [0, 0],
+    "capacity": 40,
+    "atmosphere": "栄町——入夜后才苏醒的欢楽街。粉紫色的霓虹在湿漉漉的柏油路上洇开，拉客的招牌一路闪到巷子深处。空气里混着香烟、廉价香水和拉面汤的味道。",
+    "cells": [
+      [
+        { "type": "exit", "block": false, "furniture": null, "label": "返回千葉駅前", "exitTo": "千葉駅前" },
+        { "type": "floor", "block": false, "furniture": "霓虹招牌", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "exit", "block": false, "furniture": null, "label": "进入夜蝶俱乐部", "exitTo": "夜蝶俱乐部" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "exit", "block": false, "furniture": null, "label": "进入情人旅馆", "exitTo": "情人旅馆" },
+        { "type": "floor", "block": false, "furniture": "立牌广告", "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "自动贩卖机", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "电线杆", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": "深夜拉面摊", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "无人案内所", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" }
+      ]
+    ]
+  },
+  "夜蝶俱乐部": {
+    "width": 5,
+    "height": 3,
+    "cellSize": 3,
+    "floor": 0,
+    "origin": [0, 0],
+    "capacity": 20,
+    "atmosphere": "夜蝶俱乐部——昏暗的店内只有吧台上方一圈暖光。卡座的皮沙发有些年头，空气里飘着香槟和香水。舞台的追光偶尔扫过天花板。",
+    "cells": [
+      [
+        { "type": "exit", "block": false, "furniture": null, "label": "出门回栄町", "exitTo": "栄町" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "吧台", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "卡座沙发", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "卡座沙发", "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "舞台", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" }
+      ]
+    ]
+  },
+  "情人旅馆": {
+    "width": 4,
+    "height": 3,
+    "cellSize": 3,
+    "floor": 0,
+    "origin": [0, 0],
+    "capacity": 6,
+    "atmosphere": "情人旅馆的大堂——没有店员，只有墙上一排亮着「空室」的房型面板和自助结账机。暗红的地毯吸走了脚步声，电梯口飘来淡淡的芳香剂味道。",
+    "cells": [
+      [
+        { "type": "exit", "block": false, "furniture": null, "label": "出门回栄町", "exitTo": "栄町" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "前台面板", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": "自助结账机", "label": "" }
+      ],
+      [
+        { "type": "floor", "block": false, "furniture": "沙发", "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" },
+        { "type": "floor", "block": false, "furniture": null, "label": "" }
+      ]
+    ]
   }
 }
