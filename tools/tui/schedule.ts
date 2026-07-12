@@ -1,10 +1,9 @@
-import { Type } from "typebox";
 import { showPanel } from "../helpers.ts";
 
 export default {
     description: "查看周边NPC的日程安排与当前位置",
     handler: async (_args, ctx) => {
-      const { gameState, getOrCreateNPC, getMemoryTags } = await import("../../engine/state.ts");
+      const { gameState, getMemoryTags } = await import("../../engine/state.ts");
       const lines: string[] = [];
       const t = gameState.time;
 
@@ -20,13 +19,12 @@ export default {
         for (const [name, npc] of npcs) {
           const loc = npc.currentRoom || "未知";
           if (!byLocation[loc]) byLocation[loc] = [];
-          const npcState = getOrCreateNPC(name);
           const tags = getMemoryTags(name);
-          const override = npc.scheduleOverride;
+          const override = npc.pendingOverride;
           let info = name;
           if (override) info += ` [🔶${override.location}]`;
           if (tags.length > 0) info += ` 🏷${tags.length}`;
-          info += ` | ${npc.action || npc.scheduleGroup || "?"} | ${npcState.action || ""}`;
+          info += ` | ${npc.action || npc.scheduleGroup || "?"}`;
           byLocation[loc].push(info);
         }
 

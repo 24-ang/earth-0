@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { showMenu } from "../helpers.ts";
 
 export default {

@@ -1,10 +1,9 @@
-import { Type } from "typebox";
 import { showPanel } from "../helpers.ts";
 
 export default {
     description: "浏览附近商店货架与打工列表",
     handler: async (_args, ctx) => {
-      const { gameState, getLocationNav, getCurrency } = await import("../../engine/state.ts");
+      const { gameState, getLocationNav, getCurrency, getRoom, shopsCatalog, economyConfig } = await import("../../engine/state.ts");
       const lines: string[] = [];
       const loc = gameState.player.location;
 
@@ -12,59 +11,42 @@ export default {
       lines.push("────────────────────────────────────────");
       lines.push(`📍 当前位置: ${loc}`);
 
-      // 加载商店数据
-      let shops: any = null;
-      try {
-        const { shopsCatalog } = await import("../../engine/state.ts");
-        shops = shopsCatalog;
-      } catch (e) {
-        console.error("shop command shopsCatalog loading error:", e);
-      }
-      let economy: any = null;
-      try {
-        economy = (await import("../../data/economy.json", { with: { type: "json" } })).default;
-      } catch (e) {
-        console.error("shop command economy loading error:", e);
-      }
+      // shops.json 是平铺结构 { 店类型: { items:[...] } }
+      const shopTypes = shopsCatalog && typeof shopsCatalog === "object" ? Object.keys(shopsCatalog) : [];
 
-      // 匹配附近商店
+      // 匹配"附近商店"：当前房间的家具名 或 位置/面包屑名 命中某个店类型
       const nav = getLocationNav(loc);
-      const foundShops: any[] = [];
-      if (shops?.shops) {
-        for (const [sname, sdata] of Object.entries(shops.shops) as any) {
-          const sloc = sdata.location || "";
-          if (loc.includes(sloc) || sloc.includes(loc) ||
-              nav.breadcrumb.some((b: string) => b.includes(sloc) || sloc.includes(b))) {
-            foundShops.push({ name: sname, ...sdata });
-          }
-        }
-      }
+      const room = getRoom(loc);
+      const furnitureNames: string[] = [];
+      if (room?.cells) for (const row of room.cells) for (const c of (row || [])) if (c?.furniture) furnitureNames.push(c.furniture);
+      const locText = [loc, ...(nav.breadcrumb || [])].join(" ");
+      const matched = shopTypes.filter(t =>
+        furnitureNames.some(f => f.includes(t) || t.includes(f)) || locText.includes(t)
+      );
 
-      if (foundShops.length > 0) {
-        for (const shop of foundShops) {
+      if (matched.length > 0) {
+        for (const t of matched) {
+          const items = (shopsCatalog as any)[t]?.items || [];
           lines.push("");
-          lines.push(`🏬 ${shop.name} (${shop.type || "杂货"})`);
-          if (shop.inventory && shop.inventory.length > 0) {
-            for (const item of shop.inventory.slice(0, 8)) {
-              const price = item.price ? `${getCurrency()}${item.price}` : "?";
-              lines.push(`  • ${item.name} — ${price}`);
-            }
-            if (shop.inventory.length > 8) lines.push(`  ... 还有 ${shop.inventory.length - 8} 件`);
-          }
+          lines.push(`🏬 ${t} (${items.length}种)`);
+          for (const it of items.slice(0, 12)) lines.push(`  • ${it}`);
+          if (items.length > 12) lines.push(`  ... 还有 ${items.length - 12} 种`);
         }
       } else {
         lines.push("");
-        lines.push("（附近未匹配到商店。移动到商业区试试？）");
+        lines.push("（这附近没有可直接光顾的货架）");
+        if (shopTypes.length > 0) lines.push(`世界内已知店类型: ${shopTypes.join("、")}（走到对应场所或找到相应家具再逛）`);
       }
 
-      // 打工列表
+      // 打工列表（用引擎已加载的 economyConfig，不读 data/ 兜底）
       lines.push("");
       lines.push("────────────────────────────────────────");
-      lines.push("💼 可打工种 (2010千叶时薪):");
-      if (economy?.job_rates) {
-        for (const [job, rate] of Object.entries(economy.job_rates) as any) {
-          lines.push(`  • ${job}: ${getCurrency()}${rate}/小时`);
-        }
+      lines.push("💼 可打工种 (时薪):");
+      const jobRates = (economyConfig as any)?.job_rates;
+      if (jobRates && Object.keys(jobRates).length > 0) {
+        for (const [job, rate] of Object.entries(jobRates) as any) lines.push(`  • ${job}: ${getCurrency()}${rate}/小时`);
+      } else {
+        lines.push("  （暂无可打工种数据）");
       }
       lines.push("────────────────────────────────────────");
       lines.push(`💰 你的余额: ${getCurrency()}${gameState.player.funds}`);

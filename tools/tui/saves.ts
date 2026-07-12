@@ -1,7 +1,7 @@
 export default {
     description: "管理存档。不带参数=查看，/saves delete <名>=删除",
     handler: async (args: string, ctx: any) => {
-      const { listSaves, deleteSave, createSave, loadSave, gameState, saveState } = await import("../../engine/state.ts");
+      const { listSaves, deleteSave } = await import("../../engine/state.ts");
       const parts = args.trim().split(/\s+/);
       if (parts[0] === "delete" && parts[1]) {
         const ok = deleteSave(parts[1]);

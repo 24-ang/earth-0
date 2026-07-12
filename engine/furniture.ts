@@ -557,7 +557,7 @@ async function applyEffect(def: FurnitureActionDef, gs: GameState, furnitureDef?
       const { advanceMinutes } = await import("./time.ts");
       gs.time = advanceMinutes(gs.time, hours * 60);
       const { addSkillExp } = await import("./state.ts");
-      addSkillExp(skill, exp);
+      addSkillExp(gs.player.skills, skill, exp);
       effects.push(`时间 +${hours}h`, `${skill} 经验 +${exp}`);
       if (!narrative) narrative = `你专注学习了 ${hours} 小时，${skill}经验增加了。`;
       break;

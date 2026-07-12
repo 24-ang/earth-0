@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { showMenu } from "../helpers.ts";
 
 export default {
@@ -25,7 +24,7 @@ export default {
       items.push({ label: `🔗 等待触发的剧情钩子: (${hooks.length})`, detail: "" });
       if (hooks.length > 0) {
         for (const h of hooks) {
-          items.push({ label: `  - ${h.event_id} (${h.urgency})`, detail: h.hook_text.slice(0, 40) });
+          items.push({ label: `  - ${h.event_id} (${h.urgency || "?"})`, detail: (h.hook_text || "").slice(0, 40) });
         }
       }
 

@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { runNavigation } from "../helpers.ts";
 
 export default {

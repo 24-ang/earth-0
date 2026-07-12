@@ -250,7 +250,7 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
           else if (d === "\r" || d === "\n") {
             const it = items[sel];
             if (it?.action) Promise.resolve(it.action(done)).then(() => { items = getItems(); sel = Math.min(sel, items.length-1); });
-            else done();
+            else if (!items.some(x => x?.action)) done();  // 纯信息面板：回车关闭。交互菜单里落在无动作项(灰选项/分隔线)上则保持打开，不误关整个菜单
           }
         },
         invalidate() {},
@@ -833,7 +833,7 @@ export async function runStatus(ctx: any) {
       .map(([k]) => k);
     items.push({
       label: `  [状态] 模式:${gameState.mode} | Layer1:${gameState.layer1Enabled ? "启用" : "禁用"} | 魔改:${gameState.auMode ? "启用" : "禁用"}`,
-      detail: `阻合:${gameState.turn}`
+      detail: `回合:${gameState.turn}`
     });
     items.push({
       label: `  [天气] ${gameState.weather.type} (${gameState.weather.temp}°C)`,

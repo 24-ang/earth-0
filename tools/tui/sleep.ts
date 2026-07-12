@@ -4,7 +4,8 @@ export default {
       const { gameState, saveState, stampRoom } = await import("../../engine/state.ts");
       const { advanceTime } = await import("../../engine/time.ts");
       const loc = gameState.player.location;
-      if (!(loc.includes("家")||loc.includes("公寓")||loc.includes("邸")||loc.includes("橘家"))) {
+      const ownsHere = Object.values(gameState.player.properties || {}).some((p: any) => p?.name && (loc.includes(p.name) || p.name.includes(loc)));
+      if (!(ownsHere || loc.includes("家") || loc.includes("公寓") || loc.includes("邸"))) {
         ctx.ui.notify("需要在家才能睡觉", "warning"); return;
       }
       const days = Math.max(1, Math.min(7, parseInt(args.trim()) || 1));

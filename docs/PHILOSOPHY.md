@@ -360,6 +360,7 @@ LLM 优先用高层。高层工具内部补全细节字段，LLM 不需要关心
 | **框架优化的历史和理论依据** | `docs/framework-optimization-log.md` |
 | **叙事工程长远路线图** | `docs/narrative-engineering-roadmap.md` |
 | 新模块怎么加 | `docs/module-template.md` |
+| TUI 面板全景/谁推正文/整合建议 | `docs/TUI系统概览.md` |
 | 参考项目清单 | `docs/reference-projects.md` |
 | 三段式工作流完整规则 | `agents/gm-contract.md` |
 | 早期设计评审（v0.1/v0.2 快照） | `docs/history/DESIGN_REVIEW.md` |

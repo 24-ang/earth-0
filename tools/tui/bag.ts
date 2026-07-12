@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 
 export default {
     description: "背包管理：查看/筛选/使用物品",

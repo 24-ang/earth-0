@@ -1,11 +1,9 @@
-import { Type } from "typebox";
 import { showPanel } from "../helpers.ts";
 
 export default {
     description: "查看博弈赔率与灰色交易状态",
     handler: async (_args, ctx) => {
       const { gameState } = await import("../../engine/state.ts");
-      const { getHousingCatalog } = await import("../../engine/housing.ts");
       const { getBlackMarketPrice } = await import("../../engine/gambling.ts");
       const lines: string[] = [];
       

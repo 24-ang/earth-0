@@ -1,20 +1,14 @@
-import { Type } from "typebox";
 import { showMenu, updateChatHUD } from "../helpers.ts";
 
 export default {
     description: "电车通勤：查看当前区域车站，购票乘车",
     handler: async (_args, ctx) => {
-      const { gameState, saveState, getLocationNav, getCurrency } = await import("../../engine/state.ts");
+      const { gameState, saveState, getLocationNav, getCurrency, CITY_MAP } = await import("../../engine/state.ts");
       const loc = gameState.player.location;
       const nav = getLocationNav(loc);
 
-      // 加载车站数据
-      let cityMap: any = null;
-      try {
-        cityMap = (await import("../../data/city_map.json", { with: { type: "json" } })).default;
-      } catch (e) {
-        console.error("train command cityMap loading error:", e);
-      }
+      // 车站数据用引擎已加载的当前世界 city_map（不再读 data/ 兜底，避免与 worldpack 脱节）
+      const cityMap: any = CITY_MAP;
 
       // 在 city_map 中搜索当前位置所在区域的车站
       const findStations = (): { region: string; stationName: string; station: any }[] => {
@@ -68,7 +62,12 @@ export default {
             label: `🎫 → ${dest}`,
             detail: `约${mins}分钟 | ${getCurrency()}${Math.round(mins * 20)}`,
             action: async (destDone) => {
-              const fare = Math.round(mins * 20);
+              const fare = Math.round((Number(mins) || 0) * 20);
+              if (fare <= 0) {
+                ctx.ui.notify(`${dest} 的车费/耗时数据异常，无法购票`, "warning");
+                destDone();
+                return;
+              }
               if (gameState.player.funds < fare) {
                 ctx.ui.notify(`资金不足！需要 ${getCurrency()}${fare}，当前 ${getCurrency()}${gameState.player.funds}`, "warning");
                 destDone();

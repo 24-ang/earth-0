@@ -1,14 +1,13 @@
-import { Type } from "typebox";
 import { showMenu } from "../helpers.ts";
 
 export default {
     description: "切换系统提示词组装配置（标准 default / 轻量 lite）。",
     handler: async (args, ctx) => {
       const { gameState, saveState } = await import("../../engine/state.ts");
-      if (args && (args[0] === "default" || args[0] === "lite")) {
-        gameState.preset = args[0] as "default" | "lite";
+      if (args === "default" || args === "lite") {
+        gameState.preset = args as "default" | "lite";
         saveState();
-        ctx.ui.notify(`已切换提示词模式为: ${args[0]}`, "info");
+        ctx.ui.notify(`已切换提示词模式为: ${args}`, "info");
       } else {
         // 弹窗菜单选择
         const items: MenuItem[] = [

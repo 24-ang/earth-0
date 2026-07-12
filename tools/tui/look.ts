@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { showMenu, showPanel, SLOT_NAMES, SLOT_NAMES_SHORT } from "../helpers.ts";
 
 export default {
@@ -113,7 +112,7 @@ export default {
           lines.push(`力${a.力量 ?? 10} 敏${a.敏捷 ?? 10} 体${a.体质 ?? 10} 智${a.智力 ?? 10} 感${a.感知 ?? 10} 魅${a.魅力 ?? 10}`);
         }
         
-        const npcState = getOrCreateNPC(char.name);
+        const npcState = gameState.npcs[char.name] || {};  // 只读面板不用 getOrCreateNPC（会顺手创建运行时NPC=副作用）
         
         lines.push(`── 动态 ──`);
         lines.push(`位置: ${npcState.currentRoom || "未知"}`);
@@ -145,7 +144,7 @@ export default {
         }
 
         const clothingSlots = ['top', 'shirt', 'inner_top', 'bottom', 'inner_bot', 'legs', 'feet'];
-        const eq = Object.entries(npcState.equipment).filter(([k, v]) => v && !clothingSlots.includes(k));
+        const eq = Object.entries(npcState.equipment || {}).filter(([k, v]) => v && !clothingSlots.includes(k));
         if (eq.length > 0) {
           lines.push(`── 携带装备 ──`);
           eq.forEach(([s, it]) => {

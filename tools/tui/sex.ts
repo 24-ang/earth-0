@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { showMenu, showPanel } from "../helpers.ts";
 
 export default {
@@ -29,19 +28,19 @@ export default {
           lines.push(`💝 初体验: ${ml.join(" | ")}`);
         }
         lines.push(``);
-        lines.push(`喜欢: ${p.likes.join("、")}`,
-          `排斥: ${p.dislikes.join("、")}`,
+        lines.push(`喜欢: ${(p.likes || []).join("、")}`,
+          `排斥: ${(p.dislikes || []).join("、")}`,
         );
-        if (p.female) {
+        if (p.female?.breast || p.female?.vagina) {
           lines.push(``);
-          lines.push(`胸: ${p.female.breast.cup}cup ${p.female.breast.shape} ${p.female.breast.feel}`);
-          lines.push(`秘部: ${p.female.vagina.type} ${p.female.vagina.tightness} ${p.female.vagina.depth_cm}cm`);
-          lines.push(`阴蒂: ${p.female.clitoris}`);
-        } else if (p.male) {
+          if (p.female.breast) lines.push(`胸: ${p.female.breast.cup}cup ${p.female.breast.shape} ${p.female.breast.feel}`);
+          if (p.female.vagina) lines.push(`秘部: ${p.female.vagina.type} ${p.female.vagina.tightness} ${p.female.vagina.depth_cm}cm`);
+          if (p.female.clitoris) lines.push(`阴蒂: ${p.female.clitoris}`);
+        } else if (p.male?.penis) {
           lines.push(``);
           const circum = p.male.penis.circumcised ? "已割" : "未割";
           lines.push(`阴茎: ${p.male.penis.length_cm}cm × ${p.male.penis.girth_cm}cm ${p.male.penis.shape} ${p.male.penis.head_size}头 ${circum} ${p.male.penis.color}色`);
-          lines.push(`睾丸: ${p.male.testicles.size}`);
+          if (p.male.testicles) lines.push(`睾丸: ${p.male.testicles.size}`);
         }
         // 可用体位
         try {

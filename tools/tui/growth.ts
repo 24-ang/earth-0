@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { showPanel } from "../helpers.ts";
 
 export default {

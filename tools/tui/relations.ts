@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { showPanel } from "../helpers.ts";
 
 export default {
@@ -6,7 +5,7 @@ export default {
     handler: async (_args, ctx) => {
       const { gameState } = await import("../../engine/state.ts");
       const lines: string[] = [];
-      const rels = gameState.player.relationships;
+      const rels = gameState.player.relationships || {};
       
       lines.push("👤 关系与恋爱状态概览");
       lines.push("────────────────────────────────────────");

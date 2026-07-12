@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 
 export default {
     description: "设置或查看当前公开身份（伪装）。用法: /identity [新身份]",

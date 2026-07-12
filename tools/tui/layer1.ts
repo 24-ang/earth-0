@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 
 export default {
     description: "切换模式：rpg ↔ gal ↔ sex（自动注入对应规则）",

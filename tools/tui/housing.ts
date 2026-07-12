@@ -1,11 +1,9 @@
-import { Type } from "typebox";
 import { showPanel } from "../helpers.ts";
 
 export default {
     description: "查看当前持有的安全屋与储物柜状态",
     handler: async (_args, ctx) => {
       const { gameState } = await import("../../engine/state.ts");
-      const { getHousingCatalog } = await import("../../engine/housing.ts");
       const lines: string[] = [];
 
       lines.push("🏠 安全屋与储物柜概览");
@@ -26,16 +24,17 @@ export default {
             lines.push(`  • 租金: ${prop.rent_fee} 资金/30天 | 下次扣租: ${prop.rent_due_date}`);
           }
           
-          const curVol = prop.storage.reduce((sum, i) => sum + i.volume * i.quantity, 0);
-          const curWgt = prop.storage.reduce((sum, i) => sum + i.weight * i.quantity, 0);
+          const storage = prop.storage || [];
+          const curVol = storage.reduce((sum, i) => sum + i.volume * i.quantity, 0);
+          const curWgt = storage.reduce((sum, i) => sum + i.weight * i.quantity, 0);
           lines.push(`  • 储物箱体积: ${curVol.toFixed(2)}/${prop.max_volume} m³`);
           lines.push(`  • 储物箱承重: ${curWgt.toFixed(2)}/${prop.max_weight} kg`);
-          
-          if (prop.storage.length === 0) {
+
+          if (storage.length === 0) {
             lines.push("  • 储物箱内容: 空");
           } else {
             lines.push("  • 储物柜内物品：");
-            for (const item of prop.storage) {
+            for (const item of storage) {
               lines.push(`    - ${item.name} x${item.quantity} (${(item.weight * item.quantity).toFixed(1)}kg, ${(item.volume * item.quantity).toFixed(2)}m³)`);
             }
           }

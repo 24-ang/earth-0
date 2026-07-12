@@ -17,6 +17,18 @@ export default {
     }
 
     const flags = gameState.flags || {};
+
+    // 无成就定义时诚实提示，别显示自相矛盾的"全部解锁"
+    if (achievementRules.length === 0) {
+      await showMenu(ctx, "🏆 达成成就", [
+        { label: "🏆 成就系统", detail: "" },
+        { label: "────────────────────────────────────────", detail: "" },
+        { label: "（成就系统尚未配置）", detail: "data/achievements.json 为空" },
+        { label: "  暂无成就定义，也没有解锁记录。", detail: "" },
+      ]);
+      return;
+    }
+
     const unlockedList = achievementRules.filter(r => !!flags[r.id]);
     const lockedList = achievementRules.filter(r => !flags[r.id]);
 

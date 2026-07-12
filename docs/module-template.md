@@ -83,13 +83,16 @@ if (gameState.xxxCondition) {
 
 | 数据类型 | 位置 | 格式 |
 |---------|------|------|
-| **角色卡** | `worldpacks/{世界}/characters.json`（优先）；`data/characters.json` 仅兜底 | 数组，每元素含 name/source/outfits/equipment/body/... |
-| **角色阶段人格** | `worldpacks/{世界}/character_stages.json`（优先）；`data/character_stages.json` 仅兜底 | 对象，key=角色名，value=阶段对象 `{"高中":"独居…"}` |
-| **性档案** | `worldpacks/{世界}/sex_profiles.json`（优先）；`data/sex_profiles.json` 仅兜底 | 对象，key=角色名，value=性行为参数 |
+| **角色卡** | `worldpacks/{世界}/characters/{角色名}.json`（一人一文件，真相源，141个）。旧平面 `characters.json` 已删，`data/` 兜底为空 `[]` | 单个角色对象：name/source/outfits/equipment/body/personality_stages/`stages`/`sex_profile`/... |
+| **角色阶段标签**（旧 character_stages.json） | 已内联进角色卡的 `stages` / `stages_if` 字段 | `loadActiveWorld` 从各卡投影出 `charStages`（键=角色名，`_if` 后缀=分支）；空才回退旧平面文件 |
+| **性档案**（旧 sex_profiles.json） | 已内联进角色卡的 `sex_profile` 字段 | `loadActiveWorld` 投影出 `sexProfilesData`；空才回退旧平面文件 |
 | 静态配置 | `data/模块名.json`（跨世界）或 `worldpacks/{世界}/模块名.json`（世界专属） | JSON 对象或数组 |
 | 剧情时间线 | `worldpacks/{世界}/timelines/弧名.json`（优先）；`data/timelines/` 仅兜底模板 | 单条 TimelineEvent |
 | 日历事件 | `worldpacks/{世界}/calendar.json`（优先）；`data/calendar/` 仅兜底模板 | CalendarEntry 数组 |
 | 区域设定 | `worldpacks/{世界}/locations/区域名.json`（优先）；`data/region_contexts.json` 仅兜底 | 单条目 {keys, context, social_norms?} |
+| 城市地图 | `worldpacks/{世界}/city_map.json` | region→landmarks + transit 线路（详见约定7） |
+| 房间实体 | `worldpacks/{世界}/rooms.json` | 一地点一 grid（cells/exit/atmosphere，详见约定7） |
+| 物品总表 | `worldpacks/{世界}/items.json`（改结构后 `data/items.json` 要 sync 同步，否则启动"脑裂自检"按顶层键数误报） | 5 分类桶 weapons/armor/tools/consumables/clothing。**服装一律放 clothing 桶，每条必须带 `name`+`type`**（别加顶层独立键——会被 `buildCatalogLookup` 误当容器遍历）；缺服装时引擎只合成无重量/效果的兜底，flavor 以角色卡手写为准 |
 | 世界秘密 | `worldpacks/{世界}/secrets/秘密名.json`（优先）；`data/world_secrets.json` 仅兜底 | 单条目 {id, content, fromLevel, toLevel} |
 | 组织常识 | `worldpacks/{世界}/orgs/组织名.json`（优先）；`data/orgs/` 仅兜底模板 | 数组，每元素含 org + match_rules + entries |
 | 引擎代码 | `engine/模块名.ts` | TypeScript，export 纯函数 |
@@ -100,7 +103,7 @@ if (gameState.xxxCondition) {
 
 ```bash
 # 每加一个新模块，测试数只增不减
-npx tsx test.ts  # 当前基准：346 passed, 0 failed
+npx tsx test.ts  # 当前基准：343 passed, 0 failed（另有 e2e-init 57 / e2e-full 31）
 
 # 新模块至少 2 个测试：
 # - 正常路径
@@ -180,7 +183,7 @@ gamble: ["place_bet", "dice_roll"],
 - [ ] 所有参数有 description
 - [ ] 引擎函数在 `engine/` + 数据在 `data/`
 - [ ] 场景映射已添加
-- [ ] `npx tsx test.ts` 测试数 ≥ 346（在原有基准上只增不减）
+- [ ] `npx tsx test.ts` 测试数 ≥ 343（在原有基准上只增不减）
 - [ ] 不包含任何硬编码的题材特定内容（人物名、地名、作品名）
 - [ ] 如有世界设定，放入 `worldpacks/{世界}/` 对应子目录，`data/` 仅兜底。sync 两份
 - [ ] **工具 description 不手写会过时的枚举值**。值多或来源在 JSON 文件 → 点 LLM 去 `lookup_xxx` 查。值少（≤10）且稳定 → 直接列
@@ -262,9 +265,9 @@ contribute_to_org: "../tools/action/contribute_to_org.ts",
 
 ---
 
-## 约定 6：角色卡字段规范 (characters.json)
+## 约定 6：角色卡字段规范 (characters/*.json)
 
-角色卡是 138 个 NPC 的唯一真相来源。以下字段规格直接影响引擎渲染、状态面板和 LLM 行为。
+角色卡是 141 个 NPC 的唯一真相来源（`worldpacks/{世界}/characters/` 下一人一文件）。校验器：`npx tsx engine/validate-characters.ts`。以下字段规格直接影响引擎渲染、状态面板和 LLM 行为。
 
 ### 6.1 服装两层描述
 
@@ -314,16 +317,17 @@ contribute_to_org: "../tools/action/contribute_to_org.ts",
 
 **降级**：无 `outfits_by_age` 且 ageGap > 3 → 引擎输出 `"115cm，穿着儿童便服（6岁）"` 兜底文字 (`state.ts:2732-2737`)。
 
-### 6.3 character_stages.json vs personality_stages
+### 6.3 卡内 `stages` 字段 vs `personality_stages` 字段
 
-| | character_stages.json | characters.json personality_stages |
+旧 `character_stages.json` 已废，内容内联为每卡的 `stages` 字段，引擎 `loadActiveWorld` 投影成 `charStages`。卡内两个阶段字段各司其职：
+
+| | 卡内 `stages`（旧 character_stages.json） | 卡内 `personality_stages` |
 |---|---|---|
 | **键格式** | 阶段标签 `"幼儿_小学"` `"中学"` `"高中"` `"成年"` | 年龄数字 `"6"` `"12"` `"16"` `"25"` |
-| **注入目标** | Phase 3 场景 NPC 标签 | NPC Agent 内心独白 |
-| **读取代码** | `state.ts:1296` | `state.ts:866→924` |
+| **注入目标** | Phase 3 场景 NPC 标签（一句话） | NPC Agent 内心独白（多段） |
 | **内容特征** | 短标签 "死鱼眼。被强制加入侍奉部。" | 多段心理 "软糯呆板…内心敏感脆弱…" |
 
-**两套独立运行，内容不应相同**。
+**两套独立运行，内容不应相同**。`stages_if`（分支阶段）投影为 `charStages` 的 `{角色名}_if` 键。
 
 ### 6.4 equipment.effects
 
@@ -344,3 +348,28 @@ contribute_to_org: "../tools/action/contribute_to_org.ts",
 
 - 新建角色：`docs/角色卡生成提示词.md`（300+ 字段完整版，发给 LLM 带图）
 - 修补服装细节：`docs/角色卡服装装备修正提示词.md`（只输出 outfits+equipment 补丁）
+
+---
+
+## 约定 7：新增可行走地点（地图扩建）
+
+地点数据有**两套并存的系统**，别混：
+
+| 系统 | 文件 | 喂给谁 | 作用 |
+|------|------|--------|------|
+| 城市地图 | `worldpacks/{世界}/city_map.json` | `_landmarkToRegion`（`resolveLocationToRegion`）+ 车站/区域显示 | region→landmarks 列表、transit 线路 |
+| 房间实体 | `worldpacks/{世界}/rooms.json` | `ROOMS`（`getRoom`）+ 棋盘渲染 | 一地点一 grid（cells/exit/furniture/atmosphere） |
+| 导航树 | `worldpacks/{世界}/locations/*.json`（约定4 的"区域设定"） | `buildLocationTree`（面包屑/兄弟/子节点显示） | 层级导航展示，**不是移动硬门槛** |
+
+**能不能走进去，取决于 `go_to_location`**（`tools/lookup/go_to_location.ts`）：目的地满足其一即可——① 是 city_map 某 region 的 landmark；② `getRoom(dest)` 命中 rooms.json；③ 在 `known_locations`；④ school_map 教室。命中后设 `pendingTravel` → `complete_travel` → `moveTo`（`setPlayerLocation`+`stampRoom`）→ `getRoom` 渲染 grid。
+
+**加一个可行走城市地点的最小步骤：**
+1. `rooms.json` 加一条 room（grid + `atmosphere` + 一个 `type:"exit"` 格子 `exitTo` 回枢纽 `千葉駅前`）。**光加 city_map landmark 不够**——没 room 实体走进去不渲染 grid（现有"稲毛海岸"就只是住宅街 grid）。
+2. `city_map.json` 对应 region 的 `landmarks[]` 追加地点名。新区就在 `regions` 加一条 `{label, parent, landmarks[], feel, stations?}`。
+3. 若要 grid 内互通（街道↔店内），两边各放一个 `exitTo` 对方的 exit 格子（双向）。
+
+**卫星地点的现状模式（照抄，别自作主张）**：稲毛海岸/苏我/栄町等只**单向** `exitTo` 回 `千葉駅前`，进来靠 `go_to_location`；枢纽里**没有**到它们的反向格子。别去改枢纽加反向格子——不符合现状也没必要。
+
+**分寸（守"引擎守恒"）**：room 只写空间骨架 + `atmosphere` 氛围文字；里面有谁、发生什么交 LLM 现编（场景导演 `spawn_temp_npc`）。**不在 rooms.json 硬编码 NPC 或剧情。**
+
+**验证**：改世界数据跑 `npx tsx e2e-init-test.ts`（含导航链）；`getRoom(新地点)` 应非空；每个新 exit 的 `exitTo` 必须命中已存在的 room key（否则走进去出不来）。

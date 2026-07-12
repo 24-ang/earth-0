@@ -96,16 +96,18 @@ export default {
             if (def?.containers?.some(c => (c as any).can_hold_person)) stateTags.push("🫥");
             const stateTag = stateTags.length > 0 ? ` ${stateTags.join("")}` : "";
 
-            // 容器内容预览
-            const furnContainers = containers.filter(c => c.ownerType === "furniture" && c.ownerId === fname);
+            // 容器内容预览（子容器 ownerId 形如 "书桌·抽屉"，需前缀匹配；标签用子容器名而非内部id）
+            const subLabelOf = (c: any): string => (c.ownerId && c.ownerId.includes("·")) ? c.ownerId.split("·")[1] : "储物";
+            const furnContainers = containers.filter(c => c.ownerType === "furniture" && (c.ownerId === fname || (c.ownerId && c.ownerId.startsWith(fname + "·"))));
             const contentPreview: string[] = [];
             for (const fc of furnContainers) {
+              const sub = subLabelOf(fc);
               if (fc.def.visible && fc.items.length > 0) {
-                contentPreview.push(`${fc.def.id}:${fc.items.map((i:any) => i.name).join(",")}`);
+                contentPreview.push(`${sub}:${fc.items.map((i:any) => i.name).join(",")}`);
               } else if (fc.def.locked) {
-                contentPreview.push(`${fc.def.id}:🔒已锁`);
+                contentPreview.push(`${sub}:🔒已锁`);
               } else if (!fc.def.visible) {
-                contentPreview.push(`${fc.def.id}:关闭`);
+                contentPreview.push(`${sub}:关闭`);
               }
             }
             const contentStr = contentPreview.length > 0 ? ` [${contentPreview.join(" | ")}]` : "";
@@ -129,7 +131,7 @@ export default {
                       const result = await interactFurniture(fname, act, gameState, gameState.player.gridPos as [number, number] | null, room.cells, inlineActions);
                       saveState();
                       if (result.effects.includes("时间推进") || result.effects.includes("HP恢复")) updateChatHUD(ctx);
-                      ctx.ui.notify(result.message, "info");
+                      ctx.ui.notify(result.message || result.narrative || (result.effects.length ? result.effects.join("、") : `你${act}了${fname}。`), "info");
                     },
                   });
                 }
@@ -141,7 +143,7 @@ export default {
                     const locked = !!(fc.def.locked);
                     const itemList = fc.items.map((i:any) => `${i.name}(${i.weight}kg)`).join(", ") || "空";
                     subItems.push({
-                      label: `${locked ? "🔒" : "📂"} ${fc.def.id} (${fc.current_volume}/${fc.def.max_volume}L)`,
+                      label: `${locked ? "🔒" : "📂"} ${subLabelOf(fc)} (${fc.current_volume}/${fc.def.max_volume}L)`,
                       detail: locked ? "已锁" : itemList,
                       action: locked ? undefined : async () => {
                         // 从容器取物
@@ -190,7 +192,7 @@ export default {
                       label: "👁️ 出来",
                       action: async () => {
                         const result = await interactFurniture(fname, "出来", gameState, gameState.player.gridPos as [number,number]|null, room.cells);
-                        saveState(); ctx.ui.notify(result.message, "info");
+                        saveState(); ctx.ui.notify(result.message || result.narrative || "你从藏身处出来了。", "info");
                       },
                     });
                   } else {
@@ -198,7 +200,7 @@ export default {
                       label: "🫥 躲进去",
                       action: async () => {
                         const result = await interactFurniture(fname, "躲进去", gameState, gameState.player.gridPos as [number,number]|null, room.cells);
-                        saveState(); ctx.ui.notify(result.message, "info");
+                        saveState(); ctx.ui.notify(result.message || result.narrative || `你躲进了${fname}。`, "info");
                       },
                     });
                   }

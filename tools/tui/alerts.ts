@@ -1,4 +1,3 @@
-import { Type } from "typebox";
 import { showPanel } from "../helpers.ts";
 
 export default {
@@ -9,10 +8,10 @@ export default {
       const f = gameState.flags || {} as any;
       const alerts: { flag: string; icon: string; desc: string }[] = [];
 
-      if ((f as any).steal_alert) alerts.push({ flag: "steal_alert", icon: "🚨", desc: `偷窃警报: ${(f as any).steal_alert}` });
-      if ((f as any).school_alert) alerts.push({ flag: "school_alert", icon: "🏫", desc: `校园警戒: ${(f as any).school_alert}` });
-      if ((f as any).identity_exposed) alerts.push({ flag: "identity_exposed", icon: "🎭", desc: `身份暴露: ${(f as any).identity_exposed}` });
-      if ((f as any).wanted) alerts.push({ flag: "wanted", icon: "👮", desc: `被通缉: ${(f as any).wanted}` });
+      if ((f as any).steal_alert) alerts.push({ flag: "steal_alert", icon: "🚨", desc: "偷窃警报生效中" });
+      if ((f as any).school_alert) alerts.push({ flag: "school_alert", icon: "🏫", desc: "校园警戒中" });
+      if ((f as any).identity_exposed) alerts.push({ flag: "identity_exposed", icon: "🎭", desc: "身份已暴露" });
+      if ((f as any).wanted) alerts.push({ flag: "wanted", icon: "👮", desc: "已被通缉" });
       const stealCaughtFlags = Object.keys(f as any).filter(k => k.startsWith("steal_caught_by_"));
       if (stealCaughtFlags.length > 0) {
         const names = stealCaughtFlags.map(k => k.replace("steal_caught_by_", ""));
