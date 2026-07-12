@@ -61,18 +61,61 @@ export function setLastRenderedProse(prose: string) {
 
 export { parseRoleOptions } from "../engine/parse-options.ts";
 
+export const TUI_THEME = {
+  border: "\x1b[90m",        // Gray borders
+  borderActive: "\x1b[36m",   // Cyan highlighted borders
+  titleText: "\x1b[1m\x1b[36m", // Bold Cyan title text
+  reset: "\x1b[0m",           // Reset style
+  selected: "\x1b[7m\x1b[1m\x1b[36m", // Inverse + Bold Cyan
+  itemDetail: "\x1b[90m",    // Gray detail
+  keyHint: "\x1b[90m",       // Gray key hints
+  keyText: "\x1b[36m",       // Cyan highlight keys
+  separator: "\x1b[90m",     // Gray separator lines
+  hudText: "\x1b[33m",       // Yellow HUD text
+};
+
 export function getStringWidth(str: string): number {
-  return [...str].reduce((w, c) => w + (c.charCodeAt(0) > 0x7f ? 2 : 1), 0);
+  let w = 0;
+  let i = 0;
+  while (i < str.length) {
+    if (str[i] === "\x1b") {
+      const match = str.slice(i).match(/^\x1b\[[0-9;]*[a-zA-Z]/);
+      if (match) {
+        i += match[0].length;
+        continue;
+      }
+    }
+    const c = str[i]!;
+    w += c.charCodeAt(0) > 0x7f ? 2 : 1;
+    i++;
+  }
+  return w;
 }
 
 export function truncateToWidth(str: string, maxWidth: number): string {
   let w = 0;
   let res = "";
-  for (const c of str) {
+  let i = 0;
+  let hasColor = false;
+  while (i < str.length) {
+    if (str[i] === "\x1b") {
+      const match = str.slice(i).match(/^\x1b\[[0-9;]*[a-zA-Z]/);
+      if (match) {
+        res += match[0];
+        hasColor = true;
+        i += match[0].length;
+        continue;
+      }
+    }
+    const c = str[i]!;
     const charW = c.charCodeAt(0) > 0x7f ? 2 : 1;
-    if (w + charW > maxWidth) break;
+    if (w + charW > maxWidth) {
+      if (hasColor) res += "\x1b[0m"; // Prevent color bleeding
+      break;
+    }
     res += c;
     w += charW;
+    i++;
   }
   return res;
 }
@@ -81,16 +124,27 @@ export function wrapLine(text: string, maxW: number): string[] {
   const res: string[] = [];
   let cur = "";
   let curW = 0;
-  for (const c of text) {
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === "\x1b") {
+      const match = text.slice(i).match(/^\x1b\[[0-9;]*[a-zA-Z]/);
+      if (match) {
+        cur += match[0];
+        i += match[0].length;
+        continue;
+      }
+    }
+    const c = text[i]!;
     const cw = c.charCodeAt(0) > 0x7f ? 2 : 1;
     if (curW + cw > maxW) {
-      res.push(cur);
+      res.push(cur + "\x1b[0m");
       cur = c;
       curW = cw;
     } else {
       cur += c;
       curW += cw;
     }
+    i++;
   }
   if (cur) res.push(cur);
   return res;
@@ -205,8 +259,84 @@ export async function showPanel(ctx: any, title: string, lines: string[]): Promi
   for (const line of lines) {
     finalLines.push(...wrapLine(line, 65));
   }
-  const items: MenuItem[] = finalLines.map(l => ({ label: l, detail: "", action: undefined }));
-  return showMenu(ctx, title, items);
+  // 只读面板：独立的滚动视图。内容不带 ▶ 光标（不是可选菜单），↑↓ 滚动而非移光标，q/Enter/ESC 返回。
+  return ctx.ui.custom(
+    (tui: any, _theme: any, _kb: any, done: any) => {
+      let scroll = 0;
+      const PAGE = 16;
+      const comp = {
+        render(width: number): string[] {
+          const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
+          const out: string[] = [];
+          const titleW = getStringWidth(title);
+          
+          // Styled Top border
+          const topBorder = TUI_THEME.border + "┌─" + TUI_THEME.reset + 
+                            TUI_THEME.titleText + title + TUI_THEME.reset + " " +
+                            TUI_THEME.border + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐" + TUI_THEME.reset;
+          out.push(topBorder);
+          
+          const maxScroll = Math.max(0, finalLines.length - PAGE);
+          if (scroll > maxScroll) scroll = maxScroll;
+          const view = finalLines.slice(scroll, scroll + PAGE);
+          
+          const total = finalLines.length;
+          const visibleCount = view.length;
+          const thumbHeight = Math.max(1, Math.round((visibleCount / total) * visibleCount));
+          const scrollableDistance = total - visibleCount;
+          const thumbStart = scrollableDistance > 0 ? Math.round((scroll / scrollableDistance) * (visibleCount - thumbHeight)) : 0;
+          
+          const contentW = w - 4;
+          for (let i = 0; i < visibleCount; i++) {
+            const l = view[i]!;
+            
+            // Check if this line is a sub-header or divider
+            let lineContent = l;
+            if (l.startsWith("──") && l.endsWith("──")) {
+              // Section header
+              lineContent = TUI_THEME.titleText + l + TUI_THEME.reset;
+            } else if (l.startsWith("──") || l.includes("────")) {
+              // General divider
+              lineContent = TUI_THEME.separator + l + TUI_THEME.reset;
+            }
+            
+            const t = truncateToWidth(lineContent, contentW);
+            const pad = Math.max(0, contentW - getStringWidth(t));
+            const paddedContent = t + " ".repeat(pad);
+            
+            let rightBorder = "│";
+            if (total > PAGE) {
+              const isScrollChar = i >= thumbStart && i < thumbStart + thumbHeight;
+              rightBorder = isScrollChar ? "\x1b[36m█\x1b[0m" : "\x1b[90m░\x1b[0m";
+            }
+            
+            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + paddedContent + TUI_THEME.border + " " + rightBorder + TUI_THEME.reset);
+          }
+          
+          out.push(TUI_THEME.border + "└" + "─".repeat(w - 2) + "┘" + TUI_THEME.reset);
+          
+          const scrollHint = total > PAGE
+            ? ` [${scroll + 1}-${Math.min(scroll + PAGE, total)}/${total}] ${TUI_THEME.keyText}↑↓/Space${TUI_THEME.keyHint} 滚动`
+            : "";
+          const hintText = `${TUI_THEME.keyText}q/Enter/ESC${TUI_THEME.keyHint} 返回${scrollHint}`;
+          out.push(truncateToWidth(hintText, w));
+          
+          return out;
+        },
+        handleInput(d: string) {
+          if (d === "\x1b" || d === "q" || d === "\r" || d === "\n") { done(); return; }
+          const maxScroll = Math.max(0, finalLines.length - PAGE);
+          if (d === "\x1b[A" || d === "\x1bOA" || d === "k" || d === "w") scroll = Math.max(0, scroll - 1);
+          else if (d === "\x1b[B" || d === "\x1bOB" || d === "j" || d === "s") scroll = Math.min(maxScroll, scroll + 1);
+          else if (d === "\x1b[5~") scroll = Math.max(0, scroll - PAGE);
+          else if (d === "\x1b[6~" || d === " ") scroll = Math.min(maxScroll, scroll + PAGE);
+        },
+        invalidate() {},
+      };
+      return comp;
+    },
+    { overlay: true }
+  );
 }
 
 export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem[] | (() => MenuItem[])): Promise<void> {
@@ -215,42 +345,137 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
       let sel = 0;
       const getItems = (): MenuItem[] => typeof itemsOrBuilder === "function" ? itemsOrBuilder() : itemsOrBuilder;
       let items = getItems();
+      
+      const isSelectable = (idx: number): boolean => {
+        const item = items[idx];
+        if (!item) return false;
+        if (item.label.startsWith("──") || item.label.trim() === "") return false;
+        const hasAnyAction = items.some(x => x && x.action);
+        if (hasAnyAction && !item.action) return false;
+        return true;
+      };
+
+      // Find first selectable item on start
+      if (items.length > 0 && !isSelectable(sel)) {
+        const first = items.findIndex((_, idx) => isSelectable(idx));
+        if (first !== -1) sel = first;
+      }
+
       const comp = {
         render(width: number): string[] {
           const out: string[] = [];
           const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
           const titleW = getStringWidth(title);
-          out.push("┌─" + title + " " + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐");
+          
+          // Styled Top border
+          const topBorder = TUI_THEME.border + "┌─" + TUI_THEME.reset + 
+                            TUI_THEME.titleText + title + TUI_THEME.reset + " " +
+                            TUI_THEME.border + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐" + TUI_THEME.reset;
+          out.push(topBorder);
           
           // TUI HUD Status Bar
           const statusText = buildStatusBarText();
           if (statusText) {
-            const barTrunc = truncateToWidth(statusText, w - 4);
+            const styledStatus = TUI_THEME.hudText + statusText + TUI_THEME.reset;
+            const barTrunc = truncateToWidth(styledStatus, w - 4);
             const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
-            out.push("│ " + barTrunc + " ".repeat(barPad) + " │");
-            out.push("├" + "─".repeat(w - 2) + "┤");
+            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + barTrunc + " ".repeat(barPad) + TUI_THEME.border + " │" + TUI_THEME.reset);
+            out.push(TUI_THEME.border + "├" + "─".repeat(w - 2) + "┤" + TUI_THEME.reset);
           }
 
-          const start = Math.max(0, sel - 5), end = Math.min(items.length, start + 10);
-          for (let i = start; i < end; i++) {
-            const it = items[i];
-            const line = (i === sel ? "▶ " : "  ") + it.label + (it.detail ? "  " + it.detail : "");
-            const t = tui.truncateToWidth ? tui.truncateToWidth(line, w - 2) : truncateToWidth(line, w - 2);
-            const pad = Math.max(0, (w - 4) - getStringWidth(t));
-            out.push("│ " + t + " ".repeat(pad) + " │");
+          let start = Math.max(0, sel - 5);
+          let end = Math.min(items.length, start + 10);
+          if (end - start < 10) {
+            start = Math.max(0, end - 10);
           }
-          out.push("└" + "─".repeat(w - 2) + "┘");
-          out.push((sel+1 + "/" + items.length + " 方向键选择 Enter确认 q退出").slice(0, w));
+          
+          const total = items.length;
+          const visibleCount = end - start;
+          const thumbHeight = Math.max(1, Math.round((visibleCount / total) * visibleCount));
+          const scrollableDistance = total - visibleCount;
+          const thumbStart = scrollableDistance > 0 ? Math.round((start / scrollableDistance) * (visibleCount - thumbHeight)) : 0;
+
+          const contentW = w - 4;
+          for (let i = start; i < end; i++) {
+            const it = items[i]!;
+            const isSel = (i === sel);
+            const isSeparator = it.label.startsWith("──");
+            
+            let labelStr = it.label;
+            let detailStr = it.detail ? " " + it.detail : "";
+            
+            let lineContent = "";
+            if (isSeparator) {
+              lineContent = TUI_THEME.separator + labelStr + TUI_THEME.reset;
+            } else {
+              if (isSel) {
+                lineContent = TUI_THEME.selected + "▶ " + labelStr + (detailStr ? "  " + detailStr : "") + TUI_THEME.reset;
+              } else {
+                lineContent = "  " + labelStr + (detailStr ? "  " + TUI_THEME.itemDetail + detailStr + TUI_THEME.reset : "");
+              }
+            }
+            
+            const t = truncateToWidth(lineContent, contentW);
+            const pad = Math.max(0, contentW - getStringWidth(t));
+            const paddedContent = t + " ".repeat(pad);
+            
+            const lineIdx = i - start;
+            let rightBorder = "│";
+            if (total > visibleCount) {
+              const isScrollChar = lineIdx >= thumbStart && lineIdx < thumbStart + thumbHeight;
+              rightBorder = isScrollChar ? "\x1b[36m█\x1b[0m" : "\x1b[90m░\x1b[0m";
+            }
+            
+            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + paddedContent + TUI_THEME.border + " " + rightBorder + TUI_THEME.reset);
+          }
+          
+          out.push(TUI_THEME.border + "└" + "─".repeat(w - 2) + "┘" + TUI_THEME.reset);
+          
+          const countStr = `${sel + 1}/${items.length}`;
+          const hintText = `${countStr}  ${TUI_THEME.keyText}↑↓${TUI_THEME.keyHint} 选择 · ${TUI_THEME.keyText}Enter${TUI_THEME.keyHint} 确认 · ${TUI_THEME.keyText}q/ESC${TUI_THEME.keyHint} 返回`;
+          out.push(truncateToWidth(hintText, w));
+          
           return out;
         },
         handleInput(d: string) {
           if (d === "\x1b" || d === "q") { done(); return; }
-          if (d === "\x1b[A" || d === "\x1bOA" || d === "k" || d === "w") sel = Math.max(0, sel - 1);
-          else if (d === "\x1b[B" || d === "\x1bOB" || d === "j" || d === "s") sel = Math.min(items.length - 1, sel + 1);
+          
+          const hasSelectable = items.some((_, idx) => isSelectable(idx));
+          
+          if (d === "\x1b[A" || d === "\x1bOA" || d === "k" || d === "w") {
+            if (hasSelectable) {
+              const prev = sel;
+              do {
+                sel = sel > 0 ? sel - 1 : items.length - 1;
+              } while (!isSelectable(sel) && sel !== prev);
+            } else {
+              sel = Math.max(0, sel - 1);
+            }
+          }
+          else if (d === "\x1b[B" || d === "\x1bOB" || d === "j" || d === "s") {
+            if (hasSelectable) {
+              const prev = sel;
+              do {
+                sel = sel < items.length - 1 ? sel + 1 : 0;
+              } while (!isSelectable(sel) && sel !== prev);
+            } else {
+              sel = Math.min(items.length - 1, sel + 1);
+            }
+          }
           else if (d === "\r" || d === "\n") {
             const it = items[sel];
-            if (it?.action) Promise.resolve(it.action(done)).then(() => { items = getItems(); sel = Math.min(sel, items.length-1); });
-            else if (!items.some(x => x?.action)) done();  // 纯信息面板：回车关闭。交互菜单里落在无动作项(灰选项/分隔线)上则保持打开，不误关整个菜单
+            if (it?.action) {
+              Promise.resolve(it.action(done)).then(() => { 
+                items = getItems(); 
+                sel = Math.min(sel, items.length - 1); 
+                // Adjust if current item is not selectable anymore
+                if (items.length > 0 && !isSelectable(sel)) {
+                  const first = items.findIndex((_, idx) => isSelectable(idx));
+                  if (first !== -1) sel = first;
+                }
+              });
+            }
+            else if (!items.some(x => x?.action)) done();  // 纯信息面板：回车关闭
           }
         },
         invalidate() {},
