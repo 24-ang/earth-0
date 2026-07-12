@@ -42,25 +42,30 @@
 
 `/reroll` 特殊：重新生成了一段叙事，却只 `showPanel` 展示、不注入对话，无法成为正史——设计层面残缺。
 
-## 4. 面板全景（34 命令 + 1 别名）
+## 4. 面板全景（2026-07-12 整合后：约 22 命令 + 1 别名）
 
-- **纯只读显示**：`look` `relations` `combat` `quest` `calendar` `weather` `alerts` `memory` `growth` `schedule` `shop` `achievements` `housing` `gamble` `party` `sex` `saves`
-- **改状态但不推正文**：`bag` `status` `identity` `preset` `layer1` `world` `save` `load` `new` `redo` `sleep` `room`
-- **改状态 + 排队消息**：`go` `goskip` `train` `choice`
-- **改状态 + 立即推正文**：`npc`
-- **其他**：`reroll`（重渲染，不进对话）
+- **信息 hub `/info`**（原 6 个只读面板并入，渲染函数在 `helpers.ts`：`renderCalendarLines`/`renderQuestLines`/`renderAlertsLines`/`renderScheduleLines`/`renderWeatherLines`/`renderMemoryLines`）
+- **经济 hub `/economy`**（原 `shop`/`gamble`/`housing` 并入：`renderShopLines`/`renderGambleLines`/`renderHousingLines`）
+- **`/status`** 收编 `growth`/`combat`/`party`（`renderGrowthLines`/`renderCombatLines`/`renderPartyLines`），加装备/背包管理
+- **其它只读**：`look` `relations` `sex` `saves` `achievements`
+- **改状态不推正文**：`bag` `identity` `preset` `layer1` `world` `save` `load` `new` `redo` `sleep` `room`
+- **移动（排队消息）**：`go`（`/go skip` = 原 goskip，跳过剧情直达）`train` `choice`
+- **立即推正文**：`npc`
+- **其它**：`reroll`（重渲染，不进对话）
 
-## 5. 整合建议（尚未实施）
+> hub 模式：`/info`·`/economy` 是 `showMenu` 入口，选一项 → `showPanel(渲染函数())`。子面板渲染逻辑统一放 `helpers.ts`（避免 tui↔helpers 循环依赖），是所有面板的单一真相源。
 
-| 整合项 | 操作 | 减少文件 | 风险 |
-|--------|------|---------|------|
-| `goskip` → `go fast` | `go.ts` 加参数解析，删 `goskip.ts` | 1 | 低 |
-| `status` 收编 `growth`/`combat`/`party` | 做标签页子菜单 | 3 | 中 |
-| `room` 解耦 `npc` | `showNPCInteractionMenu` 移到 `helpers.ts` | 0 | 低 |
-| 信息面板合并（`calendar`/`quest`/`alerts`/`schedule`/`weather`/`memory` → `/info` 标签页） | 新建 `info.ts` | 6 | 高（数据量大） |
-| `shop`/`gamble`/`housing` → `/economy` 标签页 | 新建 | 2 | 中 |
+## 5. 整合进度（2026-07-12 已完成 4 项）
 
-`save`/`load`/`saves` 三件套功能正交，不必合并。
+| 整合项 | 操作 | 状态 |
+|--------|------|------|
+| `goskip` → `/go skip` | `go.ts` 解析 skip 参数，删 `goskip.ts` | ✅ 已完成 |
+| `status` 收编 `growth`/`combat`/`party` | 渲染移入 helpers，status 加入口，删 3 文件 | ✅ 已完成 |
+| `shop`/`gamble`/`housing` → `/economy` | 新建 `economy.ts` hub + 渲染移入 helpers，删 3 文件 | ✅ 已完成 |
+| `calendar`/`quest`/`alerts`/`schedule`/`weather`/`memory` → `/info` | 新建 `info.ts` hub + 渲染移入 helpers，删 6 文件 | ✅ 已完成 |
+| `room` 解耦 `npc` | `showNPCInteractionMenu` 移到 helpers | ⬜ 未做（低优先，纯重构） |
+
+`save`/`load`/`saves` 三件套功能正交，不合并。共删 13 个面板文件、新增 `info.ts`/`economy.ts`，12 个渲染函数集中在 `helpers.ts`。门禁 test 343 / e2e-init 57 / e2e-full 31 全绿。
 
 ## 6. 已修的交互 bug（2026-07-12 收口）
 
