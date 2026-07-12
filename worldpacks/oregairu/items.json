@@ -957,326 +957,7103 @@
       "state": "intact",
       "volume": 0.4,
       "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已经磨出光泽——用了好几年了。通常装着一两本正在读的文库本和笔记。"
+    },
+    "黑白百褶裙": {
+      "name": "黑白百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "黑白相间的百褶裙，裙摆及膝，摆动时露出大腿内侧的绝对领域。",
+      "gender": "female"
+    },
+    "白色蕾丝胸罩": {
+      "name": "白色蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "白色蕾丝胸罩，小巧精致，包裹着含苞待放的乳房。",
+      "gender": "female"
+    },
+    "白色棉内裤": {
+      "name": "白色棉内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.03,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "纯白棉质内裤，简洁朴素，贴合臀部的曲线。",
+      "gender": "female"
+    },
+    "长袖衬衫": {
+      "name": "长袖衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.15,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2,
+      "flavor": "洁白笔挺的长袖衬衫，袖口扣紧，领口系缎带。",
+      "gender": "female"
+    },
+    "白色体操服": {
+      "name": "白色体操服",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2,
+      "flavor": "白色短袖体操服，吸汗面料，贴身勾勒出运动中的身体线条。",
+      "gender": "female"
+    },
+    "深蓝运动短裤": {
+      "name": "深蓝运动短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "深蓝色运动短裤，宽松透气，奔跑时裤管随步伐翻飞。",
+      "gender": "female"
+    },
+    "深蓝运动短裙": {
+      "name": "深蓝运动短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.12,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "深蓝色网球短裙，裙摆蓬松摇曳，底下安全裤若隐若现。",
+      "gender": "female"
+    },
+    "运动安全裤": {
+      "name": "运动安全裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.08,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "黑色弹力安全裤，紧贴大腿根部，剧烈运动也不走光。",
+      "gender": "female"
+    },
+    "白色网球鞋": {
+      "name": "白色网球鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8,
+      "flavor": "白色网球鞋，鞋底防滑，鞋带系得整整齐齐。",
+      "gender": "female"
+    },
+    "白色网球服": {
+      "name": "白色网球服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.12,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "白色网球服上衣，透气面料，运动后微微汗湿贴在白皙肌肤上。",
+      "gender": "female"
+    },
+    "米色针织衫": {
+      "name": "米色针织衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2,
+      "flavor": "米色针织衫，柔软亲肤，领口微敞露出锁骨。",
+      "gender": "female"
+    },
+    "深蓝A字裙": {
+      "name": "深蓝A字裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.15,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "深蓝色A字短裙，及膝以上，简约大方。",
+      "gender": "female"
+    },
+    "棕色短靴": {
+      "name": "棕色短靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8,
+      "flavor": "棕色短靴，低跟设计，走路时发出清脆的声响。",
+      "gender": "female"
+    },
+    "淡蓝蕾丝胸罩": {
+      "name": "淡蓝蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "淡蓝色蕾丝胸罩，小巧可爱，衬托出清纯的气质。",
+      "gender": "female"
+    },
+    "淡蓝蕾丝内裤": {
+      "name": "淡蓝蕾丝内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.03,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "淡蓝色蕾丝内裤，同色配套，质地轻柔。",
+      "gender": "female"
+    },
+    "白色棉质睡裙": {
+      "name": "白色棉质睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.15,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "纯白棉质睡裙，宽松柔软，及膝长度，穿着舒适。",
+      "gender": "female"
+    },
+    "白色连体泳衣": {
+      "name": "白色连体泳衣",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2,
+      "flavor": "白色连体泳衣，简洁的校园泳装款式，贴合纤细的身材曲线。",
+      "gender": "female"
+    },
+    "白底滚荷边比基尼": {
+      "name": "白底滚荷边比基尼",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.08,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "白底滚荷边的成套比基尼，胸前有黑绳蝴蝶结装饰，展示纤细的腰身。",
+      "gender": "female"
+    },
+    "薄纱长裙": {
+      "name": "薄纱长裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.06,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "若隐若现的薄纱长裙，轻裹白玉般的双腿，随海风轻轻扬起。",
+      "gender": "female"
+    },
+    "沙滩拖鞋": {
+      "name": "沙滩拖鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.12,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8,
+      "flavor": "沙滩拖鞋，藤编底，走在沙滩上发出沙沙声。",
+      "gender": "female"
+    },
+    "素黑连身长裙": {
+      "name": "素黑连身长裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "素黑淡雅的连身长裙，收束腰身的设计衬托出胸部曲线，下摆及踝。",
+      "gender": "female"
+    },
+    "纯白围裙": {
+      "name": "纯白围裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "纯白围裙，系在腰间，与黑色长裙形成鲜明对比。",
+      "gender": "female"
+    },
+    "黑色丝质过膝袜": {
+      "name": "黑色丝质过膝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.08,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "黑色丝质过膝袜，光泽优雅，紧裹纤细的小腿。",
+      "gender": "female"
+    },
+    "亮黑女仆皮鞋": {
+      "name": "亮黑女仆皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8,
+      "flavor": "亮黑色女仆皮鞋，低跟，鞋头微圆，走路轻巧无声。",
+      "gender": "female"
+    },
+    "雪白和服": {
+      "name": "雪白和服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "一袭雪白和服，配合清冷的气质，宛如误入凡间的雪女。",
+      "gender": "female"
+    },
+    "和服下摆": {
+      "name": "和服下摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "和服下摆，行走时布料轻曳，步伐被约束成细碎的步伐。",
+      "gender": "female"
+    },
+    "旅馆浴衣": {
+      "name": "旅馆浴衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "旅馆提供的素色浴衣，出浴后随意裹在身上，领口微敞。",
+      "gender": "female"
+    },
+    "木屐": {
+      "name": "木屐",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.25,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8,
+      "flavor": "木质人字拖，走在石板上咔哒咔哒响。",
+      "gender": "unisex"
+    },
+    "粉色蕾丝胸罩": {
+      "name": "粉色蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.06,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "粉色蕾丝胸罩，尺码比雪乃的大了两号，蕾丝边缘点缀着小花。",
+      "gender": "female"
+    },
+    "粉色条纹内裤": {
+      "name": "粉色条纹内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.04,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "粉色条纹内裤，俏皮可爱，与胸罩同色系搭配。",
+      "gender": "female"
+    },
+    "粉色运动内衣": {
+      "name": "粉色运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.09,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1,
+      "flavor": "粉色运动内衣，高强度支撑，防止剧烈运动时的晃动。",
+      "gender": "female"
+    },
+    "粉色棉内裤": {
+      "name": "粉色棉内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.04,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05,
+      "flavor": "粉色棉内裤，柔软亲肤，简洁的款式。",
+      "gender": "female"
+    },
+    "粉色荷叶边比基尼": {
+      "name": "粉色荷叶边比基尼",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.09,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "粉色荷叶边比基尼，可爱风格的泳装上装，衬托饱满的身材。",
+      "gender": "female"
+    },
+    "粉色比基尼下装": {
+      "name": "粉色比基尼下装",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3,
+      "flavor": "粉色比基尼下装，与上装成套，侧边系带。",
+      "gender": "female"
+    },
+    "白色校服衬衫": {
+      "name": "白色校服衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "深蓝色制服短裙": {
+      "name": "深蓝色制服短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "室内鞋": {
+      "name": "室内鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "制服外套": {
+      "name": "制服外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "校服衬衫": {
+      "name": "校服衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "裙子": {
+      "name": "裙子",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "长裤": {
+      "name": "长裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "百褶裙": {
+      "name": "百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "灰色旧西装": {
+      "name": "灰色旧西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "旧皮鞋": {
+      "name": "旧皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白衬衫": {
+      "name": "白衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "老花镜": {
+      "name": "老花镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "开衫毛衣": {
+      "name": "开衫毛衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "宽松裤子": {
+      "name": "宽松裤子",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色商务西装外套": {
+      "name": "黑色商务西装外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色商务西裤": {
+      "name": "黑色商务西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深灰男式正装袜": {
+      "name": "深灰男式正装袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "磨损黑色系带皮鞋": {
+      "name": "磨损黑色系带皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "薄白长袖衬衫": {
+      "name": "薄白长袖衬衫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "藏青纯棉平角内裤": {
+      "name": "藏青纯棉平角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "暗红窄版领带": {
+      "name": "暗红窄版领带",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "深灰拉链连帽卫衣": {
+      "name": "深灰拉链连帽卫衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "泛白直筒牛仔裤": {
+      "name": "泛白直筒牛仔裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "灰白网面运动鞋": {
+      "name": "灰白网面运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "灰色圆领棉短袖": {
+      "name": "灰色圆领棉短袖",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蓝白条纹纯棉睡衣裤": {
+      "name": "蓝白条纹纯棉睡衣裤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "社畜的暗色西装外套": {
+      "name": "社畜的暗色西装外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "充满褶皱的黑色西裤": {
+      "name": "充满褶皱的黑色西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深灰色正装男袜": {
+      "name": "深灰色正装男袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "饱经风霜的黑皮鞋": {
+      "name": "饱经风霜的黑皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "微黄的白衬衫": {
+      "name": "微黄的白衬衫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深蓝工作服": {
+      "name": "深蓝工作服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "工作裤": {
+      "name": "工作裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "安全鞋": {
+      "name": "安全鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "旧衬衫": {
+      "name": "旧衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝色制服长裤": {
+      "name": "深蓝色制服长裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "制服裤": {
+      "name": "制服裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "衬衫（领口大开）+ 鲜艳吊带背心": {
+      "name": "衬衫（领口大开）+ 鲜艳吊带背心",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "超短改版百褶裙": {
+      "name": "超短改版百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "耳机、多个手环、挂件": {
+      "name": "耳机、多个手环、挂件",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "校服上衣": {
+      "name": "校服上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "泡泡袜": {
+      "name": "泡泡袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "彩色指甲油": {
+      "name": "彩色指甲油",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "条纹内裤": {
+      "name": "条纹内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色T恤": {
+      "name": "白色T恤",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "四角内裤": {
+      "name": "四角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "校服外套": {
+      "name": "校服外套",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "普通T恤": {
+      "name": "普通T恤",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "休闲裤": {
+      "name": "休闲裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "宽松T恤配短裤": {
+      "name": "宽松T恤配短裤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "学生会制服外套": {
+      "name": "学生会制服外套",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "修身衬衫": {
+      "name": "修身衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高档棉质睡衣": {
+      "name": "高档棉质睡衣",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "黑色制服裤": {
+      "name": "黑色制服裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色背心": {
+      "name": "黑色背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "运动内裤": {
+      "name": "运动内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "中学校徽外套": {
+      "name": "中学校徽外套",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "潮牌T恤": {
+      "name": "潮牌T恤",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "工装短裤": {
+      "name": "工装短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "潮流球鞋": {
+      "name": "潮流球鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "大短裤": {
+      "name": "大短裤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "西装外套": {
+      "name": "西装外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "西裤": {
+      "name": "西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "休闲夹克": {
+      "name": "休闲夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "休闲鞋": {
+      "name": "休闲鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "睡衣": {
+      "name": "睡衣",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "棒球部训练服": {
+      "name": "棒球部训练服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "棒球裤": {
+      "name": "棒球裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "钉鞋": {
+      "name": "钉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "红色蝴蝶结": {
+      "name": "红色蝴蝶结",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "居家针织衫": {
+      "name": "居家针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "浅米色条纹工作衬衫": {
+      "name": "浅米色条纹工作衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色直筒工作长裤": {
+      "name": "黑色直筒工作长裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色棉质短袜": {
+      "name": "黑色棉质短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深灰防滑平底工作鞋": {
+      "name": "深灰防滑平底工作鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无钢圈肉色运动胸罩": {
+      "name": "无钢圈肉色运动胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅色棉质高腰内裤": {
+      "name": "浅色棉质高腰内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "暗红色挂脖式长围裙": {
+      "name": "暗红色挂脖式长围裙",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "黑色机车皮短夹克": {
+      "name": "黑色机车皮短夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白包臀连身短裙": {
+      "name": "纯白包臀连身短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "15D透肉黑色丝袜": {
+      "name": "15D透肉黑色丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色系带粗跟短靴": {
+      "name": "白色系带粗跟短靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑蕾丝钢圈半罩杯胸罩": {
+      "name": "黑蕾丝钢圈半罩杯胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑蕾丝低腰三角内裤": {
+      "name": "黑蕾丝低腰三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "纯白圆领长款打底衫": {
+      "name": "纯白圆领长款打底衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "浅灰色宽松连帽卫衣": {
+      "name": "浅灰色宽松连帽卫衣",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "黑色机车皮夹克": {
+      "name": "黑色机车皮夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色包臀连身短裙": {
+      "name": "白色包臀连身短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "15D透肉黑丝袜": {
+      "name": "15D透肉黑丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色蕾丝胸罩": {
+      "name": "黑色蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "灰色西装": {
+      "name": "灰色西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "Polo衫": {
+      "name": "Polo衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "米色高领针织衫": {
+      "name": "米色高领针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高腰直筒西裤": {
+      "name": "高腰直筒西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "尖头真皮踝靴": {
+      "name": "尖头真皮踝靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无痕肤色内衣": {
+      "name": "无痕肤色内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "无痕丁字裤": {
+      "name": "无痕丁字裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "藏青色剑道着（稽古着）": {
+      "name": "藏青色剑道着（稽古着）",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "藏青色剑道袴": {
+      "name": "藏青色剑道袴",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "赤足": {
+      "name": "赤足",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白色排汗打底": {
+      "name": "白色排汗打底",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "绿粉拼色运动短款罩衫": {
+      "name": "绿粉拼色运动短款罩衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "拼色高胯系带巴西高叉泳裤": {
+      "name": "拼色高胯系带巴西高叉泳裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "裸腿": {
+      "name": "裸腿",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色坡跟沙滩人字拖": {
+      "name": "白色坡跟沙滩人字拖",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "绿白拼色环扣三角比基尼胸衣": {
+      "name": "绿白拼色环扣三角比基尼胸衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蕾丝网眼缀墨绿宝石颈圈": {
+      "name": "蕾丝网眼缀墨绿宝石颈圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "丝绸质地细肩带V领睡裙": {
+      "name": "丝绸质地细肩带V领睡裙",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "白色芭蕾练功服": {
+      "name": "白色芭蕾练功服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "薄纱短裙": {
+      "name": "薄纱短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "芭蕾软鞋": {
+      "name": "芭蕾软鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "总武中学水手服": {
+      "name": "总武中学水手服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝百褶裙": {
+      "name": "深蓝百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "剑道着（稽古着）": {
+      "name": "剑道着（稽古着）",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "剑道袴": {
+      "name": "剑道袴",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "运动短款罩衫": {
+      "name": "运动短款罩衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "巴西高叉丁字泳裤": {
+      "name": "巴西高叉丁字泳裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "坡跟沙滩人字拖": {
+      "name": "坡跟沙滩人字拖",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "三角比基尼胸衣": {
+      "name": "三角比基尼胸衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "宝石蕾丝颈圈": {
+      "name": "宝石蕾丝颈圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "高马尾固定夹": {
+      "name": "高马尾固定夹",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "总武高浅米色V领制服针织背心": {
+      "name": "总武高浅米色V领制服针织背心",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "总武高深蓝高腰褶皱百褶裙": {
+      "name": "总武高深蓝高腰褶皱百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "堆叠式白色纯棉泡泡袜": {
+      "name": "堆叠式白色纯棉泡泡袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色亮面制服乐福鞋": {
+      "name": "黑色亮面制服乐福鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无缝紧身背心式运动内衣": {
+      "name": "无缝紧身背心式运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "字母印花高叉纯棉丁字裤": {
+      "name": "字母印花高叉纯棉丁字裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色免烫修身制服衬衫": {
+      "name": "白色免烫修身制服衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "修身白色背心": {
+      "name": "修身白色背心",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "灰色运动卫裤": {
+      "name": "灰色运动卫裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "复古运动鞋": {
+      "name": "复古运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无钢圈抹胸": {
+      "name": "无钢圈抹胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯棉三角裤": {
+      "name": "纯棉三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "绿粉拼色露腹网眼镂空罩衫": {
+      "name": "绿粉拼色露腹网眼镂空罩衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高胯系带式巴西高叉丁字泳裤": {
+      "name": "高胯系带式巴西高叉丁字泳裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色厚底松糕凉鞋": {
+      "name": "白色厚底松糕凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白色挂脖式三角比基尼胸衣": {
+      "name": "白色挂脖式三角比基尼胸衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "双层金色蝎子吊坠项链": {
+      "name": "双层金色蝎子吊坠项链",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "CDDP印花环扣三角比基尼": {
+      "name": "CDDP印花环扣三角比基尼",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "金属环扣高叉巴西式丁字泳裤": {
+      "name": "金属环扣高叉巴西式丁字泳裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "金属色哑光防静电手环": {
+      "name": "金属色哑光防静电手环",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "修身超短款高领华夫格针织衫": {
+      "name": "修身超短款高领华夫格针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "肉色无钢圈极薄抹胸": {
+      "name": "肉色无钢圈极薄抹胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "极窄细带低腰纯黑丁字裤": {
+      "name": "极窄细带低腰纯黑丁字裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色挂脖式深V露背礼服裙": {
+      "name": "白色挂脖式深V露背礼服裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色漆皮尖头细高跟鞋": {
+      "name": "白色漆皮尖头细高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "肉色加厚硅胶隐形胸贴": {
+      "name": "肉色加厚硅胶隐形胸贴",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色冰丝无痕丁字裤": {
+      "name": "白色冰丝无痕丁字裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "爱心蓝宝石白金项链": {
+      "name": "爱心蓝宝石白金项链",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "重工艺短款机车修身皮夹克": {
+      "name": "重工艺短款机车修身皮夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高弹力漆皮紧身格斗皮裤": {
+      "name": "高弹力漆皮紧身格斗皮裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "加厚钢头高帮格斗战术靴": {
+      "name": "加厚钢头高帮格斗战术靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "银白高弹排汗修身速干衣": {
+      "name": "银白高弹排汗修身速干衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "微纤维无缝加压防护平角裤": {
+      "name": "微纤维无缝加压防护平角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "钛合金格斗护腕指虎": {
+      "name": "钛合金格斗护腕指虎",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "银白色科幻女主角高叉Cos服": {
+      "name": "银白色科幻女主角高叉Cos服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "一体式连脚打底裤": {
+      "name": "一体式连脚打底裤",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "配套的银白高跟鞋": {
+      "name": "配套的银白高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "配套的白钢护腕道具": {
+      "name": "配套的白钢护腕道具",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蕾丝花边系带镂空胸衣围裙": {
+      "name": "蕾丝花边系带镂空胸衣围裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "超短轻薄透光围裙": {
+      "name": "超短轻薄透光围裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "蕾丝宽幅吊带袜网眼丝袜": {
+      "name": "蕾丝宽幅吊带袜网眼丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色漆皮丁字带玛丽珍鞋": {
+      "name": "白色漆皮丁字带玛丽珍鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "蕾丝花边系带镂空胸衣内衬": {
+      "name": "蕾丝花边系带镂空胸衣内衬",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白荷叶边蕾丝细带丁字裤": {
+      "name": "纯白荷叶边蕾丝细带丁字裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "带十字架挂钩的白钢颈圈": {
+      "name": "带十字架挂钩的白钢颈圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "大码黑色纯棉T恤": {
+      "name": "大码黑色纯棉T恤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "宽松连帽卫衣": {
+      "name": "宽松连帽卫衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "小白鞋": {
+      "name": "小白鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "遮胸束身运动内衣": {
+      "name": "遮胸束身运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "科幻女主角Cos服": {
+      "name": "科幻女主角Cos服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "配套银白高跟鞋": {
+      "name": "配套银白高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白钢护腕道具": {
+      "name": "白钢护腕道具",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "金色细框飞行员墨镜": {
+      "name": "金色细框飞行员墨镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深蓝色职业西装外套": {
+      "name": "深蓝色职业西装外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝色配套西装长裤": {
+      "name": "深蓝色配套西装长裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色中跟皮鞋": {
+      "name": "黑色中跟皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白色翻领知性衬衫": {
+      "name": "白色翻领知性衬衫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯色棉质三角内裤": {
+      "name": "纯色棉质三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "简约针织开衫": {
+      "name": "简约针织开衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "及膝棉麻半身裙": {
+      "name": "及膝棉麻半身裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "平底皮质单鞋": {
+      "name": "平底皮质单鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "围裙": {
+      "name": "围裙",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "浅色舒适吊带背心": {
+      "name": "浅色舒适吊带背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "棉质平角内裤": {
+      "name": "棉质平角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "保守纯棉长袖睡衣套装": {
+      "name": "保守纯棉长袖睡衣套装",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "肉色薄款丝袜": {
+      "name": "肉色薄款丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "半框近视眼镜": {
+      "name": "半框近视眼镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "总武高制服上衣": {
+      "name": "总武高制服上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "T恤": {
+      "name": "T恤",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "制服": {
+      "name": "制服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "米色V领毛衣背心": {
+      "name": "米色V领毛衣背心",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色圆领衬衫": {
+      "name": "白色圆领衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "红棕色格子蝴蝶结": {
+      "name": "红棕色格子蝴蝶结",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深蓝色百褶裙": {
+      "name": "深蓝色百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色中筒袜": {
+      "name": "黑色中筒袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "荷叶边露肩连衣裙": {
+      "name": "荷叶边露肩连衣裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "草编底凉鞋": {
+      "name": "草编底凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "浅蓝色宽松棉质睡袍": {
+      "name": "浅蓝色宽松棉质睡袍",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "圆框眼镜": {
+      "name": "圆框眼镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深色包臀裙": {
+      "name": "深色包臀裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "中跟鞋": {
+      "name": "中跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "胸罩": {
+      "name": "胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "内裤": {
+      "name": "内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "针织衫": {
+      "name": "针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "平底鞋": {
+      "name": "平底鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "米色内衣": {
+      "name": "米色内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "米色内裤": {
+      "name": "米色内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "百褶裙（比标准更短）": {
+      "name": "百褶裙（比标准更短）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "小皮鞋": {
+      "name": "小皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "粉色蝴蝶结、耳环": {
+      "name": "粉色蝴蝶结、耳环",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "游泳部训练T恤": {
+      "name": "游泳部训练T恤",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "运动凉鞋": {
+      "name": "运动凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "竞泳水着": {
+      "name": "竞泳水着",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "彩色发圈": {
+      "name": "彩色发圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色短裙": {
+      "name": "白色短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色帆布鞋": {
+      "name": "白色帆布鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "淡粉蕾丝胸罩": {
+      "name": "淡粉蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉色蕾丝内裤": {
+      "name": "粉色蕾丝内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "蝴蝶结发卡": {
+      "name": "蝴蝶结发卡",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉色针织开衫": {
+      "name": "粉色针织开衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "粉色吊带睡裙": {
+      "name": "粉色吊带睡裙",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "粉色发圈": {
+      "name": "粉色发圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉色内衣": {
+      "name": "粉色内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉色内裤": {
+      "name": "粉色内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "高领粗针织毛衣": {
+      "name": "高领粗针织毛衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深色修身西裤": {
+      "name": "深色修身西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色低跟皮鞋": {
+      "name": "黑色低跟皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无钢圈薄款内衣": {
+      "name": "无钢圈薄款内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯色棉质内裤": {
+      "name": "纯色棉质内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "一字领露肩毛衣": {
+      "name": "一字领露肩毛衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "修身水洗牛仔裤": {
+      "name": "修身水洗牛仔裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "居家室内拖鞋": {
+      "name": "居家室内拖鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无肩带聚拢内衣": {
+      "name": "无肩带聚拢内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蕾丝边低腰内裤": {
+      "name": "蕾丝边低腰内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "宽松大号男衬衫": {
+      "name": "宽松大号男衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "丝绸平角睡裤": {
+      "name": "丝绸平角睡裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "细带装饰皮带": {
+      "name": "细带装饰皮带",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯棉低腰内裤": {
+      "name": "纯棉低腰内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "精致银色耳钉": {
+      "name": "精致银色耳钉",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深灰色西装外套": {
+      "name": "深灰色西装外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "棕色皮鞋": {
+      "name": "棕色皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "金丝眼镜": {
+      "name": "金丝眼镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝色衬衫": {
+      "name": "浅蓝色衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "金丝眼镜+乳胶手套": {
+      "name": "金丝眼镜+乳胶手套",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深色开衫": {
+      "name": "深色开衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深灰西装": {
+      "name": "深灰西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "校服制服外套": {
+      "name": "校服制服外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色女式衬衫（紧身）": {
+      "name": "白色女式衬衫（紧身）",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "紧身长裙": {
+      "name": "紧身长裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高跟鞋": {
+      "name": "高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "金属细框眼镜": {
+      "name": "金属细框眼镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色短袖制服衬衫": {
+      "name": "白色短袖制服衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深色制服百褶裙": {
+      "name": "深色制服百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色运动板鞋": {
+      "name": "白色运动板鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "红色条纹蝴蝶结": {
+      "name": "红色条纹蝴蝶结",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "黑色蕾絲吊帶背心": {
+      "name": "黑色蕾絲吊帶背心",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "磨邊牛仔短褲": {
+      "name": "磨邊牛仔短褲",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色條紋防曬襯衫": {
+      "name": "白色條紋防曬襯衫",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "無肩帶隱形胸罩": {
+      "name": "無肩帶隱形胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "低腰棉質內褲": {
+      "name": "低腰棉質內褲",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色蕾絲頸圈": {
+      "name": "黑色蕾絲頸圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "宽松大码灰棉T恤": {
+      "name": "宽松大码灰棉T恤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "粉色條紋三角內褲": {
+      "name": "粉色條紋三角內褲",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色短袖制服襯衫": {
+      "name": "白色短袖制服襯衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色短襪": {
+      "name": "黑色短襪",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色運動板鞋": {
+      "name": "白色運動板鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑色蕾絲胸罩": {
+      "name": "黑色蕾絲胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色蕾絲內褲": {
+      "name": "黑色蕾絲內褲",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "紅色條紋蝴蝶結": {
+      "name": "紅色條紋蝴蝶結",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色短袖翻领运动衫": {
+      "name": "白色短袖翻领运动衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深灰侧白条纹运动裤": {
+      "name": "深灰侧白条纹运动裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色室内运动鞋": {
+      "name": "白色室内运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "浅色无痕运动内衣": {
+      "name": "浅色无痕运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯棉舒适三角内裤": {
+      "name": "纯棉舒适三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "专业竞技连体泳衣": {
+      "name": "专业竞技连体泳衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "赤脚": {
+      "name": "赤脚",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "修身针织衫": {
+      "name": "修身针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高腰牛仔裤": {
+      "name": "高腰牛仔裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "平底单鞋": {
+      "name": "平底单鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "蕾丝胸罩": {
+      "name": "蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蕾丝内裤": {
+      "name": "蕾丝内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "宽松莫代尔大号T恤": {
+      "name": "宽松莫代尔大号T恤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "深灰色侧白条纹长运动裤": {
+      "name": "深灰色侧白条纹长运动裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "橙绳不锈钢不鸣哨": {
+      "name": "橙绳不锈钢不鸣哨",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "过膝制服裙": {
+      "name": "过膝制服裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝色西装": {
+      "name": "深蓝色西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑皮鞋": {
+      "name": "黑皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "衬衫": {
+      "name": "衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "古典蕾丝女仆洋装": {
+      "name": "古典蕾丝女仆洋装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "荷叶边黑色百褶短裙": {
+      "name": "荷叶边黑色百褶短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色过膝天鹅绒大腿袜": {
+      "name": "黑色过膝天鹅绒大腿袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色圆头玛丽珍鞋": {
+      "name": "黑色圆头玛丽珍鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白色防走光抹胸": {
+      "name": "白色防走光抹胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯黑防走光安全裤": {
+      "name": "纯黑防走光安全裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色荷叶边长围裙": {
+      "name": "白色荷叶边长围裙",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "纯白荷叶边比基尼上衣": {
+      "name": "纯白荷叶边比基尼上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "扶桑花图案海滩纱裙": {
+      "name": "扶桑花图案海滩纱裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色坡跟凉鞋": {
+      "name": "白色坡跟凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "比基尼泳衣胸垫": {
+      "name": "比基尼泳衣胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白系带泳裤": {
+      "name": "纯白系带泳裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "缎带装饰遮阳草帽": {
+      "name": "缎带装饰遮阳草帽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉白相间翻领POLO衫": {
+      "name": "粉白相间翻领POLO衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白色运动短裙": {
+      "name": "纯白色运动短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑白条纹过膝运动袜": {
+      "name": "黑白条纹过膝运动袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "网面白色运动鞋": {
+      "name": "网面白色运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "吸汗无钢圈运动内衣": {
+      "name": "吸汗无钢圈运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯棉透气三角内裤": {
+      "name": "纯棉透气三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "防走光紧身打底裤": {
+      "name": "防走光紧身打底裤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "浅米色翻领双面呢大衣": {
+      "name": "浅米色翻领双面呢大衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色修身直筒西裤": {
+      "name": "黑色修身直筒西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色保暖短袜": {
+      "name": "黑色保暖短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深色真皮低跟短靴": {
+      "name": "深色真皮低跟短靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑色无痕光面胸罩": {
+      "name": "黑色无痕光面胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色无痕三角内裤": {
+      "name": "黑色无痕三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "麦穗纹高领针织毛衣": {
+      "name": "麦穗纹高领针织毛衣",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "条纹透气半透罩衫": {
+      "name": "条纹透气半透罩衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "极细竖条纹重工浴衣裙": {
+      "name": "极细竖条纹重工浴衣裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "传统桐木二齿下驮": {
+      "name": "传统桐木二齿下驮",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "和装专用防震束胸": {
+      "name": "和装专用防震束胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "真丝无痕和装内裤": {
+      "name": "真丝无痕和装内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色和装内衬肌襦袢": {
+      "name": "白色和装内衬肌襦袢",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "镂空蕾丝拼接黑衬衫": {
+      "name": "镂空蕾丝拼接黑衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "亮黄色复古褶皱长裙": {
+      "name": "亮黄色复古褶皱长裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "蕾丝提花半透长袜": {
+      "name": "蕾丝提花半透长袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色牛津厚底皮鞋": {
+      "name": "黑色牛津厚底皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑色绑带束身胸衣": {
+      "name": "黑色绑带束身胸衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯黑丝绸蕾丝内裤": {
+      "name": "纯黑丝绸蕾丝内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色呢料复古贝雷帽": {
+      "name": "黑色呢料复古贝雷帽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "水洗蓝原色牛仔夹克": {
+      "name": "水洗蓝原色牛仔夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "宽松高腰哈伦牛仔裤": {
+      "name": "宽松高腰哈伦牛仔裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "运动防滑棉质短袜": {
+      "name": "运动防滑棉质短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白厚底街头板鞋": {
+      "name": "纯白厚底街头板鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "纯白紧身短款背心": {
+      "name": "纯白紧身短款背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色低腰运动内裤": {
+      "name": "黑色低腰运动内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色软顶棒球帽": {
+      "name": "白色软顶棒球帽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "绿白细条纹连体泳衣": {
+      "name": "绿白细条纹连体泳衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "连体低叉泳裤摆": {
+      "name": "连体低叉泳裤摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "粉色双带平底凉拖": {
+      "name": "粉色双带平底凉拖",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "一体化轻薄聚拢胸垫": {
+      "name": "一体化轻薄聚拢胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "防透光棉质运动里衬": {
+      "name": "防透光棉质运动里衬",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "草编浅绿色单肩大包": {
+      "name": "草编浅绿色单肩大包",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白蕾丝连体束身衣裙": {
+      "name": "白蕾丝连体束身衣裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无裙装（仅着吊带袜内衣）": {
+      "name": "无裙装（仅着吊带袜内衣）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白蕾丝提花吊带袜": {
+      "name": "纯白蕾丝提花吊带袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色漆皮正装高跟鞋": {
+      "name": "白色漆皮正装高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "重工蕾丝钢圈聚拢托": {
+      "name": "重工蕾丝钢圈聚拢托",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白丁字高叉内裤一体": {
+      "name": "纯白丁字高叉内裤一体",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "双层珍珠微型锁骨链": {
+      "name": "双层珍珠微型锁骨链",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "微透光纯白蕾丝短旗袍": {
+      "name": "微透光纯白蕾丝短旗袍",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高开叉薄纱旗袍下摆": {
+      "name": "高开叉薄纱旗袍下摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无肩带一片式肉色胸贴": {
+      "name": "无肩带一片式肉色胸贴",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白网纱透明低腰内裤": {
+      "name": "纯白网纱透明低腰内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "大号纯白长袖职业衬衫": {
+      "name": "大号纯白长袖职业衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无下装（仅单穿衬衫）": {
+      "name": "无下装（仅单穿衬衫）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "肉色薄款无痕蕾丝胸罩": {
+      "name": "肉色薄款无痕蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅粉色丝绸低腰三角裤": {
+      "name": "浅粉色丝绸低腰三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "深海军蓝双排扣大衣": {
+      "name": "深海军蓝双排扣大衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深灰色厚呢料直筒短裙": {
+      "name": "深灰色厚呢料直筒短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "加厚纯黑天鹅绒连裤袜": {
+      "name": "加厚纯黑天鹅绒连裤袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色粗高跟真皮短靴": {
+      "name": "黑色粗高跟真皮短靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑色光面无痕聚拢胸罩": {
+      "name": "黑色光面无痕聚拢胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色丝绸无痕三角内裤": {
+      "name": "黑色丝绸无痕三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "浅灰色重编织高领围脖": {
+      "name": "浅灰色重编织高领围脖",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "橙红色粗针织外套": {
+      "name": "橙红色粗针织外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝色贴身牛仔裤": {
+      "name": "深蓝色贴身牛仔裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "普通纯棉保暖短袜": {
+      "name": "普通纯棉保暖短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "平底驼色翻毛皮鞋": {
+      "name": "平底驼色翻毛皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "浅色少女纯棉胸罩": {
+      "name": "浅色少女纯棉胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅色少女纯棉内裤": {
+      "name": "浅色少女纯棉内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "蓝绿相间条纹长袖T恤": {
+      "name": "蓝绿相间条纹长袖T恤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "宽松版纯白大号短袖T": {
+      "name": "宽松版纯白大号短袖T",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "超短水洗磨边牛仔短裤": {
+      "name": "超短水洗磨边牛仔短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色漆皮高跟短靴": {
+      "name": "黑色漆皮高跟短靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "水蓝色镂空蕾丝胸罩": {
+      "name": "水蓝色镂空蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "水蓝色蕾丝低腰三角裤": {
+      "name": "水蓝色蕾丝低腰三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色紧身真皮Choker": {
+      "name": "黑色紧身真皮Choker",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "排扣开领长款麻花毛衣": {
+      "name": "排扣开领长款麻花毛衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无裙装（过臀毛衣摆）": {
+      "name": "无裙装（过臀毛衣摆）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "肉色一片式防走光抹胸": {
+      "name": "肉色一片式防走光抹胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "肉色高级无痕三角短裤": {
+      "name": "肉色高级无痕三角短裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "纯黑色绒面皮革项圈": {
+      "name": "纯黑色绒面皮革项圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "大露背绑带针织毛衣": {
+      "name": "大露背绑带针织毛衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无背式隐形硅胶胸贴": {
+      "name": "无背式隐形硅胶胸贴",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "肉色极薄无痕丁字内裤": {
+      "name": "肉色极薄无痕丁字内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "镭射半透明连帽短夹克": {
+      "name": "镭射半透明连帽短夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝高叉高弹健美服": {
+      "name": "深蓝高叉高弹健美服",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯黑色高弹专业裤袜": {
+      "name": "纯黑色高弹专业裤袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "一体化竞速防震胸垫": {
+      "name": "一体化竞速防震胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "高弹力网眼透气打底裤": {
+      "name": "高弹力网眼透气打底裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "灰蓝色大U领针织长袖": {
+      "name": "灰蓝色大U领针织长袖",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色重工束腰皮短裙": {
+      "name": "黑色重工束腰皮短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "普通平底室内皮凉鞋": {
+      "name": "普通平底室内皮凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "聚拢型光面无痕胸罩": {
+      "name": "聚拢型光面无痕胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯黑丝绸无痕三角内裤": {
+      "name": "纯黑丝绸无痕三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色细皮质Choker项圈": {
+      "name": "黑色细皮质Choker项圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "水彩风冬季制服水手服": {
+      "name": "水彩风冬季制服水手服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "同色系水彩百褶短裙": {
+      "name": "同色系水彩百褶短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深黑色保暖正装过膝袜": {
+      "name": "深黑色保暖正装过膝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "标准黑色制服乐福鞋": {
+      "name": "标准黑色制服乐福鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白色纯棉防走光棉背心": {
+      "name": "白色纯棉防走光棉背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白色少女棉质内裤": {
+      "name": "纯白色少女棉质内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "亮红色条纹装饰防风围巾": {
+      "name": "亮红色条纹装饰防风围巾",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "一字肩露肩雪纺长裙": {
+      "name": "一字肩露肩雪纺长裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无裙装（连身单件）": {
+      "name": "无裙装（连身单件）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色细带编织凉鞋": {
+      "name": "白色细带编织凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "肉色无痕一片式抹胸": {
+      "name": "肉色无痕一片式抹胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白无痕丝滑三角裤": {
+      "name": "纯白无痕丝滑三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "藏青缎带白色遮阳帽": {
+      "name": "藏青缎带白色遮阳帽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "总武高竞速连体死库水": {
+      "name": "总武高竞速连体死库水",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "连体高叉泳裤摆": {
+      "name": "连体高叉泳裤摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "防水无痕泳衣内衬胸垫": {
+      "name": "防水无痕泳衣内衬胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "防走光低腰紧身内衬裤": {
+      "name": "防走光低腰紧身内衬裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "刺绣向日葵游泳校徽": {
+      "name": "刺绣向日葵游泳校徽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝牡丹重工精织浴衣": {
+      "name": "浅蓝牡丹重工精织浴衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无裙装（浴衣下摆）": {
+      "name": "无裙装（浴衣下摆）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "平底桐木涂漆下驮": {
+      "name": "平底桐木涂漆下驮",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "和装专用棉布束胸带": {
+      "name": "和装专用棉布束胸带",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝色丝绸无痕三角裤": {
+      "name": "浅蓝色丝绸无痕三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "天蓝色精织重工宽腰带": {
+      "name": "天蓝色精织重工宽腰带",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色细带丝绸吊带裙": {
+      "name": "白色细带丝绸吊带裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "超薄透气真丝一片式胸垫": {
+      "name": "超薄透气真丝一片式胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白网纱蕾丝半透裤": {
+      "name": "纯白网纱蕾丝半透裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "细银链圆形环坠项链": {
+      "name": "细银链圆形环坠项链",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白极简分体比基尼上衣": {
+      "name": "纯白极简分体比基尼上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白低腰双系带泳裤": {
+      "name": "纯白低腰双系带泳裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色纯棉大腿半截袜": {
+      "name": "白色纯棉大腿半截袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "防水超薄透气泳装胸垫": {
+      "name": "防水超薄透气泳装胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "防透光高密纯白内衬裤": {
+      "name": "防透光高密纯白内衬裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "分体式露脐旗袍上衣": {
+      "name": "分体式露脐旗袍上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "侧开叉提花包臀短裙": {
+      "name": "侧开叉提花包臀短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯黑色过膝长筒袜": {
+      "name": "纯黑色过膝长筒袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "宝蓝色高跟正装鞋": {
+      "name": "宝蓝色高跟正装鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无肩带肉色聚拢胸罩": {
+      "name": "无肩带肉色聚拢胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白色丝滑三角内裤": {
+      "name": "纯白色丝滑三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色荷叶边衬裙裙摆": {
+      "name": "白色荷叶边衬裙裙摆",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "藏青色古典折扇": {
+      "name": "藏青色古典折扇",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "木耳边细带蕾丝吊带裙": {
+      "name": "木耳边细带蕾丝吊带裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "一片式无痕肉色胸垫": {
+      "name": "一片式无痕肉色胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白棉质蕾丝边三角裤": {
+      "name": "纯白棉质蕾丝边三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "分体式蓝色排球运动衣": {
+      "name": "分体式蓝色排球运动衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "低腰双条纹运动短裤": {
+      "name": "低腰双条纹运动短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "排球衣一体化防震胸垫": {
+      "name": "排球衣一体化防震胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "透气排汗运动三角内裤": {
+      "name": "透气排汗运动三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黄蓝相间标准排球": {
+      "name": "黄蓝相间标准排球",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "脱卸半开式重工紫和服": {
+      "name": "脱卸半开式重工紫和服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无裙装（和服下摆）": {
+      "name": "无裙装（和服下摆）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "半脱落状态和装抹胸": {
+      "name": "半脱落状态和装抹胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "肉色高级无痕和装内裤": {
+      "name": "肉色高级无痕和装内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "明黄色重工重锦宽腰带": {
+      "name": "明黄色重工重锦宽腰带",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "大露背透光围裙式睡裙": {
+      "name": "大露背透光围裙式睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "透气超薄真丝无痕胸垫": {
+      "name": "透气超薄真丝无痕胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白蕾丝半透明薄内裤": {
+      "name": "纯白蕾丝半透明薄内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "高光漆皮紧身连体兔女郎": {
+      "name": "高光漆皮紧身连体兔女郎",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "连体高叉紧身裤摆": {
+      "name": "连体高叉紧身裤摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "透肉极薄纯黑色丝袜": {
+      "name": "透肉极薄纯黑色丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯黑色真皮细高跟鞋": {
+      "name": "纯黑色真皮细高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "一体化聚拢钢圈塑形托": {
+      "name": "一体化聚拢钢圈塑形托",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "连体高叉提臀防走光底衬": {
+      "name": "连体高叉提臀防走光底衬",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色漆皮兔耳发箍": {
+      "name": "黑色漆皮兔耳发箍",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "制服西装配棕色毛衣": {
+      "name": "制服西装配棕色毛衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "红绿格纹百褶裙": {
+      "name": "红绿格纹百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色三杠过膝袜": {
+      "name": "黑色三杠过膝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深棕色乐福皮鞋": {
+      "name": "深棕色乐福皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白色防走光背心": {
+      "name": "白色防走光背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白棉质三角裤": {
+      "name": "纯白棉质三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色尖领制服衬衫": {
+      "name": "白色尖领制服衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "雪花纹蓝色针织围巾": {
+      "name": "雪花纹蓝色针织围巾",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "一字领水蓝色睡裙": {
+      "name": "一字领水蓝色睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "软底室内拖鞋": {
+      "name": "软底室内拖鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "肉色光面防走光胸垫": {
+      "name": "肉色光面防走光胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝色丝绸三角内裤": {
+      "name": "浅蓝色丝绸三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "蕾丝拼接露肩内搭": {
+      "name": "蕾丝拼接露肩内搭",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "紫色缎面丁香花发圈": {
+      "name": "紫色缎面丁香花发圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "无外衣（仅着内衣）": {
+      "name": "无外衣（仅着内衣）",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无下装（仅着内衣）": {
+      "name": "无下装（仅着内衣）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "粉色蕾丝刺绣胸罩": {
+      "name": "粉色蕾丝刺绣胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉色蕾丝半透内裤": {
+      "name": "粉色蕾丝半透内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "深蓝缎面镂空胸罩": {
+      "name": "深蓝缎面镂空胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深蓝蕾丝低腰内裤": {
+      "name": "深蓝蕾丝低腰内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "一字肩纯白重工婚纱": {
+      "name": "一字肩纯白重工婚纱",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "大托尾层叠欧根纱裙": {
+      "name": "大托尾层叠欧根纱裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白真皮防水台高跟": {
+      "name": "纯白真皮防水台高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "白色防震无肩带束胸": {
+      "name": "白色防震无肩带束胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色无痕蕾丝三角裤": {
+      "name": "白色无痕蕾丝三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "双层水钻珍珠发冠": {
+      "name": "双层水钻珍珠发冠",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色荷叶边比基尼上衣": {
+      "name": "白色荷叶边比基尼上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色褶皱低腰泳裤": {
+      "name": "白色褶皱低腰泳裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "防水无痕泳衣胸垫": {
+      "name": "防水无痕泳衣胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "防透光内衬泳裤": {
+      "name": "防透光内衬泳裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色荷叶边女仆发箍": {
+      "name": "白色荷叶边女仆发箍",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "改良版宽袖和服上衣": {
+      "name": "改良版宽袖和服上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "浅蓝荷叶边双层短裙": {
+      "name": "浅蓝荷叶边双层短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白尼龙高筒大腿袜": {
+      "name": "纯白尼龙高筒大腿袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "水蓝色漆皮尖头高跟": {
+      "name": "水蓝色漆皮尖头高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无痕肉色三角内裤": {
+      "name": "无痕肉色三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "重工浅蓝菊花绢发饰": {
+      "name": "重工浅蓝菊花绢发饰",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "修身纯白长袖职业衬衫": {
+      "name": "修身纯白长袖职业衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高腰黑色紧身包臀裙": {
+      "name": "高腰黑色紧身包臀裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "透肉深灰色吊带丝袜": {
+      "name": "透肉深灰色吊带丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯黑真皮正装高跟鞋": {
+      "name": "纯黑真皮正装高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "全罩杯黑色刺绣胸衣": {
+      "name": "全罩杯黑色刺绣胸衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "全黑色绑带吊带内裤": {
+      "name": "全黑色绑带吊带内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "金属细框黑边近视眼镜": {
+      "name": "金属细框黑边近视眼镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑蓝双色运动文胸": {
+      "name": "黑蓝双色运动文胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "天蓝系带蕾丝裤": {
+      "name": "天蓝系带蕾丝裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "浅蓝透光薄纱吊带裙": {
+      "name": "浅蓝透光薄纱吊带裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "一体化超薄无痕胸垫": {
+      "name": "一体化超薄无痕胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝蕾丝低腰三角裤": {
+      "name": "浅蓝蕾丝低腰三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "高光紧身大露背兔女郎": {
+      "name": "高光紧身大露背兔女郎",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "连体高叉裤摆（卧姿）": {
+      "name": "连体高叉裤摆（卧姿）",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "透肉纯黑性感长丝袜": {
+      "name": "透肉纯黑性感长丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深黑色红底细高跟鞋": {
+      "name": "深黑色红底细高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "内置聚拢钢圈塑形托": {
+      "name": "内置聚拢钢圈塑形托",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "米色呢料大衣": {
+      "name": "米色呢料大衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色修身正装裤": {
+      "name": "黑色修身正装裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色羊绒保暖短袜": {
+      "name": "黑色羊绒保暖短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "真皮低跟短靴": {
+      "name": "真皮低跟短靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑色无痕胸罩": {
+      "name": "黑色无痕胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色无痕三角裤": {
+      "name": "黑色无痕三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "高领粗线针织毛衣": {
+      "name": "高领粗线针织毛衣",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "古典女仆洋装": {
+      "name": "古典女仆洋装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "蕾丝百褶短裙": {
+      "name": "蕾丝百褶短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "玛丽珍圆头皮鞋": {
+      "name": "玛丽珍圆头皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑色安全短裤": {
+      "name": "黑色安全短裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色荷叶边围裙": {
+      "name": "白色荷叶边围裙",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色荷叶边比基尼": {
+      "name": "白色荷叶边比基尼",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "扶桑花海滩纱裙": {
+      "name": "扶桑花海滩纱裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "泳衣内嵌胸垫": {
+      "name": "泳衣内嵌胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色系带泳裤": {
+      "name": "白色系带泳裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "缎带编织遮阳帽": {
+      "name": "缎带编织遮阳帽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉白相间POLO衫": {
+      "name": "粉白相间POLO衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白色网球短裙": {
+      "name": "纯白色网球短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑白双杠过膝运动袜": {
+      "name": "黑白双杠过膝运动袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色网面运动鞋": {
+      "name": "白色网面运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无钢圈运动胸罩": {
+      "name": "无钢圈运动胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "吸汗棉质发带": {
+      "name": "吸汗棉质发带",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "半透气条纹短罩衫": {
+      "name": "半透气条纹短罩衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "条纹重工精织浴衣": {
+      "name": "条纹重工精织浴衣",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "传统二齿木屐": {
+      "name": "传统二齿木屐",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "和装防震束胸": {
+      "name": "和装防震束胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "真丝无痕和装裤": {
+      "name": "真丝无痕和装裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "重工编织纯白腰带": {
+      "name": "重工编织纯白腰带",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蕾丝拼接黑衬衫": {
+      "name": "蕾丝拼接黑衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "姜黄色百褶长裙": {
+      "name": "姜黄色百褶长裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色蕾丝提花袜": {
+      "name": "黑色蕾丝提花袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "厚底牛津皮鞋": {
+      "name": "厚底牛津皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "绑带紧身束身衣": {
+      "name": "绑带紧身束身衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯黑蕾丝低腰裤": {
+      "name": "纯黑蕾丝低腰裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "呢料黑色贝雷帽": {
+      "name": "呢料黑色贝雷帽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "水洗蓝牛仔夹克": {
+      "name": "水洗蓝牛仔夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高腰宽松牛仔裤": {
+      "name": "高腰宽松牛仔裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "棉质加厚防滑短袜": {
+      "name": "棉质加厚防滑短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "街头厚底纯白板鞋": {
+      "name": "街头厚底纯白板鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "纯白紧身短背心": {
+      "name": "纯白紧身短背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "绿白条纹连体泳衣": {
+      "name": "绿白条纹连体泳衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "粉色双带平底拖鞋": {
+      "name": "粉色双带平底拖鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "一体化轻薄胸垫": {
+      "name": "一体化轻薄胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "高密网眼防透里衬": {
+      "name": "高密网眼防透里衬",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "浅绿草编单肩大包": {
+      "name": "浅绿草编单肩大包",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白蕾丝连体束身衣": {
+      "name": "白蕾丝连体束身衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "连体吊带袜扣带": {
+      "name": "连体吊带袜扣带",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白蕾丝提花吊带袜": {
+      "name": "白蕾丝提花吊带袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色漆皮正装高跟": {
+      "name": "白色漆皮正装高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "重工蕾丝钢圈托": {
+      "name": "重工蕾丝钢圈托",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白丁字高叉裤一体": {
+      "name": "白丁字高叉裤一体",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "礼服款长白手套": {
+      "name": "礼服款长白手套",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "微透纯白蕾丝短旗袍": {
+      "name": "微透纯白蕾丝短旗袍",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "高开叉薄纱裙摆": {
+      "name": "高开叉薄纱裙摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "一片式肉色隐形胸贴": {
+      "name": "一片式肉色隐形胸贴",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白网纱透明裤": {
+      "name": "纯白网纱透明裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "大号纯白长袖衬衫": {
+      "name": "大号纯白长袖衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无下装": {
+      "name": "无下装",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "肉色薄款无痕胸罩": {
+      "name": "肉色薄款无痕胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅粉丝绸低腰三角裤": {
+      "name": "浅粉丝绸低腰三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "海军蓝双排扣大衣": {
+      "name": "海军蓝双排扣大衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深灰厚呢料直筒裙": {
+      "name": "深灰厚呢料直筒裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "加厚纯黑天鹅绒裤袜": {
+      "name": "加厚纯黑天鹅绒裤袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色光面无痕胸罩": {
+      "name": "黑色光面无痕胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色丝绸无痕三角裤": {
+      "name": "黑色丝绸无痕三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "灰重麻花纹高领围脖": {
+      "name": "灰重麻花纹高领围脖",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "橙红粗针针织外套": {
+      "name": "橙红粗针针织外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝修身牛仔裤": {
+      "name": "深蓝修身牛仔裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯棉保暖短袜": {
+      "name": "纯棉保暖短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "驼色翻毛皮鞋": {
+      "name": "驼色翻毛皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "宽松版纯白大号T恤": {
+      "name": "宽松版纯白大号T恤",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "磨边牛仔短裤": {
+      "name": "磨边牛仔短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "水蓝镂空蕾丝胸罩": {
+      "name": "水蓝镂空蕾丝胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "水蓝低腰蕾丝裤": {
+      "name": "水蓝低腰蕾丝裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色真皮Choker项圈": {
+      "name": "黑色真皮Choker项圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "前扣粗线麻花毛衣": {
+      "name": "前扣粗线麻花毛衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "无裙装": {
+      "name": "无裙装",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "肉色一片式抹胸": {
+      "name": "肉色一片式抹胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "肉色无痕三角内裤": {
+      "name": "肉色无痕三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色绒面皮颈圈": {
+      "name": "黑色绒面皮颈圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "大露背绑带羊毛衫": {
+      "name": "大露背绑带羊毛衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "隐形无背硅胶胸贴": {
+      "name": "隐形无背硅胶胸贴",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "肉色无痕丁字裤": {
+      "name": "肉色无痕丁字裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "镭射半透明短夹克": {
+      "name": "镭射半透明短夹克",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝高叉连体衣": {
+      "name": "深蓝高叉连体衣",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色高弹连裤袜": {
+      "name": "黑色高弹连裤袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "竞速专用内嵌胸垫": {
+      "name": "竞速专用内嵌胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "网眼透气运动打底": {
+      "name": "网眼透气运动打底",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "灰蓝大U领针织衫": {
+      "name": "灰蓝大U领针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色高腰皮短裙": {
+      "name": "黑色高腰皮短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "平底室内皮凉鞋": {
+      "name": "平底室内皮凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "聚拢光面无痕胸罩": {
+      "name": "聚拢光面无痕胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯黑丝绸无痕短裤": {
+      "name": "纯黑丝绸无痕短裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色细皮Choker项圈": {
+      "name": "黑色细皮Choker项圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "冬季制服水手服": {
+      "name": "冬季制服水手服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "水彩深蓝百褶短裙": {
+      "name": "水彩深蓝百褶短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色正装过膝袜": {
+      "name": "黑色正装过膝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色制服乐福鞋": {
+      "name": "黑色制服乐福鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "纯棉防走光小背心": {
+      "name": "纯棉防走光小背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白少女棉质裤": {
+      "name": "纯白少女棉质裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "条纹装饰针织围巾": {
+      "name": "条纹装饰针织围巾",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "露肩一字领雪纺长裙": {
+      "name": "露肩一字领雪纺长裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色编织系带凉鞋": {
+      "name": "白色编织系带凉鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "纯白无痕丝滑短裤": {
+      "name": "纯白无痕丝滑短裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "藏青缎带遮阳帽": {
+      "name": "藏青缎带遮阳帽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深蓝连体死库水": {
+      "name": "深蓝连体死库水",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "连体高叉裤摆": {
+      "name": "连体高叉裤摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "防走光泳装胸垫": {
+      "name": "防走光泳装胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "低腰紧身运动衬裤": {
+      "name": "低腰紧身运动衬裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "向日葵游泳校徽": {
+      "name": "向日葵游泳校徽",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝牡丹精织浴衣": {
+      "name": "浅蓝牡丹精织浴衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "重工浴衣裙摆": {
+      "name": "重工浴衣裙摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "平底漆木下驮": {
+      "name": "平底漆木下驮",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "棉布防震束胸带": {
+      "name": "棉布防震束胸带",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝丝绸三角裤": {
+      "name": "浅蓝丝绸三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "天蓝精织宽腰带": {
+      "name": "天蓝精织宽腰带",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "细带丝绸吊带睡裙": {
+      "name": "细带丝绸吊带睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "真丝无痕薄胸垫": {
+      "name": "真丝无痕薄胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白网纱蕾丝裤": {
+      "name": "纯白网纱蕾丝裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "细银链环坠项链": {
+      "name": "细银链环坠项链",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色分体泳衣上装": {
+      "name": "白色分体泳衣上装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色低腰双系带裤": {
+      "name": "白色低腰双系带裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白棉质大腿半截袜": {
+      "name": "纯白棉质大腿半截袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "防水超薄泳装胸垫": {
+      "name": "防水超薄泳装胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "高密纯白内衬裤": {
+      "name": "高密纯白内衬裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "发端装饰红丝带": {
+      "name": "发端装饰红丝带",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "总武高制服西装": {
+      "name": "总武高制服西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "红绿呢格纹裙": {
+      "name": "红绿呢格纹裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深棕正装皮鞋": {
+      "name": "深棕正装皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "纯棉防走光背心": {
+      "name": "纯棉防走光背心",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "雪花鹿纹围巾": {
+      "name": "雪花鹿纹围巾",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "一字领水蓝睡裙": {
+      "name": "一字领水蓝睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "肉色无痕胸垫": {
+      "name": "肉色无痕胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝丝绸内裤": {
+      "name": "浅蓝丝绸内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "紫色丁香发圈": {
+      "name": "紫色丁香发圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "粉色半透内裤": {
+      "name": "粉色半透内裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝缎面胸罩": {
+      "name": "深蓝缎面胸罩",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝低腰内裤": {
+      "name": "深蓝低腰内裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "一字肩纯白婚纱": {
+      "name": "一字肩纯白婚纱",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "欧根纱大托尾裙": {
+      "name": "欧根纱大托尾裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "白色真皮高跟鞋": {
+      "name": "白色真皮高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "防震无肩带束胸": {
+      "name": "防震无肩带束胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色无痕三角裤": {
+      "name": "白色无痕三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "水钻珍珠发冠": {
+      "name": "水钻珍珠发冠",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "白色褶皱泳裤": {
+      "name": "白色褶皱泳裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "防水无痕内衬胸垫": {
+      "name": "防水无痕内衬胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "荷叶边女仆发箍": {
+      "name": "荷叶边女仆发箍",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "改良宽袖和服上衣": {
+      "name": "改良宽袖和服上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "浅蓝蕾丝蓬蓬裙": {
+      "name": "浅蓝蕾丝蓬蓬裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯白尼龙大腿袜": {
+      "name": "纯白尼龙大腿袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "水蓝漆皮高跟鞋": {
+      "name": "水蓝漆皮高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "无痕肉色三角裤": {
+      "name": "无痕肉色三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "重工蓝菊绢花发饰": {
+      "name": "重工蓝菊绢花发饰",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "修身纯白职业衬衫": {
+      "name": "修身纯白职业衬衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色紧身一步裙": {
+      "name": "黑色紧身一步裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深灰透肉吊带丝袜": {
+      "name": "深灰透肉吊带丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色漆皮正装高跟": {
+      "name": "黑色漆皮正装高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "黑色全罩杯束身衣": {
+      "name": "黑色全罩杯束身衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色绑带吊带内裤": {
+      "name": "黑色绑带吊带内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "金属细框黑边眼镜": {
+      "name": "金属细框黑边眼镜",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝透光薄纱睡裙": {
+      "name": "浅蓝透光薄纱睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "一体化无痕胸垫": {
+      "name": "一体化无痕胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅蓝蕾丝三角裤": {
+      "name": "浅蓝蕾丝三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "高光漆皮连体衣": {
+      "name": "高光漆皮连体衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "透肉纯黑长丝袜": {
+      "name": "透肉纯黑长丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色红底细高跟": {
+      "name": "黑色红底细高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "内置聚拢钢圈托": {
+      "name": "内置聚拢钢圈托",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "高叉提臀防走光衬": {
+      "name": "高叉提臀防走光衬",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "提花露脐短上衣": {
+      "name": "提花露脐短上衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "侧开叉包臀裙": {
+      "name": "侧开叉包臀裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯黑过膝长筒袜": {
+      "name": "纯黑过膝长筒袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "宝蓝色正装高跟": {
+      "name": "宝蓝色正装高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "肉色聚拢胸罩": {
+      "name": "肉色聚拢胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白丝滑内裤": {
+      "name": "纯白丝滑内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "藏青古典折扇": {
+      "name": "藏青古典折扇",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "木耳边吊带睡裙": {
+      "name": "木耳边吊带睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "肉色一片式胸垫": {
+      "name": "肉色一片式胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "棉质蕾丝三角裤": {
+      "name": "棉质蕾丝三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "水蓝色细带扣": {
+      "name": "水蓝色细带扣",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蓝色排球短背心": {
+      "name": "蓝色排球短背心",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "双条纹运动短裤": {
+      "name": "双条纹运动短裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "一体化防震胸垫": {
+      "name": "一体化防震胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "排汗运动三角裤": {
+      "name": "排汗运动三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "标准1号排球": {
+      "name": "标准1号排球",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "半解重工紫和服": {
+      "name": "半解重工紫和服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "和服松散下摆": {
+      "name": "和服松散下摆",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "松脱纯白束胸": {
+      "name": "松脱纯白束胸",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "肉色无痕和装裤": {
+      "name": "肉色无痕和装裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "重锦明黄宽腰带": {
+      "name": "重锦明黄宽腰带",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "大露背围裙睡裙": {
+      "name": "大露背围裙睡裙",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "真丝无痕胸垫": {
+      "name": "真丝无痕胸垫",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "纯白半透明内裤": {
+      "name": "纯白半透明内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "后颈系带蝴蝶结": {
+      "name": "后颈系带蝴蝶结",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色高光漆皮衣": {
+      "name": "黑色高光漆皮衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "极薄纯黑长丝袜": {
+      "name": "极薄纯黑长丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色漆皮细高跟": {
+      "name": "黑色漆皮细高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "一体聚拢钢圈托": {
+      "name": "一体聚拢钢圈托",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "连体防走光底衬": {
+      "name": "连体防走光底衬",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "黑色漆皮兔耳圈": {
+      "name": "黑色漆皮兔耳圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "T恤或卫衣": {
+      "name": "T恤或卫衣",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "宽松T恤": {
+      "name": "宽松T恤",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "小学生服": {
+      "name": "小学生服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "修身OL包臀半身裙": {
+      "name": "修身OL包臀半身裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色哑光薄丝袜": {
+      "name": "黑色哑光薄丝袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑色尖头细高跟鞋": {
+      "name": "黑色尖头细高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "蕾丝无钢圈内衣": {
+      "name": "蕾丝无钢圈内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "蕾丝包边三角内裤": {
+      "name": "蕾丝包边三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "宽松套头针织衫": {
+      "name": "宽松套头针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "纯棉修身长裙": {
+      "name": "纯棉修身长裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "居家软底拖鞋": {
+      "name": "居家软底拖鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "围裙（常做家务时穿）": {
+      "name": "围裙（常做家务时穿）",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "舒适无钢圈内衣": {
+      "name": "舒适无钢圈内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "丝绸质感吊带睡裙": {
+      "name": "丝绸质感吊带睡裙",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "深色家用挂脖围裙": {
+      "name": "深色家用挂脖围裙",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "浅灰色职业西装外套": {
+      "name": "浅灰色职业西装外套",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深蓝紧身包臀裙": {
+      "name": "深蓝紧身包臀裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "蕾丝黑吊带大腿袜": {
+      "name": "蕾丝黑吊带大腿袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "黑漆皮尖头细高跟": {
+      "name": "黑漆皮尖头细高跟",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "暗紫蕾丝半罩杯胸罩": {
+      "name": "暗紫蕾丝半罩杯胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "暗紫蕾丝低腰三角裤": {
+      "name": "暗紫蕾丝低腰三角裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "白色长袖职业衬衫": {
+      "name": "白色长袖职业衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "深酒红无袖高领针织衫": {
+      "name": "深酒红无袖高领针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "深色紧身包臀裙": {
+      "name": "深色紧身包臀裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "复古蕾丝黑丝吊带袜": {
+      "name": "复古蕾丝黑丝吊带袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "深色正装高跟鞋": {
+      "name": "深色正装高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
+    },
+    "真丝深V吊带内衣": {
+      "name": "真丝深V吊带内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "无痕纯棉三角内裤": {
+      "name": "无痕纯棉三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.05
+    },
+    "宽松纯白大褂": {
+      "name": "宽松纯白大褂",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "黑色吊带真丝睡裙": {
+      "name": "黑色吊带真丝睡裙",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.2
+    },
+    "深蓝包臀裙": {
+      "name": "深蓝包臀裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.3
+    },
+    "黑色吊带网纱袜": {
+      "name": "黑色吊带网纱袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.1
+    },
+    "细跟高跟鞋": {
+      "name": "细跟高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.7,
+      "effects": [],
+      "state": "intact",
+      "volume": 0.8
     }
-  },
-  "总武高制服外套": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "白色衬衫外套深色制服，颈间系缎带，勾勒出纤细的肩线与腰身。",
-    "weight": 0.3,
-    "value": 0
-  },
-  "黑白百褶裙": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "黑白相间的百褶裙，裙摆及膝，摆动时露出大腿内侧的绝对领域。",
-    "weight": 0.2,
-    "value": 0
-  },
-  "黑色过膝袜": {
-    "type": "clothing",
-    "slot": "legs",
-    "gender": "female",
-    "flavor": "黑色及膝长袜，袜口带一圈白边，紧裹笔直修长的腿，在大腿上勒出微妙的肉感。",
-    "weight": 0.1,
-    "value": 0
-  },
-  "皮鞋": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "female",
-    "flavor": "深棕色乐福鞋，鞋面微光，日常通学用。",
-    "weight": 0.3,
-    "value": 0
-  },
-  "白色蕾丝胸罩": {
-    "type": "clothing",
-    "slot": "inner_top",
-    "gender": "female",
-    "flavor": "白色蕾丝胸罩，小巧精致，包裹着含苞待放的乳房。",
-    "weight": 0.05,
-    "value": 0
-  },
-  "白色棉内裤": {
-    "type": "clothing",
-    "slot": "inner_bot",
-    "gender": "female",
-    "flavor": "纯白棉质内裤，简洁朴素，贴合臀部的曲线。",
-    "weight": 0.03,
-    "value": 0
-  },
-  "长袖衬衫": {
-    "type": "clothing",
-    "slot": "shirt",
-    "gender": "female",
-    "flavor": "洁白笔挺的长袖衬衫，袖口扣紧，领口系缎带。",
-    "weight": 0.15,
-    "value": 0
-  },
-  "白色体操服": {
-    "type": "clothing",
-    "slot": "shirt",
-    "gender": "female",
-    "flavor": "白色短袖体操服，吸汗面料，贴身勾勒出运动中的身体线条。",
-    "weight": 0.1,
-    "value": 0
-  },
-  "深蓝运动短裤": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "深蓝色运动短裤，宽松透气，奔跑时裤管随步伐翻飞。",
-    "weight": 0.1,
-    "value": 0
-  },
-  "深蓝运动短裙": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "深蓝色网球短裙，裙摆蓬松摇曳，底下安全裤若隐若现。",
-    "weight": 0.12,
-    "value": 0
-  },
-  "运动安全裤": {
-    "type": "clothing",
-    "slot": "inner_bot",
-    "gender": "female",
-    "flavor": "黑色弹力安全裤，紧贴大腿根部，剧烈运动也不走光。",
-    "weight": 0.08,
-    "value": 0
-  },
-  "运动内衣": {
-    "type": "clothing",
-    "slot": "inner_top",
-    "gender": "female",
-    "flavor": "黑色运动内衣，强力支撑，吸湿排汗。",
-    "weight": 0.08,
-    "value": 0
-  },
-  "运动鞋": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "unisex",
-    "flavor": "白色运动鞋，轻便耐磨，鞋底弹性十足。",
-    "weight": 0.3,
-    "value": 0
-  },
-  "白色网球鞋": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "female",
-    "flavor": "白色网球鞋，鞋底防滑，鞋带系得整整齐齐。",
-    "weight": 0.3,
-    "value": 0
-  },
-  "白色网球服": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "白色网球服上衣，透气面料，运动后微微汗湿贴在白皙肌肤上。",
-    "weight": 0.12,
-    "value": 0
-  },
-  "米色针织衫": {
-    "type": "clothing",
-    "slot": "shirt",
-    "gender": "female",
-    "flavor": "米色针织衫，柔软亲肤，领口微敞露出锁骨。",
-    "weight": 0.2,
-    "value": 0
-  },
-  "深蓝A字裙": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "深蓝色A字短裙，及膝以上，简约大方。",
-    "weight": 0.15,
-    "value": 0
-  },
-  "棕色短靴": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "female",
-    "flavor": "棕色短靴，低跟设计，走路时发出清脆的声响。",
-    "weight": 0.4,
-    "value": 0
-  },
-  "淡蓝蕾丝胸罩": {
-    "type": "clothing",
-    "slot": "inner_top",
-    "gender": "female",
-    "flavor": "淡蓝色蕾丝胸罩，小巧可爱，衬托出清纯的气质。",
-    "weight": 0.05,
-    "value": 0
-  },
-  "淡蓝蕾丝内裤": {
-    "type": "clothing",
-    "slot": "inner_bot",
-    "gender": "female",
-    "flavor": "淡蓝色蕾丝内裤，同色配套，质地轻柔。",
-    "weight": 0.03,
-    "value": 0
-  },
-  "白色棉质睡裙": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "纯白棉质睡裙，宽松柔软，及膝长度，穿着舒适。",
-    "weight": 0.15,
-    "value": 0
-  },
-  "白色连体泳衣": {
-    "type": "clothing",
-    "slot": "shirt",
-    "gender": "female",
-    "flavor": "白色连体泳衣，简洁的校园泳装款式，贴合纤细的身材曲线。",
-    "weight": 0.1,
-    "value": 0
-  },
-  "白底滚荷边比基尼": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "白底滚荷边的成套比基尼，胸前有黑绳蝴蝶结装饰，展示纤细的腰身。",
-    "weight": 0.08,
-    "value": 0
-  },
-  "薄纱长裙": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "若隐若现的薄纱长裙，轻裹白玉般的双腿，随海风轻轻扬起。",
-    "weight": 0.06,
-    "value": 0
-  },
-  "拖鞋": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "unisex",
-    "flavor": "普通塑料拖鞋，浴室或泳池边穿。",
-    "weight": 0.15,
-    "value": 0
-  },
-  "沙滩拖鞋": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "female",
-    "flavor": "沙滩拖鞋，藤编底，走在沙滩上发出沙沙声。",
-    "weight": 0.12,
-    "value": 0
-  },
-  "素黑连身长裙": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "素黑淡雅的连身长裙，收束腰身的设计衬托出胸部曲线，下摆及踝。",
-    "weight": 0.3,
-    "value": 0
-  },
-  "纯白围裙": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "纯白围裙，系在腰间，与黑色长裙形成鲜明对比。",
-    "weight": 0.1,
-    "value": 0
-  },
-  "黑色丝质过膝袜": {
-    "type": "clothing",
-    "slot": "legs",
-    "gender": "female",
-    "flavor": "黑色丝质过膝袜，光泽优雅，紧裹纤细的小腿。",
-    "weight": 0.08,
-    "value": 0
-  },
-  "亮黑女仆皮鞋": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "female",
-    "flavor": "亮黑色女仆皮鞋，低跟，鞋头微圆，走路轻巧无声。",
-    "weight": 0.3,
-    "value": 0
-  },
-  "雪白和服": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "一袭雪白和服，配合清冷的气质，宛如误入凡间的雪女。",
-    "weight": 0.5,
-    "value": 0
-  },
-  "和服下摆": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "和服下摆，行走时布料轻曳，步伐被约束成细碎的步伐。",
-    "weight": 0.3,
-    "value": 0
-  },
-  "旅馆浴衣": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "旅馆提供的素色浴衣，出浴后随意裹在身上，领口微敞。",
-    "weight": 0.2,
-    "value": 0
-  },
-  "木屐": {
-    "type": "clothing",
-    "slot": "feet",
-    "gender": "unisex",
-    "flavor": "木质人字拖，走在石板上咔哒咔哒响。",
-    "weight": 0.25,
-    "value": 0
-  },
-  "粉色蕾丝胸罩": {
-    "type": "clothing",
-    "slot": "inner_top",
-    "gender": "female",
-    "flavor": "粉色蕾丝胸罩，尺码比雪乃的大了两号，蕾丝边缘点缀着小花。",
-    "weight": 0.06,
-    "value": 0
-  },
-  "粉色条纹内裤": {
-    "type": "clothing",
-    "slot": "inner_bot",
-    "gender": "female",
-    "flavor": "粉色条纹内裤，俏皮可爱，与胸罩同色系搭配。",
-    "weight": 0.04,
-    "value": 0
-  },
-  "粉色运动内衣": {
-    "type": "clothing",
-    "slot": "inner_top",
-    "gender": "female",
-    "flavor": "粉色运动内衣，高强度支撑，防止剧烈运动时的晃动。",
-    "weight": 0.09,
-    "value": 0
-  },
-  "粉色棉内裤": {
-    "type": "clothing",
-    "slot": "inner_bot",
-    "gender": "female",
-    "flavor": "粉色棉内裤，柔软亲肤，简洁的款式。",
-    "weight": 0.04,
-    "value": 0
-  },
-  "粉色荷叶边比基尼": {
-    "type": "clothing",
-    "slot": "top",
-    "gender": "female",
-    "flavor": "粉色荷叶边比基尼，可爱风格的泳装上装，衬托饱满的身材。",
-    "weight": 0.09,
-    "value": 0
-  },
-  "粉色比基尼下装": {
-    "type": "clothing",
-    "slot": "bottom",
-    "gender": "female",
-    "flavor": "粉色比基尼下装，与上装成套，侧边系带。",
-    "weight": 0.05,
-    "value": 0
   }
 }
