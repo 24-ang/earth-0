@@ -5769,18 +5769,18 @@ test("TUI: /relations 面板不抛异常", async () => {
   await panel.handler([], ctx);
 });
 
-test("TUI: /alerts 面板不抛异常", async () => {
+test("TUI: alerts 渲染不抛异常（已并入 /info）", async () => {
   resetState();
-  const panel = require("./tools/tui/alerts.ts").default;
-  const ctx = { ui: { custom: (..._: any[]) => {} } };
-  await panel.handler([], ctx);
+  const { renderAlertsLines } = require("./tools/helpers.ts");
+  const lines = await renderAlertsLines();
+  if (!Array.isArray(lines) || lines.length === 0) throw new Error("renderAlertsLines 返回空");
 });
 
-test("TUI: /weather 面板不抛异常", async () => {
+test("TUI: weather 渲染不抛异常（已并入 /info）", async () => {
   resetState();
-  const panel = require("./tools/tui/weather.ts").default;
-  const ctx = { ui: { custom: (..._: any[]) => {} } };
-  await panel.handler([], ctx);
+  const { renderWeatherLines } = require("./tools/helpers.ts");
+  const lines = await renderWeatherLines();
+  if (!Array.isArray(lines) || lines.length === 0) throw new Error("renderWeatherLines 返回空");
 });
 
 // ═══════════════════════════════════════════════════════════

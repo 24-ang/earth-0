@@ -1,8 +1,9 @@
 import { runNavigation } from "../helpers.ts";
 
 export default {
-    description: "旅行与探索导航系统 (长途旅行会触发剧情叙事)",
-    handler: async (_args, ctx) => {
-      await runNavigation(ctx, false);
+    description: "旅行导航。默认长途触发叙事；/go skip 跳过剧情直达",
+    handler: async (args, ctx) => {
+      const skip = /skip|fast|跳过|直达/i.test((args || "").trim());
+      await runNavigation(ctx, skip);
     },
   };

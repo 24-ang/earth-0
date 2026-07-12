@@ -658,6 +658,302 @@ export async function showPhoneTUI(ctx: any, phoneItem: any) {
   await showMenu(ctx, `📱 ${phoneItem.name}${unreadStr}`, phoneMenu);
 }
 
+// ── 状态子面板渲染（被 runStatus 收编，原 /growth /combat /party）──
+
+export async function renderGrowthLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const p = gameState.player;
+  const lines: string[] = [];
+  lines.push(`📈 ${p.name} 发育面板 | ${p.age}岁 ${gameState.time.player_stage}`);
+  lines.push("────────────────────────────────────────");
+  if (p.body) {
+    const b = p.body;
+    lines.push(`📏 身高: ${b.height_cm}cm | 体重: ${b.weight_kg}kg | 体型: ${b.build}`);
+    if (b.measurements) lines.push(`📐 三围: ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}${b.cup ? ` (${b.cup}cup)` : ""}`);
+    if (b.skin) lines.push(`🖐 肤色: ${b.skin.base_tone} | 肤质: ${b.skin.texture}`);
+  }
+  lines.push("────────────────────────────────────────");
+  lines.push(`🍽 饮食方案: ${p.body?.diet || "普通"}`);
+  lines.push(`🏃 运动方案: ${p.body?.exercise || "普通"}`);
+  lines.push("方案: 饮食(普通|节食|高蛋白|丰胸食谱) 运动(普通|规律|高强度)。每月末自动结算或调 monthly_growth。");
+  return lines;
+}
+
+export async function renderCombatLines(): Promise<string[]> {
+  const { gameState, getCurrency, isSameLocation } = await import("../engine/state.ts");
+  const p = gameState.player;
+  const lines: string[] = [];
+  lines.push(`⚔️ 战斗状态`);
+  lines.push("────────────────────────────────────────");
+  lines.push(`❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac}`);
+  lines.push(`💪 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} | 💰 ${getCurrency()}${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`);
+  const weapon = p.equipment.right_hand || p.equipment.left_hand;
+  if (weapon && weapon.type === "weapon" && weapon.damage) lines.push(`🗡 武器: ${weapon.name} (${weapon.damage.dice} ${weapon.damage.damageType})`);
+  else lines.push(`👊 武器: 拳头 (1d2 钝击)`);
+  const ds = p.deathSaves;
+  lines.push(`💀 死亡豁免: ${ds?.successes || 0} 成功 / ${ds?.failures || 0} 失败${!p.alive ? " ⚠️濒死中" : ""}`);
+  lines.push("────────────────────────────────────────");
+  lines.push("👥 周边 NPC 战力评估:");
+  const nearbyNPCs = Object.entries(gameState.npcs).filter(([_, n]: any) => isSameLocation(n.currentRoom, p.location));
+  if (nearbyNPCs.length === 0) lines.push("  (周围没有NPC)");
+  else for (const [name, npc] of nearbyNPCs as any) {
+    const npcHp = npc.hp || { current: 10, max: 10 };
+    const npcAttr = npc.attributes || { 力量: 10, 敏捷: 10, 体质: 10 };
+    const w = npc.equipment?.right_hand || npc.equipment?.left_hand;
+    const wpnStr = w?.damage ? `${w.name}(${w.damage.dice})` : "徒手";
+    lines.push(`  ${name}: HP${npcHp.current}/${npcHp.max} AC${10 + Math.floor(((npcAttr.敏捷 || 10) - 10) / 2)} ${wpnStr}`);
+  }
+  const flags = gameState.flags || {} as any;
+  if ((flags as any).steal_alert) lines.push("⚠️ 偷窃警报生效中，NPC可能敌对！");
+  if ((flags as any).school_alert) lines.push("⚠️ 校园警戒中！");
+  return lines;
+}
+
+export async function renderPartyLines(): Promise<string[]> {
+  const { gameState, getOrCreateNPC, findCharacter } = await import("../engine/state.ts");
+  const p = gameState.player;
+  const lines: string[] = [];
+  lines.push(`🛡️ 当前队伍状态 (队长: ${p.name})`);
+  lines.push("────────────────────────────────────────");
+  lines.push(`👤 [主角] ${p.name} (${p.gender}) | ${p.age}岁 | HP: ${p.hp.current}/${p.hp.max} | AC: ${p.ac} | 位置: ${p.location}`);
+  lines.push("────────────────────────────────────────");
+  if (p.party && p.party.length > 0) {
+    for (const name of p.party) {
+      const char = findCharacter(name);
+      const npcState = getOrCreateNPC(name);
+      if (char) {
+        lines.push(`👥 [队友] ${char.name} (${char.gender === "female" ? "女" : "男"}) | 位置: ${npcState.currentRoom || char.default_location}`);
+        if (char.attributes) { const a = char.attributes; lines.push(`   属性: 力${a.力量} 敏${a.敏捷} 体${a.体质} 智${a.智力} 感${a.感知} 魅${a.魅力}`); }
+      }
+    }
+  } else {
+    lines.push("ℹ️ （队伍目前没有其他成员，你正独自一人前行）");
+  }
+  return lines;
+}
+
+// ── 经济子面板渲染（被 /economy 收编，原 /shop /gamble /housing）──
+
+export async function renderShopLines(): Promise<string[]> {
+  const { gameState, getLocationNav, getCurrency, getRoom, shopsCatalog, economyConfig } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const loc = gameState.player.location;
+  lines.push(`🏪 商店与打工`);
+  lines.push("────────────────────────────────────────");
+  lines.push(`📍 当前位置: ${loc}`);
+  const shopTypes = shopsCatalog && typeof shopsCatalog === "object" ? Object.keys(shopsCatalog) : [];
+  const nav = getLocationNav(loc);
+  const room = getRoom(loc);
+  const furnitureNames: string[] = [];
+  if (room?.cells) for (const row of room.cells) for (const c of (row || [])) if (c?.furniture) furnitureNames.push(c.furniture);
+  const locText = [loc, ...(nav.breadcrumb || [])].join(" ");
+  const matched = shopTypes.filter(t => furnitureNames.some(f => f.includes(t) || t.includes(f)) || locText.includes(t));
+  if (matched.length > 0) {
+    for (const t of matched) {
+      const its = (shopsCatalog as any)[t]?.items || [];
+      lines.push("");
+      lines.push(`🏬 ${t} (${its.length}种)`);
+      for (const it of its.slice(0, 12)) lines.push(`  • ${it}`);
+      if (its.length > 12) lines.push(`  ... 还有 ${its.length - 12} 种`);
+    }
+  } else {
+    lines.push("");
+    lines.push("（这附近没有可直接光顾的货架）");
+    if (shopTypes.length > 0) lines.push(`世界内已知店类型: ${shopTypes.join("、")}（走到对应场所或找到相应家具再逛）`);
+  }
+  lines.push("");
+  lines.push("────────────────────────────────────────");
+  lines.push("💼 可打工种 (时薪):");
+  const jobRates = (economyConfig as any)?.job_rates;
+  if (jobRates && Object.keys(jobRates).length > 0) for (const [job, rate] of Object.entries(jobRates) as any) lines.push(`  • ${job}: ${getCurrency()}${rate}/小时`);
+  else lines.push("  （暂无可打工种数据）");
+  lines.push("────────────────────────────────────────");
+  lines.push(`💰 你的余额: ${getCurrency()}${gameState.player.funds}`);
+  lines.push("使用 buy_item / sell_item / work_job 工具进行交易。");
+  return lines;
+}
+
+export async function renderGambleLines(): Promise<string[]> {
+  const { gameState, economyConfig } = await import("../engine/state.ts");
+  const { getBlackMarketPrice } = await import("../engine/gambling.ts");
+  const lines: string[] = [];
+  lines.push("🎲 灰色博弈与黑市状态");
+  lines.push("────────────────────────────────────────");
+  lines.push(` 💰 当前资金: ${gameState.player.funds} 资金`);
+  const rep = gameState.player.reputation?.["underworld"] ?? 0;
+  const aff = gameState.player.relationships?.["underworld_merchant"]?.affection ?? 0;
+  lines.push(` 💀 地下声望: ${rep}/10  |  🤝 黑市商人好感: ${aff}/100`);
+  lines.push("────────────────────────────────────────");
+  lines.push("📈 可用博弈项目：");
+  const games = (economyConfig as any)?.gambling?.games || { "dice_2d6": { label: "掷双骰", payout_multiplier: 2.0, difficulty_class: 12 }, "blackjack": { label: "二十一点", payout_multiplier: 2.0, difficulty_class: 14 } };
+  for (const [key, config] of Object.entries(games) as any) lines.push(`  • [${key}] ${config.label}: 赔率 x${config.payout_multiplier} | 判定DC: ${config.difficulty_class}`);
+  lines.push("────────────────────────────────────────");
+  lines.push("⚖️ 黑市交易折扣预测：");
+  const buyRate = getBlackMarketPrice("buy", 100, rep, aff);
+  const sellRate = getBlackMarketPrice("sell", 100, rep, aff);
+  lines.push(`  • 购入违禁品折算比率: ${buyRate}% (原价100 -> 黑市售价 ${buyRate})`);
+  lines.push(`  • 出售赃物折算比率: ${sellRate}% (原价100 -> 黑市回收价 ${sellRate})`);
+  return lines;
+}
+
+export async function renderHousingLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  lines.push("🏠 安全屋与储物柜概览");
+  lines.push("────────────────────────────────────────");
+  lines.push(` 💰 当前资金: ${gameState.player.funds} 资金`);
+  lines.push("────────────────────────────────────────");
+  const props = gameState.player.properties || {};
+  if (Object.keys(props).length === 0) {
+    lines.push("  你当前名下没有任何房产或安全屋。");
+    lines.push("  你可以使用 `manage_property` 购买或租用房产。");
+  } else {
+    for (const [id, prop] of Object.entries(props) as any) {
+      const typeStr = prop.type === "own" ? "【永久产权】" : `【租赁契约 (欠费 ${prop.arrears_days}天)】`;
+      lines.push(`🏠 ${prop.name} (${id}) ${typeStr}`);
+      lines.push(`  • 坐落区域: ${prop.regionId}`);
+      if (prop.type === "rent") lines.push(`  • 租金: ${prop.rent_fee} 资金/30天 | 下次扣租: ${prop.rent_due_date}`);
+      const storage = prop.storage || [];
+      const curVol = storage.reduce((s: number, i: any) => s + i.volume * i.quantity, 0);
+      const curWgt = storage.reduce((s: number, i: any) => s + i.weight * i.quantity, 0);
+      lines.push(`  • 储物箱体积: ${curVol.toFixed(2)}/${prop.max_volume} m³ | 承重: ${curWgt.toFixed(2)}/${prop.max_weight} kg`);
+      if (storage.length === 0) lines.push("  • 储物箱内容: 空");
+      else { lines.push("  • 储物柜内物品："); for (const item of storage) lines.push(`    - ${item.name} x${item.quantity} (${(item.weight * item.quantity).toFixed(1)}kg)`); }
+      lines.push("────────────────────────────────────────");
+    }
+  }
+  return lines;
+}
+
+// ── 信息子面板渲染（被 /info 收编，原 /calendar /quest /alerts /schedule /weather /memory）──
+
+export async function renderCalendarLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const { getTodayCalendar, getActiveQuests } = await import("../engine/timeline.ts");
+  const lines: string[] = [];
+  lines.push(`📅 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日`);
+  lines.push("────────────────────────────────────────");
+  const todayEvent = getTodayCalendar();
+  if (todayEvent) { lines.push("📌 今日事件"); lines.push(`  ${todayEvent}`); }
+  else lines.push("📌 今日: 无特殊事件");
+  lines.push("────────────────────────────────────────");
+  const quests = getActiveQuests();
+  lines.push(`📋 进行中的任务 (${quests.length})`);
+  if (quests.length > 0) for (const q of quests) lines.push(`  ▶ ${q.id} ${q.title || ""}`);
+  else lines.push("  (无)");
+  lines.push("────────────────────────────────────────");
+  const hooks = gameState.active_hooks || [];
+  lines.push(`🔗 待触发事件: ${hooks.length}`);
+  if (hooks.length > 0) for (const h of hooks.slice(0, 10)) lines.push(`  • ${h.event_id} (${h.urgency || "?"})`);
+  return lines;
+}
+
+export async function renderQuestLines(): Promise<string[]> {
+  const { getActiveQuests } = await import("../engine/timeline.ts");
+  const { gameState } = await import("../engine/state.ts");
+  const activeQuests = getActiveQuests();
+  const lines: string[] = [];
+  lines.push(`📋 进行中的任务: (${activeQuests.length})`);
+  lines.push("────────────────────────────────────────");
+  if (activeQuests.length > 0) for (const q of activeQuests) lines.push(`▶ [${q.id}] ${q.title || ""}`);
+  else lines.push("  (当前没有正在进行的任务)");
+  lines.push("────────────────────────────────────────");
+  const hooks = gameState.active_hooks || [];
+  lines.push(`🔗 等待触发的剧情钩子: (${hooks.length})`);
+  if (hooks.length > 0) for (const h of hooks) lines.push(`  - ${h.event_id} (${h.urgency || "?"}) ${(h.hook_text || "").slice(0, 40)}`);
+  return lines;
+}
+
+export async function renderAlertsLines(): Promise<string[]> {
+  const { gameState, getDisguiseIdentity } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const f = gameState.flags || {} as any;
+  const alerts: string[] = [];
+  if ((f as any).steal_alert) alerts.push("🚨 偷窃警报生效中");
+  if ((f as any).school_alert) alerts.push("🏫 校园警戒中");
+  if ((f as any).identity_exposed) alerts.push("🎭 身份已暴露");
+  if ((f as any).wanted) alerts.push("👮 已被通缉");
+  const caught = Object.keys(f as any).filter(k => k.startsWith("steal_caught_by_"));
+  if (caught.length > 0) alerts.push(`👀 偷窃目击者: ${caught.map(k => k.replace("steal_caught_by_", "")).join("、")}`);
+  lines.push("🚨 当前警报状态");
+  lines.push("────────────────────────────────────────");
+  if (alerts.length === 0) lines.push("✅ 一切正常，无活跃警报");
+  else for (const a of alerts) lines.push(a);
+  lines.push("────────────────────────────────────────");
+  lines.push(`当前身份: ${gameState.player.public_identity || "未公开"}`);
+  const disguise = getDisguiseIdentity(gameState.player);
+  if (disguise) lines.push(`🎭 装备伪装: ${disguise}`);
+  return lines;
+}
+
+export async function renderScheduleLines(): Promise<string[]> {
+  const { gameState, getMemoryTags } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const t = gameState.time;
+  lines.push(`📋 NPC 日程一览 | ${t.game_date} ${t.day_of_week}曜日 ${t.time_of_day}`);
+  lines.push("────────────────────────────────────────");
+  const npcs = Object.entries(gameState.npcs);
+  if (npcs.length === 0) { lines.push("（尚未追踪任何NPC日程）"); return lines; }
+  const byLocation: Record<string, string[]> = {};
+  for (const [name, npc] of npcs as any) {
+    const loc = npc.currentRoom || "未知";
+    if (!byLocation[loc]) byLocation[loc] = [];
+    const tags = getMemoryTags(name);
+    const override = npc.pendingOverride;
+    let info = name;
+    if (override) info += ` [🔶${override.location}]`;
+    if (tags.length > 0) info += ` 🏷${tags.length}`;
+    info += ` | ${npc.action || npc.scheduleGroup || "?"}`;
+    byLocation[loc].push(info);
+  }
+  for (const [loc, names] of Object.entries(byLocation)) {
+    const isHere = loc === gameState.player.location;
+    lines.push(`${isHere ? "📍" : "  "} ${loc} (${names.length}人)`);
+    for (const n of names.slice(0, 8)) lines.push(`    ${n}`);
+    if (names.length > 8) lines.push(`    ... 还有 ${names.length - 8} 人`);
+  }
+  lines.push("────────────────────────────────────────");
+  lines.push("🔶 = 日程覆盖中 | 🏷 = 有记忆标签 | 📍 = 当前位置");
+  return lines;
+}
+
+export async function renderWeatherLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const t = gameState.time;
+  const m = Number(t.game_date.split("-")[1]);
+  const season = m >= 3 && m <= 5 ? "春" : m >= 6 && m <= 8 ? "夏" : m >= 9 && m <= 11 ? "秋" : "冬";
+  lines.push(`🌈 天气面板`);
+  lines.push("────────────────────────────────────────");
+  lines.push(`📅 ${t.game_date} ${t.day_of_week}曜日 ${t.time_of_day}`);
+  lines.push(`🌤 当前: ${gameState.weather?.type || "晴"}`);
+  lines.push(`🌡 季节: ${season} | 温度: ${gameState.weather?.temp ?? "?"}°C`);
+  lines.push("────────────────────────────────────────");
+  lines.push("提示: 天气影响移动速度、NPC出没、事件触发。暴雨天NPC倾向室内，下雪天操场不可用。");
+  return lines;
+}
+
+export async function renderMemoryLines(): Promise<string[]> {
+  const { gameState, getMemoryTags, getOrCreateNPC } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  lines.push("🧠 NPC 记忆标签");
+  lines.push("────────────────────────────────────────");
+  const npcs = Object.keys(gameState.npcs);
+  let found = false;
+  for (const name of npcs) {
+    const npc = getOrCreateNPC(name);
+    const tags = getMemoryTags(name);
+    if (tags.length > 0) {
+      found = true;
+      lines.push(`👤 ${name} (${npc.currentRoom || "未知位置"})`);
+      for (const tag of tags) lines.push(`  📌 ${tag}`);
+      lines.push("");
+    }
+  }
+  if (!found) { lines.push("（尚无NPC对你留下记忆标签）"); lines.push("记忆标签在关键剧情事件时由GM写入，注入后续NPC上下文。"); }
+  return lines;
+}
+
 export async function runStatus(ctx: any) {
   const { gameState, saveState, calcMaxCarry, calcCurrentWeight, isOverburdened, calcPocketVolume, calcInventoryVolume } = await import("../engine/state.ts");
   const p = gameState.player;
@@ -708,6 +1004,11 @@ export async function runStatus(ctx: any) {
     } else {
       items.push({ label: `  (无)`, detail: "" });
     }
+
+    items.push({ label: "── 🔎 更多面板 ──", detail: "" });
+    items.push({ label: "  📈 发育", detail: "身高/三围/饮食/运动", action: async (_d) => { await showPanel(ctx, "📈 发育", await renderGrowthLines()); } });
+    items.push({ label: "  ⚔️ 战力", detail: "HP/AC/周边NPC战力", action: async (_d) => { await showPanel(ctx, "⚔️ 战斗", await renderCombatLines()); } });
+    items.push({ label: "  👥 队伍", detail: "队友状态", action: async (_d) => { await showPanel(ctx, "👥 我的队伍", await renderPartyLines()); } });
 
     items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
     for (const [slotKey, slotName] of Object.entries(SLOT_NAMES)) {
