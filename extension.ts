@@ -646,7 +646,8 @@ async function maintainSexMode(ctx: any) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 向后兼容：buildSystemPrompt（测试文件可能引用）
+// [DEPRECATED] buildSystemPrompt — 仅保留供 test.ts 引用
+// 新版 Phase 3 使用 buildRenderSystemPrompt（phase3-render.ts）
 // ═══════════════════════════════════════════════════════════
 
 export async function buildSystemPrompt(gameState: any, statePrompt: string): Promise<string> {
@@ -713,233 +714,259 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🎮 终端常驻 HUD widget + /hud 交互
+// 🎮 终端常驻 HUD widget — 纯文本渲染（pi-tui aboveEditor 过滤 ANSI 转义）
 // ═══════════════════════════════════════════════════════════
-// widget 可画任意行（只要宽度不超），但不能收按键。用 /hud 做 overlay 交互。
 
-const C = { r:"\x1b[0m", O:"\x1b[38;5;216m", P:"\x1b[38;5;140m", b:"\x1b[38;5;117m", G:"\x1b[38;5;114m", d:"\x1b[38;5;167m", Y:"\x1b[38;5;215m", M:"\x1b[38;5;243m", W:"\x1b[38;5;252m", B:"\x1b[1m", dim:"\x1b[2m", rev:"\x1b[7m" };
-/** 动态分割线，匹配终端宽度 */
-function makeHLine(W: number) { return "\x1b[90m" + "─".repeat(W) + "\x1b[0m"; }
+/** NPC 好感度 helper */
+function getNpcAffection(gs: any, name: string): number {
+  return gs?.player?.relationships?.[name]?.affection ?? 0;
+}
+function isNpcLover(gs: any, name: string): boolean {
+  return gs?.player?.relationships?.[name]?.romance === "恋人";
+}
 
 function initGamePanel(pi: any, ctx: any) {
-  // ── HUD 导航状态 ──
-  let _tab = 1;        // 0=自身 1=周边 2=房间 3=行动
+  let _tab = 0;
   let _cursor = 0;
-  let _panelMode = false; // Enter 进入面板模式后 ↑↓ 才生效
+  let _panelMode = false;
   let _choicesCache: string[] = [];
   let _choiceTags: string[] = [];
   let _peopleCache: any[] = [];
+  let _lastProseHash = "";
 
-  // ── 辅助：NPC grid位置 → 文字描述 ──
   const posLabel = (gp: any, rm: any): string => {
     if (!gp || !rm) return "";
+    if (!Array.isArray(gp)) { console.warn("[game-hud] non-array gridPos", typeof gp, gp); }
     const [x,y] = Array.isArray(gp) ? gp : [0,0];
-    let lbl = "";
-    const w=rm.width||10, h=rm.height||6;
+    let lbl = ""; const w=rm.width||10, h=rm.height||6;
     if (y===0) lbl="靠墙"; else if (y===h-1) lbl="靠后墙";
     if (x===0) lbl+="靠左"; else if (x===w-1) lbl+="靠右";
     if (!lbl) lbl="中间";
     const c=rm.cells?.[y]?.[x];
     if (c?.label && c.label.trim() && c.label.trim()!=="  ") lbl=c.label.trim();
-    return `(${x},${y})${lbl}`;
+    return lbl;
+  };
+
+  const npcQuickActions = (gs: any, name: string): string => {
+    const aff = getNpcAffection(gs, name); const lover = isNpcLover(gs, name);
+    const pty: string[] = gs?.player?.party || [];
+    const inParty = pty.includes(name);
+    const parts: string[] = ["快捷:"];
+    parts.push("①搭话");
+    parts.push(aff>=10 ? "②接触" : "②接触(需好感≥10)");
+    parts.push("③观察");
+    parts.push(aff>=40||lover ? (inParty?"④离队":"④组队") : "④组队(需≥40)");
+    if(aff>=50||lover) parts.push(aff>=50 ? "⑤恋爱" : "⑤恋爱(需≥50)");
+    if(lover&&aff>=80) parts.push("⑨亲密");
+    return parts.join("  ");
   };
 
   ctx.ui.setWidget("game-hud", (tui: any, _theme: any) => {
     const vw = typeof tui?.visibleWidth === "function" ? tui.visibleWidth() : 48;
     const W = Math.max(20, vw - 2);
-    const { truncateToWidth } = require("../tools/helpers.ts");
-    const tr = (s: string) => truncateToWidth(s, W);
-    const todZH: Record<string,string> = {morning:"午前",lunch:"昼",afternoon:"午後",evening:"夕方",night:"夜"};
-    const TABS = ["🛡 自身", "👥 周边", "🏠 房间", "▼ 行动"];
+    const tr = (s: string) => { let w=0,res="",i=0;while(i<s.length){const c=s[i]!;const cw=c.charCodeAt(0)>0x7f?2:1;if(w+cw>W){res+="…";break;}res+=c;w+=cw;i++;}return res; };
+    const TABS = ["[自身]","[周边]","[房间]","[行动]"];
 
     return {
       render(_w: number): string[] {
         try {
-          const s = require("../engine/state.ts"); const gs = s.gameState; const p = gs?.player; if (!p) return [];
+          const s = require("./engine/state.ts"); const gs = s.gameState; const p = gs?.player; if (!p) return [];
           const out: string[] = [];
-          const loc = p.location||"???"; const t = gs.time; const mode = (gs.mode||"rpg").toUpperCase();
-          const hp=p.hp?.current??10, hpM=p.hp?.max??15; const isSex = mode==="SEX";
-          const date=t?.game_date||""; const dow=t?.day_of_week||"";
-          const tod=todZH[t?.time_of_day]||t?.time_of_day||"";
+          const loc = p.location||"???"; const t = gs.time; const mode = gs.mode||"rpg";
+          const hp=p.hp?.current??10, hpM=p.hp?.max??15, ac=p.ac||10;
+          const weather=t?.weather||""; const wIcon=weather.includes("雨")?"🌧":weather.includes("雪")?"❄":"☀";
+          const rm=s.getRoom(loc);
+          const prose=(gs as any)._renderedProse||"";
 
-          const weather = t?.weather||""; const wIcon = weather.includes("雨")?"🌧":weather.includes("雪")?"❄":"☀";
-          const turn = gs.turn||0; const rm = s.getRoom(loc);
-          const prose = (gs as any)._renderedProse || "";
-
-          // 解析选项（含标签）
-          _choicesCache = []; _choiceTags = [];
-          if (prose) {
-            try {
-              const { parseRoleOptions } = require("../../engine/parse-options.ts");
-              const r = parseRoleOptions(prose);
-              for (const c of (r.options||[])) {
-                _choicesCache.push(c.text); _choiceTags.push(c.tag||"");
-              }
-            } catch {}
+          const ph=prose.length;const pk=ph+prose.slice(-30);
+          if(pk!==_lastProseHash){_lastProseHash=pk;_choicesCache=[];_choiceTags=[];
+            if(prose){try{const{parseRoleOptions}=require("./engine/parse-options.ts");const r=parseRoleOptions(prose);for(const c of(r.options||[])){_choicesCache.push(c.text);_choiceTags.push(c.tag||"");}}catch{}}
           }
 
-          // 同场 NPC
-          const nearby = Object.entries(gs.npcs||{}).filter(([_,n]:any)=>n.alive!==false&&s.isSameLocation(n.currentRoom,loc));
-          const npcNames = nearby.map(([name]:any)=>name);
-
-          // 构建 _peopleCache（含路人）
-          _peopleCache = nearby.map(([name,npc]:[string,any])=>{
-            const rel = p.relationships?.[name];
-            const body = npc.body||npc.body_by_age||{};
-            const gp = npc.gridPos||npc.grid_pos||[0,0];
-            return {
-              name, type:"named", gp,
-              height: body.height_cm||npc.height_cm||npc.height||"?",
-              posDesc: posLabel(gp, rm),
-              dist: npc.distance||npc.dist||2,
-              affection: rel?.affection??0, stage: rel?.stage||"陌生", romance: rel?.romance||"",
-              lh: npc.equipment?.left_hand?.name||npc.left_hand||"",
-              rh: npc.equipment?.right_hand?.name||npc.right_hand||"",
-              lastWords: (npc.lastWords||"").replace(/^\[.*?\]\s*/,""),
-              action: npc.action||"",
-            };
+          const nearby=Object.entries(gs.npcs||{}).filter(([_,n]:any)=>n.alive!==false&&s.isSameLocation(n.currentRoom,loc));
+          _peopleCache=nearby.map(([name,npc]:[string,any])=>{
+            const rel=p.relationships?.[name];const body=npc.body||npc.body_by_age||{};
+            return{name,type:"named",gp:npc.gridPos||npc.grid_pos||[0,0],
+              height:body.height_cm||npc.height_cm||npc.height||"?",
+              posDesc:posLabel(npc.gridPos||npc.grid_pos,rm),
+              dist:npc.distance||npc.dist||2,
+              affection:rel?.affection??0,stage:rel?.stage||"陌生",romance:rel?.romance||"",
+              lh:npc.equipment?.left_hand?.name||npc.left_hand||"",
+              rh:npc.equipment?.right_hand?.name||npc.right_hand||"",
+              lastWords:(npc.lastWords||"").replace(/^\[.*?\]\s*/,""),action:npc.action||""};
           });
-          try {
-            const realCrowd = s.getNamelessNPCs(loc, gs.turn) as any[];
-            const sandCrowd = (gs as any)._testCrowd || [];
-            const crowd = [...realCrowd, ...sandCrowd];
-            for (const c of crowd) _peopleCache.push({
-              name: c.name||"???", type:"crowd", gp: c.gridPos||[0,0],
-              height: c.height||"?", posDesc: posLabel(c.gridPos, rm), dist: "?",
-              clusterSize: c.count||c.clusterSize||1, action: c.act||c.action||"",
-              affection:0, stage:"", romance:"", lh:"", rh:"", lastWords:"",
-            });
-          } catch {}
+          try{const rc=s.getNamelessNPCs(loc,gs.turn)as any[];const sc=(gs as any)._testCrowd||[];
+            for(const c of[...rc,...sc])_peopleCache.push({name:c.name||"???",type:"crowd",gp:c.gridPos||[0,0],height:c.height||"?",posDesc:posLabel(c.gridPos,rm),dist:"?",clusterSize:c.count||c.clusterSize||1,action:c.act||c.action||"",affection:0,stage:"",romance:"",lh:"",rh:"",lastWords:""});
+          }catch{}
 
-          // ── 统一渲染 ──
-          const hline = makeHLine(W);
+          // ═══ Tab 栏 ═══
+          const hline = "─".repeat(Math.min(W, 80));
           out.push(tr(hline));
-          const tabBar = TABS.map((label,i) => i===_tab?`${C.rev}${C.B} ${label} ${C.r}`:`${C.dim} ${label} ${C.r}`).join(" ");
+          const tabBar = TABS.map((lb,i) => (i===_tab?`▶${lb}◀`:` ${lb} `)).join(" │ ");
           out.push(tr(tabBar));
           out.push(tr(hline));
 
-          if (_tab === 0) {
-              // ═══ 自身 ═══
-              const attrs = p.attributes||{};
-              const dangerBg = isSex?`${C.d}`:hp<5?`${C.rev}${C.d}`:"";
-              out.push(tr(`${dangerBg}❤${hp}/${hpM}${C.r} AC${p.ac||10} ${C.Y}¥${p.funds??0}${C.r} 💤${p.fatigue??0} ${C.M}#${turn}${C.r} ${wIcon}${weather}`));
-              out.push(tr(`力${attrs.力量??8} 敏${attrs.敏捷??10} 体${attrs.体质??9} 智${attrs.智力??12} 感${attrs.感知??10} 魅${attrs.魅力??10}`));
-              // ── Sex 模式体征 ──
-              if (isSex) { try { const sexSt = p.sex; if (sexSt) out.push(tr(`${C.d}🔥兴奋${sexSt.fire||0}${C.r} ${C.P}💓欲望${sexSt.heart||0}${C.r} 裸露:${sexSt.nudity||"全身"}`)); } catch {} }
-              const eq = p.equipment||{};
-              const eqSlots: [string,string][] = [["top","上衣"],["bottom","下装"],["shoes","鞋子"],["right_hand","右手"],["left_hand","左手"]];
-              for (const [sk,label] of eqSlots) {
-                const it = eq[sk];
-                out.push(tr(`  ${C.dim}${label}:${C.r} ${it?`${C.W}${(it.name||it).slice(0,18)}${C.r}`:`${C.dim}—${C.r}`}`));
-              }
-              const inv = p.inventory||[];
-              const invNames = inv.length ? inv.slice(0,6).map((i:any)=>i.name||i).join(", ") : "（空）";
-              out.push(tr(`${C.dim}🎒${inv.length}件${C.r} ${invNames}${inv.length>6?" …":""}`));
-              if (p.vehicle) out.push(tr(`${C.Y}🚲 ${p.vehicle.name||""}${C.r} ×${p.vehicle.speedMul||1.5}`));
-            } else if (_tab === 1) {
-              // ═══ 周边 ═══
-              if (!_peopleCache.length){out.push(tr(`${C.dim}（周边无人）${C.r}`));}
-              else for (let i=0;i<Math.min(_peopleCache.length,12);i++){
+          // ═══ Tab 0: 自身 ═══
+          if(_tab===0){
+            const attrs=p.attributes||{};
+            const w=((p?.equipment?.right_hand||p?.equipment?.left_hand) as any)?.damage;
+            const wp=w?`🗡 ${(p.equipment.right_hand||p.equipment.left_hand).name} ${w}`:`空手 1d2`;
+            out.push(tr(`  ❤ ${hp}/${hpM} · AC${ac} · ${wp} · ¥${p.funds??0} · 💤${p.fatigue??0}  ${wIcon}${weather}`));
+            out.push(tr(`  力${attrs.力量??8}  敏${attrs.敏捷??10}  体${attrs.体质??9}  智${attrs.智力??12}  感${attrs.感知??10}  魅${attrs.魅力??10}`));
+            if(mode==="sex"){try{const sx=p.sex;if(sx)out.push(tr(`  🔥兴奋${sx.fire||0}  💓欲望${sx.heart||0}  裸露:${sx.nudity||"—"}`));}catch(e:any){console.error("[game-hud] sex:",e.message);}}
+            out.push(tr(`  装备:`));
+            const eq=p.equipment||{};
+            for(const [sk,lb] of [["top","上衣"],["bottom","下装"],["shoes","鞋子"],["right_hand","右手"],["left_hand","左手"]] as [string,string][]){
+              const it=eq[sk]; out.push(tr(`    ${lb}: ${it?(it.name||it).slice(0,20):"— (穿戴)"}`));
+            }
+            const inv=p.inventory||[];
+            out.push(tr(`  🎒 背包 ${inv.length}件:`));
+            if(inv.length)out.push(tr(`    ${inv.slice(0,6).map((it:any,i:number)=>`${String.fromCodePoint(0x2460+i)}${it.name||it}`).join("  ")}${inv.length>6?" …":""}`));
+            else out.push(tr(`    （空）`));
+            if(p.vehicle)out.push(tr(`  🚲 载具: ${p.vehicle.name||""} ×${p.vehicle.speedMul||1.5} · 良好`));
+          }
+
+          // ═══ Tab 1: 周边 ═══
+          else if(_tab===1){
+            if(!_peopleCache.length){out.push(tr(`  （周边无人）`));}
+            else {
+              for(let i=0;i<Math.min(_peopleCache.length,8);i++){
                 const n=_peopleCache[i]!;
-                const sel = _panelMode && i===_cursor ? `${C.rev}▶${C.r} ` : "  ";
-                if (n.type==="named"){
-                  const a=n.affection,st=n.stage,rom=n.romance;
-                  const icon=rom==="恋人"?`${C.d}♥`:a>=40?`${C.G}◆`:a>=20?`${C.b}◇`:`${C.dim}·`;
-                  const lr=`${n.lh||"—"}|${n.rh||"—"}`;
-                  let actIcon="";const al=(n.action||"").toLowerCase();
-                  if(/警惕|敌|怒|攻击/.test(al))actIcon=`${C.d}⚠`;
-                  else if(/友|笑|点头|好奇|高兴/.test(al))actIcon=`${C.G}✓`;
-                  else actIcon=`${C.dim}·`;
-                  const nm = (n.name).slice(0,8);
-                out.push(tr(`  ${C.O}${nm}${C.r} ${C.dim}${n.height}cm ${n.dist}m${C.r} ${lr}`));
-                out.push(tr(`  ${actIcon}${icon}${a} ${C.dim}${st}${rom||""}${C.r}`));
-                if(n.lastWords)out.push(tr(`  ${C.M}"${n.lastWords.slice(0,25)}"${C.r}`));
-                }else{
-                  out.push(tr(`${sel}${C.O}${(n.name).slice(0,10)}${C.r} ${C.dim}×${n.clusterSize||1} · ${n.height} · ${n.posDesc.slice(0,10)}${C.r}`));
-                  if(n.action)out.push(tr(`   ${C.M}${n.action.slice(0,30)}${C.r}`));
+                const sel = _panelMode && i===_cursor ? "▶" : " ";
+                if(n.type==="named"){
+                  const a=n.affection, st=n.stage, rom=n.romance;
+                  const icon=rom==="恋人"?"♥":a>=40?"◆":a>=20?"◇":"·";
+                  const held=n.rh||n.lh?`携带${[n.rh,n.lh].filter((x:string)=>x&&x!=="—").join("·")}`:"";
+                  out.push(tr(`${sel} ${n.name}  ${n.height}cm · ${n.posDesc} · 隔${n.dist}m`));
+                  out.push(tr(`    ${icon}${a}/100 ${st}${rom||""}  ${held}`));
+                  out.push(tr(`    ${npcQuickActions(gs, n.name)}`));
+                } else {
+                  out.push(tr(`${sel} ${n.name}  ×${n.clusterSize||1} · ${n.height} · ${n.posDesc}`));
+                  if(n.action)out.push(tr(`    ${n.action.slice(0,35)}`));
                 }
               }
-            } else if (_tab === 2) {
-              // ═══ 房间 ═══
-              if (!rm) out.push(tr(`${C.dim}（无房间数据）${C.r}`));
-              else {
-                out.push(tr(`📏 ${rm.width||"?"}×${rm.height||"?"}m · 你在(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}) · ✨${(rm.atmosphere||"").slice(0,24)}`));
-                out.push(tr(`${C.dim}── 家具 ──${C.r}`));
-                const cells=rm.cells||[];let fc=0;
-                for(let y=0;y<rm.height;y++)for(let x=0;x<rm.width;x++){const c=cells[y]?.[x];if(c?.furniture&&fc<8){const sub=(c.label&&c.label.trim()&&c.label.trim()!=="  ")?` [${c.label.trim()}]`:"";out.push(tr(`  ${C.Y}📦 ${c.furniture}${C.r}${C.dim}(${x},${y})${sub}${C.r}`));fc++;}}
-                if(!fc)out.push(tr(`  ${C.dim}（空）${C.r}`));
-                out.push(tr(`${C.dim}── 出口 ──${C.r}`));
-                const exits:string[]=[];
-                for(let y=0;y<rm.height;y++)for(let x=0;x<rm.width;x++){const c=cells[y]?.[x];if((c?.type==="exit"||c?.type==="door")&&c?.exitTo)exits.push(`${c.exitTo}(${x},${y})`);}
-                out.push(tr(exits.length?`  ${C.G}🚪 ${exits.join(", ")}${C.r}`:`  ${C.dim}（无）${C.r}`));
-              }
-            } else {
-              // ═══ 行动 ═══
-              if (!_choicesCache.length){out.push(tr(`${C.dim}输入文字推进剧情后，选项自动出现${C.r}`));}
-              else for (let i=0;i<Math.min(_choicesCache.length,6);i++){
-                const idx=String.fromCodePoint(0x2460+i);
-                const tag=_choiceTags[i]||"";
-                const sel = _panelMode && i===_cursor ? `${C.rev}▶${C.r} ` : "  ";
-                out.push(tr(`${sel}${C.O}${idx}${C.r} ${_choicesCache[i]!.slice(0,25)}${tag?` ${C.P}[${tag.slice(0,6)}]${C.r}`:""}`));
-              }
             }
+          }
 
-            out.push(tr(hline));
-            const tip = _panelMode
-              ? `↑↓移动  Enter选择  1-6直选  Esc返回`
-              : `←→Tab  Enter进入面板`;
-            out.push(tr(`${C.dim}${tip}${C.r}`));
+          // ═══ Tab 2: 房间 ═══
+          else if(_tab===2){
+            if(!rm)out.push(tr(`  （无房间数据）`));
+            else{
+              out.push(tr(`  📏 ${rm.width||"?"}m×${rm.height||"?"}m · 你在(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}) · ${(rm.atmosphere||"普通").slice(0,20)}`));
+              out.push(tr(`  ── 家具 ──`));
+              const cells=rm.cells||[]; let fc=0; const exits:string[]=[];
+              for(let y=0;y<rm.height;y++)for(let x=0;x<rm.width;x++){const c=cells[y]?.[x];
+                if(c?.furniture&&fc<10){const sub=(c.label&&c.label.trim()&&c.label.trim()!=="  ")?` · ${c.label.trim()}`:"";const acts=furnitureActions(c.furniture as string);out.push(tr(`    📦 ${c.furniture}(${x},${y})${sub}  ${acts}`));fc++;}
+                if((c?.type==="exit"||c?.type==="door")&&c?.exitTo)exits.push(`${c.exitTo}(${x},${y})`);}
+              if(!fc)out.push(tr(`    （空）`));
+              out.push(tr(`  ── 出口 ──`));
+              if(exits.length)for(const e of exits)out.push(tr(`    🚪 → ${e}`));
+              else out.push(tr(`    （无）`));
+            }
+          }
+
+          // ═══ Tab 3: 行动 ═══
+          else {
+            if(!_choicesCache.length){out.push(tr(`  输入文字推进剧情后，选项自动出现`));}
+            else for(let i=0;i<Math.min(_choicesCache.length,6);i++){
+              const idx=String.fromCodePoint(0x2460+i); const tag=_choiceTags[i]||"";
+              const sel=_panelMode&&i===_cursor?"▶":" ";
+              out.push(tr(`${sel} ${idx} "${_choicesCache[i]!}"${tag?` [${tag}]`:""}`));
+            }
+          }
+
+          out.push(tr(hline));
+          const tip=_panelMode
+            ?(_tab===1?`↑↓选NPC  Enter=搭话  1-9=操作  Esc返回`
+              :_tab===3?`↑↓选选项  Enter/数字=确认  Esc返回`
+              :`Esc返回`)
+            :`← → 切Tab  Enter 进入面板`;
+          out.push(tr(tip));
           return out;
-        } catch { return []; }
+        }catch(e:any){console.error("[game-hud] render:",e.message||e);return[];}
       },
 
-      // ── ←→↑↓ Enter 1-6 全在 widget 处理，不用任何指令 ──
-      handleInput(d: string, focusedComponent?: any): boolean {
-        try {
-          const gs = require("../engine/state.ts").gameState;
-          if (!gs?.player) return false;
-          const hasText = focusedComponent && (
-            (typeof focusedComponent.getText === "function" && !!focusedComponent.getText()) ||
-            (focusedComponent.buffer && focusedComponent.buffer.length > 0)
-          );
-          if (hasText) return false;
-
-          // ── 全局：←→ 始终切 Tab ──
-          if (d === "\x1b[C" || d === "\x1bOC") { _tab = (_tab + 1) % 4; _cursor = 0; _panelMode = false; return true; }
-          if (d === "\x1b[D" || d === "\x1bOD") { _tab = (_tab + 3) % 4; _cursor = 0; _panelMode = false; return true; }
-
-          // ── 面板模式：↑↓ Enter 1-6 Esc ──
-          if (_panelMode) {
-            if (d === "\x1b" || d === "q" || d === "Escape") { _panelMode = false; return true; }
-            if (d === "\x1b[A" || d === "\x1bOA") { _cursor = Math.max(0, _cursor - 1); return true; }
-            if (d === "\x1b[B" || d === "\x1bOB") { _cursor++; return true; }
-            if (d === "\r" || d === "\n") {
-              if (_tab === 1) {
-                const named = _peopleCache.filter((n:any)=>n.type==="named");
-                if (named.length) {
-                  const nm = named[Math.min(_cursor, named.length-1)]!.name;
-                  (async () => { try { const { showNPCInteractionMenu } = await import("./tools/tui/npc.ts"); await showNPCInteractionMenu(nm, ctx); } catch(e:any){ctx.ui.notify(e.message,"error");} })();
-                }
-              } else if (_tab === 3 && _choicesCache.length) {
-                ctx.chat.addSystemMessage(_choicesCache[Math.min(_cursor, _choicesCache.length-1)]!);
-              }
-              _panelMode = false; return true;
+      handleInput(d:string,_fc?:any):boolean{
+        try{
+          const gs=require("./engine/state.ts").gameState;if(!gs?.player)return false;
+          if(d==="\x1b[C]"||d==="\x1bOC"||d==="l"){_tab=(_tab+1)%4;_cursor=0;_panelMode=false;return true;}
+          if(d==="\x1b[D]"||d==="\x1bOD"||d==="h"){_tab=(_tab+3)%4;_cursor=0;_panelMode=false;return true;}
+          if(_panelMode){
+            if(d==="\x1b"||d==="q"){_panelMode=false;return true;}
+            if(d==="\x1b[A"||d==="\x1bOA"){_cursor=Math.max(0,_cursor-1);return true;}
+            if(d==="\x1b[B"||d==="\x1bOB"){
+              const max=_tab===1?Math.min(_peopleCache.length,8)-1
+                :_tab===3?Math.max(0,Math.min(_choicesCache.length,6)-1):0;
+              _cursor=Math.min(_cursor+1,Math.max(0,max));return true;
             }
-            if (d.length === 1 && d >= "1" && d <= "6") {
-              if (_tab === 3 && _choicesCache.length) {
-                const n = parseInt(d)-1;
-                if (n >= 0 && n < _choicesCache.length) { ctx.chat.addSystemMessage(_choicesCache[n]!); _panelMode = false; return true; }
+            if(d==="\r"||d==="\n"||(d.length===1&&d>="1"&&d<="9")){
+              const isEnter = d==="\r"||d==="\n";
+              if(_tab===1){
+                const cur = _peopleCache[Math.min(_cursor, _peopleCache.length-1)];
+                if(!cur || cur.type!=="named"){
+                  if(isEnter){ ctx.ui.notify("路人不能交互，请选择有名NPC","info"); }
+                  return false;
+                }
+                const actionKey=isEnter?0:parseInt(d)-1;
+                _handleNpcAction(gs,cur.name,actionKey,ctx);
+              }else if(_tab===3){
+                if(!_choicesCache.length){ ctx.ui.notify("暂无选项","info"); return false; }
+                const n=isEnter?_cursor:parseInt(d)-1;
+                const idx=Math.min(n,_choicesCache.length-1);
+                ctx.chat.addSystemMessage(_choicesCache[idx]!);_panelMode=false;
+              }else{
+                // 自身/房间面板：光标浏览模式，无需操作
               }
-              _cursor = parseInt(d)-1; return true;
+              return _tab!==0&&_tab!==2; // 自身/房间不消费按键
             }
             return false;
           }
-
-          // ── 默认模式：Enter 进入面板 ──
-          if (d === "\r" || d === "\n") { _panelMode = true; return true; }
+          if(d==="\r"||d==="\n"){_panelMode=true;return true;}
           return false;
-        } catch { return false; }
+        }catch(e:any){console.error("[game-hud] handleInput:",e.message||e);return false;}
       },
     };
-  }, { placement: "aboveEditor" });
+
+    function furnitureActions(f:string):string{
+      if(/桌/.test(f))return "使用/查看/开抽屉";
+      if(/架/.test(f))return "查看/取书";
+      if(/板/.test(f))return "书写/擦除";
+      if(/床/.test(f))return "休息/查看";
+      if(/贩卖机/.test(f))return "购买";
+      if(/椅|沙发|凳/.test(f))return "坐下";
+      if(/柜|箱/.test(f))return "打开/存放";
+      return "查看/使用";
+    }
+
+    function _handleNpcAction(gs:any,name:string,key:number,ctx:any){
+      const aff=getNpcAffection(gs,name);const lover=isNpcLover(gs,name);
+      const pty:string[]=gs?.player?.party||[];
+      if(key===0){ctx.chat.addSystemMessage(`我找 ${name} 聊天。`);_panelMode=false;}
+      else if(key===1){if(aff<10){ctx.ui.notify(`与${name}关系还不够熟`,"warning");return;}_doTouch(gs,name,ctx);}
+      else if(key===2){ctx.chat.addSystemMessage(`我仔细观察 ${name}。`);_panelMode=false;}
+      else if(key===3){if(aff<40&&!lover){ctx.ui.notify(`好感需≥40或恋人`,"warning");return;}if(pty.includes(name)){gs.player.party=pty.filter((n:string)=>n!==name);ctx.chat.addSystemMessage(`${name}离开了队伍。`);}else{gs.player.party=[...pty,name];ctx.chat.addSystemMessage(`${name}加入了队伍。`);}require("./engine/state.ts").saveState();_panelMode=false;}
+      else if(key===4){if(aff<50){ctx.ui.notify("好感需≥50","warning");return;}_doDate(gs,name,ctx);_panelMode=false;}
+      else if(key===8){if(!lover||aff<80){ctx.ui.notify("需恋人+好感≥80","warning");return;}const ok=Math.random()>0.2;if(ok){gs.mode="sex";gs.layer1Enabled=true;}else{const rel=gs.player.relationships[name];if(rel)rel.affection=Math.max(0,(rel.affection||0)-15);}require("./engine/state.ts").saveState();ctx.chat.addSystemMessage(ok?`${name}红着脸点了点头…`:``);_panelMode=false;}
+    }
+    function _doTouch(gs:any,name:string,ctx:any){
+      const aff=getNpcAffection(gs,name);const{updateRelation,saveState}=require("./engine/state.ts");
+      const levels=[{n:"握手",min:0,rw:2,pen:2},{n:"摸头",min:30,rw:2,pen:5},{n:"拥抱",min:50,rw:3,pen:10},{n:"按摩",min:60,rw:3,pen:10,needL1:true},{n:"亲吻",min:70,rw:5,pen:15}];
+      for(let i=levels.length-1;i>=0;i--){
+        const l=levels[i]!;if(aff>=l.min&&(!l.needL1||gs.layer1Enabled)){
+          const ok=Math.random()>0.2;const msg=ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`;
+          if(ok)updateRelation(gs.player.relationships,name,l.rw,l.n);else updateRelation(gs.player.relationships,name,-l.pen,`${l.n}被拒`);
+          saveState();ctx.chat.addSystemMessage(msg);_panelMode=false;return;
+        }
+      }
+      ctx.ui.notify("条件未满足","warning");
+    }
+    function _doDate(gs:any,name:string,ctx:any){
+      const aff=getNpcAffection(gs,name);if(aff<50)return;
+      const rel=gs.player.relationships[name]||(gs.player.relationships[name]={stage:"熟人",affection:aff,history:[],notes:""});
+      const ok=Math.random()>0.2;
+      if(ok)rel.affection=Math.min(100,(rel.affection||0)+5);else rel.affection=Math.max(0,(rel.affection||0)-5);
+      require("./engine/state.ts").saveState();
+      ctx.chat.addSystemMessage(ok?`我约 ${name} 周末出去玩。${name}：「好啊。」好感+5`:`约 ${name} 出去玩，但${name}说有事。好感-5`);
+    }
+  },{placement:"aboveEditor"});
 }

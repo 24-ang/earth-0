@@ -27,7 +27,7 @@ export function parseRoleOptions(prose: string): { prose: string; options: Parse
     const m = line.match(/^>\s*[①②③④⑤⑥⑦⑧]\s*\[(.+?)\][:：]\s*(.+)/);
     if (m) {
       options.push({
-        label: `①${options.length} ${m[2].trim()}`, // ① text
+        label: `${String.fromCodePoint(0x2460 + options.length)} ${m[2].trim()}`, // ① text
         text: m[2].trim(),
         tag: m[1].trim(),
         index: options.length,
