@@ -125,6 +125,7 @@ import rerollCommand from "./tui/reroll.ts";
 import worldCommand from "./tui/world.ts";
 import achievementsCommand from "./tui/achievements.ts";
 import choiceCommand from "./tui/choice.ts";
+import sandboxCommand from "./tui/sandbox.ts";
 
 function withToolTracking(tool: any) {
   const origExec = tool.execute;
@@ -228,4 +229,5 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerCommand("achievements", achievementsCommand);
   pi.registerCommand("ach", achievementsCommand);
   pi.registerCommand("choice", choiceCommand);
+  pi.registerCommand("sandbox", sandboxCommand);
 }

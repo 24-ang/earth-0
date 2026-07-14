@@ -16,12 +16,11 @@ export default {
       }
 
       const items: MenuItem[] = options.map((opt, i) => ({
-        label: `${String.fromCodePoint(0x2460 + i)} ${opt}`,
+        label: `${String.fromCodePoint(0x2460 + i)} ${opt.tag ? `[${opt.tag}] ` : ""}${opt.text}`,
         detail: "点击发送",
         action: (_done: () => void) => {
-          // 去掉引号和 *动作* 包装，保持原样发送
-          ctx.chat.addSystemMessage(`玩家选择了: ${opt}`);
-          ctx.ui.notify(`已选择: ${opt}`, "info");
+          ctx.chat.addSystemMessage(`玩家选择了: ${opt.text}`);
+          ctx.ui.notify(`已选择: ${opt.text.slice(0,30)}`, "info");
           _done();
         },
       }));

@@ -232,7 +232,16 @@ function buildStatusBarText(): string | null {
       const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => normalizeLocationName(n.currentRoom) === cLoc).length;
       const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
       const totalCount = npcsHereCount + namelessCount;
-      return `🕐 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${timeOfDayZH[gameState.time.time_of_day] || gameState.time.time_of_day} | 📍 ${loc} | 👥 周边 ${totalCount} 人活动中`;
+      // 列出同场 NPC 名（最多3个）
+      const named = Object.entries(gameState.npcs || {} as any)
+        .filter(([_, n]: [string, any]) => normalizeLocationName(n.currentRoom) === cLoc)
+        .slice(0, 3)
+        .map(([name]: [string, any]) => {
+          const a = gameState.player?.relationships?.[name]?.affection ?? 0;
+          return `${name}💕${a}`;
+        }).join(" ") || "无人";
+
+      return `📍 ${loc} · 👥 ${named}${namelessCount>0?` +${namelessCount}路人`:""} · turn ${gameState.turn}`;
     }
   } catch (e) {
     console.error("buildStatusBarText error:", e);

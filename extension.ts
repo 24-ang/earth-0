@@ -86,7 +86,14 @@ export default function (pi: ExtensionAPI) {
     await showMenu(ctx, "🌍 earth-0", items.filter(i => i.action));
     if (!gameState._startup) gameState._startup = "new";
 
-    updateChatHUD(ctx);
+    // 🎮 启动游戏面板 + Web HUD 服务器
+    initGamePanel(pi, ctx);
+    try {
+      const { startWebHud, initEngineRefs } = await import("./tools/tui/web-hud.ts");
+      startWebHud(pi, ctx, 3000);
+      // 预先缓存引擎引用，避 CJS 双实例问题
+      initEngineRefs();
+    } catch (e) { console.error("web-hud 启动失败:", e); }
   });
 
   // 捕获用户输入到 gameState（pi 的 before_agent_start 不传用户消息）
@@ -115,7 +122,9 @@ export default function (pi: ExtensionAPI) {
   // ═══════════════════════════════════════════════════════════
   // Phase 1 + Phase 2: before_agent_start
   // ═══════════════════════════════════════════════════════════
+  let _hudReady = false;
   pi.on("before_agent_start", async (_event, ctx) => {
+    if (!_hudReady) { _hudReady = true; try { ctx.ui.setHiddenThinkingLabel("🧠"); ctx.ui.setToolsExpanded(false); } catch {} }
     const { gameState, saveState } = await import("./engine/state.ts");
     gameState._toolsLocked = false;
     const { runSettlement } = await import("./engine/settlement.ts");
@@ -131,9 +140,28 @@ export default function (pi: ExtensionAPI) {
     gameState._turnAtLastCheck = gameState.turn;
 
     // ── Phase 1: 分类 LLM → JSON → 引擎执行工具 ──
-    const playerInput = gameState._lastUserInput || "";
+    let playerInput = gameState._lastUserInput || "";
     // turn 0 且 _newGame：上帝模式分类器。init_game 执行后 _newGame 自动清除
     const isStartup = gameState._newGame === true;
+
+    // ── HUD 数字直选：玩家直接打 1-6 选选项，不用 /h 命令 ──
+    if (/^[1-6]$/.test(playerInput.trim()) && !isStartup) {
+      const prose = (gameState as any)._renderedProse || "";
+      if (prose) {
+        try {
+          const { parseRoleOptions } = require("./engine/parse-options.ts");
+          const r = parseRoleOptions(prose);
+          const cs = (r.options || []).map(c => c.text);
+          const n = parseInt(playerInput.trim()) - 1;
+          if (n >= 0 && n < cs.length) {
+            playerInput = cs[n]!;
+            gameState._lastUserInput = playerInput;
+          }
+        // eslint-disable-next-line no-empty
+        } catch {}
+      }
+    }
+
     // 新游戏等待玩家输入，不做引擎自动结算（turn 保持 0）
     if (!playerInput.trim() && isStartup) {
       return { systemPrompt: "新的旅程即将开始。你是谁？你想成为什么样的人？告诉我。" };
@@ -146,6 +174,17 @@ export default function (pi: ExtensionAPI) {
     gameState._phase1Summary = phase1.summary;
     gameState._phase1ToolsExecuted = phase1.toolsExecuted;
     gameState._phase1DirectorNote = (phase1 as any).directorNote || "";
+
+    // ── Phase 1.5: 条件选项扫描（引擎侧，不调 LLM）──
+    let conditionalOptionLines = "";
+    try {
+      const { scanConditionalOptions, formatConditionalOptions } = require("./engine/conditional-options.ts");
+      const condOpts = scanConditionalOptions(gameState);
+      conditionalOptionLines = formatConditionalOptions(condOpts);
+      if (conditionalOptionLines) {
+        gameState._phase1DirectorNote += "\n\n[条件选项 — 追加到标准选项 ①-④ 之后]\n" + conditionalOptionLines;
+      }
+    } catch (e: any) { console.error("[Phase1.5] conditional options failed:", e.message); }
 
     // ── 强制结算（确保时间/回合/NPC日程推进） ──
     // 仅在 Phase 1 未执行 settle_scene 时补调
@@ -370,6 +409,11 @@ export default function (pi: ExtensionAPI) {
         } catch (_) { /* lint unavailable */ }
 
         setLRP(rendered);
+        // 推送到 web-hud，浏览器 poll 立即可见（避 CJS 跨模块引用问题）
+        try {
+          const { setLatestProse } = await import("./tools/tui/web-hud.ts");
+          setLatestProse(rendered);
+        } catch {}
 
         return { systemPrompt: `[引擎已预生成叙事正文。你只需原样输出以下内容，不分析、不评价、不加额外文字、不调任何工具。]\n\n${rendered}` };
       }
@@ -666,4 +710,236 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
     read(modeFile),
     read("gm-contract.md"),
   ].filter(Boolean).join("\n\n---\n\n");
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🎮 终端常驻 HUD widget + /hud 交互
+// ═══════════════════════════════════════════════════════════
+// widget 可画任意行（只要宽度不超），但不能收按键。用 /hud 做 overlay 交互。
+
+const C = { r:"\x1b[0m", O:"\x1b[38;5;216m", P:"\x1b[38;5;140m", b:"\x1b[38;5;117m", G:"\x1b[38;5;114m", d:"\x1b[38;5;167m", Y:"\x1b[38;5;215m", M:"\x1b[38;5;243m", W:"\x1b[38;5;252m", B:"\x1b[1m", dim:"\x1b[2m", rev:"\x1b[7m" };
+/** 动态分割线，匹配终端宽度 */
+function makeHLine(W: number) { return "\x1b[90m" + "─".repeat(W) + "\x1b[0m"; }
+
+function initGamePanel(pi: any, ctx: any) {
+  // ── HUD 导航状态 ──
+  let _tab = 1;        // 0=自身 1=周边 2=房间 3=行动
+  let _cursor = 0;
+  let _panelMode = false; // Enter 进入面板模式后 ↑↓ 才生效
+  let _choicesCache: string[] = [];
+  let _choiceTags: string[] = [];
+  let _peopleCache: any[] = [];
+
+  // ── 辅助：NPC grid位置 → 文字描述 ──
+  const posLabel = (gp: any, rm: any): string => {
+    if (!gp || !rm) return "";
+    const [x,y] = Array.isArray(gp) ? gp : [0,0];
+    let lbl = "";
+    const w=rm.width||10, h=rm.height||6;
+    if (y===0) lbl="靠墙"; else if (y===h-1) lbl="靠后墙";
+    if (x===0) lbl+="靠左"; else if (x===w-1) lbl+="靠右";
+    if (!lbl) lbl="中间";
+    const c=rm.cells?.[y]?.[x];
+    if (c?.label && c.label.trim() && c.label.trim()!=="  ") lbl=c.label.trim();
+    return `(${x},${y})${lbl}`;
+  };
+
+  ctx.ui.setWidget("game-hud", (tui: any, _theme: any) => {
+    const vw = typeof tui?.visibleWidth === "function" ? tui.visibleWidth() : 48;
+    const W = Math.max(20, vw - 2);
+    const { truncateToWidth } = require("../tools/helpers.ts");
+    const tr = (s: string) => truncateToWidth(s, W);
+    const todZH: Record<string,string> = {morning:"午前",lunch:"昼",afternoon:"午後",evening:"夕方",night:"夜"};
+    const TABS = ["🛡 自身", "👥 周边", "🏠 房间", "▼ 行动"];
+
+    return {
+      render(_w: number): string[] {
+        try {
+          const s = require("../engine/state.ts"); const gs = s.gameState; const p = gs?.player; if (!p) return [];
+          const out: string[] = [];
+          const loc = p.location||"???"; const t = gs.time; const mode = (gs.mode||"rpg").toUpperCase();
+          const hp=p.hp?.current??10, hpM=p.hp?.max??15; const isSex = mode==="SEX";
+          const date=t?.game_date||""; const dow=t?.day_of_week||"";
+          const tod=todZH[t?.time_of_day]||t?.time_of_day||"";
+
+          const weather = t?.weather||""; const wIcon = weather.includes("雨")?"🌧":weather.includes("雪")?"❄":"☀";
+          const turn = gs.turn||0; const rm = s.getRoom(loc);
+          const prose = (gs as any)._renderedProse || "";
+
+          // 解析选项（含标签）
+          _choicesCache = []; _choiceTags = [];
+          if (prose) {
+            try {
+              const { parseRoleOptions } = require("../../engine/parse-options.ts");
+              const r = parseRoleOptions(prose);
+              for (const c of (r.options||[])) {
+                _choicesCache.push(c.text); _choiceTags.push(c.tag||"");
+              }
+            } catch {}
+          }
+
+          // 同场 NPC
+          const nearby = Object.entries(gs.npcs||{}).filter(([_,n]:any)=>n.alive!==false&&s.isSameLocation(n.currentRoom,loc));
+          const npcNames = nearby.map(([name]:any)=>name);
+
+          // 构建 _peopleCache（含路人）
+          _peopleCache = nearby.map(([name,npc]:[string,any])=>{
+            const rel = p.relationships?.[name];
+            const body = npc.body||npc.body_by_age||{};
+            const gp = npc.gridPos||npc.grid_pos||[0,0];
+            return {
+              name, type:"named", gp,
+              height: body.height_cm||npc.height_cm||npc.height||"?",
+              posDesc: posLabel(gp, rm),
+              dist: npc.distance||npc.dist||2,
+              affection: rel?.affection??0, stage: rel?.stage||"陌生", romance: rel?.romance||"",
+              lh: npc.equipment?.left_hand?.name||npc.left_hand||"",
+              rh: npc.equipment?.right_hand?.name||npc.right_hand||"",
+              lastWords: (npc.lastWords||"").replace(/^\[.*?\]\s*/,""),
+              action: npc.action||"",
+            };
+          });
+          try {
+            const realCrowd = s.getNamelessNPCs(loc, gs.turn) as any[];
+            const sandCrowd = (gs as any)._testCrowd || [];
+            const crowd = [...realCrowd, ...sandCrowd];
+            for (const c of crowd) _peopleCache.push({
+              name: c.name||"???", type:"crowd", gp: c.gridPos||[0,0],
+              height: c.height||"?", posDesc: posLabel(c.gridPos, rm), dist: "?",
+              clusterSize: c.count||c.clusterSize||1, action: c.act||c.action||"",
+              affection:0, stage:"", romance:"", lh:"", rh:"", lastWords:"",
+            });
+          } catch {}
+
+          // ── 统一渲染 ──
+          const hline = makeHLine(W);
+          out.push(tr(hline));
+          const tabBar = TABS.map((label,i) => i===_tab?`${C.rev}${C.B} ${label} ${C.r}`:`${C.dim} ${label} ${C.r}`).join(" ");
+          out.push(tr(tabBar));
+          out.push(tr(hline));
+
+          if (_tab === 0) {
+              // ═══ 自身 ═══
+              const attrs = p.attributes||{};
+              const dangerBg = isSex?`${C.d}`:hp<5?`${C.rev}${C.d}`:"";
+              out.push(tr(`${dangerBg}❤${hp}/${hpM}${C.r} AC${p.ac||10} ${C.Y}¥${p.funds??0}${C.r} 💤${p.fatigue??0} ${C.M}#${turn}${C.r} ${wIcon}${weather}`));
+              out.push(tr(`力${attrs.力量??8} 敏${attrs.敏捷??10} 体${attrs.体质??9} 智${attrs.智力??12} 感${attrs.感知??10} 魅${attrs.魅力??10}`));
+              // ── Sex 模式体征 ──
+              if (isSex) { try { const sexSt = p.sex; if (sexSt) out.push(tr(`${C.d}🔥兴奋${sexSt.fire||0}${C.r} ${C.P}💓欲望${sexSt.heart||0}${C.r} 裸露:${sexSt.nudity||"全身"}`)); } catch {} }
+              const eq = p.equipment||{};
+              const eqSlots: [string,string][] = [["top","上衣"],["bottom","下装"],["shoes","鞋子"],["right_hand","右手"],["left_hand","左手"]];
+              for (const [sk,label] of eqSlots) {
+                const it = eq[sk];
+                out.push(tr(`  ${C.dim}${label}:${C.r} ${it?`${C.W}${(it.name||it).slice(0,18)}${C.r}`:`${C.dim}—${C.r}`}`));
+              }
+              const inv = p.inventory||[];
+              const invNames = inv.length ? inv.slice(0,6).map((i:any)=>i.name||i).join(", ") : "（空）";
+              out.push(tr(`${C.dim}🎒${inv.length}件${C.r} ${invNames}${inv.length>6?" …":""}`));
+              if (p.vehicle) out.push(tr(`${C.Y}🚲 ${p.vehicle.name||""}${C.r} ×${p.vehicle.speedMul||1.5}`));
+            } else if (_tab === 1) {
+              // ═══ 周边 ═══
+              if (!_peopleCache.length){out.push(tr(`${C.dim}（周边无人）${C.r}`));}
+              else for (let i=0;i<Math.min(_peopleCache.length,12);i++){
+                const n=_peopleCache[i]!;
+                const sel = _panelMode && i===_cursor ? `${C.rev}▶${C.r} ` : "  ";
+                if (n.type==="named"){
+                  const a=n.affection,st=n.stage,rom=n.romance;
+                  const icon=rom==="恋人"?`${C.d}♥`:a>=40?`${C.G}◆`:a>=20?`${C.b}◇`:`${C.dim}·`;
+                  const lr=`${n.lh||"—"}|${n.rh||"—"}`;
+                  let actIcon="";const al=(n.action||"").toLowerCase();
+                  if(/警惕|敌|怒|攻击/.test(al))actIcon=`${C.d}⚠`;
+                  else if(/友|笑|点头|好奇|高兴/.test(al))actIcon=`${C.G}✓`;
+                  else actIcon=`${C.dim}·`;
+                  const nm = (n.name).slice(0,8);
+                out.push(tr(`  ${C.O}${nm}${C.r} ${C.dim}${n.height}cm ${n.dist}m${C.r} ${lr}`));
+                out.push(tr(`  ${actIcon}${icon}${a} ${C.dim}${st}${rom||""}${C.r}`));
+                if(n.lastWords)out.push(tr(`  ${C.M}"${n.lastWords.slice(0,25)}"${C.r}`));
+                }else{
+                  out.push(tr(`${sel}${C.O}${(n.name).slice(0,10)}${C.r} ${C.dim}×${n.clusterSize||1} · ${n.height} · ${n.posDesc.slice(0,10)}${C.r}`));
+                  if(n.action)out.push(tr(`   ${C.M}${n.action.slice(0,30)}${C.r}`));
+                }
+              }
+            } else if (_tab === 2) {
+              // ═══ 房间 ═══
+              if (!rm) out.push(tr(`${C.dim}（无房间数据）${C.r}`));
+              else {
+                out.push(tr(`📏 ${rm.width||"?"}×${rm.height||"?"}m · 你在(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}) · ✨${(rm.atmosphere||"").slice(0,24)}`));
+                out.push(tr(`${C.dim}── 家具 ──${C.r}`));
+                const cells=rm.cells||[];let fc=0;
+                for(let y=0;y<rm.height;y++)for(let x=0;x<rm.width;x++){const c=cells[y]?.[x];if(c?.furniture&&fc<8){const sub=(c.label&&c.label.trim()&&c.label.trim()!=="  ")?` [${c.label.trim()}]`:"";out.push(tr(`  ${C.Y}📦 ${c.furniture}${C.r}${C.dim}(${x},${y})${sub}${C.r}`));fc++;}}
+                if(!fc)out.push(tr(`  ${C.dim}（空）${C.r}`));
+                out.push(tr(`${C.dim}── 出口 ──${C.r}`));
+                const exits:string[]=[];
+                for(let y=0;y<rm.height;y++)for(let x=0;x<rm.width;x++){const c=cells[y]?.[x];if((c?.type==="exit"||c?.type==="door")&&c?.exitTo)exits.push(`${c.exitTo}(${x},${y})`);}
+                out.push(tr(exits.length?`  ${C.G}🚪 ${exits.join(", ")}${C.r}`:`  ${C.dim}（无）${C.r}`));
+              }
+            } else {
+              // ═══ 行动 ═══
+              if (!_choicesCache.length){out.push(tr(`${C.dim}输入文字推进剧情后，选项自动出现${C.r}`));}
+              else for (let i=0;i<Math.min(_choicesCache.length,6);i++){
+                const idx=String.fromCodePoint(0x2460+i);
+                const tag=_choiceTags[i]||"";
+                const sel = _panelMode && i===_cursor ? `${C.rev}▶${C.r} ` : "  ";
+                out.push(tr(`${sel}${C.O}${idx}${C.r} ${_choicesCache[i]!.slice(0,25)}${tag?` ${C.P}[${tag.slice(0,6)}]${C.r}`:""}`));
+              }
+            }
+
+            out.push(tr(hline));
+            const tip = _panelMode
+              ? `↑↓移动  Enter选择  1-6直选  Esc返回`
+              : `←→Tab  Enter进入面板`;
+            out.push(tr(`${C.dim}${tip}${C.r}`));
+          return out;
+        } catch { return []; }
+      },
+
+      // ── ←→↑↓ Enter 1-6 全在 widget 处理，不用任何指令 ──
+      handleInput(d: string, focusedComponent?: any): boolean {
+        try {
+          const gs = require("../engine/state.ts").gameState;
+          if (!gs?.player) return false;
+          const hasText = focusedComponent && (
+            (typeof focusedComponent.getText === "function" && !!focusedComponent.getText()) ||
+            (focusedComponent.buffer && focusedComponent.buffer.length > 0)
+          );
+          if (hasText) return false;
+
+          // ── 全局：←→ 始终切 Tab ──
+          if (d === "\x1b[C" || d === "\x1bOC") { _tab = (_tab + 1) % 4; _cursor = 0; _panelMode = false; return true; }
+          if (d === "\x1b[D" || d === "\x1bOD") { _tab = (_tab + 3) % 4; _cursor = 0; _panelMode = false; return true; }
+
+          // ── 面板模式：↑↓ Enter 1-6 Esc ──
+          if (_panelMode) {
+            if (d === "\x1b" || d === "q" || d === "Escape") { _panelMode = false; return true; }
+            if (d === "\x1b[A" || d === "\x1bOA") { _cursor = Math.max(0, _cursor - 1); return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _cursor++; return true; }
+            if (d === "\r" || d === "\n") {
+              if (_tab === 1) {
+                const named = _peopleCache.filter((n:any)=>n.type==="named");
+                if (named.length) {
+                  const nm = named[Math.min(_cursor, named.length-1)]!.name;
+                  (async () => { try { const { showNPCInteractionMenu } = await import("./tools/tui/npc.ts"); await showNPCInteractionMenu(nm, ctx); } catch(e:any){ctx.ui.notify(e.message,"error");} })();
+                }
+              } else if (_tab === 3 && _choicesCache.length) {
+                ctx.chat.addSystemMessage(_choicesCache[Math.min(_cursor, _choicesCache.length-1)]!);
+              }
+              _panelMode = false; return true;
+            }
+            if (d.length === 1 && d >= "1" && d <= "6") {
+              if (_tab === 3 && _choicesCache.length) {
+                const n = parseInt(d)-1;
+                if (n >= 0 && n < _choicesCache.length) { ctx.chat.addSystemMessage(_choicesCache[n]!); _panelMode = false; return true; }
+              }
+              _cursor = parseInt(d)-1; return true;
+            }
+            return false;
+          }
+
+          // ── 默认模式：Enter 进入面板 ──
+          if (d === "\r" || d === "\n") { _panelMode = true; return true; }
+          return false;
+        } catch { return false; }
+      },
+    };
+  }, { placement: "aboveEditor" });
 }

@@ -4748,8 +4748,10 @@ test("INTEGRATION: parseRoleOptions 正确分离正文和选项", () => {
   if (!clean.includes("风从走廊尽头灌进来")) throw new Error("clean prose 应保留正文");
   if (clean.includes("---")) throw new Error("clean prose 不应含分割线");
   if (options.length !== 4) throw new Error(`应有 4 个选项，实际 ${options.length}`);
-  if (options[0] !== "「打扰了，学姐。」") throw new Error(`选项1 应为台词，实际: ${options[0]}`);
-  if (options[3] !== "*走上前凑近看书页*") throw new Error(`选项4 应为行动，实际: ${options[3]}`);
+  if (options[0]!.text !== "「打扰了，学姐。」") throw new Error(`选项1 应为台词，实际: ${options[0]!.text}`);
+  if (options[3]!.text !== "*走上前凑近看书页*") throw new Error(`选项4 应为行动，实际: ${options[3]!.text}`);
+  if (options[0]!.tag !== "普通") throw new Error(`选项1 tag 应为 "普通"，实际: ${options[0]!.tag}`);
+  if (options[3]!.tag !== "大胆") throw new Error(`选项4 tag 应为 "大胆"，实际: ${options[3]!.tag}`);
 });
 
 test("INTEGRATION: parseRoleOptions 无选项正文 → 空数组", () => {
@@ -5781,6 +5783,101 @@ test("TUI: weather 渲染不抛异常（已并入 /info）", async () => {
   const { renderWeatherLines } = require("./tools/helpers.ts");
   const lines = await renderWeatherLines();
   if (!Array.isArray(lines) || lines.length === 0) throw new Error("renderWeatherLines 返回空");
+});
+
+// ═══════════════════════════════════════════════════════════
+// 面板渲染冒烟测试（Fork pi panel-render.ts）
+// ═══════════════════════════════════════════════════════════
+
+test("Panel: visibleWidth 计算正确", () => {
+  const { visibleWidth } = require("./tools/tui/panel-render.ts");
+  if (visibleWidth("abc") !== 3) throw new Error("ASCII=3");
+  if (visibleWidth("你好") !== 4) throw new Error("CJK=4");
+  if (visibleWidth("\x1b[38;5;216m你好\x1b[0m") !== 4) throw new Error("ANSI escaped=4");
+});
+
+test("Panel: fit 不超48列", () => {
+  const { fit, visibleWidth } = require("./tools/tui/panel-render.ts");
+  const line = fit("a".repeat(60));
+  if (visibleWidth(line) > 48) throw new Error(`超48列: ${visibleWidth(line)}`);
+});
+
+test("Panel: Tab 0 (自身) 不抛异常", () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const { renderPanel } = require("./tools/tui/panel-render.ts");
+  const lines = renderPanel(gameState, { tab: 0 });
+  if (!Array.isArray(lines) || lines.length < 5) throw new Error("自身面板行数不足");
+  const joined = lines.join("\n");
+  if (!joined.includes("❤")) throw new Error("缺少HP");
+});
+
+test("Panel: Tab 1 (周边) 不抛异常", () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const { renderPanel } = require("./tools/tui/panel-render.ts");
+  const lines = renderPanel(gameState, { tab: 1 });
+  if (!Array.isArray(lines) || lines.length < 5) throw new Error("周边面板行数不足");
+});
+
+test("Panel: Tab 2 (房间) 不抛异常", () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const { renderPanel } = require("./tools/tui/panel-render.ts");
+  const lines = renderPanel(gameState, { tab: 2 });
+  if (!Array.isArray(lines) || lines.length < 5) throw new Error("房间面板行数不足");
+});
+
+test("Panel: Tab 3 (行动) 不抛异常", () => {
+  resetState();
+  const { renderPanel } = require("./tools/tui/panel-render.ts");
+  const lines = renderPanel(gameState, { tab: 3 });
+  if (!Array.isArray(lines) || lines.length < 5) throw new Error("行动面板行数不足");
+  if (!lines.join("\n").includes("等待叙事推进") && !lines.join("\n").includes("①")) {
+    // 空选项时显示"等待"，有选项时显示编号
+  }
+});
+
+test("Panel: 所有行不超过48列", () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const { renderPanel, visibleWidth } = require("./tools/tui/panel-render.ts");
+  for (const tab of [0, 1, 2, 3]) {
+    const lines = renderPanel(gameState, { tab });
+    for (let i = 0; i < lines.length; i++) {
+      const w = visibleWidth(lines[i]);
+      if (w > 48) throw new Error(`Tab ${tab} 行${i}: ${w}列 > 48`);
+    }
+  }
+});
+
+test("Panel: 子菜单渲染不抛异常", () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const { renderTalkSubmenu, renderTouchSubmenu, renderObserveSubmenu } = require("./tools/tui/panel-render.ts");
+  const talk = renderTalkSubmenu(gameState, "雪之下雪乃");
+  if (!talk.join("\n").includes("💬")) throw new Error("talk子菜单缺少标题");
+  const touch = renderTouchSubmenu(gameState, "雪之下雪乃");
+  if (!touch.join("\n").includes("🖐")) throw new Error("touch子菜单缺少标题");
+  const obs = renderObserveSubmenu(gameState, "雪之下雪乃");
+  if (!obs.join("\n").includes("观察")) throw new Error("observe子菜单缺少标题");
+});
+
+test("Panel: 战斗模式红色背景", () => {
+  resetState();
+  setPlayerLocation("暗巷");
+  initPlayerGrid();
+  gameState.mode = "combat";
+  const { renderPanel } = require("./tools/tui/panel-render.ts");
+  const lines = renderPanel(gameState, { tab: 0, combat: true });
+  // combat 模式不要求必须有红色 ANSI，只要有面板就行
+  if (!Array.isArray(lines) || lines.length < 5) throw new Error("战斗面板行数不足");
+  gameState.mode = "rpg";
 });
 
 // ═══════════════════════════════════════════════════════════

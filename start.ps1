@@ -1,54 +1,39 @@
 <#
 .SYNOPSIS
-  earth-0 启动脚本 (PowerShell 5.1 兼容)
+  earth-0 启动脚本 — 新会话模式（每次都是干净的）
+  传 -continue 可继续上次会话
 #>
-param()
+param([switch]$Continue)
 
 $ErrorActionPreference = "Stop"
-
-# ── 检查 pi ──
-$piPath = (Get-Command pi -ErrorAction SilentlyContinue).Source
-if (-not $piPath) {
-  Write-Error "pi not installed. https://github.com/earendil-works/pi-coding-agent"
-  exit 1
-}
-
-# ── 项目根 ──
 Set-Location $PSScriptRoot
 
-# ── sessions/ ──
-if (-not (Test-Path sessions)) { New-Item -ItemType Directory sessions -Force | Out-Null }
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host " earth-0" -ForegroundColor Yellow -NoNewline
+if ($Continue) { Write-Host " (继续上次会话)" -ForegroundColor Green }
+else { Write-Host " (新会话)" -ForegroundColor Green }
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
 
-# ── 清旧存档 ──
-if (Test-Path state) {
-  Get-ChildItem state -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+# ── 新会话：清 sessions / state ──
+if (-not $Continue) {
+  if (Test-Path sessions) { Remove-Item -Recurse -Force sessions -ErrorAction SilentlyContinue }
+  $null = New-Item -ItemType Directory sessions -Force
+  if (Test-Path state) { Remove-Item -Recurse -Force state -ErrorAction SilentlyContinue }
+} else {
+  if (-not (Test-Path sessions)) { $null = New-Item -ItemType Directory sessions -Force }
+  if (Test-Path state) { Remove-Item -Recurse -Force state -ErrorAction SilentlyContinue }
 }
 
-# ── .pi/agent/ ──
+# ── .pi/agent 本地配置 ──
 $piAgentDir = ".pi/agent"
-if (-not (Test-Path $piAgentDir)) { New-Item -ItemType Directory $piAgentDir -Force | Out-Null }
-
+if (-not (Test-Path $piAgentDir)) { $null = New-Item -ItemType Directory $piAgentDir -Force }
 if ((-not (Test-Path "$piAgentDir/auth.json")) -and (Test-Path "$env:USERPROFILE\.pi\agent\auth.json")) {
   Copy-Item "$env:USERPROFILE\.pi\agent\auth.json" "$piAgentDir/auth.json"
 }
-
 if (-not (Test-Path "$piAgentDir/settings.json")) {
   Set-Content "$piAgentDir/settings.json" -Value '{ "theme": "dark" }' -Encoding utf8
-}
-
-# ── disable builtins (skip if ConvertFrom-Json fails) ──
-$dev = ($env:TAVERN2AGENT_DEV -eq "1")
-$settingsPath = "$piAgentDir/settings.json"
-try {
-  $raw = Get-Content $settingsPath -Raw -Encoding utf8
-  $settings = $raw | ConvertFrom-Json
-  $sub = $settings.subagents
-  if (-not $sub) { $sub = [PSCustomObject]@{} }
-  $sub | Add-Member -MemberType NoteProperty -Name "disableBuiltins" -Value (-not $dev) -Force
-  $settings | Add-Member -MemberType NoteProperty -Name "subagents" -Value $sub -Force
-  $settings | ConvertTo-Json -Depth 3 | Set-Content $settingsPath -Encoding utf8
-} catch {
-  Write-Host "settings.json fix skipped: $($_.Exception.Message)"
 }
 
 # ── env ──
@@ -57,8 +42,9 @@ if ((-not $env:DEEPSEEK_API_KEY) -and $env:ANTHROPIC_AUTH_TOKEN) {
   $env:DEEPSEEK_API_KEY = $env:ANTHROPIC_AUTH_TOKEN
 }
 
-# ── launch ──
-$piArgs = @(
+# ── 启动 ──
+$nodeArgs = @(
+  ".\pi\pi-agent\dist\cli.js",
   "--no-skills",
   "--skill", "./skills/",
   "-e", "./extension.ts",
@@ -66,12 +52,12 @@ $piArgs = @(
   "--no-context-files"
 ) + $args
 
-& $piPath @piArgs
+& node @nodeArgs
 $piExit = $LASTEXITCODE
 
 Write-Host ""
-Write-Host "================================================"
-Write-Host "tips: delete .pi/agent/auth.json, sessions/, state/ before sharing this project."
-Write-Host "================================================"
+Write-Host "================================================" -ForegroundColor DarkGray
+Write-Host "tips: delete .pi/agent/auth.json, sessions/, state/ before sharing this project." -ForegroundColor DarkGray
+Write-Host "================================================" -ForegroundColor DarkGray
 
 exit $piExit
