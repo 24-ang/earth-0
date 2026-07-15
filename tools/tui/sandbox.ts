@@ -7,11 +7,23 @@ export default {
     const { gameState, saveState, getOrCreateNPC, updateRelation } = await import("../../engine/state.ts");
     const loc = gameState.player?.location || "千葉駅前";
 
+    const p = gameState.player;
+
+    // ── 玩家装备 + 技能（方便测试战斗/窃取/观察） ──
+    if (!p.skills) p.skills = {};
+    p.skills["潜行"] = { level: 2, exp: 0, nextLevel: 20 };
+    p.skills["洞察"] = { level: 3, exp: 0, nextLevel: 30 };
+    p.skills["心理"] = { level: 1, exp: 0, nextLevel: 10 };
+    if (!p.equipment) p.equipment = {};
+    if (!p.equipment.right_hand) {
+      p.equipment.right_hand = { name: "铁管", type: "weapon", slot: "right_hand", damage: { dice: "1d6", damageType: "钝击" }, weight: 2, volume: 2, effects: [], state: "intact", flavor: "冷冰冰的，敲上去有闷响。" };
+    }
+
     // 放几个测试 NPC 到当前位置
     const testNpcs = [
-      { name: "雪之下雪乃", aff: 12, stage: "陌生", lw: "又一个抱无聊期待来的人…但眼神不太一样。" },
-      { name: "由比滨结衣", aff: 35, stage: "熟人", lw: "小雪乃居然说了那么多话…说不定能改变她？" },
-      { name: "比企谷八幡", aff: 5, stage: "陌生", lw: "这年头连行为艺术都这么卷了吗。" },
+      { name: "雪之下雪乃", aff: 85, stage: "恋人", romance: "恋人", hp: 12, cash: 450, lw: "又一个抱无聊期待来的人…但眼神不太一样。" },
+      { name: "由比滨结衣", aff: 55, stage: "好朋友", hp: 14, cash: 320, lw: "小雪乃居然说了那么多话…说不定能改变她？" },
+      { name: "比企谷八幡", aff: 5, stage: "陌生", hp: 16, cash: 200, lw: "这年头连行为艺术都这么卷了吗。" },
     ];
     for (const n of testNpcs) {
       const npc = getOrCreateNPC(n.name);
@@ -19,11 +31,14 @@ export default {
       npc.currentRoom = loc;
       npc.gridPos = [Math.floor(Math.random() * 3) + 1, Math.floor(Math.random() * 3)];
       npc.lastWords = "[内心独白] " + n.lw;
-      npc.action = n.aff >= 30 ? "友好地看向这边" : "警惕地观察周围";
+      npc.action = n.aff >= 80 ? "温柔地注视着你" : n.aff >= 30 ? "友好地看向这边" : "警惕地观察周围";
+      npc.hp = { current: n.hp, max: n.hp };
+      npc.funds = n.cash;
       npc.equipment = { left_hand: null, right_hand: n.name === "雪之下雪乃" ? { name: "文库本" } : { name: "手机" } };
       updateRelation(gameState.player.relationships, n.name, n.aff, "测试初始化");
       if (gameState.player.relationships[n.name]) {
         gameState.player.relationships[n.name].stage = n.stage;
+        if (n.romance) gameState.player.relationships[n.name].romance = n.romance;
       }
     }
 
