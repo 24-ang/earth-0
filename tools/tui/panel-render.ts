@@ -21,7 +21,9 @@ const C = {
   M:  "\x1b[38;5;243m",  // gray
   W:  "\x1b[38;5;252m",  // white
   B:  "\x1b[1m",
+  I:  "\x1b[3m",         // italic
 };
+export { C };
 
 const W = 48;
 const HR = "─".repeat(W);
@@ -55,6 +57,23 @@ export function fit(s: string, width = W): string {
     r += ch; w += cw;
   }
   return r + " ".repeat(Math.max(0, width - visibleWidth(r)));
+}
+
+/** ANSI 感知截断（不补齐版）：可见宽度超 width 就截 + "…"，并强制补 \x1b[0m 防色彩泄漏到下一行。
+ *  给 widget 用——只截断不 pad，因为 widget 行宽由 pi-tui 自己管。 */
+export function truncAnsi(s: string, width: number): string {
+  let r = "", w = 0, esc = false, hasColor = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]!;
+    if (esc) { r += ch; if (ch === "m") esc = false; continue; }
+    if (ch === "\x1b") { esc = true; hasColor = true; r += ch; continue; }
+    const cp = ch.codePointAt(0)!;
+    const cw = cp > 0x7f ? (cp >= 0x2E80 ? 2 : 1) : 1;
+    if (w + cw > width) { r += "…"; break; }
+    r += ch; w += cw;
+  }
+  if (hasColor) r += "\x1b[0m";
+  return r;
 }
 
 function hr(): string { return HR; }

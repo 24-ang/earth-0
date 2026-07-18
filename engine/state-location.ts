@@ -37,6 +37,11 @@ export interface StationInfo {
 
 // ── 地点树构建 ──
 
+/** 世界根节点名（如"日本"）。HUD 收起态等场景用：动态住宅不在树里时退化到国家而不是房间名 */
+export function getWorldRootName(): string {
+  return LOCATIONS_BASE.japan?.name || "日本";
+}
+
 function buildLocationTree(): LocationNode {
   const root: LocationNode = { key: "japan", name: LOCATIONS_BASE.japan?.name || "日本", type: "root", children: [], parent: null };
 

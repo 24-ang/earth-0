@@ -1,7 +1,7 @@
-{
-  "theme": "dark",
-  "subagents": {
-    "disableBuiltins": true
-  },
-  "lastChangelogVersion": "0.74.2"
+﻿{
+    "theme":  "dark",
+    "lastChangelogVersion":  "0.74.2",
+    "subagents":  {
+                      "disableBuiltins":  true
+                  }
 }

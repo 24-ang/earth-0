@@ -27,12 +27,19 @@ export interface ClassificationResult {
   ambiguous: boolean;
 }
 
+export interface SceneFooterText {
+  posture: string;        // 玩家当前姿态/触觉体验，如"坐在靠窗第三排的椅子上"
+  location_detail: string; // 具象位置，如"千葉-出云殖民卫星-Side6-総武高校-2年F组教室"
+  main_quest: string;      // 主线任务进度，如"SSS-找到返回原来世界的方法"
+}
+
 export interface Phase1Outcome {
   directorNote: string;
   toolsExecuted: string[];
   summary: string;
   /** true if classification succeeded and tools were executed */
   classified: boolean;
+  sceneFooter?: SceneFooterText;
 }
 
 // ── A 类工具白名单（引擎通过分类 LLM 决定执行） ──
@@ -132,11 +139,15 @@ export async function runPhase1(
     gameState,
   );
 
+  // 5. 存场景页脚供 widget 显示
+  gameState._sceneFooter = result.sceneFooter || null;
+
   return {
     directorNote,
     toolsExecuted,
     summary: result.summary,
     classified: true,
+    sceneFooter: result.sceneFooter,
   };
 }
 
@@ -253,7 +264,12 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "  6. 不要使用上面没列出的工具名",
     "",
     "输出纯 JSON（不要 markdown 代码块，不要其他文字）:",
-    '{"actions": [{"tool": "...", "params": {...}, "confidence": 0.9}], "summary": "玩家意图的一句话"}',
+    '{"actions": [...], "summary": "...", "scene_footer": {"posture": "坐在靠窗的椅子上", "location_detail": "千葉-総武高校-教室", "main_quest": "暂无"}}',
+    "",
+    "scene_footer 每回合更新。三条都 ≤20字、文学质感:",
+    "  posture        = 当前姿态+感官细节(温度/触觉)",
+    "  location_detail = 地区-城市-具体位置(一层层往下)",
+    "  main_quest      = 难度:任务名。难度 SSS~E，无主线填「暂无」。",
   ].filter(Boolean).join("\n");
 }
 
@@ -330,6 +346,11 @@ export function buildStartupPrompt(playerInput: string): string {
 
     "",
     "默认: 名→维, 性别→男, 年龄→16。按年龄匹配模板。模板是快捷键，不匹配就自己当导演。",
+
+    "",
+    "输出 JSON 里必须带 scene_footer（开局的第一印象）:",
+    '{"actions": [...], "summary": "...", "scene_footer": {"posture": "站在校门口的樱花树下", "location_detail": "千葉-総武高校-正門前", "main_quest": "暂无"}}',
+    "scene_footer 三条 ≤20字: posture=当前姿态+感官细节, location_detail=地区-城市-具体位置, main_quest=难度:任务名（无主线填「暂无」）",
   ].join("\n");
 }
 
@@ -345,21 +366,28 @@ function parseClassificationOutput(raw: string): ClassificationResult {
 
   try {
     const obj = JSON.parse(text);
+    let sceneFooter: SceneFooterText | undefined = undefined;
+    if (obj.scene_footer && typeof obj.scene_footer === "object") {
+      sceneFooter = {
+        posture: typeof obj.scene_footer.posture === "string" ? obj.scene_footer.posture : "",
+        location_detail: typeof obj.scene_footer.location_detail === "string" ? obj.scene_footer.location_detail : "",
+        main_quest: typeof obj.scene_footer.main_quest === "string" ? obj.scene_footer.main_quest : "",
+      };
+      // 三项任意为空则整体降级到 engine fallback
+      if (!sceneFooter.posture || !sceneFooter.location_detail || !sceneFooter.main_quest) sceneFooter = undefined;
+    }
     return {
       actions: Array.isArray(obj.actions) ? obj.actions : [],
       summary: typeof obj.summary === "string" ? obj.summary : "玩家进行了操作",
       ambiguous: obj.ambiguous === true,
+      sceneFooter,
     };
   } catch {
     // 尝试用正则提取 JSON 对象
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const obj = JSON.parse(jsonMatch[0]);
-      return {
-        actions: Array.isArray(obj.actions) ? obj.actions : [],
-        summary: typeof obj.summary === "string" ? obj.summary : "玩家进行了操作",
-        ambiguous: obj.ambiguous === true,
-      };
+      return { actions: Array.isArray(obj.actions) ? obj.actions : [], summary: typeof obj.summary === "string" ? obj.summary : "玩家进行了操作", ambiguous: obj.ambiguous === true };
     }
     throw new Error("Failed to parse classification JSON");
   }

@@ -95,6 +95,16 @@ export function startWebHud(pi: any, ctx: any, port: number = 3000) {
     }
   });
 
+  _server.on("error", (err: any) => {
+    if (err.code === "EADDRINUSE") {
+      console.warn(`[web-hud] Port ${port} already in use, trying port ${port + 1}...`);
+      _server = null;
+      startWebHud(pi, ctx, port + 1);
+    } else {
+      console.error("[web-hud] server error:", err.message || err);
+    }
+  });
+
   _server.listen(port, () => {
     console.log(`[web-hud] http://localhost:${port}`);
   });

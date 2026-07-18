@@ -15,6 +15,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { registerAll } from "./tools/registry.ts";
 import { updateChatHUD } from "./tools/helpers.ts";
+import { C, truncAnsi } from "./tools/tui/panel-render.ts";
 
 /** 最新的含 chat API 的 ctx（before_agent_start / turn_end 更新） */
 let _latestCtx: any = null;
@@ -719,7 +720,13 @@ export async function buildSystemPrompt(gameState: any, statePrompt: string): Pr
 }
 
 // ═══════════════════════════════════════════════════════════
-// 🎮 终端常驻 HUD widget — 纯文本渲染（pi-tui aboveEditor 过滤 ANSI 转义）
+// 🎮 终端常驻 HUD widget — 支持 ANSI 彩色（aboveEditor 不过滤 \x1b，见下）
+//
+// 【重要更正 2026-07-15】旧交接文档说"aboveEditor 过滤 ANSI，widget 永远纯文本"是误诊。
+// 真相：pi-tui 的 Text 组件全程 ANSI 感知（wrapTextWithAnsi/visibleWidth），pi 自己
+// 也往 widget 塞 theme.fg("muted",...) 彩色行。旧版看到裸色码的根因是当年的 tr() 截断
+// 函数按 charCodeAt 逐字符计宽，把 \x1b[..m 序列当可见字符、截断时拦腰斩断 → 裸码。
+// 现已换成 ANSI 感知的 truncAnsi()（tools/tui/panel-render.ts）。色彩语义见 tmp/TUI-HUD-HANDOFF.md。
 // ═══════════════════════════════════════════════════════════
 
 /** NPC 好感度 helper */
@@ -730,28 +737,292 @@ function isNpcLover(gs: any, name: string): boolean {
   return gs?.player?.relationships?.[name]?.romance === "恋人";
 }
 
-function initGamePanel(_pi: any, sessionCtx: any) {
+export function initGamePanel(_pi: any, sessionCtx: any) {
   let _tab = 0;
   let _cursor = 0;
   let _panelMode = false;
+  let _expanded = false; // 折叠态：false=只显示 1 行摘要；双击 Enter 展开
   let _lastEnterTime = 0; // 双击 Enter 进面板的时间戳
 
   // ── 三级状态机 ──
-  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "item-detail" | "vehicle-detail" | "furniture-detail" | "body-detail" | "skills-detail" | "party-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | null = null;
+  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "party-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | null = null;
   let _subCursor = 0; // 子菜单内部光标
   let _selectedTarget: any = null; // 当前交互的目标实体 (如选中 NPC, 物品, 载具)
+  let _pickSlot: string | null = null; // equip-detail 空槽 Enter → 选物品模式（slot id）, null=正常槽列表
 
   let _choicesCache: string[] = [];
   let _choiceTags: string[] = [];
+  let _condOptsCache: any[] = []; // Phase 1.5 条件选项（引擎扫描，行动 Tab 追加显示）
   let _peopleCache: any[] = [];
   let _lastProseHash = "";
 
   // 收集当前 Tab 所有的可聚焦行
   let _focusItems: any[] = [];
 
-  /** 取最新有 chat API 的 ctx，兜底用 session ctx */
+  // 装备槽定义（render 和 handleInput 共用）
+  const EQUIP_SLOTS_ALL = [
+    { id: "top", label: "外套", femaleOnly: false }, { id: "shirt", label: "内搭", femaleOnly: false },
+    { id: "inner_top", label: "胸罩", femaleOnly: true },
+    { id: "bottom", label: "下装", femaleOnly: false }, { id: "inner_bot", label: "内裤", femaleOnly: false },
+    { id: "legs", label: "袜", femaleOnly: false },
+    { id: "feet", label: "鞋", femaleOnly: false }, { id: "head", label: "头饰", femaleOnly: false },
+    { id: "acc", label: "配饰", femaleOnly: false }, { id: "acc2", label: "配饰②", femaleOnly: false },
+    { id: "acc3", label: "配饰③", femaleOnly: false },
+    { id: "right_hand", label: "主手", femaleOnly: false }, { id: "left_hand", label: "副手", femaleOnly: false },
+    { id: "back", label: "背", femaleOnly: false },
+  ];
+  /** 按玩家性别过滤装备槽（女保留全，男去掉胸罩等专有槽） */
+  const getEquipSlots = (gender?: string) =>
+    EQUIP_SLOTS_ALL.filter(s => !s.femaleOnly || (gender || "").includes("女"));
+  const EQUIP_SLOTS = getEquipSlots(); // 默认全量（render 里会按实性别再过滤）
+
+  /** item-detail 可用操作（render 与 handleInput 共用，杜绝两处漂移）。
+   *  slotId 来源=已装备（equip-detail 进入）；否则=背包物品。 */
+  const _buildItemActions = (sel: any): { id: string; label: string }[] => {
+    if (sel?.slotId) return [{ id: "unequip", label: "卸下放回背包" }, { id: "discard", label: "丢弃" }];
+    const it = sel?.item;
+    const acts: { id: string; label: string }[] = [];
+    if (it?.type === "consumable") acts.push({ id: "use", label: "使用" });
+    if (it?.slot) acts.push({ id: "equip", label: `装备 → ${EQUIP_SLOTS_ALL.find(s => s.id === it.slot)?.label || it.slot}` });
+    acts.push({ id: "discard", label: "丢弃" });
+    return acts;
+  };
+
+  /** 性征摘要段（自身 Tab 一级"性征"行；字段可能缺失，全程 ?. 并过滤空段）。
+   *  focusItems 收集与渲染两处共用——条件必须一致，否则光标停在不存在的行上。 */
+  const _buildSexSegs = (p: any): string[] => {
+    const prof = p?.sex?.profile || {};
+    const segs: string[] = [];
+    if ((p?.gender || "").includes("女") && prof.female) {
+      const f = prof.female;
+      const br = [f.breast?.cup && `${f.breast.cup}-cup`, f.breast?.shape].filter(Boolean).join("");
+      if (br) segs.push(br);
+      const vg = [f.vagina?.type, f.vagina?.tightness].filter(Boolean).join("/");
+      if (vg) segs.push(vg);
+      if (f.pubic_hair?.amount) segs.push(`阴毛${f.pubic_hair.amount}`);
+    } else if (prof.male) {
+      const m = prof.male;
+      if (m.penis?.length_cm || m.penis?.erect_length_cm)
+        segs.push(`${m.penis?.length_cm ?? "?"}cm→勃起${m.penis?.erect_length_cm ?? "?"}cm·围${m.penis?.erect_girth_cm ?? "?"}cm`);
+      if (m.pubic_hair?.amount) segs.push(`阴毛${m.pubic_hair.amount}`);
+    }
+    return segs;
+  };
+
+  // ── 外出导航（房间 Tab「外出」子面板，吃掉旧 /go /train）──
+  let _goNavItems: any[] = []; // {kind:"header",label} | {kind:"dest",mode:"walk"|"train"|"unknown",name,mins,rawMins?,fare?,station?}
+
+  /** 构建外出目的地列表。known_locations 过滤 = 信息可见性守恒（没去过的显示❓不可选） */
+  const _buildGoNav = (gs: any, s: any): any[] => {
+    const p = gs.player;
+    const loc = p.location;
+    const known: string[] = p.known_locations || [];
+    const isKnown = (n: string) => known.some((k: string) => s.isSameLocation(k, n));
+    const { estimateTravelMinutes } = require("./tools/helpers.ts");
+    const nav = s.getLocationNav(loc);
+    const mul = p.vehicle?.speedMul || 1;
+    const items: any[] = [];
+    const walk = (name: string, rawMins: number) => {
+      items.push({ kind: "dest", mode: "walk", name, rawMins, mins: Math.max(1, Math.round(rawMins / mul)) });
+    };
+    if (nav.parent && !s.isSameLocation(nav.parent, loc)) {
+      items.push({ kind: "header", label: "── 返回上级 ──" });
+      walk(nav.parent, estimateTravelMinutes(loc, nav.parent));
+    }
+    const rooms = (nav.rooms || []).filter((r: string) => !s.isSameLocation(r, loc) && isKnown(r));
+    if (rooms.length) {
+      items.push({ kind: "header", label: "── 同层 ──" });
+      for (const r of rooms) walk(r, estimateTravelMinutes(loc, r));
+    }
+    const nearby = nav.nearby || [];
+    if (nearby.length) {
+      items.push({ kind: "header", label: mul > 1 ? `── 附近 🚲×${mul} ──` : "── 附近 ──" });
+      for (const n of nearby) {
+        if (isKnown(n.name)) walk(n.name, n.minutes);
+        else items.push({ kind: "dest", mode: "unknown", name: n.name, mins: Math.max(1, Math.round(n.minutes / mul)) });
+      }
+    }
+    for (const st of nav.stations || []) {
+      if (!st.destinations?.length) continue;
+      items.push({ kind: "header", label: `── 电车 🚉 ${st.name} ──` });
+      for (const d of st.destinations) {
+        items.push({ kind: "dest", mode: "train", name: d.name, mins: d.minutes, fare: Math.round(d.minutes * 20), station: st.name });
+      }
+    }
+    return items;
+  };
+
+  /** 外出落地（与 helpers.runNavigation.doMove 语义一致）：
+   *  电车=扣钱+pendingTravel；步行≥15分=pendingTravel+旅途叙事；短途=直移+推进时间。 */
+  const _doTravel = async (it: any) => {
+    const s = require("./engine/state.ts");
+    const h = require("./tools/helpers.ts");
+    const gs = s.gameState;
+    const ctx = getCtx();
+    const vName = gs.player.vehicle?.name;
+    if (it.mode === "train") {
+      const fare = it.fare || 0;
+      if (fare <= 0) { ctx?.ui?.notify("车费数据异常，无法购票", "warning"); return; }
+      if (gs.player.funds < fare) { ctx?.ui?.notify(`资金不足！需要 ¥${fare}，当前 ¥${gs.player.funds}`, "warning"); return; }
+      gs.player.funds -= fare;
+      gs.pendingTravel = { from: gs.player.location, to: it.name, route: `电车 ${it.station}→${it.name}（${it.mins}分钟）`, minutes: it.mins, timeOfDay: gs.time.time_of_day };
+      s.saveState();
+      ctx?.ui?.notify(`🚃 ${it.station} → ${it.name}，¥${fare}`, "info");
+      pushText(`玩家乘坐电车从 ${it.station} 前往 ${it.name}，约${it.mins}分钟。描述车窗外的风景，到达前调用 complete_travel。`);
+    } else if ((it.rawMins ?? it.mins) >= 15) {
+      gs.pendingTravel = { from: gs.player.location, to: it.name, route: vName ? `${vName}（约${it.mins}分钟）` : `步行/短途（约${it.rawMins}分钟）`, minutes: it.mins, timeOfDay: gs.time.time_of_day };
+      s.saveState();
+      ctx?.ui?.notify(`[旅行中] 前往 ${it.name}，行程 ${it.mins} 分钟`, "info");
+      pushText(`玩家已出发前往 ${it.name}。${vName ? `骑${vName}，预计${it.mins}分钟到达。` : `步行约${it.rawMins}分钟。`}不要立即让他们到达目的地！请描述路上的见闻、风景。等剧情差不多了，再调用 complete_travel 工具。`);
+    } else {
+      const fromLoc = gs.player.location;
+      await h.moveTo(it.name, ctx, gs, s.saveState);
+      await h.advanceTimeMinutes(it.mins, ctx, gs, s.saveState);
+      if (it.mins >= 2) pushText(`[移动] ${fromLoc} → ${it.name}，耗时 ${it.mins} 分钟${vName ? `（骑${vName}）` : ""}。`);
+    }
+  };
+
+  // ── 行动 Tab 常驻动作（吃掉旧 /sleep；条件满足才出现）──
+
+  /** 在家判定（与旧 tools/tui/sleep.ts 一致：自有房产 or 地名含 家/公寓/邸） */
+  const _isAtHome = (gs: any): boolean => {
+    const loc = gs.player.location || "";
+    const ownsHere = Object.values(gs.player.properties || {}).some((pr: any) => pr?.name && (loc.includes(pr.name) || pr.name.includes(loc)));
+    return ownsHere || loc.includes("家") || loc.includes("公寓") || loc.includes("邸");
+  };
+
+  /** 常驻动作列表：恒有等待；在家→睡觉；背包有消耗品→吃。渲染与 focusItems 收集共用。 */
+  const _buildStandingActions = (gs: any): any[] => {
+    const acts: any[] = [];
+    acts.push({ id: "wait", icon: "⏳", label: "原地等待", hint: "30分钟" });
+    if (_isAtHome(gs)) {
+      const tired = (gs.player.fatigue ?? 0) >= 70;
+      acts.push({ id: "sleep", icon: "💤", label: "睡到明早", hint: "在家·HP/疲劳全恢复", hot: tired });
+    }
+    const foods = (gs.player.inventory || []).filter((i: any) => i.type === "consumable");
+    if (foods.length) {
+      const counts: Record<string, number> = {};
+      for (const f of foods) counts[f.name] = (counts[f.name] || 0) + 1;
+      const summary = Object.entries(counts).slice(0, 2).map(([n2, c2]) => c2 > 1 ? `${n2}×${c2}` : n2).join("·");
+      acts.push({ id: "eat", icon: "🍱", label: "吃点东西", hint: `背包:${summary}` });
+    }
+    return acts;
+  };
+
+  /** 常驻动作落地：纯引擎直改+notify，不推正文（守恒量路径） */
+  const _doStandingAction = async (act: any) => {
+    const s = require("./engine/state.ts");
+    const h = require("./tools/helpers.ts");
+    const gs = s.gameState;
+    const ctx = getCtx();
+    if (act.id === "wait") {
+      await h.advanceTimeMinutes(30, ctx, gs, s.saveState);
+    } else if (act.id === "sleep") {
+      // 与旧 /sleep 一致：+1天、满血、疲劳清零
+      const { advanceTime } = require("./engine/time.ts");
+      gs.time = advanceTime(gs.time, 1);
+      gs.player.hp.current = gs.player.hp.max;
+      gs.player.fatigue = 0;
+      if (s.stampRoom) s.stampRoom();
+      s.saveState();
+      ctx?.ui?.notify(`😴 一觉睡到 ${gs.time.game_date} ${gs.time.day_of_week}曜日早上。HP/体力全恢复。`, "info");
+    } else if (act.id === "eat") {
+      const idx = (gs.player.inventory || []).findIndex((i: any) => i.type === "consumable");
+      if (idx < 0) { ctx?.ui?.notify("背包里没有能吃的了", "warning"); return; }
+      const food = gs.player.inventory[idx];
+      for (const ef of food.effects || []) {
+        if (ef.type === "heal") {
+          const amt = typeof ef.value === "number" ? ef.value : (parseInt(ef.value) || 5);
+          gs.player.hp.current = Math.min(gs.player.hp.max, gs.player.hp.current + amt);
+        }
+      }
+      gs.player.inventory.splice(idx, 1);
+      s.saveState();
+      ctx?.ui?.notify(`🍱 吃了 ${food.name}，HP ${gs.player.hp.current}/${gs.player.hp.max}`, "info");
+    }
+  };
+
+  // ── 情报子面板（吃掉旧 /info 六合一；二级=六项菜单，三级=单段内容）──
+  let _tuiRef: any = null;      // pi-tui 实例，异步加载完成后主动 requestRender
+  let _infoSections: string[][] | null = null; // 六段内容（与 _INFO_SECTIONS 同序），null=加载中
+  let _infoSecIdx = 0;          // info-section 当前查看的段
+
+  const _INFO_SECTIONS = [
+    { icon: "🚨", label: "警报" },
+    { icon: "📋", label: "任务" },
+    { icon: "📅", label: "日历" },
+    { icon: "🌈", label: "天气" },
+    { icon: "👥", label: "NPC日程" },
+    { icon: "🧠", label: "NPC记忆" },
+  ];
+
+  /** 六项菜单右侧的同步摘要（轻量，直接读 gameState，不等异步加载） */
+  const _infoSummary = (gs: any, idx: number): string => {
+    try {
+      if (idx === 0) {
+        const f = gs.flags || {};
+        const bits: string[] = [];
+        if (f.wanted) bits.push("👮通缉");
+        if (f.steal_alert) bits.push("🚨警报");
+        if (f.identity_exposed) bits.push("🎭暴露");
+        if (f.school_alert) bits.push("🏫警戒");
+        return bits.length ? bits.join(" ") : "✅正常";
+      }
+      if (idx === 1) {
+        const actives = Object.values(gs.quests || {}).filter((q: any) => q.status === "active");
+        return `${actives.length}个进行中`;
+      }
+      if (idx === 2) {
+        const { getTodayCalendar } = require("./engine/timeline.ts");
+        const ev = getTodayCalendar();
+        if (!ev) return "今日无事件";
+        const s2 = String(ev);
+        return s2.length > 9 ? s2.slice(0, 9) + "…" : s2;
+      }
+      if (idx === 3) return [gs.time?.weather, gs.time?.season].filter(Boolean).join(" · ") || "当前天气·预报";
+      if (idx === 4) return "周边NPC按位置分组";
+      if (idx === 5) return "NPC对你的记忆标签";
+    } catch {}
+    return "";
+  };
+
+  /** 异步拼装六段情报（复用 helpers 现成渲染函数），完成后触发重绘 */
+  const _loadInfoLines = async () => {
+    try {
+      const h = require("./tools/helpers.ts");
+      _infoSections = await Promise.all([
+        h.renderAlertsLines(), h.renderQuestLines(), h.renderCalendarLines(),
+        h.renderWeatherLines(), h.renderScheduleLines(), h.renderMemoryLines(),
+      ]);
+    } catch (e: any) {
+      console.error("[info-detail] 情报加载失败:", e?.message || e);
+      _infoSections = _INFO_SECTIONS.map(() => ["情报加载失败，请看控制台"]);
+    }
+    try { _tuiRef?.requestRender?.(); } catch {}
+  };
+
+  /** 取最新 ctx，兜底用 session ctx */
   const getCtx = () => _latestCtx || sessionCtx;
 
+  /** 把第一人称文本作为玩家消息推入 LLM 流水线（等价玩家打字，走 input 钩子 → Phase 1-3）。
+   *  旧 ctx.chat.addSystemMessage 是 pi 遗留 API（v0.74.2 已无 chat 属性，可选链静默失效）。
+   *  无条件 deliverAs:"followUp"：idle 时 pi 忽略该参数并立即触发一轮；流式中排队到本轮结束
+   *  （流式 throw 是异步 rejection，同步 catch 接不到，必须前置指定）。 */
+  const pushText = (text: string) => {
+    const t = (text ?? "").trim();
+    if (!t) return; // 亲密失败分支等会传空串
+    try {
+      _pi.sendUserMessage(t, { deliverAs: "followUp" });
+      const ctx = getCtx();
+      if (typeof ctx?.isIdle === "function" && !ctx.isIdle())
+        ctx?.ui?.notify("已排队，本轮叙事结束后发送", "info");
+    } catch (e) {
+      console.error("[game-hud] pushText: sendUserMessage 失败", e);
+      getCtx()?.ui?.notify("消息发送失败", "error");
+    }
+  };
+
+  /** 位置描述：基于网格坐标 + 房间家具标签，如 "靠右" / "靠窗" / "桌前" */
   const posLabel = (gp: any, rm: any): string => {
     if (!gp || !rm) return "";
     const [x,y] = Array.isArray(gp) ? gp : [0,0];
@@ -760,7 +1031,9 @@ function initGamePanel(_pi: any, sessionCtx: any) {
     if (x===0) lbl+="靠左"; else if (x===rw-1) lbl+="靠右";
     if (!lbl) lbl="中间";
     const c=rm.cells?.[y]?.[x];
-    if (c?.label && c.label.trim() && c.label.trim()!=="  ") lbl=c.label.trim();
+    // cell.label 可能是内部代号（如 "DR"），只采用含中文的可读标签
+    const cl = c?.label?.trim();
+    if (cl && cl !== "" && /[一-鿿]/.test(cl)) lbl = cl;
     return lbl;
   };
 
@@ -863,7 +1136,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
     const aff=getNpcAffection(gs,name);const lover=isNpcLover(gs,name);
     const pty:string[]=gs?.player?.party||[];
     if(key===0){
-      ctx?.chat?.addSystemMessage(`我找 ${name} 聊天。`);
+      pushText(`我找 ${name} 聊天。`);
       ctx?.ui?.notify(`向${name}搭话`, "info");
       _panelMode=false;
     }
@@ -873,11 +1146,11 @@ function initGamePanel(_pi: any, sessionCtx: any) {
       if(aff<40&&!lover){ctx?.ui?.notify(`好感需≥40或恋人`,"warning");return;}
       if(pty.includes(name)){
         gs.player.party=pty.filter((n:string)=>n!==name);
-        ctx?.chat?.addSystemMessage(`${name}离开了队伍。`);
+        pushText(`${name}离开了队伍。`);
         ctx?.ui?.notify(`${name}离队`, "info");
       } else {
         gs.player.party=[...pty,name];
-        ctx?.chat?.addSystemMessage(`${name}加入了队伍。`);
+        pushText(`${name}加入了队伍。`);
         ctx?.ui?.notify(`${name}入队`, "info");
       }
       require("./engine/state.ts").saveState();_panelMode=false;
@@ -888,23 +1161,23 @@ function initGamePanel(_pi: any, sessionCtx: any) {
     }
     // key===5/6 → 战斗/窃取子菜单，key===4 → 恋爱子菜单（由 handleInput 路由）
     // key===20-26 → Sex 模式专用操作
-    else if(key===20){ctx?.chat?.addSystemMessage(`我轻轻抚摸 ${name}。`);ctx?.ui?.notify(`爱抚${name}`, "info");_panelMode=false;}
-    else if(key===21){ctx?.chat?.addSystemMessage(`我吻向 ${name}。`);ctx?.ui?.notify(`亲吻${name}`, "info");_panelMode=false;}
-    else if(key===22){ctx?.chat?.addSystemMessage(`我进入 ${name} 的身体。`);ctx?.ui?.notify(`进入${name}`, "info");_panelMode=false;}
-    else if(key===23){ctx?.chat?.addSystemMessage(`我变换了体位。`);ctx?.ui?.notify("变换体位", "info");_panelMode=false;}
-    else if(key===24){ctx?.chat?.addSystemMessage(`我对 ${name} 说着挑逗的话。`);ctx?.ui?.notify(`挑逗${name}`, "info");_panelMode=false;}
+    else if(key===20){pushText(`我轻轻抚摸 ${name}。`);ctx?.ui?.notify(`爱抚${name}`, "info");_panelMode=false;}
+    else if(key===21){pushText(`我吻向 ${name}。`);ctx?.ui?.notify(`亲吻${name}`, "info");_panelMode=false;}
+    else if(key===22){pushText(`我进入 ${name} 的身体。`);ctx?.ui?.notify(`进入${name}`, "info");_panelMode=false;}
+    else if(key===23){pushText(`我变换了体位。`);ctx?.ui?.notify("变换体位", "info");_panelMode=false;}
+    else if(key===24){pushText(`我对 ${name} 说着挑逗的话。`);ctx?.ui?.notify(`挑逗${name}`, "info");_panelMode=false;}
     else if(key===25){
       // ⑥状态 → 展开自身 sex-detail
-      ctx?.chat?.addSystemMessage(`我看了看 ${name} 的状态。`);
+      pushText(`我看了看 ${name} 的状态。`);
       ctx?.ui?.notify(`查看${name}性状态`, "info");
       _panelMode=false;
     }
-    else if(key===26){gs.mode=gs._prevMode||"gal";gs._prevMode=undefined;require("./engine/state.ts").saveState();ctx?.chat?.addSystemMessage(`我和 ${name} 结束了亲密。`);ctx?.ui?.notify("结束亲密", "info");_panelMode=false;}
+    else if(key===26){gs.mode=gs._prevMode||"gal";gs._prevMode=undefined;require("./engine/state.ts").saveState();pushText(`我和 ${name} 结束了亲密。`);ctx?.ui?.notify("结束亲密", "info");_panelMode=false;}
     else if(key===7){
       // ⑧暗示 — 需心理或话术技能
       const hasPsych = (gs?.player?.skills?.心理 || gs?.player?.skills?.话术 || 0) >= 1;
       if(!hasPsych){ctx?.ui?.notify("需要心理或话术技能Lv1+", "warning");return;}
-      ctx?.chat?.addSystemMessage(`我对 ${name} 发出了微妙的暗示。`);
+      pushText(`我对 ${name} 发出了微妙的暗示。`);
       ctx?.ui?.notify(`对${name}使用暗示`, "info");
       _panelMode=false;
     }
@@ -919,13 +1192,13 @@ function initGamePanel(_pi: any, sessionCtx: any) {
         ctx?.ui?.notify(`${name}拒绝了…好感-15`, "warning");
       }
       require("./engine/state.ts").saveState();
-      ctx?.chat?.addSystemMessage(ok?`${name}红着脸点了点头…`:``);
+      pushText(ok?`${name}红着脸点了点头…`:``);
       _panelMode=false;
     }
     // 技能交互
-    else if(key===30){ctx?.chat?.addSystemMessage(`我对 ${name} 进行伤势检查与包扎治疗。`);ctx?.ui?.notify(`医疗${name}`, "info");_panelMode=false;}
-    else if(key===31){ctx?.chat?.addSystemMessage(`我施展话术，试图说服 ${name}。`);ctx?.ui?.notify(`说服${name}`, "info");_panelMode=false;}
-    else if(key===32){ctx?.chat?.addSystemMessage(`我凝视着 ${name} 的眼睛，尝试施加暗示…`);ctx?.ui?.notify(`暗示${name}`, "info");_panelMode=false;}
+    else if(key===30){pushText(`我对 ${name} 进行伤势检查与包扎治疗。`);ctx?.ui?.notify(`医疗${name}`, "info");_panelMode=false;}
+    else if(key===31){pushText(`我施展话术，试图说服 ${name}。`);ctx?.ui?.notify(`说服${name}`, "info");_panelMode=false;}
+    else if(key===32){pushText(`我凝视着 ${name} 的眼睛，尝试施加暗示…`);ctx?.ui?.notify(`暗示${name}`, "info");_panelMode=false;}
   }
 
   function _doTouch(gs:any,name:string){
@@ -937,7 +1210,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
         const ok=Math.random()>0.2;const msg=ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`;
         if(ok){updateRelation(gs.player.relationships,name,l.rw,l.n);ctx?.ui?.notify(`${l.n}${name} ✓ +${l.rw}`, "info");}
         else{updateRelation(gs.player.relationships,name,-l.pen,`${l.n}被拒`);ctx?.ui?.notify(`${name}拒绝${l.n} -${l.pen}`, "warning");}
-        saveState();ctx?.chat?.addSystemMessage(msg);_panelMode=false;return;
+        saveState();pushText(msg);_panelMode=false;return;
       }
     }
     ctx?.ui?.notify("条件未满足","warning");
@@ -951,30 +1224,72 @@ function initGamePanel(_pi: any, sessionCtx: any) {
     if(ok){rel.affection=Math.min(100,(rel.affection||0)+5);ctx?.ui?.notify(`约${name}成功 ✓ +5`, "info");}
     else{rel.affection=Math.max(0,(rel.affection||0)-5);ctx?.ui?.notify(`${name}说有事… -5`, "warning");}
     require("./engine/state.ts").saveState();
-    ctx?.chat?.addSystemMessage(ok?`我约 ${name} 周末出去玩。${name}：「好啊。」好感+5`:`约 ${name} 出去玩，但${name}说有事。好感-5`);
+    pushText(ok?`我约 ${name} 周末出去玩。${name}：「好啊。」好感+5`:`约 ${name} 出去玩，但${name}说有事。好感-5`);
   }
 
   const widget = {
     render(w: number): string[] {
       try {
-        const W = Math.max(20, w - 2);
-        const tr = (s: string) => {
-          let ww=0,res="",ii=0;
-          while(ii<s.length){
-            const ch=s[ii]!;
-            const cw=ch.charCodeAt(0)>0x7f?2:1;
-            if(ww+cw>W){res+="…";break;}
-            res+=ch;
-            ww+=cw;
-            ii++;
-          }
-          return res;
+        const W = Math.max(20, w - 2) - 2; // 减 2 列给左侧竖线轨道 "│ "
+        // 竖线轨道：聚焦区 → 粗橙 ┃，其余 → 灰 │
+        const _secOf = (ft: string|null): string|null =>
+          !ft ? null : (ft === "titles" || ft === "reputation" || ft === "infoline") ? "info"
+          : (ft === "body" || ft === "sex" || ft === "equip" || ft === "skills" || ft === "bag" || ft === "vehicle" || ft === "party") ? "gear"
+          : (ft === "gonav") ? "nav" : null;
+        const tr = (s: string, sec?: string|null, focus?: boolean) => {
+          const active = sec && sec === _secOf(_panelMode ? _focusItems[_cursor]?.type : null);
+          const rail = active ? `${C.O}${C.B}┃${C.r} ` : `${C.M}│${C.r} `;
+          return rail + truncAnsi(s, W);
         };
-        /** 进度条: bar(45,100,8) → "[====----] 45/100" */
-        const bar = (val: number, max: number, w: number = 8): string => {
-          const pct = Math.max(0, Math.min(1, val / max));
+        // ── 着色小工具（世界书风格：灰为主，橙点睛）──
+        const gray = (s: string) => `${C.M}${s}${C.r}`;
+        const dim  = (s: string) => `${C.M}${C.I}${s}${C.r}`;   // 灰斜体（心里话）
+        const hi   = (s: string) => `${C.O}${s}${C.r}`;         // 橙（选中/可用）
+        const gold = (s: string) => `${C.Y}${s}${C.r}`;         // 金（钱）
+        const head = (s: string) => `${C.M}【 ${C.r}${C.W}${C.B}${s}${C.r}${C.M} 】${C.r}`; // 区块标头：括号灰、字白粗
+        const COL = 10; // 统一对齐线（视觉列数）= 5中文字宽
+        /** 把 s pad 到视觉列 COL（所有 kv 的 │ 和入口行的 │ 都在同一列） */
+        const padCol = (s: string) => s + " ".repeat(Math.max(0, COL - visW(s)));
+        /** key │ value 竖排行：键白，pad 到 COL 后 │ 白，值白 */
+        const kv = (key: string, val: string) =>
+          `  ${padCol(key)} │ ${val}`;
+        /** 入口行（身体/装备/技能/背包/队伍等可聚焦项），对齐到 kv 的 │ 列 */
+        const entry = (focus: boolean, label: string, val: string, suffix?: string) =>
+          ` ${focus ? hi("▶") : " "} ${padCol(label)} ${C.M}│${C.r} ${val}${suffix ? " " + suffix : ""}`;
+        /** 进度条: bar(45,100,10) → "██████░░░░ [45/100]"，low=true 变红。max<=0 时按空条处理 */
+        const bar = (val: number, max: number, w: number = 10, low = false): string => {
+          const pct = max > 0 ? Math.max(0, Math.min(1, val / max)) : 0;
           const n = Math.round(pct * w);
-          return "[" + "=".repeat(n) + "-".repeat(w - n) + `] ${val}/${max}`;
+          const fill = n > 0 ? `${low ? C.d : C.G}${"█".repeat(n)}` : "";
+          const rest = n < w ? `${C.M}${"░".repeat(w - n)}` : "";
+          return `${fill}${rest}${C.r} [${val}/${max}]`;
+        };
+        /** 方块条（世界书 ■■□□□ 风格）: sq(12,20,5) → "■■■□□ [12/20]" */
+        const sq = (val: number, max: number, w: number = 5, low = false): string => {
+          const pct = max > 0 ? Math.max(0, Math.min(1, val / max)) : 0;
+          const n = Math.round(pct * w);
+          const fill = n > 0 ? `${low ? C.d : C.G}${"■".repeat(n)}` : "";
+          const rest = n < w ? `${C.M}${"□".repeat(w - n)}` : "";
+          return `${fill}${rest}${C.r} ${C.M}[${C.r}${val}${C.M}/${C.r}${max}${C.M}]${C.r}`;
+        };
+        /** 属性偏离注解（10=常人基线，只标偏离值） */
+        const attrNote = (v: number): string => {
+          if (v >= 14) return dim(" (远超常人)");
+          if (v >= 12) return dim(" (出色)");
+          if (v <= 5) return dim(" (相当孱弱)");
+          if (v <= 7) return dim(" (低于常人)");
+          return "";
+        };
+        /** 可见宽度（中文2，ANSI 0）*/
+        const visW = (s: string): number => {
+          let ww = 0, esc = false;
+          for (let i = 0; i < s.length; i++) {
+            const ch = s[i]!;
+            if (esc) { if (ch === "m") esc = false; continue; }
+            if (ch === "\x1b") { esc = true; continue; }
+            ww += ch.charCodeAt(0) > 0x7f ? 2 : 1;
+          }
+          return ww;
         };
 
         const s = require("./engine/state.ts");
@@ -999,6 +1314,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
           _lastProseHash=pk;
           _choicesCache=[];
           _choiceTags=[];
+          _condOptsCache=[];
           if(prose){
             try {
               const{parseRoleOptions}=require("./engine/parse-options.ts");
@@ -1009,6 +1325,19 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               }
             } catch {}
           }
+          // Phase 1.5 条件选项（引擎侧扫描，展示层追加；去重：已有的不重复）
+          try {
+            const{scanConditionalOptions}=require("./engine/conditional-options.ts");
+            const conds=scanConditionalOptions(gs);
+            const seen=new Set(_choicesCache.map((t:string)=>t.slice(0,20)));
+            for(const c of conds) {
+              if(!seen.has(c.text.slice(0,20))) {
+                _condOptsCache.push({text:c.text,tag:c.tag,type:"conditional"});
+                seen.add(c.text.slice(0,20));
+              }
+            }
+            if(_condOptsCache.length>4) _condOptsCache=_condOptsCache.slice(0,4);
+          } catch {}
         }
 
         // 加载周边人物
@@ -1038,49 +1367,81 @@ function initGamePanel(_pi: any, sessionCtx: any) {
           }
         } catch {}
 
+        // ── 收起态摘要行（始终作为第一行）：[ 区域|HH:MM-天气|季节 ] + 模式 logo ──
+        const modeLogo = mode === "sex" ? "🔞" : mode === "gal" ? "🌸"
+          : gs.interactionMode === "novel" ? "📖" : "🎮";
+        let region = loc, clock = "", season = "", wx = "", dayType = "";
+        try {
+          const sl = require("./engine/state-location.ts");
+          const nav = sl.getLocationNav(loc);
+          // 收起态开头永远是国家级：树里有链取顶层，动态住宅等不在树里的退化到世界根名
+          region = (nav?.breadcrumb?.length > 1) ? nav.breadcrumb[0] : sl.getWorldRootName();
+        } catch {}
+        try {
+          const cp = require("./engine/time.ts").getClockParts(t);
+          clock = cp.display_time; season = cp.season;
+        } catch {}
+        wx = gs.weather?.type || "";
+        // 平日/休日（土·日=休日），对标世界书 |平日]
+        const dow = t?.day_of_week || "";
+        dayType = (dow === "土" || dow === "日" || dow === "六" || dow === "天") ? "休日" : "平日";
+        // 灰框白字（与开场日期行 |-[土曜日-…] 同款：|-[ ] | 分隔符灰，内容白）
+        const summarySegs = [region, `${clock}${wx ? gray("-") + wx : ""}`, `${season}${gray("·")}${dayType}`].filter(Boolean);
+        const summaryLine = `${gray("|-[")}${summarySegs.join(gray("|"))}${gray("]")} ${modeLogo}`;
+
+        // 收起态：只显示摘要行
+        if (!_expanded) {
+          out.push(tr(summaryLine));
+          return out;
+        }
+
         // 收集焦点项并生成 Tab 栏
         _focusItems = [];
-        const TABS = ["[自身]","[周边]","[房间]","[行动]"];
-        const hline = "─".repeat(Math.min(W, 80));
+        const TABS = ["自身","周边","房间","行动"];
+        const hline = gray("─".repeat(Math.min(W, 80)));
+        out.push(tr(summaryLine));
         out.push(tr(hline));
-        const tabBar = TABS.map((lb,i) => (i===_tab?`▶${lb}◀`:` ${lb} `)).join(" │ ");
+        const tabBar = " " + TABS.map((lb,i) =>
+          i===_tab ? `${C.O}${C.B}▶[${lb}]◀${C.r}` : gray(` [${lb}] `)
+        ).join(gray("│"));
         out.push(tr(tabBar));
         out.push(tr(hline));
 
         // ── 自身 Tab 渲染 ──
         if (_tab === 0) {
+          const gdot2 = ` ${C.M}·${C.r} `; // 自身 Tab 全域可用（子面板 sex-detail body-detail 等也在此分支内）
           const eq = p.equipment || {};
-          const EQUIP_SLOTS = [
-            { id: "top", label: "外套" }, { id: "shirt", label: "内搭" }, { id: "inner_top", label: "胸罩" },
-            { id: "bottom", label: "下装" }, { id: "inner_bot", label: "内裤" }, { id: "legs", label: "袜" },
-            { id: "feet", label: "鞋" }, { id: "head", label: "头饰" },
-            { id: "acc", label: "配饰" }, { id: "acc2", label: "配饰②" }, { id: "acc3", label: "配饰③" },
-            { id: "right_hand", label: "主手" }, { id: "left_hand", label: "副手" }, { id: "back", label: "背" },
-          ];
-          // 收集焦点项
-          for (const s of EQUIP_SLOTS) { _focusItems.push({ type: "slot", slotId: s.id, label: s.label, item: eq[s.id] }); }
-          const eqEnd = EQUIP_SLOTS.length; // 14
+          // 焦点项（顺序=显示顺序）：称号 · 声望 · 身体 · [性状态·性征] · 装备 · 技能 · 背包×n · 载具 · 队伍
+          _focusItems.push({ type: "titles" });
+          _focusItems.push({ type: "reputation" });
           _focusItems.push({ type: "body" });
+          if (gs.layer1Enabled && p.sex) {
+            _focusItems.push({ type: "sex", index: 0 }); // 性状态行
+            if (_buildSexSegs(p).length) _focusItems.push({ type: "sex", index: 1 }); // 性征行
+          }
+          _focusItems.push({ type: "equip" });
           _focusItems.push({ type: "skills" });
           const inv = p.inventory || [];
           for (let i = 0; i < inv.length; i++) { _focusItems.push({ type: "bag", item: inv[i], index: i }); }
-          const bagStart = eqEnd + 2; // 14 slots + body + skills
           if (p.vehicle) { _focusItems.push({ type: "vehicle", vehicle: p.vehicle }); }
-          const vehIdx = _focusItems.findIndex(f => f.type === "vehicle");
           _focusItems.push({ type: "party" });
-          _focusItems.push({ type: "reputation" });
-          _focusItems.push({ type: "titles" });
+          _focusItems.push({ type: "infoline" });
 
           // 子菜单渲染
           if (_submenu === "item-detail" && _selectedTarget) {
             const it = _selectedTarget.item || _selectedTarget;
             out.push(tr(`o ${it.name || "物品"}`));
-            out.push(tr(`  类型: ${it.type || "装备"} · ${it.weight_kg ?? 0}kg · ${it.volume_l ?? 0}L`));
-            if (it.damage) out.push(tr(`  伤害骰: ${it.damage}`));
-            if (it.description) out.push(tr(`  描述: "${it.description}"`));
+            out.push(tr(`  类型: ${it.type || "装备"} · ${it.weight ?? 0}kg · ${it.volume ?? 0}L`));
+            if (it.state && it.state !== "intact") out.push(tr(`  状态: ${it.state === "ruined" ? "损毁💀" : "破损⚠️"}`));
+            if (it.damage?.dice) out.push(tr(`  伤害: ${it.damage.dice}（${it.damage.damageType || "物理"}）`));
+            if (Array.isArray(it.effects) && it.effects.length)
+              out.push(tr(`  效果: ${it.effects.map((e: any) => `${e.type}:${e.value}`).join("  ")}`));
+            if (it.flavor) out.push(tr(`  描述: "${it.flavor}"`));
             out.push(tr(`  ─ 操作 ─`));
-            out.push(tr(`${_subCursor === 0 ? "▶" : " "} ① 卸下放回背包`));
-            out.push(tr(`${_subCursor === 1 ? "▶" : " "} ② 丢弃`));
+            const acts = _buildItemActions(_selectedTarget);
+            for (let i = 0; i < acts.length; i++) {
+              out.push(tr(`${_subCursor === i ? "▶" : " "} ${String.fromCodePoint(0x2460 + i)} ${acts[i].label}`));
+            }
           } else if (_submenu === "vehicle-detail" && _selectedTarget) {
             const v = _selectedTarget;
             out.push(tr(`🚲 ${v.name || "载具"}`));
@@ -1088,21 +1449,95 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(`  ─ 操作 ─`));
             out.push(tr(`${_subCursor === 0 ? "▶" : " "} ① 设为当前骑行载具`));
             out.push(tr(`${_subCursor === 1 ? "▶" : " "} ② 检查状况`));
+          } else if (_submenu === "info-detail") {
+            // 二级：六项菜单 + 同步摘要（内容后台加载，进三级即看）
+            out.push(tr(head("情报"), "info"));
+            for (let i = 0; i < _INFO_SECTIONS.length; i++) {
+              const sec = _INFO_SECTIONS[i]!;
+              const on = _subCursor === i;
+              const summ = _infoSummary(gs, i);
+              const summStr = i === 0 && summ !== "✅正常" ? `${C.d}${summ}${C.r}` : gray(summ);
+              out.push(tr(` ${on ? hi("▶") : " "} ${sec.icon} ${padCol(sec.label)} ${C.M}│${C.r} ${summStr} ${gray("›")}`, "info", on));
+            }
+          } else if (_submenu === "info-section") {
+            // 三级：单段内容（过滤旧全屏面板的分隔线装饰）
+            const sec = _INFO_SECTIONS[_infoSecIdx]!;
+            out.push(tr(head(`${sec.icon} ${sec.label}`), "info"));
+            const seg = _infoSections?.[_infoSecIdx];
+            if (!seg) {
+              out.push(tr(gray("  …加载中")));
+            } else {
+              const body = seg.filter(ln => !/^[─═-]{6,}$/.test(ln.trim()));
+              if (!body.length) out.push(tr(gray("  （无内容）")));
+              for (const ln of body) out.push(tr(`  ${ln}`, "info"));
+            }
           } else if (_submenu === "body-detail") {
             const b = p.body || {};
-            out.push(tr(`── 身体详情 ──`));
-            out.push(tr(`  身高 ${b.height_cm || "?"}cm · 体重 ${b.weight_kg || "?"}kg · 体型 ${b.build || "?"}`));
-            if (b.cup) out.push(tr(`  罩杯 ${b.cup}-cup`));
-            if (b.measurements) out.push(tr(`  三围 ${b.measurements.bust||"?"}-${b.measurements.waist||"?"}-${b.measurements.hips||"?"}`));
-            if (b.leg_type) out.push(tr(`  腿型 ${b.leg_type}`));
-            if (b.skin) out.push(tr(`  肤色 ${b.skin.base_tone || "?"} · 日晒 ${b.skin.tan || 0}`));
-            if (b.plastic_surgery?.length) out.push(tr(`  整形: ${b.plastic_surgery.join(", ")}`));
+            const isF = (p.gender || "").includes("女");
+            // 体型
+            out.push(tr(head("身体")));
+            out.push(tr(kv("身高", `${b.height_cm || "?"}cm`)));
+            out.push(tr(kv("体重", `${b.weight_kg || "?"}kg`)));
+            out.push(tr(kv("体型", b.build || "?")));
+            if (isF && b.cup) out.push(tr(kv("罩杯", `${b.cup}-cup`)));
+            if (isF && b.measurements) out.push(tr(kv("三围", `${b.measurements.bust||"?"}-${b.measurements.waist||"?"}-${b.measurements.hips||"?"}`)));
+            if (b.leg_type) out.push(tr(kv("腿型", b.leg_type)));
+            if (b.skin) out.push(tr(kv("肤色", `${b.skin.base_tone || "?"} · 日晒${b.skin.tan || 0} · ${b.skin.texture || "?"}`)));
+            if (b.body_shape) {
+              const bs = b.body_shape;
+              let bsStr = "";
+              if (bs.chest) bsStr += `胸:${bs.chest} `;
+              if (bs.hips) bsStr += `臀:${bs.hips} `;
+              if (bs.waist) bsStr += `腰:${bs.waist}`;
+              if (bsStr) out.push(tr(kv("身型", bsStr.trim())));
+            }
+            if (b.diet && b.diet !== "正常") out.push(tr(kv("饮食", b.diet)));
+            if (b.exercise && b.exercise !== "日常活动") out.push(tr(kv("运动", b.exercise)));
+            if (b.plastic_surgery?.length) out.push(tr(kv("整形", b.plastic_surgery.join("、"))));
+
+            // Layer1 性器详情（按性别 + SexProfile）
+            if (gs.layer1Enabled && p.sex) {
+              const sx = p.sex;
+              const prof = sx.profile || {};
+              out.push(tr(""));
+              out.push(tr(head("性器")));
+              if (isF && prof.female) {
+                const f = prof.female;
+                out.push(tr(kv("乳房", `${f.breast.shape||"?"} · ${f.breast.cup||"?"} · 乳首${f.breast.nipple_size||"?"}·${f.breast.nipple_color||"?"}`)));
+                out.push(tr(kv("膣", `${f.vagina.type||"?"} · ${f.vagina.tightness||"?"} · ${f.vagina.depth_cm||"?"}cm · ${f.vagina.inner_color||"?"}`)));
+                out.push(tr(kv("陰核", f.clitoris || "?")));
+                out.push(tr(kv("陰毛", `${f.pubic_hair.amount||"?"} · ${f.pubic_hair.color||"?"} · ${f.pubic_hair.style||"?"}`)));
+              } else if (prof.male) {
+                const m = prof.male;
+                out.push(tr(kv("阴茎", `${m.penis.length_cm||"?"}cm · ${m.penis.shape||"?"} · ${m.penis.circumcised?"包皮":"无包皮"}`)));
+                out.push(tr(kv("勃起", `${m.penis.erect_length_cm||"?"}cm × ${m.penis.erect_girth_cm||"?"}cm`)));
+                out.push(tr(kv("睾丸", m.testicles?.size || "?")));
+                out.push(tr(kv("陰毛", `${m.pubic_hair.amount||"?"} · ${m.pubic_hair.color||"?"} · ${m.pubic_hair.style||"?"}`)));
+              }
+              out.push(tr(kv("周期", `第${sx.cycleDay||0}天 · ${sx.cyclePhase||"?"}`)));
+              out.push(tr(kv("高潮", `${sx.climaxCount||0}次 · 潮吹${sx.squirtCount||0}次`)));
+              if (isF) {
+                const baseRates: Record<string,number> = { "排卵期":0.35, "安全期":0.01, "生理期":0 };
+                const rate = baseRates[sx.cyclePhase] ?? 0.01;
+                const contra = sx.contraceptionUsed || "none";
+                const contraLabel = contra === "pill" ? "避孕药" : contra === "condom" ? "避孕套" : "无";
+                const risk = contra === "pill" ? 0.01*rate : contra === "condom" ? 0.02*rate : rate;
+                out.push(tr(kv("避孕", `${contraLabel} → 受孕率 ${(risk*100).toFixed(1)}%`)));
+                if (sx.milestones) {
+                  const m = sx.milestones;
+                  if (!m.virginity?.isVirgin) out.push(tr(kv("初夜", `${m.virginity?.lostTo || "?"} (${m.virginity?.lostAt || "?"})`)));
+                  if (!m.analVirginity?.isVirgin) out.push(tr(kv("菊初", `${m.analVirginity?.lostTo || "?"}`)));
+                }
+              }
+              out.push(tr(kv("态度", prof.attitude||"?")));
+              out.push(tr(kv("经验", prof.experience||"?")));
+            }
           } else if (_submenu === "skills-detail") {
             const sk = p.skills || {};
             const names = Object.keys(sk);
-            out.push(tr(`── 技能详情 ──`));
-            if (!names.length) { out.push(tr(`  （无）`)); }
-            else { for (const n of names) { const s = sk[n]; const lv = s?.level ?? s ?? 0; const exp = s?.exp ?? 0; const next = s?.nextLevel ?? (lv * 10); out.push(tr(`  ${n} Lv.${lv} (${exp}/${next})`)); } }
+            out.push(tr(head("技能")));
+            if (!names.length) { out.push(tr(kv("（无）", ""))); }
+            else { for (const n of names) { const s = sk[n]; const lv = s?.level ?? s ?? 0; const exp = s?.exp ?? 0; const next = s?.nextLevel ?? (lv * 10); out.push(tr(kv(n, `Lv.${lv}  ${exp}/${next}`))); } }
           } else if (_submenu === "party-detail") {
             const pty = p.party || [];
             out.push(tr(`── 队伍详情 ──`));
@@ -1120,137 +1555,251 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             if (!tt.length) { out.push(tr(`  （暂无称号）`)); }
             else { for (const t of tt) { out.push(tr(`  🏅 ${t}`)); } }
           } else if (_submenu === "sex-detail" && mode === "sex") {
-            // Sex 详情（对标旧版 /sex 面板）
             const sx = p.sex;
+            // 找 sex 对手：同房恋人或最高好感 NPC
+            let partner: { name: string; sx: any } | null = null;
+            try {
+              const nearby2: [string, any][] = Object.entries(gs.npcs || {}).filter(([_, n2]: any) => n2.alive !== false && s.isSameLocation(n2.currentRoom, loc));
+              const lovers = nearby2.filter(([n2]) => p.relationships?.[n2]?.romance === "恋人");
+              const pick = (lovers.length ? lovers : nearby2).sort((a, b) => (p.relationships?.[b[0]]?.affection || 0) - (p.relationships?.[a[0]]?.affection || 0));
+              if (pick.length) {
+                const [pn, pnpc] = pick[0];
+                const psx = (gs.sexStates || {})[pn];
+                partner = { name: pn, sx: psx || null };
+              }
+            } catch {}
+            const compact = (v: number) => sq(v, 100, 5);
+            out.push(tr(head(partner ? `SEX · 相手: ${partner.name}` : "SEX"), "gear"));
+            if (sx) {
+              // 自身一段
+              const pMale = (p.gender || "").includes("男") && !(p.gender || "").includes("女");
+              const selfExtra = pMale ? "" : `  ${gray("💦")}${sx.squirtCount || 0}`;
+              out.push(tr(`  ${gray("── 自身 ──")}`, "gear"));
+              out.push(tr(`  🔥 ${compact(sx.arousal || 0)}  💓 ${compact(sx.desire || 0)}  💫 ${gray("高潮")}${sx.climaxCount || 0}${gray("次")}${selfExtra}`, "gear"));
+            }
+            if (partner) {
+              const psx = partner.sx;
+              out.push(tr(`  ${gray("── " + partner.name + " ──")}`, "gear"));
+              if (psx) {
+                // 相手性别判定：查角色卡
+                let pnrMale = false;
+                try {
+                  const fd = require("./engine/state.ts").findCharacter(partner.name);
+                  pnrMale = (fd?.gender || "").includes("男") && !(fd.gender || "").includes("女");
+                } catch {}
+                const pnrExtra = pnrMale ? "" : `  ${gray("💦")}${psx.squirtCount || 0}`;
+                out.push(tr(`  🔥 ${compact(psx.arousal || 0)}  💓 ${compact(psx.desire || 0)}  💫 ${gray("高潮")}${psx.climaxCount || 0}${gray("次")}${pnrExtra}`, "gear"));
+              } else {
+                out.push(tr(gray(`  （无 SexState —— 引擎尚未为该 NPC 生成性状态）`), "gear"));
+              }
+            }
+            // 共通：体位 / 可用动作 / 避孕（只用玩家侧数据）
+            out.push(tr(`  ${gray("── 共通 ──")}`, "gear"));
             if (sx) {
               const prof = sx.profile || {};
-              out.push(tr(`[ SEX ]`));
-              out.push(tr(`  🔥 兴奋 ${bar(sx.arousal||0, 100, 10)}  💓 欲望 ${bar(sx.desire||0, 100, 10)}`));
-              out.push(tr(`  📅 周期 第${sx.cycleDay||0}天 · ${sx.cyclePhase||"?"}  高潮阈值 ${prof.climaxThreshold||70}`));
-              out.push(tr(`  💫 高潮 ${sx.climaxCount||0}次 · 潮吹 ${sx.squirtCount||0}次`));
-              // 避孕 + 受孕率
-              const baseRates: Record<string,number> = { "排卵期":0.35, "安全期":0.01, "生理期":0 };
-              const rate = baseRates[sx.cyclePhase] ?? 0.01;
-              const contra = sx.contraceptionUsed || "none";
-              const contraLabel = contra === "pill" ? "避孕药" : contra === "condom" ? "避孕套" : "无";
-              const risk = contra === "pill" ? 0.01*rate : contra === "condom" ? 0.02*rate : rate;
-              out.push(tr(`  💊 避孕: ${contraLabel} → 受孕率 ${(risk*100).toFixed(1)}%`));
-              // 初体验
-              if (sx.milestones) {
-                const m = sx.milestones;
-                const ml: string[] = [];
-                if (m.firstKiss?.given) ml.push(`初吻: ${m.firstKiss.partner} (${m.firstKiss.date})`);
-                if (!m.virginity?.isVirgin) ml.push(`初夜: ${m.virginity.lostTo} (${m.virginity.lostAt})`);
-                if (!m.analVirginity?.isVirgin) ml.push(`菊初: ${m.analVirginity.lostTo} (${m.analVirginity.lostAt})`);
-                if (ml.length) out.push(tr(`  💝 ${ml.join(" | ")}`));
-              }
-              out.push(tr(`  态度: ${prof.attitude||"?"} · 经验: ${prof.experience||"?"}`));
-              // 可用动作/体位
               try {
                 const { getAvailableActions } = require("./engine/sex.ts");
                 const avail = getAvailableActions(prof, sx);
-                if (avail.actions?.length) out.push(tr(`  可用动作: ${avail.actions.join("、")}`));
-                if (avail.positions?.length) out.push(tr(`  可用体位: ${avail.positions.join("、")}`));
+                if (avail.positions?.length) out.push(tr(`  体位: ${avail.positions.join(gdot2)}`, "gear"));
+                if (avail.actions?.length) out.push(tr(`  动作: ${avail.actions.join("、")}`, "gear"));
               } catch {}
+              const cycleLabel = ["生理期","卵泡期","排卵期","黄体期"][["生理期","卵泡期","排卵期","黄体期"].indexOf(sx.cyclePhase)] || sx.cyclePhase || "?";
+              const baseRates: Record<string,number> = { "排卵期":0.35, "安全期":0.01, "生理期":0 };
+              const rate = baseRates[sx.cyclePhase] ?? 0.01;
+              const contra = sx.contraceptionUsed || "none";
+              const contraLabel = contra === "pill" ? "药" : contra === "condom" ? "套" : "无";
+              const risk = contra === "pill" ? 0.01*rate : contra === "condom" ? 0.02*rate : rate;
+              out.push(tr(`  📅 ${gray("周期")}${sx.cycleDay||0}${gray("天·")}${cycleLabel}  💊 ${gray("避孕:")}${contraLabel}  ${risk > 0.05 ? C.d : ""}${gray("受孕")}${(risk*100).toFixed(1)}%${C.r}`, "gear"));
+              if (sx.milestones) {
+                const m = sx.milestones;
+                const ml: string[] = [];
+                // 注意：字段缺失 ≠ 已失去，必须先判存在（旧写法 !m.x?.isVirgin 在缺字段时读 lostTo 崩）
+                if (m.virginity && !m.virginity.isVirgin) ml.push(`初夜:${m.virginity.lostTo}(${m.virginity.lostAt})`);
+                if (m.analVirginity && !m.analVirginity.isVirgin) ml.push(`菊初:${m.analVirginity.lostTo}(${m.analVirginity.lostAt})`);
+                if (ml.length) out.push(tr(`  💝 ${ml.join(" | ")}`, "gear"));
+              }
               // 心里话
               if (sx.thoughts?.length) {
-                out.push(tr(`  ── 心里话 ──`));
-                sx.thoughts.slice(-3).forEach((t: any) => out.push(tr(`  「${t.text}」`)));
+                out.push(tr(`  ${gray("── 心里话 ──")}`, "gear"));
+                sx.thoughts.slice(-3).forEach((t: any) => out.push(tr(`  「${t.text}」`, "gear")));
               }
-            } else { out.push(tr(`  （无 SexState）`)); }
-          } else {
-            // ── 默认自身面板 ──
-            const attrs = p.attributes || {};
-            const wep = ((p?.equipment?.right_hand || p?.equipment?.left_hand) as any);
-            const wp = wep?.damage ? `🗡 ${wep.name} ${wep.damage}` : `空手 1d2`;
-
-            // HP 行（带进度条）
-            out.push(tr(`  ❤ ${bar(hp, hpM, 8)} · AC${ac} · ${wp}`));
-            out.push(tr(`  力${attrs.力量??8} 敏${attrs.敏捷??10} 体${attrs.体质??9} 智${attrs.智力??12} 感${attrs.感知??10} 魅${attrs.魅力??10}`));
-            if(mode==="sex"){
-              try {
-                const sx=p.sex;
-                if(sx) out.push(tr(`  🔥${bar(sx.arousal||0, 100, 8)}  💓${bar(sx.desire||0, 100, 8)}`));
-              } catch {}
-            }
-
-            // 身体行（Sex 模式摘要，可 Enter 展开详情）
-            if (mode === "sex") {
-              const sx = p.sex;
-              const summary = sx ? `${sx.cyclePhase||"?"} · 高潮${sx.climaxCount||0}次` : "未激活";
-              const selB = _panelMode && _cursor === eqEnd ? "▶" : " ";
-              out.push(tr(`${selB} ── Sex ──`));
-              out.push(tr(`    ${summary}`));
             } else {
-              const b = p.body || {};
-              const bodySum = [b.height_cm ? `${b.height_cm}cm` : "", b.weight_kg ? `${b.weight_kg}kg` : "", b.build || ""].filter(Boolean).join(" · ") || "?";
-              const selB = _panelMode && _cursor === eqEnd ? "▶" : " ";
-              out.push(tr(`${selB} ── 身体 ──`));
-              out.push(tr(`    ${bodySum}`));
+              out.push(tr(gray(`  （无 SexState）`), "gear"));
             }
-
-            // 装备（一行一槽竖列）
-            out.push(tr(`  ── 装备 ──`));
-            for (let i = 0; i < EQUIP_SLOTS.length; i++) {
-              const s = EQUIP_SLOTS[i]!;
-              const item = eq[s.id];
-              const sel = _panelMode && _cursor === i ? "▶" : " ";
-              const display = item ? (item.name || item).slice(0, 22) : "—";
-              out.push(tr(`    ${sel} ${s.label} [${display}]`));
-            }
-
-            // 技能
-            const sk = p.skills || {};
-            const skNames = Object.keys(sk).filter(k => (sk[k]?.level ?? sk[k] ?? 0) > 0);
-            const skSum = skNames.length ? skNames.map(k => `${k}Lv${sk[k]?.level ?? sk[k]}`).join(" · ") : "（无）";
-            const selSk = _panelMode && _cursor === eqEnd + 1 ? "▶" : " ";
-            out.push(tr(`${selSk} ── 技能 ──`));
-            out.push(tr(`    ${skSum}`));
-
-            // 背包
-            out.push(tr(`  🎒 背包 ${inv.length}件:`));
-            if (inv.length) {
-              for (let i = 0; i < Math.min(inv.length, 5); i++) {
-                const idx = i + bagStart;
-                const sel = _panelMode && _cursor === idx ? "▶" : " ";
-                out.push(tr(`    ${sel} ${String.fromCodePoint(0x2460 + i)} ${inv[i].name}`));
+          } else if (_submenu === "equip-detail") {
+            const eqSlots = getEquipSlots(p.gender);
+            if (_pickSlot) {
+              // 选物品模式：列出背包里能与该槽位兼容的物品（item.slot === _pickSlot）
+              const slotLabel = eqSlots.find(s => s.id === _pickSlot)?.label || _pickSlot;
+              const compat = inv.filter((i: any) => i.slot === _pickSlot);
+              out.push(tr(head(`装备 → ${slotLabel}`), "gear"));
+              if (!compat.length) {
+                out.push(tr(gray(`  （背包里没有能贴${slotLabel}的物品——底部"背包"入口找 LLM 要一个）`)));
+              } else {
+                for (let i = 0; i < compat.length; i++) {
+                  const it = compat[i];
+                  const on = _subCursor === i;
+                  const meta = `  ${gray(`[${(it.type || "??").slice(0, 2)}]`)} ${it.name} ${gray(`${it.weight ?? 0}kg`)}`;
+                  out.push(tr(` ${on ? hi("▶") : " "} ${meta}`, "gear", on));
+                }
               }
-            } else { out.push(tr(`    （空）`)); }
+            } else {
+              // 装备详情：N 槽竖排（按性别），槽上 Enter 进 item-detail
+              out.push(tr(head("装备"), "gear"));
+              for (let i = 0; i < eqSlots.length; i++) {
+                const slot = eqSlots[i]!;
+                const item = eq[slot.id];
+                const stIcon = item ? (item.state === "ruined" ? " 💀" : item.state === "damaged" ? " ⚠️" : "") : "";
+              const disp = item ? (item.name || item) + stIcon : gray("—");
+                const cur = _subCursor === i ? hi("▶") : " ";
+                const lbl = "  " + slot.label;
+                out.push(tr(` ${cur} ${gray(padCol(lbl))} ${disp}`, "gear"));
+              }
+            }
+          } else {
+            // ── 默认自身面板（F 世界书正统版：|-[日期]开场 + ■□条 + 属性注解 + 页脚三连）──
+            const attrs = p.attributes || {};
+            const b = p.body || {};
+            const sel = (type: string) => _panelMode && _focusItems[_cursor]?.type === type;
+            const cur = (on: boolean) => on ? hi("▶") : " ";
+            const gdot = gdot2; // 自身 Tab 内可直接用；子面板区（sex-detail 等）用 gdot2
 
-            // 载具
-            if (p.vehicle) {
-              const selV = _panelMode && vehIdx >= 0 && _cursor === vehIdx ? "▶" : " ";
-              out.push(tr(`  ${selV} ── 驾驶 ──`));
-              out.push(tr(`    🚲 ${p.vehicle.name} ×${p.vehicle.speedMul || 1.5}`));
+            // 开场日期行
+            if (t?.game_date) {
+              const [gy, gm, gd] = String(t.game_date).split("-");
+              out.push(tr(`${C.M}|-[${C.r}${t.day_of_week || "?"}曜日${C.M}-${C.r}${gy}年${gm}月${gd}日${C.M}]${C.r}`));
             }
 
-            // 队伍
-            const pty = p.party || [];
-            const ptyIdx = _focusItems.findIndex(f => f.type === "party");
-            const selPty = _panelMode && _cursor === ptyIdx ? "▶" : " ";
-            out.push(tr(`${selPty} ── 队伍 ──`));
-            out.push(tr(`    ${pty.length ? pty.map(n => "👤" + n).join(" · ") : "（无队友）"}`));
-
-            // 声望
+            // 角色信息竖排
+            const identity = p.public_identity || p.memberships?.[0]?.title || p.social_class || "";
+            out.push(tr(kv("姓名", p.name || "你")));
+            out.push(tr(kv("性别", p.gender || "?")));
+            out.push(tr(kv("年龄", `${p.age ?? t?.player_age ?? "?"}岁`)));
+            if (identity) out.push(tr(kv("身份", identity)));
+            const tt = p.titles || [];
+            const focusTitles = sel("titles");
+            out.push(tr(entry(focusTitles, '称号', tt.length ? `「${tt[tt.length-1]}」${tt.length > 1 ? gray(` +${tt.length-1}`) : ""}` : dim('尚未获得'), gray('›'))));
             const rep = p.reputation || {};
             const repKeys = Object.keys(rep);
-            const repIdx = _focusItems.findIndex(f => f.type === "reputation");
-            const selRep = _panelMode && _cursor === repIdx ? "▶" : " ";
-            out.push(tr(`${selRep} ── 声望 ──`));
-            out.push(tr(`    ${repKeys.length ? repKeys.slice(0,4).map(k => `${k}:${rep[k]>=0?"+":""}${rep[k]}`).join(" · ") : "（暂无）"}`));
+            const repSum = repKeys.slice(0,3).map(k => `${k}${(rep[k]??0)>=0 ? `${C.G}+${rep[k]}${C.r}` : `${C.d}${rep[k]}${C.r}`}`).join(gdot);
+            const focusRep = sel("reputation");
+            out.push(tr(entry(focusRep, '声望', repKeys.length ? repSum : dim('默默无闻'), gray('›'))));
+            out.push(tr(""));
 
-            // 称号
-            const tt = p.titles || [];
-            const ttIdx = _focusItems.findIndex(f => f.type === "titles");
-            const selTt = _panelMode && _cursor === ttIdx ? "▶" : " ";
-            out.push(tr(`${selTt} ── 称号 ──`));
-            out.push(tr(`    ${tt.length ? tt.map(t => `「${t}」`).join(" · ") : "（暂无）"}`));
+            // 等级
+            out.push(tr(kv("等级", `Lv.${p.level ?? 1}  EXP ${p.exp ?? 0}/${(p.level ?? 1) * 100}`)));
+            // 状态条（■□ 方块 10 格）
+            out.push(tr(kv("体力", sq(hp, hpM, 10, hp / hpM < 0.3))));
+            const pools = p.resourcePools || {};
+            for (const [pn, pv] of Object.entries(pools) as [string, any][]) {
+              if (pv && typeof pv.current === "number") out.push(tr(kv(pn.slice(0,2), sq(pv.current, pv.max ?? pv.current, 10))));
+            }
+            out.push(tr(kv("疲劳", sq(p.fatigue ?? 0, 100, 10))));
+            if (mode === "sex" && p.sex) {
+              out.push(tr(kv("兴奋", `🔥 ${sq(p.sex.arousal||0, 100, 10)}`)));
+              out.push(tr(kv("欲望", `💓 ${sq(p.sex.desire||0, 100, 10)}`)));
+            }
+            out.push(tr(kv("防御", `AC ${ac}`)));
 
-            // 底栏
-            const dateStr = t?.game_date ? `${t.day_of_week||""}曜日 · ${t.game_date}` : "";
-            out.push(tr(`  ────────────────`));
-            if (dateStr) out.push(tr(`  |-[${dateStr}]`));
-            out.push(tr(`  ¥${p.funds ?? 0} · 💤${p.fatigue ?? 0} · ${(p.weight ?? 0).toFixed(1)}kg/12L`));
+            // 属性竖排（带偏离注解，10=常人）
+            for (const nm of ["力量","敏捷","体质","智力","感知","魅力","幸运"]) {
+              const v = attrs[nm] ?? 10;
+              out.push(tr(kv(nm, `${v}${attrNote(v)}`)));
+            }
+            out.push(tr(""));
+
+            // 身体（按性别+模式显示不同摘要）
+            const isFemale = (p.gender || "").includes("女");
+            const bodyParts: string[] = [];
+            if (b.height_cm) bodyParts.push(`${b.height_cm}cm`);
+            if (b.weight_kg) bodyParts.push(`${b.weight_kg}kg`);
+            if (b.build) bodyParts.push(b.build);
+            if (isFemale && b.cup) bodyParts.push(`${b.cup}-cup`);
+            const bodySum = bodyParts.join(gdot) || "?";
+            const focusBody = sel("body");
+            out.push(tr(entry(focusBody, '身体', bodySum, gray("›")), "gear"));
+            // Sex 状态摘要（仅 Layer1 开启时）——两行可聚焦，Enter→body-detail
+            if (gs.layer1Enabled && p.sex) {
+              const sx = p.sex;
+              const sxSum = `${C.d}🔥 ${sx.arousal||0}${C.r}${gdot}💓 ${sx.desire||0}${gdot}高潮${sx.climaxCount||0}次`;
+              const sexIdx0 = _focusItems.findIndex(f => f.type === "sex" && f.index === 0);
+              out.push(tr(entry(_panelMode && _cursor === sexIdx0, '性状态', sxSum, gray('›')), 'gear'));
+              const segs = _buildSexSegs(p);
+              if (segs.length) {
+                const sexIdx1 = _focusItems.findIndex(f => f.type === "sex" && f.index === 1);
+                out.push(tr(entry(_panelMode && _cursor === sexIdx1, '性征', segs.join(gdot), gray('›')), 'gear'));
+              }
+            }
+
+            const genderSlots = getEquipSlots(p.gender);
+            const eqCount = genderSlots.filter(s2 => eq[s2.id]).length;
+            const focusEquip = sel("equip");
+            out.push(tr(entry(focusEquip, '装备', eqCount+'/'+genderSlots.length+' 件穿戴', gray('›')), 'gear'));
+
+            const sk = p.skills || {};
+            const skNames = Object.keys(sk).filter(k => (sk[k]?.level ?? sk[k] ?? 0) > 0);
+            const skSum = skNames.length ? skNames.map(k => `${k}${C.M}Lv${C.r}${sk[k]?.level ?? sk[k]}`).join(gdot) : dim("（无）");
+            const focusSkills = sel("skills");
+            out.push(tr(entry(focusSkills, '技能', skSum, gray('›')), 'gear'));
+
+            // 背包——行可聚焦（Enter→首个物品），每件可选。摘要按类型分类计数
+            const bagHeaderIdx = _focusItems.length;
+            _focusItems.push({ type: "bag", item: inv[0] || null, index: -1 }); // -1=背包头
+            const focusBag = _panelMode && _cursor === bagHeaderIdx;
+            const cats: Record<string, number> = {};
+            for (const i2 of inv) {
+              const t2 = (i2.type || "其他").slice(0, 2);
+              cats[t2] = (cats[t2] || 0) + 1;
+            }
+            const catSum = Object.entries(cats).map(([k, v]) => `${k}${v}`).join(gdot) || "0件";
+            out.push(tr(entry(focusBag, '背包', catSum, inv.length>0 ? gray('›') : ''), 'gear'));
+            for (let i = 0; i < Math.min(inv.length, 6); i++) {
+              const bagFocusIdx = _focusItems.findIndex(f => f.type === "bag" && f.index === i);
+              const on = _panelMode && _cursor === bagFocusIdx;
+              const bi = inv[i];
+              const stIcon = bi.state === "ruined" ? "💀" : bi.state === "damaged" ? "⚠️" : "";
+              const meta = `${gray(`[${(bi.type || "??").slice(0, 2)}]`)} ${bi.name} ${gray(`${bi.weight ?? 0}kg`)}${stIcon}`;
+              out.push(tr(`      ${cur(on)} ${gray(String.fromCodePoint(0x2460 + i))} ${meta}`, "gear", on));
+            }
+
+            // 载具 / 队伍
+            const focusVehicle = sel("vehicle");
+            if (p.vehicle) {
+              out.push(tr(entry(focusVehicle, '载具', '🚲'+p.vehicle.name, gray('×'+(p.vehicle.speedMul||1.5))), 'gear'));
+            }
+            const pty = p.party || [];
+            const focusParty = sel("party");
+            out.push(tr(entry(focusParty, '队伍', pty.length ? pty.map(n => '👤'+n).join(gdot) : dim('（无队友）'), gray('›')), 'gear'));
+            out.push(tr(""));
+
+            // 钱/负重 + 伤口 + 情报摘要行（警报红色前置常驻可见，Enter→info-detail）
+            out.push(tr(`  ${gold(`¥${p.funds ?? 0}`)}${gdot}💤${p.fatigue ?? 0}${gdot}${(p.weight ?? 0).toFixed(1)}kg`));
+            if ((p.wounds || []).length > 0) {
+              out.push(tr(gray(`  伤口: ${p.wounds.map((w:any) => w.name || w.bodyPart || "轻伤").join("、")}`)));
+            }
+            {
+              const flags2: any = gs.flags || {};
+              const alertBits: string[] = [];
+              if (flags2.wanted) alertBits.push("👮通缉");
+              if (flags2.steal_alert) alertBits.push("🚨警报");
+              if (flags2.identity_exposed) alertBits.push("🎭暴露");
+              if (flags2.school_alert) alertBits.push("🏫警戒");
+              const quests = gs.quests || {};
+              const actives = Object.values(quests).filter((q: any) => q.status === "active");
+              let calBit = "";
+              try {
+                const { getTodayCalendar } = require("./engine/timeline.ts");
+                const ev = getTodayCalendar();
+                if (ev) calBit = `📅${String(ev).slice(0, 10)}`;
+              } catch {}
+              const segs2: string[] = [];
+              if (alertBits.length) segs2.push(`${C.d}${alertBits.join(" ")}${C.r}`);
+              segs2.push(`📋任务${actives.length}`);
+              if (calBit) segs2.push(calBit);
+              const infoIdx = _focusItems.findIndex(f => f.type === "infoline");
+              const onInfo = _panelMode && _cursor === infoIdx;
+              out.push(tr(entry(onInfo, '情报', segs2.join(gdot), gray('›')), 'info'));
+            }
           }
         }
 
@@ -1267,13 +1816,24 @@ function initGamePanel(_pi: any, sessionCtx: any) {
           else if (_submenu === "npc-detail" && _selectedTarget) {
             const n = _selectedTarget;
             const statusLabel = getNPCStatusLabel(gs, n.name);
-            out.push(tr(`▶ ${n.name} ◀  ${n.height}cm · ${n.posDesc} · 隔${n.dist}m`));
-            out.push(tr(`    ${statusLabel} · 💕${n.affection}/100 · 携带: ${[n.rh, n.lh].filter(Boolean).join("·") || "—"}`));
-            if (n.lastWords) out.push(tr(`    "${n.lastWords}"`));
+            out.push(tr(`${hi(`▶ ${n.name} ◀`)}  ${gray(`${n.height}cm · ${n.posDesc} · 隔${n.dist}m`)}`));
+            out.push(tr(gray(`    ${statusLabel} · 💕${n.affection}/100 · 携带: ${[n.rh, n.lh].filter(Boolean).join("·") || "—"}`)));
+            if (n.lastWords) out.push(tr(`    ${dim(`「${n.lastWords}」`)}`));
 
-            out.push(tr(`  ── 快捷操作 ──`));
+            out.push(tr(head("快捷操作")));
             const npcActions = _buildNpcActions(gs, n.name);
-            out.push(tr(`    ` + npcActions.map((ac, idx) => _subCursor === idx ? `▶${ac.label}◀` : ` ${ac.label} `).join(" ")));
+            // 按钮栏：>5 个拆两行；选中=橙粗▶◀，锁定=灰，可用=默认
+            const btn = (ac: any, idx: number) =>
+              _subCursor === idx ? `${C.O}${C.B}▶${ac.label}◀${C.r}`
+              : ac.locked ? gray(` ${ac.label} `)
+              : ` ${ac.label} `;
+            if (npcActions.length > 5) {
+              const half = Math.ceil(npcActions.length / 2);
+              out.push(tr(`    ` + npcActions.slice(0, half).map((ac, i) => btn(ac, i)).join(" ")));
+              out.push(tr(`    ` + npcActions.slice(half).map((ac, i) => btn(ac, i + half)).join(" ")));
+            } else {
+              out.push(tr(`    ` + npcActions.map((ac, idx) => btn(ac, idx)).join(" ")));
+            }
           }
           // 三级状态：搭话子菜单
           else if (_submenu === "npc-talk" && _selectedTarget) {
@@ -1466,29 +2026,71 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               out.push(tr(`  ${_subCursor === i ? "▶" : " "} ${String.fromCodePoint(0x2460+i)} ${si.label}  ${si.detail}`));
             }
           }
-          // 默认展示周边列表
+          // 默认展示周边列表（甲：世界书动态版 — |-[位置] *动作* + 阶段色 + ■□好感条 + 携带）
           else {
+            /** 关系阶段徽章：文本用引擎 rel.stage/romance，颜色按好感分档 */
+            const stageBadge = (name: string, aff: number): string => {
+              const rel = p.relationships?.[name];
+              if (rel?.stage === "死敌") return `${C.d}[死敌]${C.r}`;
+              if (rel?.romance === "恋人") return `${C.P}[恋人]${C.r}`;
+              const label = rel?.stage || (aff >= 90 ? "至交" : aff >= 70 ? "信赖" : aff >= 40 ? "友人" : aff >= 20 ? "熟人" : "陌生");
+              const col = aff >= 90 ? C.Y : aff >= 70 ? C.O : aff >= 40 ? C.G : aff >= 20 ? "" : C.M;
+              return `${col}[${label}]${col ? C.r : ""}`;
+            };
+            out.push(tr(head("周边动态")));
             for (let i = 0; i < Math.min(_peopleCache.length, 8); i++) {
               const n = _peopleCache[i]!;
-              const sel = _panelMode && i === _cursor ? "▶" : " ";
+              const on = _panelMode && i === _cursor;
               if (n.type === "named") {
                 const a = n.affection;
-                const statusLabel = getNPCStatusLabel(gs, n.name);
-                out.push(tr(`${sel} ${n.name}  ${n.height}cm · ${n.posDesc} · 隔${n.dist}m`));
-                out.push(tr(`    ${statusLabel} · 💕${a}/100`));
-                if (n.lastWords) out.push(tr(`    "${n.lastWords}"`));
+                const nameDisp = on ? `${hi("▶")} ${C.W}${C.B}${n.name}${C.r} ${hi("◀")}` : `  ${C.W}${C.B}${n.name}${C.r}`;
+                const pos = `${C.M}|-[${C.r}${n.posDesc || "?"}${n.dist !== undefined && n.dist !== "?" ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
+                const act = n.action ? ` ${dim(`*${String(n.action).slice(0, 20)}*`)}` : "";
+                out.push(tr(` ${nameDisp}  ${n.height}cm ${pos}${act}`));
+                const carry = [n.rh, n.lh].filter(Boolean).join("·") || "—";
+                out.push(tr(`      ${stageBadge(n.name, a)} ${sq(a, 100, 5)} ${C.M}·${C.r} 携带 ${carry}`));
+                if (n.lastWords) out.push(tr(`      ${dim(`「${n.lastWords}」`)}`));
               } else {
-                out.push(tr(`${sel} ${n.name}  ×${n.clusterSize||1} · ${n.height} · ${n.posDesc}`));
-                if (n.action) out.push(tr(`    ${n.action.slice(0, 35)}`));
+                const act = n.action ? ` ${dim(`*${String(n.action).slice(0, 25)}*`)}` : "";
+                out.push(tr(gray(`   |-[${n.name}${n.clusterSize && n.clusterSize > 1 ? `×${n.clusterSize}` : ""}] ${n.height !== "?" && n.height ? `${n.height}·` : ""}${n.posDesc || "?"}${act}`)));
               }
             }
+            // 底栏
+            out.push(tr(""));
+            out.push(tr(gray(`  |-[${loc}${clock ? " · " + clock : ""}]`)));
           }
         }
 
         // ── 房间 Tab 渲染 ──
         else if (_tab === 2) {
+          // 外出导航子面板
+          if (_submenu === "go-nav") {
+            out.push(tr(head("外出"), "nav"));
+            const bc = (() => { try { return require("./engine/state.ts").getLocationNav(p.location).breadcrumb || []; } catch { return []; } })();
+            if (bc.length) out.push(tr(gray(`|-[${bc.join("-")}]`)));
+            out.push(tr(""));
+            if (!_goNavItems.some(it => it.kind === "dest")) {
+              out.push(tr(gray("  （当前没有可去的地点——问 GM 带你探索）")));
+            }
+            const GCOL = 16; // 地名列宽（地名比 kv 键长，单独对齐线）
+            const padG = (s2: string) => s2 + " ".repeat(Math.max(0, GCOL - visW(s2)));
+            for (let i = 0; i < _goNavItems.length; i++) {
+              const it = _goNavItems[i];
+              if (it.kind === "header") { out.push(tr(`  ${gray(it.label)}`, "nav")); continue; }
+              const on = _panelMode && _subCursor === i;
+              const curMark = on ? hi("▶") : " ";
+              if (it.mode === "unknown") {
+                out.push(tr(` ${curMark} ${gray("❓ " + padG(it.name))} ${gray(`步行${it.mins}分 · 未探索`)}`, "nav"));
+              } else if (it.mode === "train") {
+                out.push(tr(` ${curMark} ${padG("→ " + it.name)} ${C.M}│${C.r} ${gold(`¥${it.fare}`)} ${gray(`· ${it.mins}分`)}`, "nav", on));
+              } else {
+                const slow = (it.rawMins ?? 0) >= 15 ? ` ${hi("💭旅途叙事")}` : "";
+                out.push(tr(` ${curMark} ${padG(it.name)} ${C.M}│${C.r} ${gray(`步行${it.mins}分`)}${slow}`, "nav", on));
+              }
+            }
+          }
           // 家具详情子面板
-          if (_submenu === "furniture-detail" && _selectedTarget) {
+          else if (_submenu === "furniture-detail" && _selectedTarget) {
             const ft = _selectedTarget;
             out.push(tr(`📦 ${ft.name} (${ft.x},${ft.y})`));
             if (ft.label && ft.label.trim()) out.push(tr(`  标签: ${ft.label.trim()}`));
@@ -1528,7 +2130,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             } catch {}
           }
           else if (!rm) {
-            out.push(tr(`  （无房间数据）`));
+            out.push(tr(gray(`  （无房间数据）`)));
           } else {
             const cells = rm.cells || [];
             for (let y = 0; y < rm.height; y++) {
@@ -1543,32 +2145,69 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               }
             }
 
-            out.push(tr(`  📏 ${rm.width||"?"}m×${rm.height||"?"}m · 你在(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}) · ${(rm.atmosphere||"普通").slice(0, 25)}`));
-            out.push(tr(`  ── 家具 ──`));
+            out.push(tr(gray(`  📏 ${rm.width||"?"}m×${rm.height||"?"}m · 你在(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}) · ${(rm.atmosphere||"普通").slice(0, 25)}`)));
+            out.push(tr(head("家具")));
             let fCount = 0;
             for (let i = 0; i < _focusItems.length; i++) {
               const item = _focusItems[i];
-              const sel = _panelMode && i === _cursor ? "▶" : " ";
+              const sel = _panelMode && i === _cursor ? hi("▶") : " ";
               if (item.type === "furniture") {
                 const sub = (item.label && item.label.trim()) ? ` · ${item.label.trim()}` : "";
                 const acts = furnitureActions(item.name);
-                out.push(tr(`    ${sel} 📦 ${item.name}(${item.x},${item.y})${sub}  ${acts}`));
+                out.push(tr(`    ${sel} 📦 ${item.name}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`));
                 fCount++;
               }
             }
-            if (!fCount) out.push(tr(`    （空）`));
+            if (!fCount) out.push(tr(gray(`    （空）`)));
 
-            out.push(tr(`  ── 出口 ──`));
+            out.push(tr(head("出口")));
             let eCount = 0;
             for (let i = 0; i < _focusItems.length; i++) {
               const item = _focusItems[i];
-              const sel = _panelMode && i === _cursor ? "▶" : " ";
+              const sel = _panelMode && i === _cursor ? hi("▶") : " ";
               if (item.type === "exit") {
-                out.push(tr(`    ${sel} 🚪 → ${item.exitTo}(${item.x},${item.y})`));
+                out.push(tr(`    ${sel} 🚪 → ${item.exitTo}${gray(`(${item.x},${item.y})`)}`));
                 eCount++;
               }
             }
-            if (!eCount) out.push(tr(`    （无）`));
+            if (!eCount) out.push(tr(gray(`    （无）`)));
+            // 外出入口（跨区导航，Enter → go-nav 子面板）
+            {
+              const goIdx = _focusItems.length;
+              _focusItems.push({ type: "gonav" });
+              const onGo = _panelMode && _cursor === goIdx;
+              let goHint = "";
+              try {
+                const nav2 = s.getLocationNav(p.location);
+                const nDest = (nav2.rooms?.length || 0) + (nav2.nearby?.length || 0) + (nav2.stations || []).reduce((n2: number, st2: any) => n2 + (st2.destinations?.length || 0), 0);
+                const area = nav2.breadcrumb?.[nav2.breadcrumb.length - 2] || "";
+                goHint = `${area ? area + "·" : ""}${nDest}处可去`;
+              } catch { goHint = "跨区导航"; }
+              out.push(tr(` ${onGo ? hi("▶") : " "} 🚶 ${padCol("外出")} ${C.M}│${C.r} ${goHint} ${gray("›")}`, "nav", onGo));
+            }
+            // 页脚三连（Phase 1 LLM 生成优先，空则引擎 fallback）
+            out.push(tr(""));
+            const sf = gs._sceneFooter as { posture: string; location_detail: string; main_quest: string } | null;
+            if (sf?.posture || sf?.location_detail || sf?.main_quest) {
+              if (sf.posture) out.push(tr(gray(`  |-[${sf.posture}]`)));
+              if (sf.location_detail) out.push(tr(gray(`  |-[${sf.location_detail}]`)));
+              if (sf.main_quest && sf.main_quest !== "暂无")
+                out.push(tr(gray(`  |-[主线任务:${sf.main_quest}]`)));
+            } else {
+              const postureBits: string[] = [];
+              if (p.hiding_in) postureBits.push(p.hiding_in);
+              else if (rm) { const pl = posLabel(p.gridPos, rm); if (pl) postureBits.push(pl); }
+              if (postureBits.length) out.push(tr(gray(`  |-[动作位置-${postureBits.join("·")}]`)));
+              try {
+                const nav = require("./engine/state-location.ts").getLocationNav(loc);
+                const chain = nav?.breadcrumb?.length ? nav.breadcrumb.join("-")
+                  : `${require("./engine/state-location.ts").getWorldRootName()}-${loc}`;
+                out.push(tr(gray(`  |-[${chain}]`)));
+              } catch { out.push(tr(gray(`  |-[${loc}]`))); }
+              const quests = gs.quests || {};
+              const mainQuest = Object.values(quests).find((q: any) => q.status === "active") as any;
+              if (mainQuest?.title) out.push(tr(gray(`  |-[主线任务:${mainQuest.title}]`)));
+            }
           }
         }
 
@@ -1633,13 +2272,13 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             for (let i = 0; i < _choicesCache.length; i++) {
               _focusItems.push({ type: "choice", text: _choicesCache[i], tag: _choiceTags[i], index: i });
             }
-            if (!_choicesCache.length) { out.push(tr(`  输入文字推进剧情后，选项自动出现`)); }
+            if (!_choicesCache.length) { out.push(tr(gray(`  输入文字推进剧情后，选项自动出现`))); }
             else {
               for (let i = 0; i < Math.min(_choicesCache.length, 6); i++) {
                 const idx = String.fromCodePoint(0x2460 + i);
                 const tag = _choiceTags[i] || "";
-                const sel = _panelMode && i === _cursor ? "▶" : " ";
-                out.push(tr(`${sel} ${idx} "${_choicesCache[i]}"${tag ? ` [${tag}]` : ""}`));
+                const sel = _panelMode && i === _cursor ? hi("▶") : " ";
+                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`));
               }
             }
           }
@@ -1648,14 +2287,43 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             for (let i = 0; i < _choicesCache.length; i++) {
               _focusItems.push({ type: "choice", text: _choicesCache[i], tag: _choiceTags[i], index: i });
             }
-            if (!_choicesCache.length) {
-              out.push(tr(`  输入文字推进剧情后，选项自动出现`));
+            for (const co of _condOptsCache) {
+              _focusItems.push({ type: "choice", text: co.text, tag: co.tag, conditional: true });
+            }
+            const standing = _buildStandingActions(gs);
+            for (const sa of standing) {
+              _focusItems.push({ type: "standing", act: sa });
+            }
+            if (!_focusItems.length) {
+              out.push(tr(gray(`  输入文字推进剧情后，选项自动出现`)));
             } else {
-              for (let i = 0; i < Math.min(_choicesCache.length, 6); i++) {
+              const nStd = Math.min(_choicesCache.length, 6);
+              for (let i = 0; i < nStd; i++) {
                 const idx = String.fromCodePoint(0x2460 + i);
                 const tag = _choiceTags[i] || "";
-                const sel = _panelMode && i === _cursor ? "▶" : " ";
-                out.push(tr(`${sel} ${idx} "${_choicesCache[i]}"${tag ? ` [${tag}]` : ""}`));
+                const sel = _panelMode && i === _cursor ? hi("▶") : " ";
+                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`));
+              }
+              // 条件选项：编号顺延，条件 tag 橙色（DLC2.09 风格）
+              for (let j = 0; j < _condOptsCache.length && nStd + j < 9; j++) {
+                const co = _condOptsCache[j];
+                const fi = _choicesCache.length + j; // focusItems 中的真实下标
+                const idx = String.fromCodePoint(0x2460 + nStd + j);
+                const sel = _panelMode && fi === _cursor ? hi("▶") : " ";
+                out.push(tr(`${sel} ${gray(idx)} ${co.text} ${hi(`[${co.tag}]`)}`));
+              }
+              // 常驻动作：等待/睡觉/吃东西（引擎直改不推正文），编号继续顺延
+              if (standing.length) {
+                out.push(tr(`  ${gray("── 常驻 ──")}`));
+                const nShown = nStd + Math.min(_condOptsCache.length, Math.max(0, 9 - nStd));
+                for (let k2 = 0; k2 < standing.length; k2++) {
+                  const sa = standing[k2];
+                  const fi = _choicesCache.length + _condOptsCache.length + k2;
+                  const idx = String.fromCodePoint(0x2460 + nShown + k2);
+                  const sel = _panelMode && fi === _cursor ? hi("▶") : " ";
+                  const lbl = sa.hot ? hi(`${sa.icon} ${sa.label}`) : `${sa.icon} ${sa.label}`;
+                  out.push(tr(`${sel} ${gray(idx)} ${lbl} ${dim(`(${sa.hint})`)}`));
+                }
               }
             }
           }
@@ -1671,15 +2339,21 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             tip = "↑ ↓ 选子选项 · 1-9数字直选 · Esc返回";
           } else if (_submenu === "npc-observe" || _submenu === "settlement-detail") {
             tip = "信息量 = 洞察技能等级 · Esc 返回";
-          } else if (_submenu === "item-detail" || _submenu === "vehicle-detail" || _submenu === "furniture-detail") {
+          } else if (_submenu === "item-detail" || _submenu === "vehicle-detail" || _submenu === "furniture-detail" || _submenu === "equip-detail") {
             tip = "↑ ↓ 选操作 · Enter确认 · Esc返回";
+          } else if (_submenu === "go-nav") {
+            tip = "↑ ↓ 选目的地 · Enter出发 · Esc返回";
+          } else if (_submenu === "info-detail") {
+            tip = "↑ ↓ 选分类 · Enter查看 · Esc返回";
+          } else if (_submenu === "info-section") {
+            tip = "Esc 返回";
           } else {
-            tip = _tab === 1 ? "← → 切Tab  ↑ ↓ 移光标 · Enter展开 · Esc返回" : "← → 切Tab  ↑ ↓ 选项目 · Enter操作 · Esc返回";
+            tip = _tab === 1 ? "← → 切Tab  ↑ ↓ 移光标 · Enter展开 · Esc收起" : "← → 切Tab  ↑ ↓ 选项目 · Enter操作 · Esc收起";
           }
         } else {
-          tip = "双击 Enter 进面板";
+          tip = "双击 Enter 展开";
         }
-        out.push(tr(tip));
+        out.push(tr(gray(tip)));
         return out;
       } catch (e: any) {
         console.error("[game-hud] render error:", e.message || e);
@@ -1692,20 +2366,40 @@ function initGamePanel(_pi: any, sessionCtx: any) {
         const s = require("./engine/state.ts");
         const gs = s.gameState;
         if (!gs?.player) return false;
+        // 列表可能在动作后变短（使用/丢弃/装备），光标越界一律夹回
+        if (_cursor >= _focusItems.length) _cursor = Math.max(0, _focusItems.length - 1);
 
         // 如果是子菜单内部输入，单独消费
         if (_panelMode && _submenu) {
           // ESC/q 返回上一级
           if (d === "\x1b" || d === "q") {
+            // 装备选物品模式的 Esc 只退出选物品模式，回正常槽列表
+            if (_submenu === "equip-detail" && _pickSlot) { _pickSlot = null; _subCursor = 0; return true; }
             if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance") {
               _submenu = "npc-detail";
               _subCursor = 0;
             } else if (_submenu === "npc-detail") {
               _submenu = null;
               _subCursor = 0;
-            } else if (_submenu === "item-detail" || _submenu === "vehicle-detail" || _submenu === "furniture-detail" ||
+            } else if (_submenu === "item-detail") {
+              // 从装备详情进来的，Esc 退回装备详情；否则退到面板
+              if (_selectedTarget?.slotId) {
+                _submenu = "equip-detail";
+                const eqSlots3 = getEquipSlots(gs.player.gender);
+                _subCursor = eqSlots3.findIndex((s:any) => s.id === _selectedTarget.slotId);
+                if (_subCursor < 0) _subCursor = 0;
+              } else {
+                _submenu = null;
+                _subCursor = 0;
+              }
+            } else if (_submenu === "info-section") {
+              // 三级退回二级菜单，光标停留在刚看的段
+              _submenu = "info-detail";
+              _subCursor = _infoSecIdx;
+            } else if (_submenu === "vehicle-detail" || _submenu === "furniture-detail" || _submenu === "equip-detail" ||
                        _submenu === "body-detail" || _submenu === "skills-detail" || _submenu === "party-detail" ||
-                       _submenu === "reputation-detail" || _submenu === "titles-detail" || _submenu === "sex-detail") {
+                       _submenu === "reputation-detail" || _submenu === "titles-detail" || _submenu === "sex-detail" ||
+                       _submenu === "go-nav" || _submenu === "info-detail") {
               _submenu = null;
               _subCursor = 0;
             } else if (_submenu === "settlement-detail") {
@@ -1791,7 +2485,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               if (idx >= 0 && idx < talks.length) {
                 const ctx = getCtx();
                 const topic = talks[idx];
-                ctx?.chat?.addSystemMessage(`我找 ${_selectedTarget.name} ${topic}。`);
+                pushText(`我找 ${_selectedTarget.name} ${topic}。`);
                 ctx?.ui?.notify(`与${_selectedTarget.name}${topic}`, "info");
                 _submenu = null;
                 _panelMode = false;
@@ -1837,10 +2531,10 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             return false;
           }
 
-          // 观察/身体/技能/队伍/声望/称号/Sex 子面板（只读，仅 Esc 退出）
+          // 观察/身体/技能/队伍/声望/称号/Sex/情报单段 子面板（只读，仅 Esc 退出）
           if (_submenu === "npc-observe" || _submenu === "body-detail" || _submenu === "skills-detail" ||
               _submenu === "party-detail" || _submenu === "reputation-detail" || _submenu === "titles-detail" ||
-              _submenu === "sex-detail" || _submenu === "settlement-detail") {
+              _submenu === "sex-detail" || _submenu === "settlement-detail" || _submenu === "info-section") {
             // 消费所有方向键和回车，防止漏到外层
             if (d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB" ||
                 d === "\x1b[C" || d === "\x1bOC" || d === "\x1b[D" || d === "\x1bOD" ||
@@ -1868,11 +2562,11 @@ function initGamePanel(_pi: any, sessionCtx: any) {
                 const ok = Math.random() > 0.25;
                 if (ok) {
                   rel.affection = Math.min(100, (rel.affection || 0) + 10); rel.romance = "恋人";
-                  ctx?.chat?.addSystemMessage(`我向 ${n} 告白了。${n}沉默了很久，然后轻轻点了点头。「……我也。」好感+10，成为恋人！`);
+                  pushText(`我向 ${n} 告白了。${n}沉默了很久，然后轻轻点了点头。「……我也。」好感+10，成为恋人！`);
                   ctx?.ui?.notify(`${n}接受了告白！`, "info");
                 } else {
                   rel.affection = Math.max(0, (rel.affection || 0) - 10);
-                  ctx?.chat?.addSystemMessage(`我向 ${n} 告白了。${n}低下了头。「……对不起。」好感-10。`);
+                  pushText(`我向 ${n} 告白了。${n}低下了头。「……对不起。」好感-10。`);
                   ctx?.ui?.notify(`${n}拒绝了…`, "warning");
                 }
                 require("./engine/state.ts").saveState();
@@ -1902,7 +2596,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               if (idx === 0) {
                 // 切磋
                 gs.mode = "rpg";
-                ctx?.chat?.addSystemMessage(`我对 ${n} 抱拳行礼：「请赐教。」${n}摆出了架势。切磋开始！`);
+                pushText(`我对 ${n} 抱拳行礼：「请赐教。」${n}摆出了架势。切磋开始！`);
                 ctx?.ui?.notify(`⚔ 与${n}切磋武艺`, "info");
               } else if (idx === 1) {
                 // 死斗
@@ -1910,7 +2604,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
                 rel.affection = Math.max(0, (rel.affection || 0) - 50);
                 rel.stage = "死敌";
                 gs.mode = "rpg";
-                ctx?.chat?.addSystemMessage(`我向 ${n} 发起了死斗！一场你死我活的战斗即将展开……`);
+                pushText(`我向 ${n} 发起了死斗！一场你死我活的战斗即将展开……`);
                 ctx?.ui?.notify(`💀 向${n}发起死斗`, "warning");
               }
               require("./engine/state.ts").saveState();
@@ -1944,12 +2638,12 @@ function initGamePanel(_pi: any, sessionCtx: any) {
                 if (si.action === "steal_cash") {
                   const result = st.stealFunds(gs.player, _selectedTarget.name);
                   st.saveState();
-                  ctx?.chat?.addSystemMessage(result.narrative);
+                  pushText(result.narrative);
                   ctx?.ui?.notify(result.caught ? `偷钱被${_selectedTarget.name}抓住！` : result.success ? "顺到了钱" : "没摸到钱包", result.caught ? "warning" : "info");
                 } else {
                   const result = st.stealItem(gs.player, _selectedTarget.name, si.key);
                   st.saveState();
-                  ctx?.chat?.addSystemMessage(result.narrative);
+                  pushText(result.narrative);
                   ctx?.ui?.notify(result.caught ? `偷窃被${_selectedTarget.name}抓住！好感-20` : result.success ? `偷到了${si.key}` : "偷窃失败", result.caught ? "warning" : "info");
                 }
               } catch(e: any) {
@@ -1993,7 +2687,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
                   ).then((result: any) => {
                     s2.saveState();
                     ctx?.ui?.notify(result.message || `已${action}${_selectedTarget.name}`, "info");
-                    ctx?.chat?.addSystemMessage(result.narrative || result.message);
+                    pushText(result.narrative || result.message);
                   }).catch((e: any) => {
                     console.error("[furniture] 动作失败:", e?.message || e);
                     ctx?.ui?.notify("操作失败", "error");
@@ -2032,30 +2726,185 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             return false;
           }
 
-          // 物品详情控制
-          if (_submenu === "item-detail") {
-            if (d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB") {
-              _subCursor = _subCursor === 0 ? 1 : 0;
+          // 装备详情控制（上下选，Enter 进物品详情）
+          if (_submenu === "equip-detail") {
+            // 选物品模式：背包里兼容该槽的物品列表，↑↓ 选 Enter 装备
+            if (_pickSlot) {
+              const inv2 = gs.player.inventory || [];
+              const compat = inv2.filter((i: any) => i.slot === _pickSlot);
+              if (d === "\x1b" || d === "q") { _pickSlot = null; _subCursor = 0; return true; }
+              if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + compat.length - 1) % Math.max(1, compat.length); return true; }
+              if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % Math.max(1, compat.length); return true; }
+              if (d === "\r" || d === "\n") {
+                const it = compat[_subCursor];
+                if (!it) { getCtx()?.ui?.notify("没有选中物品", "info"); return true; }
+                // 装备落地：原槽有物先回背包（与 tools/action/equip_item.ts 一致）
+                const p2 = gs.player;
+                if (p2.equipment[_pickSlot]) p2.inventory.push(p2.equipment[_pickSlot]);
+                const idx = p2.inventory.findIndex((i: any) => i.name === it.name);
+                if (idx < 0) { getCtx()?.ui?.notify(`背包里找不到 ${it.name}`, "warning"); return true; }
+                p2.equipment[_pickSlot] = p2.inventory.splice(idx, 1)[0];
+                s.saveState();
+                getCtx()?.ui?.notify(`装备了 ${it.name}`, "info");
+                _pickSlot = null;
+                _subCursor = 0;
+                return true;
+              }
+              return false;
+            }
+            // 正常槽列表模式
+            const eqSlots2 = getEquipSlots(gs.player.gender);
+            const n = eqSlots2.length;
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + n - 1) % n; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % n; return true; }
+            if (d === "\r" || d === "\n") {
+              const slot = eqSlots2[_subCursor]!;
+              const item = gs.player.equipment?.[slot.id];
+              if (item) {
+                _selectedTarget = { type: "slot", slotId: slot.id, label: slot.label, item };
+                _submenu = "item-detail";
+                _subCursor = 0;
+              } else {
+                // 空槽 → 进入选物品模式（背包里该槽兼容物品列表）
+                const inv2 = gs.player.inventory || [];
+                const compat = inv2.filter((i: any) => i.slot === slot.id);
+                if (!compat.length) {
+                  getCtx()?.ui?.notify(`${slot.label}槽为空，且背包里也没有能填 ${slot.label} 的物品`, "info");
+                } else {
+                  _pickSlot = slot.id;
+                  _subCursor = 0;
+                }
+              }
               return true;
             }
-            if (d === "\r" || d === "\n" || d === "1" || d === "2") {
-              const option = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
-              const ctx = getCtx();
-              if (option === 0) {
-                // 卸下放回背包
-                if (_selectedTarget.slotId) {
-                  const itemName = _selectedTarget.item?.name || _selectedTarget.item;
-                  ctx?.chat?.addSystemMessage(`卸下 ${itemName}`);
-                  ctx?.ui?.notify(`已卸下 ${itemName}`, "info");
-                }
-              } else {
-                // 丢弃物品
-                const itemName = _selectedTarget.item?.name || _selectedTarget.item?.name || "物品";
-                ctx?.chat?.addSystemMessage(`丢弃 ${itemName}`);
-                ctx?.ui?.notify(`已丢弃 ${itemName}`, "warning");
+            return false;
+          }
+
+          // 外出导航控制（↑↓ 跳过段头和未探索项，Enter 出发）
+          if (_submenu === "go-nav") {
+            const selectable = (idx: number) => _goNavItems[idx]?.kind === "dest" && _goNavItems[idx]?.mode !== "unknown";
+            const step = (dir: 1 | -1): boolean => {
+              const n = _goNavItems.length;
+              if (!n || !_goNavItems.some((_, i2) => selectable(i2))) return true; // 无可选项，吞掉按键
+              let i2 = _subCursor;
+              for (let c2 = 0; c2 < n; c2++) {
+                i2 = (i2 + dir + n) % n;
+                if (selectable(i2)) { _subCursor = i2; return true; }
               }
+              return true;
+            };
+            if (d === "\x1b[A" || d === "\x1bOA") return step(-1);
+            if (d === "\x1b[B" || d === "\x1bOB") return step(1);
+            if (d === "\r" || d === "\n") {
+              const it = _goNavItems[_subCursor];
+              if (!it || !selectable(_subCursor)) { getCtx()?.ui?.notify("没有选中可去的地点", "info"); return true; }
+              _doTravel(it).catch(e => {
+                console.error("[go-nav] 移动失败:", e?.message || e);
+                getCtx()?.ui?.notify("移动异常，请看控制台", "error");
+              });
               _submenu = null;
+              _subCursor = 0;
               _panelMode = false;
+              _expanded = false; // 出发后收起 HUD，看叙事/移动结果
+              return true;
+            }
+            return false;
+          }
+
+          // 情报二级菜单控制（↑↓ 选段，Enter/数字进单段）
+          if (_submenu === "info-detail") {
+            const n = _INFO_SECTIONS.length;
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + n - 1) % n; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % n; return true; }
+            const isEnterK = d === "\r" || d === "\n";
+            const numK = /^[1-6]$/.test(d) ? parseInt(d) - 1 : -1;
+            if (isEnterK || numK >= 0) {
+              _infoSecIdx = isEnterK ? _subCursor : numK;
+              _submenu = "info-section";
+              return true;
+            }
+            return false;
+          }
+
+          // 物品详情控制（动作真落地：守恒量=引擎直改+saveState，不推正文）
+          if (_submenu === "item-detail") {
+            const acts = _buildItemActions(_selectedTarget);
+            if (_subCursor >= acts.length) _subCursor = 0;
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + acts.length - 1) % acts.length; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % acts.length; return true; }
+            const isEnterKey = d === "\r" || d === "\n";
+            const numIdx = /^[1-9]$/.test(d) ? parseInt(d) - 1 : -1;
+            if (isEnterKey || (numIdx >= 0 && numIdx < acts.length)) {
+              const act = acts[isEnterKey ? _subCursor : numIdx];
+              const ctx = getCtx();
+              const p2 = gs.player;
+              const it = _selectedTarget?.item;
+              const itemName = it?.name || "物品";
+              if (act.id === "unequip") {
+                // 卸下：放回背包（与 tools/action/equip_item.ts 卸下逻辑一致）
+                const slot = _selectedTarget.slotId;
+                if (slot && p2.equipment[slot]) {
+                  p2.inventory.push(p2.equipment[slot]);
+                  p2.equipment[slot] = null;
+                  s.saveState();
+                  ctx?.ui?.notify(`已卸下 ${itemName}，放回背包`, "info");
+                } else {
+                  ctx?.ui?.notify(`槽位上没有 ${itemName}`, "warning");
+                }
+              } else if (act.id === "use") {
+                // 使用消耗品（与旧 /bag 一致：heal effect 回血后移除）
+                const idx = p2.inventory.findIndex((i: any) => i.name === itemName);
+                if (idx < 0) { ctx?.ui?.notify(`背包里没有 ${itemName}`, "warning"); return true; }
+                const target = p2.inventory[idx];
+                for (const ef of target.effects || []) {
+                  if (ef.type === "heal") {
+                    const amt = typeof ef.value === "number" ? ef.value : (parseInt(ef.value) || 5);
+                    p2.hp.current = Math.min(p2.hp.max, p2.hp.current + amt);
+                  }
+                }
+                p2.inventory.splice(idx, 1);
+                s.saveState();
+                ctx?.ui?.notify(`使用了 ${itemName}，HP ${p2.hp.current}/${p2.hp.max}`, "info");
+              } else if (act.id === "equip") {
+                // 装备：原槽有物先回背包（与 tools/action/equip_item.ts 装备逻辑一致）
+                const idx = p2.inventory.findIndex((i: any) => i.name === itemName);
+                if (idx < 0) { ctx?.ui?.notify(`背包里没有 ${itemName}`, "warning"); return true; }
+                const target = p2.inventory[idx];
+                const slot = target.slot;
+                if (p2.equipment[slot]) p2.inventory.push(p2.equipment[slot]);
+                p2.equipment[slot] = target;
+                p2.inventory.splice(idx, 1);
+                s.saveState();
+                ctx?.ui?.notify(`装备了 ${itemName}`, "info");
+              } else if (act.id === "discard") {
+                // 丢弃：装备来源先落回背包，再优先投进相邻家具容器（守恒）。
+                // 注意：禁止以 floor-* 为 transfer 目标——transferBetweenContainers 的
+                // "加入目标"分支没实现 room（state.ts:2378-2383），会 splice 掉物品不落地。
+                // 地板容器补全留待引擎任务；无容器时 splice 与旧 /bag 一致。
+                if (_selectedTarget.slotId && p2.equipment[_selectedTarget.slotId]) {
+                  p2.inventory.push(p2.equipment[_selectedTarget.slotId]);
+                  p2.equipment[_selectedTarget.slotId] = null;
+                }
+                let done = "";
+                try {
+                  const containers = s.getContainersAt(p2.location, p2.gridPos || undefined) || [];
+                  const furn = containers.find((c: any) => c.ownerType === "furniture" && !c.def?.locked);
+                  if (furn) {
+                    const r = s.transferBetweenContainers("backpack", furn.id, itemName);
+                    if (typeof r === "string" && r.includes("转移成功")) done = `已把 ${itemName} 丢进 ${furn.ownerId}`;
+                  }
+                } catch (e) { console.error("[game-hud] 丢弃→容器失败", e); }
+                if (!done) {
+                  const idx = p2.inventory.findIndex((i: any) => i.name === itemName);
+                  if (idx >= 0) { p2.inventory.splice(idx, 1); s.saveState(); }
+                  done = `已丢弃 ${itemName}（散落无踪）`;
+                }
+                ctx?.ui?.notify(done, "warning");
+              }
+              // 留在面板：纯引擎动作无正文可看，收面板会丢失反馈
+              _submenu = null;
+              _selectedTarget = null;
+              _subCursor = 0;
               return true;
             }
             return false;
@@ -2071,10 +2920,10 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               const option = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
               const ctx = getCtx();
               if (option === 0) {
-                ctx?.chat?.addSystemMessage(`我骑上载具 ${_selectedTarget.name}。`);
+                pushText(`我骑上载具 ${_selectedTarget.name}。`);
                 ctx?.ui?.notify(`骑上${_selectedTarget.name}`, "info");
               } else {
-                ctx?.chat?.addSystemMessage(`检查 ${_selectedTarget.name} 车况。`);
+                pushText(`检查 ${_selectedTarget.name} 车况。`);
                 ctx?.ui?.notify(`检查${_selectedTarget.name}车况：良好`, "info");
               }
               _submenu = null;
@@ -2087,24 +2936,26 @@ function initGamePanel(_pi: any, sessionCtx: any) {
           return false;
         }
 
-        // 未开启面板时：双击 Enter 进面板，←→↑↓ 和字母键全部放行给聊天输入栏
+        // 未开启面板时：双击 Enter 展开面板，←→↑↓ 和字母键全部放行给聊天输入栏
         if (!_panelMode) {
-          // 行动 Tab 有结算卡片 + 单次 Enter → 查看详情
+          // 行动 Tab 有结算卡片 + 单次 Enter → 展开并查看详情
           if (_tab === 3 && (gs as any)._pendingSettlement && (d === "\r" || d === "\n")) {
+            _expanded = true;
             _submenu = "settlement-detail";
             _selectedTarget = (gs as any)._pendingSettlement;
             _subCursor = 0;
             _panelMode = true;
             return true;
           }
-          // 双击 Enter（600ms 内两次）→ 进入面板模式
+          // 双击 Enter（600ms 内两次）→ 展开 + 进入面板模式
           if (d === "\r" || d === "\n") {
             const now = Date.now();
             if (now - _lastEnterTime < 600 && _lastEnterTime > 0) {
-              // 双击！进入面板
+              // 双击！展开面板
               _lastEnterTime = 0;
               if (_tab === 1 && !_peopleCache.length) return false;
-              if (_tab === 3 && !_choicesCache.length && !(gs as any)._pendingSettlement) return false;
+              // 行动 Tab 恒可进：即使无 LLM 选项，常驻动作（等待/睡觉/吃）也在
+              _expanded = true;
               _panelMode = true;
               _cursor = 0;
               return true;
@@ -2117,9 +2968,10 @@ function initGamePanel(_pi: any, sessionCtx: any) {
           return false;
         }
 
-        // 面板激活中：ESC 退出
+        // 面板激活中：ESC — 无子菜单时收起整个 HUD，有则退回上一级
         if (d === "\x1b" || d === "q") {
           _panelMode = false;
+          _expanded = false; // 收起回摘要行
           _cursor = 0;
           // 如果不在子菜单中，退出面板同时清子菜单
           if (!_submenu || _submenu === "npc-detail") { _submenu = null; }
@@ -2171,19 +3023,38 @@ function initGamePanel(_pi: any, sessionCtx: any) {
 
           // 2. 选项推进项
           if (currentItem.type === "choice") {
-            ctx?.chat?.addSystemMessage(currentItem.text);
+            pushText(currentItem.text);
             ctx?.ui?.notify(`选择: ${currentItem.text.slice(0, 20)}`, "info");
             delete (gs as any)._pendingSettlement;
             _panelMode = false;
             return true;
           }
 
+          // 2.2 常驻动作（等待/睡觉/吃东西——引擎直改，留在面板看结果）
+          if (currentItem.type === "standing") {
+            _doStandingAction(currentItem.act).catch(e => {
+              console.error("[standing-action] 执行失败:", e?.message || e, "act:", currentItem.act?.id);
+              getCtx()?.ui?.notify("动作异常，请看控制台", "error");
+            });
+            return true;
+          }
+
+          // 2.3 情报摘要行 → info-detail（六项菜单，内容后台预加载）
+          if (currentItem.type === "infoline") {
+            _submenu = "info-detail";
+            _subCursor = 0;
+            _infoSections = null;
+            _loadInfoLines();
+            return true;
+          }
+
           // 2.5 自身面板专用项（body/skills/party/reputation/titles）
-          if (currentItem.type === "body") {
+          if (currentItem.type === "body" || currentItem.type === "sex") {
             _submenu = (gs.mode === "sex") ? "sex-detail" : "body-detail";
             _subCursor = 0;
             return true;
           }
+          if (currentItem.type === "equip") { _submenu = "equip-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "skills") { _submenu = "skills-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "party") { _submenu = "party-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "reputation") { _submenu = "reputation-detail"; _subCursor = 0; return true; }
@@ -2195,9 +3066,18 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               _selectedTarget = currentItem;
               _submenu = "item-detail";
               _subCursor = 0;
+            } else if (currentItem.type === "bag" && currentItem.index === -1) {
+              // 背包头行：空背包时提示，有物时进第一个物品
+              const inv0 = gs.player.inventory || [];
+              if (inv0.length) {
+                _selectedTarget = { type: "bag", item: inv0[0], index: 0 };
+                _submenu = "item-detail";
+                _subCursor = 0;
+              } else {
+                ctx?.ui?.notify("背包空空如也——问 LLM 要一件，或搜刮家具/路人。", "info");
+              }
             } else {
-              // 空装备槽直接提示
-              ctx?.ui?.notify(`空装备槽：你可以去背包选中防具或武器穿戴。`, "info");
+              ctx?.ui?.notify("空装备槽：去背包选中防具或武器穿戴。", "info");
             }
             return true;
           }
@@ -2217,6 +3097,14 @@ function initGamePanel(_pi: any, sessionCtx: any) {
             _subCursor = 0;
             return true;
           }
+          if (currentItem.type === "gonav") {
+            // 进入外出导航：构建目的地列表，光标停在第一个可选项
+            const st0 = require("./engine/state.ts");
+            _goNavItems = _buildGoNav(gs, st0);
+            _submenu = "go-nav";
+            _subCursor = Math.max(0, _goNavItems.findIndex(it2 => it2.kind === "dest" && it2.mode !== "unknown"));
+            return true;
+          }
           if (currentItem.type === "exit") {
             // 实际移动：调用引擎 setPlayerLocation
             try {
@@ -2225,7 +3113,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
               if (dest && st.setPlayerLocation) {
                 st.setPlayerLocation(dest, gs);
                 st.saveState();
-                ctx?.chat?.addSystemMessage(`我走向 ${dest}。`);
+                pushText(`我走向 ${dest}。`);
                 ctx?.ui?.notify(`前往 ${dest}`, "info");
               } else {
                 ctx?.ui?.notify(`无法移动到 ${dest || "未知"}`, "warning");
@@ -2249,6 +3137,7 @@ function initGamePanel(_pi: any, sessionCtx: any) {
     }
   };
 
-  sessionCtx.ui.setWidget("game-hud", () => widget, { placement: "aboveEditor" });
+  sessionCtx.ui.setWidget("game-hud", (tui: any) => { _tuiRef = tui; return widget; }, { placement: "aboveEditor" });
+  return widget; // 便于测试直接拿到 widget 调 render/handleInput
 }
 

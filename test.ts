@@ -875,6 +875,7 @@ const mockPi = {
   getFlag(name: string) {
     return mockFlags[name]?.default;
   },
+  sendUserMessage(..._: any[]) {},
   on() {}
 };
 
@@ -5783,6 +5784,288 @@ test("TUI: weather 渲染不抛异常（已并入 /info）", async () => {
   const { renderWeatherLines } = require("./tools/helpers.ts");
   const lines = await renderWeatherLines();
   if (!Array.isArray(lines) || lines.length === 0) throw new Error("renderWeatherLines 返回空");
+});
+
+// ═══════════════════════════════════════════════════════════
+// HUD widget 交互测试（initGamePanel 直接喂按键；pushText/item动作/性征行）
+// ═══════════════════════════════════════════════════════════
+
+/** 新建干净 HUD widget + 记录 sendUserMessage 调用（管道断言用） */
+async function makeHudWidget() {
+  const { initGamePanel } = await import("./extension.ts");
+  const sent: any[] = [];
+  const mockPi2 = { sendUserMessage: (c: any, o: any) => sent.push({ c, o }) };
+  const hudCtx = { ui: { setWidget: () => {}, notify: () => {} }, isIdle: () => true };
+  const widget: any = initGamePanel(mockPi2, hudCtx);
+  return { widget, sent };
+}
+/** 双击 Enter 进面板 */
+function hudEnterPanel(widget: any) {
+  widget.render(80);
+  widget.handleInput("\r");
+  widget.handleInput("\r");
+  widget.render(80);
+}
+
+test("HUD: NPC 搭话推正文（sendUserMessage + deliverAs:followUp）", async () => {
+  resetState();
+  const { widget, sent } = await makeHudWidget();
+  const loc = gameState.player.location;
+  (gameState.npcs as any)["雪之下雪乃"] = { currentRoom: loc, alive: true, gridPos: [1, 1] };
+  hudEnterPanel(widget);
+  widget.handleInput("\x1b[C"); // 切到周边 Tab
+  widget.render(80);            // 刷 _focusItems（people 行）
+  widget.handleInput("\r");     // 进 npc-detail
+  widget.handleInput("1");      // ① 搭话 → npc-talk
+  widget.render(80);
+  widget.handleInput("1");      // ① 聊聊日常 → pushText
+  if (!sent.length) throw new Error("搭话未推正文（sendUserMessage 未被调用）");
+  if (!String(sent[0].c).includes("雪之下雪乃")) throw new Error(`推送文本不含 NPC 名: ${sent[0].c}`);
+  if (sent[0].o?.deliverAs !== "followUp") throw new Error(`未带 deliverAs:followUp: ${JSON.stringify(sent[0].o)}`);
+});
+
+test("HUD: 行动 Tab choice 选择推正文并收面板", async () => {
+  resetState();
+  const { widget, sent } = await makeHudWidget();
+  (gameState as any)._renderedProse = "教室里很安静。\n---\n> ① [继续]: 走到窗边看看操场\n> ② [观察]: 留在座位上观察同学";
+  hudEnterPanel(widget);
+  widget.handleInput("\x1b[C"); widget.handleInput("\x1b[C"); widget.handleInput("\x1b[C"); // 切到行动 Tab
+  widget.render(80);
+  widget.handleInput("\r");     // 选中第一个选项
+  if (sent.length !== 1) throw new Error(`choice 应推送 1 条，实际 ${sent.length}`);
+  if (!String(sent[0].c).includes("窗边")) throw new Error(`推送文本错误: ${sent[0].c}`);
+  // 面板已收起（_panelMode=false）→ 后续 ↓ 不再被面板消费
+  if (widget.handleInput("\x1b[B") !== false) throw new Error("choice 后面板应已收起，↓ 应放行");
+});
+
+test("HUD: item-detail 使用消耗品真落地（回血+移除，不推正文）", async () => {
+  resetState();
+  const { widget, sent } = await makeHudWidget();
+  const p = gameState.player;
+  gameState.layer1Enabled = false;
+  p.hp.current = Math.max(1, p.hp.max - 6);
+  const hpBefore = p.hp.current;
+  p.inventory.length = 0;
+  p.inventory.push({ name: "绷带", type: "consumable", weight: 0.1, volume: 0.1, effects: [{ type: "heal", value: 5 }], state: "intact" } as any);
+  hudEnterPanel(widget);
+  // 焦点序：titles0 rep1 body2 equip3 skills4 bag0=5
+  for (let i = 0; i < 5; i++) widget.handleInput("\x1b[B");
+  widget.handleInput("\r");     // 进 item-detail
+  widget.render(80);
+  widget.handleInput("\r");     // 首动作 = 使用
+  if (p.inventory.some((i: any) => i.name === "绷带")) throw new Error("使用后绷带应从背包移除");
+  if (p.hp.current !== Math.min(p.hp.max, hpBefore + 5)) throw new Error(`HP 应 +5：${hpBefore} → ${p.hp.current}`);
+  if (sent.length) throw new Error("引擎动作不应推正文");
+});
+
+test("HUD: item-detail 装备落地 + 原槽物品回背包", async () => {
+  resetState();
+  const { widget } = await makeHudWidget();
+  const p = gameState.player;
+  gameState.layer1Enabled = false;
+  const oldCoat = { name: "旧外套", type: "clothing", slot: "top", weight: 1, effects: [], state: "intact" } as any;
+  const newCoat = { name: "新风衣", type: "clothing", slot: "top", weight: 1.2, effects: [], state: "intact" } as any;
+  p.equipment.top = oldCoat;
+  p.inventory.length = 0;
+  p.inventory.push(newCoat);
+  hudEnterPanel(widget);
+  for (let i = 0; i < 5; i++) widget.handleInput("\x1b[B"); // bag0
+  widget.handleInput("\r");
+  widget.render(80);
+  widget.handleInput("\r");     // 首动作 = 装备（非 consumable 有 slot）
+  if (p.equipment.top?.name !== "新风衣") throw new Error(`top 槽应为新风衣，实际 ${p.equipment.top?.name}`);
+  if (!p.inventory.some((i: any) => i.name === "旧外套")) throw new Error("旧外套应回背包");
+});
+
+test("HUD: equip-detail 卸下真落地", async () => {
+  resetState();
+  const { widget } = await makeHudWidget();
+  const p = gameState.player;
+  gameState.layer1Enabled = false;
+  p.equipment.top = { name: "校服外套", type: "clothing", slot: "top", weight: 1, effects: [], state: "intact" } as any;
+  hudEnterPanel(widget);
+  for (let i = 0; i < 3; i++) widget.handleInput("\x1b[B"); // equip=3
+  widget.handleInput("\r");     // 进 equip-detail（槽0=top）
+  widget.render(80);
+  widget.handleInput("\r");     // 进 item-detail（slotId 来源）
+  widget.render(80);
+  widget.handleInput("\r");     // 首动作 = 卸下
+  if (p.equipment.top) throw new Error("卸下后 top 槽应为空");
+  if (!p.inventory.some((i: any) => i.name === "校服外套")) throw new Error("卸下的外套应回背包");
+});
+
+test("HUD: 丢弃真落地（离开背包）+ 光标越界不抛", async () => {
+  resetState();
+  const { widget, sent } = await makeHudWidget();
+  const p = gameState.player;
+  gameState.layer1Enabled = false;
+  p.inventory.length = 0;
+  p.inventory.push({ name: "碎石子", type: "tool", weight: 0.1, effects: [], state: "intact" } as any); // 无 slot 非消耗品 → 唯一动作=丢弃
+  hudEnterPanel(widget);
+  for (let i = 0; i < 5; i++) widget.handleInput("\x1b[B");
+  widget.handleInput("\r");
+  widget.render(80);
+  widget.handleInput("\r");     // 唯一动作 = 丢弃（家具容器或 splice，两条路都离开背包）
+  if (p.inventory.some((i: any) => i.name === "碎石子")) throw new Error("丢弃后不应留在背包");
+  if (sent.length) throw new Error("丢弃不应推正文");
+  // 列表变短后连续操作不抛（clamp 防护）
+  widget.render(80);
+  widget.handleInput("\x1b[B"); widget.handleInput("\x1b[A"); widget.handleInput("\r");
+  widget.render(80);
+});
+
+test("HUD: 性征摘要行渲染 + 字段缺失兜底 + Enter 进 body-detail", async () => {
+  resetState();
+  const { widget } = await makeHudWidget();
+  const p: any = gameState.player;
+  gameState.layer1Enabled = true;
+  p.gender = "女";
+  p.sex = { arousal: 12, desire: 30, climaxCount: 0, profile: { female: {
+    breast: { cup: "D", shape: "水滴" }, vagina: { type: "紧致", tightness: "高" }, pubic_hair: { amount: "稀疏" },
+  } } };
+  hudEnterPanel(widget);
+  let outStr = widget.render(80).join("\n");
+  if (!outStr.includes("性征")) throw new Error("应渲染性征行");
+  if (!outStr.includes("D-cup")) throw new Error("性征行应含 D-cup 摘要");
+  // 焦点序：titles0 rep1 body2 sex3 sex4 → ↓×3 停在性状态行，Enter → body-detail
+  for (let i = 0; i < 3; i++) widget.handleInput("\x1b[B");
+  widget.handleInput("\r");
+  outStr = widget.render(80).join("\n");
+  if (!outStr.includes("身高")) throw new Error("性状态行 Enter 应进 body-detail");
+  widget.handleInput("\x1b"); // 退回
+  // 兜底：profile 缺失 → 性征行整行不渲染、不占焦点、不抛
+  p.sex = { arousal: 0, desire: 0, climaxCount: 0, profile: {} };
+  outStr = widget.render(80).join("\n");
+  if (outStr.includes("性征")) throw new Error("无 profile 时不应渲染性征行");
+  if (!outStr.includes("性状态")) throw new Error("性状态行应保留");
+});
+
+test("HUD: npc-detail 全数字键冒烟（无 ctx.chat 不抛）", async () => {
+  resetState();
+  const { widget } = await makeHudWidget();
+  const loc = gameState.player.location;
+  (gameState.npcs as any)["由比滨结衣"] = { currentRoom: loc, alive: true, gridPos: [2, 2] };
+  hudEnterPanel(widget);
+  widget.handleInput("\x1b[C"); // 切到周边 Tab（后续收起重进时 _tab 保持）
+  widget.render(80);
+  for (const k of ["4", "8", "9", "7"]) { // 组队/暗示/亲密/窃取入口（门槛拦截或进子面板，都不许抛）
+    // 无论当前停在哪一级，连按 Esc 全退到收起态，再双击重进
+    widget.handleInput("\x1b"); widget.handleInput("\x1b"); widget.handleInput("\x1b");
+    widget.handleInput("\r"); widget.handleInput("\r");
+    widget.render(80);
+    widget.handleInput("\r");   // 进 npc-detail
+    widget.render(80);
+    widget.handleInput(k);
+    widget.render(80);
+  }
+});
+
+test("HUD: 外出面板渲染 + 短途移动真落地", async () => {
+  resetState();
+  setPlayerLocation("侍奉部");
+  initPlayerGrid();
+  const { widget } = await makeHudWidget();
+  hudEnterPanel(widget);
+  widget.handleInput("\x1b[C"); widget.handleInput("\x1b[C"); // 切到房间 Tab
+  widget.render(80);
+  widget.handleInput("\x1b[A"); // ↑ 环绕到最后一个焦点项 = 「外出」行
+  widget.handleInput("\r");     // 进 go-nav
+  const outStr = widget.render(80).join("\n");
+  if (!outStr.includes("外出")) throw new Error("go-nav 面板应渲染「外出」标头");
+  if (!outStr.includes("返回上级")) throw new Error("侍奉部应有「返回上级」段");
+  const before = gameState.player.location;
+  widget.handleInput("\r");     // 出发（光标停在第一个可选项=上级，同链 breadcrumb → 短途直移）
+  const t0 = Date.now();
+  while (Date.now() - t0 < 4000 && gameState.player.location === before) {
+    await new Promise(r => setTimeout(r, 50));
+  }
+  if (gameState.player.location === before) throw new Error("短途移动后位置应改变（fire-and-forget 未落地）");
+});
+
+test("HUD: 行动 Tab 常驻动作——睡觉引擎落地（满血+疲劳清零）", async () => {
+  resetState();
+  const { widget, sent } = await makeHudWidget();
+  const p: any = gameState.player;
+  p.location = "海浜公寓"; // 含"公寓"→在家判定通过（只读字符串，不走导航校验）
+  p.fatigue = 60;
+  p.hp.current = Math.max(1, p.hp.max - 5);
+  p.inventory.length = 0;
+  p.inventory.push({ name: "饭团", type: "consumable", weight: 0.1, effects: [{ type: "heal", value: 3 }], state: "intact" } as any);
+  hudEnterPanel(widget);
+  widget.handleInput("\x1b[D"); // ← 从 tab0 环绕到 tab3 行动
+  const outStr = widget.render(80).join("\n");
+  if (!outStr.includes("常驻")) throw new Error("行动 Tab 应有常驻段");
+  if (!outStr.includes("原地等待")) throw new Error("常驻段应有等待");
+  if (!outStr.includes("睡到明早")) throw new Error("在家应显示睡觉");
+  if (!outStr.includes("吃点东西")) throw new Error("背包有消耗品应显示吃东西");
+  // 焦点序不固定（scanConditionalOptions 可能扫出条件选项占前排）→ 循环 ↓ 直到 ▶ 停在睡觉行
+  let found = false;
+  for (let i = 0; i < 20 && !found; i++) {
+    const lines: string[] = widget.render(80);
+    if (lines.some((l: string) => l.includes("▶") && l.includes("睡到明早"))) { found = true; break; }
+    widget.handleInput("\x1b[B");
+  }
+  if (!found) throw new Error("↓ 遍历未能停在睡觉行");
+  widget.handleInput("\r");
+  if (p.fatigue !== 0) throw new Error(`睡觉后疲劳应清零，实际 ${p.fatigue}`);
+  if (p.hp.current !== p.hp.max) throw new Error("睡觉后应满血");
+  if (sent.length) throw new Error("常驻动作不应推正文");
+});
+
+test("HUD: 情报摘要行（警报前置）+ 二级菜单 + 单段异步加载", async () => {
+  resetState();
+  const { widget } = await makeHudWidget();
+  (gameState as any).flags = { ...(gameState as any).flags, wanted: true };
+  gameState.layer1Enabled = false;
+  gameState.player.inventory.length = 0;
+  hudEnterPanel(widget);
+  const outStr = widget.render(80).join("\n");
+  if (!outStr.includes("情报")) throw new Error("自身 Tab 底部应有情报行");
+  if (!outStr.includes("👮通缉")) throw new Error("wanted 时情报行应前置通缉标记");
+  // 焦点序（layer1关/空背包/无载具）：titles0 rep1 body2 equip3 skills4 party5 infoline6
+  for (let i = 0; i < 6; i++) widget.handleInput("\x1b[B");
+  widget.handleInput("\r");     // 进 info-detail 二级菜单
+  const menuStr = widget.render(80).join("\n");
+  if (!menuStr.includes("警报") || !menuStr.includes("NPC记忆")) throw new Error("info-detail 应渲染六项菜单");
+  if (!menuStr.includes("👮通缉")) throw new Error("警报项摘要应显示通缉");
+  widget.handleInput("\r");     // 光标0=警报段 → info-section
+  const t0 = Date.now();
+  let loaded = "";
+  while (Date.now() - t0 < 4000) {
+    loaded = widget.render(80).join("\n");
+    if (loaded.includes("已被通缉")) break;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  if (!loaded.includes("已被通缉")) throw new Error("警报段应异步加载出通缉详情");
+  widget.handleInput("\x1b");   // Esc → 回二级菜单
+  const backStr = widget.render(80).join("\n");
+  if (!backStr.includes("NPC记忆")) throw new Error("info-section Esc 应退回六项菜单");
+  widget.handleInput("\x1b");   // Esc → 回一级面板
+  widget.render(80);
+});
+
+test("HUD: sex-detail 双方面板（自身+相手两段）", async () => {
+  resetState();
+  const { widget } = await makeHudWidget();
+  const p: any = gameState.player;
+  const loc = p.location;
+  gameState.mode = "sex";
+  gameState.layer1Enabled = true;
+  p.sex = { profile: {}, desire: 40, arousal: 30, cycleDay: 7, cyclePhase: "安全期", climaxed: false, climaxCount: 1, squirtCount: 0, thoughts: [] };
+  (gameState.npcs as any)["雪之下雪乃"] = { currentRoom: loc, alive: true, gridPos: [1, 1] };
+  p.relationships["雪之下雪乃"] = { stage: "亲密", affection: 90, romance: "恋人", history: [], notes: "" };
+  (gameState as any).sexStates = { "雪之下雪乃": { profile: {}, desire: 70, arousal: 55, cycleDay: 12, cyclePhase: "排卵期", climaxed: false, climaxCount: 2, squirtCount: 1, thoughts: [] } };
+  hudEnterPanel(widget);
+  // 焦点序：titles0 rep1 body2 → Enter（sex 模式 → sex-detail）
+  widget.handleInput("\x1b[B"); widget.handleInput("\x1b[B");
+  widget.handleInput("\r");
+  const outStr = widget.render(80).join("\n").replace(/\x1b\[[0-9;]*m/g, ""); // 去 ANSI 后断言
+  if (!outStr.includes("相手: 雪之下雪乃")) throw new Error("sex-detail 标头应显示相手名");
+  if (!outStr.includes("── 自身 ──")) throw new Error("应有自身段");
+  if (!outStr.includes("── 雪之下雪乃 ──")) throw new Error("应有对方段");
+  if (!outStr.includes("高潮2次")) throw new Error("对方段应显示她的高潮次数");
+  widget.handleInput("\x1b");
+  widget.render(80);
 });
 
 // ═══════════════════════════════════════════════════════════

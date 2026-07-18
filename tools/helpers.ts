@@ -14,6 +14,71 @@ export function setPi(piInstance: ExtensionAPI) {
   pi = piInstance;
 }
 
+/** 把第一人称文本作为玩家消息推入 LLM 流水线（等价玩家打字，走 input 钩子 → Phase 1-3）。
+ *  替代死掉的 ctx.chat.addSystemMessage（pi v0.74.2 的 ctx 没有 chat 属性，旧调用全部静默失效）。
+ *  无条件 deliverAs:"followUp"：idle 时 pi 忽略该参数立即触发一轮；流式中排队到本轮结束。 */
+export function pushUserText(text: string) {
+  const t = (text ?? "").trim();
+  if (!t) return;
+  try {
+    if (!pi) { console.error("pushUserText: pi 未注入（setPi 未调用）"); return; }
+    (pi as any).sendUserMessage(t, { deliverAs: "followUp" });
+  } catch (e) {
+    console.error("pushUserText: sendUserMessage 失败", e);
+  }
+}
+
+/** 两地间移动耗时估算（分钟）。同层房间按格距，跨房间按 origin 距离+楼层惩罚，
+ *  导航树上按 breadcrumb 共享比例分档 + 名字哈希扰动（同一对地点估时稳定）。 */
+export function estimateTravelMinutes(from: string, to: string): number {
+  const { getRoom, getLocationNav } = require("../engine/state.ts");
+  const hashDist = (a: string, b: string, min: number, range: number): number => {
+    const h = (a + b).split("").reduce((s: number, c: string) => s + c.charCodeAt(0), 0);
+    return min + (h % range);
+  };
+  const fromRoom = getRoom(from);
+  const toRoom = getRoom(to);
+
+  if (fromRoom && toRoom && fromRoom.floor === toRoom.floor) {
+    const toOrigin = toRoom.origin;
+    const fromPos = gameState.player.gridPos || fromRoom.origin;
+    const dx = fromPos[0] - toOrigin[0];
+    const dy = fromPos[1] - toOrigin[1];
+    const cells = Math.sqrt(dx * dx + dy * dy);
+    return Math.max(1, Math.round(cells * fromRoom.cellSize / 1.5));
+  }
+  if (fromRoom && toRoom) {
+    const toOrigin = toRoom.origin;
+    const fromOrigin = fromRoom.origin;
+    const dx = fromOrigin[0] - toOrigin[0];
+    const dy = fromOrigin[1] - toOrigin[1];
+    const cells = Math.sqrt(dx * dx + dy * dy);
+    const floorPenalty = Math.abs(fromRoom.floor - toRoom.floor);
+    return Math.max(2, Math.round(cells * fromRoom.cellSize / 1.5) + floorPenalty);
+  }
+
+  const fromNav = getLocationNav(from);
+  const toNav = getLocationNav(to);
+  const fb: string[] = fromNav.breadcrumb || [];
+  const tb: string[] = toNav.breadcrumb || [];
+  // 直系祖先/后代（一方在另一方的位置链上）：走廊/楼梯级别，按层级差×2分钟。
+  // 不加这条时“侍奉部→学校本体”会因校内树/世界树 breadcrumb 体系不同掉进跨城档（~113分钟）。
+  const { isSameLocation } = require("../engine/state.ts");
+  const fIdx = fb.findIndex((b: string) => isSameLocation(b, to));
+  if (fIdx >= 0) return Math.max(2, (fb.length - fIdx) * 2);
+  const tIdx = tb.findIndex((b: string) => isSameLocation(b, from));
+  if (tIdx >= 0) return Math.max(2, (tb.length - tIdx) * 2);
+  const sharePrefix = fb.filter((b: string) => tb.includes(b)).length;
+  const maxDepth = Math.max(fb.length, tb.length, 5);
+  const shareRatio = sharePrefix / maxDepth;
+
+  if (shareRatio >= 0.9) return 1 + hashDist(from, to, 0, 5);
+  if (shareRatio >= 0.7) return 2 + hashDist(from, to, 0, 6);
+  if (shareRatio >= 0.5) return 3 + hashDist(from, to, 0, 27);
+  if (shareRatio >= 0.3) return 30 + hashDist(from, to, 0, 60);
+  return 60 + hashDist(from, to, 0, 120);
+}
+
 export const SLOT_NAMES: Record<string, string> = {
   top: "外套大衣",
   shirt: "内搭衬衫",
@@ -249,9 +314,11 @@ function buildStatusBarText(): string | null {
   return null;
 }
 
+/** 旧一代状态条（hud-status-bar widget）已被 game-hud 常驻 HUD 取代——
+ *  位置/时间/天气在收起态一行，同场 NPC 在周边 Tab。这里保留函数壳并主动清除残留，
+ *  防止双 HUD 叠显（turn_end 钩子和旧 TUI 命令仍在调用）；旧命令退役后连壳一起删。 */
 export function updateChatHUD(ctx: any) {
-  const text = buildStatusBarText();
-  if (text) ctx.ui.setWidget("hud-status-bar", [text]);
+  try { ctx?.ui?.setWidget("hud-status-bar", undefined); } catch {}
 }
 
 export async function moveTo(loc: string, ctx: any, gs: any, save: any) {
@@ -536,14 +603,15 @@ export async function runNavigation(ctx: any, fastTravel = false) {
       saveState();
       ctx.ui.notify(`[旅行中] 正在前往 ${to}，行程 ${actualMins} 分钟。引擎已暂停移动。`, "info");
       const vehicleHint = vehicleName ? `骑${vehicleName}，预计${actualMins}分钟到达。` : `步行约${mins}分钟。`;
-      ctx.chat.addSystemMessage(`玩家已出发前往 ${to}。${vehicleHint}不要立即让他们到达目的地！请描述路上的见闻、风景。等剧情差不多了，再调用 complete_travel 工具。`);
+      pushUserText(`玩家已出发前往 ${to}。${vehicleHint}不要立即让他们到达目的地！请描述路上的见闻、风景。等剧情差不多了，再调用 complete_travel 工具。`);
       updateChatHUD(ctx);
     } else {
+      const fromLoc = gameState.player.location;
       await moveTo(to, ctx, gameState, saveState);
       await advanceTimeMinutes(actualMins, ctx, gameState, saveState);
       if (mins >= 2) {
         const vHint = vehicleName ? `（骑${vehicleName}）` : "";
-        ctx.chat.addSystemMessage(`[移动] ${gameState.player.location} → ${to}，耗时 ${actualMins} 分钟${vHint}。`);
+        pushUserText(`[移动] ${fromLoc} → ${to}，耗时 ${actualMins} 分钟${vHint}。`);
       }
     }
     subDone();
@@ -556,45 +624,7 @@ export async function runNavigation(ctx: any, fastTravel = false) {
   const vehicleMul = gameState.player.vehicle?.speedMul || 1;
   const vehicleName = gameState.player.vehicle?.name;
 
-  const estTravel = (from: string, to: string): number => {
-    const fromRoom = getRoom(from);
-    const toRoom = getRoom(to);
-
-    if (fromRoom && toRoom && fromRoom.floor === toRoom.floor) {
-      const toOrigin = toRoom.origin;
-      const fromPos = gameState.player.gridPos || fromRoom.origin;
-      const dx = fromPos[0] - toOrigin[0];
-      const dy = fromPos[1] - toOrigin[1];
-      const cells = Math.sqrt(dx * dx + dy * dy);
-      return Math.max(1, Math.round(cells * fromRoom.cellSize / 1.5));
-    }
-    if (fromRoom && toRoom) {
-      const toOrigin = toRoom.origin;
-      const fromOrigin = fromRoom.origin;
-      const dx = fromOrigin[0] - toOrigin[0];
-      const dy = fromOrigin[1] - toOrigin[1];
-      const cells = Math.sqrt(dx * dx + dy * dy);
-      const floorPenalty = Math.abs(fromRoom.floor - toRoom.floor);
-      return Math.max(2, Math.round(cells * fromRoom.cellSize / 1.5) + floorPenalty);
-    }
-
-    const fromNav = getLocationNav(from);
-    const toNav = getLocationNav(to);
-    const sharePrefix = fromNav.breadcrumb.filter(b => toNav.breadcrumb.includes(b)).length;
-    const maxDepth = Math.max(fromNav.breadcrumb.length, toNav.breadcrumb.length, 5);
-    const shareRatio = sharePrefix / maxDepth;
-
-    if (shareRatio >= 0.9) return 1 + hashDist(from, to, 0, 5);
-    if (shareRatio >= 0.7) return 2 + hashDist(from, to, 0, 6);
-    if (shareRatio >= 0.5) return 3 + hashDist(from, to, 0, 27);
-    if (shareRatio >= 0.3) return 30 + hashDist(from, to, 0, 60);
-    return 60 + hashDist(from, to, 0, 120);
-  };
-
-  const hashDist = (a: string, b: string, min: number, range: number): number => {
-    const h = (a + b).split("").reduce((s, c) => s + c.charCodeAt(0), 0);
-    return min + (h % range);
-  };
+  const estTravel = estimateTravelMinutes;
 
   const buildNavMenu = (parentDone: () => void): MenuItem[] => {
     const items: MenuItem[] = [];
