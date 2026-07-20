@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "world_interact", label: "世界交互",
-    description: "建造/拆除/拾取/丢弃/开关门。action: place|remove|pick_up|drop|build_wall|remove_wall|toggle_door",
+    description: "建造/拆除/拾取/丢弃/开关门。action: place|remove|pick_up|drop|build_wall|remove_wall|toggle_door。place时可传furniture_actions为家具自定义交互动作(如广播喇叭=开关+调频)，不传则用引擎兜底。",
     parameters: Type.Object({
       action: Type.String({ description: "place / remove / pick_up / drop / build_wall / remove_wall / toggle_door" }),
       item: Type.Optional(Type.String({ description: "物品名（place/drop时必需）" })),
@@ -106,7 +106,7 @@ export default {
         if (!params.item) {
           return { content: [{ type: "text", text: "参数错误: place 动作需要指定 item" }], details: {} };
         }
-        const hasItem = p.inventory.some((i: any) => i.name === params.item);
+        const hasItem = (params as any).furniture_actions ? true : p.inventory.some((i: any) => i.name === params.item);
         if (!hasItem) {
           return { content: [{ type: "text", text: `背包里没有 ${params.item}，无法放置` }], details: {} };
         }
@@ -117,7 +117,8 @@ export default {
             return { content: [{ type: "text", text: `坐标(${params.x},${params.y})超出房间范围(${room.width}x${room.height})` }], details: {} };
           }
           matched = { x: params.x, y: params.y, cell: room.cells[params.y][params.x], dir: "指定" };
-          if (matched.cell.type !== "floor" || matched.cell.furniture) {
+          const canPlace = matched.cell.type === "floor" || matched.cell.type === "wall";
+          if (!canPlace || matched.cell.furniture) {
             const reason = matched.cell.furniture
               ? `坐标(${params.x},${params.y})已有${matched.cell.furniture}`
               : `坐标(${params.x},${params.y})是${matched.cell.type}，不能放置`;
@@ -125,19 +126,19 @@ export default {
             const alts: string[] = [];
             for (let yy = 0; yy < room.height && alts.length < 3; yy++)
               for (let xx = 0; xx < room.width && alts.length < 3; xx++)
-                if (room.cells[yy][xx].type === "floor" && !room.cells[yy][xx].furniture)
+                if ((room.cells[yy][xx].type === "floor" || room.cells[yy][xx].type === "wall") && !room.cells[yy][xx].furniture)
                   alts.push(`(${xx},${yy})`);
             const altText = alts.length > 0 ? `。可选空位: ${alts.join(", ")}` : "";
             return { content: [{ type: "text", text: `${reason}${altText}` }], details: {} };
           }
         } else {
-          matched = targets.find(t => t.cell.type === "floor" && !t.cell.furniture);
+          matched = targets.find(t => (t.cell.type === "floor" || t.cell.type === "wall") && !t.cell.furniture);
           if (!matched) {
             // 扫描全房间找空位
             const alts: string[] = [];
             for (let yy = 0; yy < room.height && alts.length < 3; yy++)
               for (let xx = 0; xx < room.width && alts.length < 3; xx++)
-                if (room.cells[yy][xx].type === "floor" && !room.cells[yy][xx].furniture)
+                if ((room.cells[yy][xx].type === "floor" || room.cells[yy][xx].type === "wall") && !room.cells[yy][xx].furniture)
                   alts.push(`(${xx},${yy})`);
             const altText = alts.length > 0
               ? `。房间可选空位: ${alts.join(", ")}；用 x/y 参数指定坐标放置`
@@ -273,7 +274,7 @@ export default {
           // 相邻四格无空地 → 扫描全房间找可用 floor 格
           for (let yy = 0; yy < room.height; yy++) {
             for (let xx = 0; xx < room.width; xx++) {
-              if (room.cells[yy][xx].type === "floor" && !room.cells[yy][xx].furniture) {
+              if ((room.cells[yy][xx].type === "floor" || room.cells[yy][xx].type === "wall") && !room.cells[yy][xx].furniture) {
                 matched = { x: xx, y: yy, cell: room.cells[yy][xx], dir: "房间" };
                 break;
               }

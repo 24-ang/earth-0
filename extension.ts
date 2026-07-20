@@ -15,7 +15,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { registerAll } from "./tools/registry.ts";
 import { updateChatHUD } from "./tools/helpers.ts";
-import { C, truncAnsi } from "./tools/tui/panel-render.ts";
+import { C, truncAnsi } from "./tools/tui/colors.ts";
 
 /** 最新的含 chat API 的 ctx（before_agent_start / turn_end 更新） */
 let _latestCtx: any = null;
@@ -745,7 +745,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _lastEnterTime = 0; // 双击 Enter 进面板的时间戳
 
   // ── 三级状态机 ──
-  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "party-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | null = null;
+  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "party-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | null = null;
   let _subCursor = 0; // 子菜单内部光标
   let _selectedTarget: any = null; // 当前交互的目标实体 (如选中 NPC, 物品, 载具)
   let _pickSlot: string | null = null; // equip-detail 空槽 Enter → 选物品模式（slot id）, null=正常槽列表
@@ -755,6 +755,48 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _condOptsCache: any[] = []; // Phase 1.5 条件选项（引擎扫描，行动 Tab 追加显示）
   let _peopleCache: any[] = [];
   let _lastProseHash = "";
+  let _sortMode = 0; // 0=类型 1=名称 2=重量 3=最近（背包排序，非持久化）
+  let _confirmMode: null | { action: string; item: any; slotId?: string; cb: () => void } = null;
+
+  // ── 经济/战斗/世界子面板缓存（异步加载，渲染同步读）──
+  let _econLines: string[] | null = null;
+  let _combatLines: string[] | null = null;
+  let _worldLines: string[] | null = null;
+  const _gry = (s: string) => `${C.M}${s}${C.r}`;
+  const _loadEconCombat = async () => {
+    try {
+      const h = require("./tools/helpers.ts");
+      _econLines = [
+        ...(h.renderShopLines ? await h.renderShopLines() : []),
+        _gry("─".repeat(30)),
+        ...(h.renderGambleLines ? await h.renderGambleLines() : []),
+        _gry("─".repeat(30)),
+        ...(h.renderHousingLines ? await h.renderHousingLines() : []),
+      ];
+      _combatLines = h.renderCombatLines ? await h.renderCombatLines() : [];
+    } catch (e) {
+      console.error("[econ/combat] 预加载失败:", e);
+      _econLines = [_gry("数据加载失败")];
+      _combatLines = [_gry("数据加载失败")];
+    }
+    try { _tuiRef?.requestRender?.(); } catch {}
+  };
+  const _loadWorld = async () => {
+    try {
+      const s0 = require("./engine/state.ts");
+      const ws = s0.gameState?.worldState;
+      if (!ws) { _worldLines = [_gry("（暂无世界状态数据）")]; return; }
+      const lines: string[] = [];
+      lines.push(_gry(`── 🌍 当前位置大势 ──`));
+      const desc = s0.translateWorldState ? s0.translateWorldState(ws) : "";
+      if (desc) lines.push(desc);
+      _worldLines = lines;
+    } catch (e) {
+      console.error("[world-detail] 预加载失败:", e);
+      _worldLines = [_gry("数据加载失败")];
+    }
+    try { _tuiRef?.requestRender?.(); } catch {}
+  };
 
   // 收集当前 Tab 所有的可聚焦行
   let _focusItems: any[] = [];
@@ -784,6 +826,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     const acts: { id: string; label: string }[] = [];
     if (it?.type === "consumable") acts.push({ id: "use", label: "使用" });
     if (it?.slot) acts.push({ id: "equip", label: `装备 → ${EQUIP_SLOTS_ALL.find(s => s.id === it.slot)?.label || it.slot}` });
+    if (it?.phoneData) acts.push({ id: "open_phone", label: "📱 打开手机" });
     acts.push({ id: "discard", label: "丢弃" });
     return acts;
   };
@@ -899,6 +942,19 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       const tired = (gs.player.fatigue ?? 0) >= 70;
       acts.push({ id: "sleep", icon: "💤", label: "睡到明早", hint: "在家·HP/疲劳全恢复", hot: tired });
     }
+    // 存放物品：同房间有未锁家具容器 + 背包非空
+    try {
+      const inv2 = gs.player.inventory || [];
+      if (inv2.length) {
+        const s0 = require("./engine/state.ts");
+        const containers = s0.getContainersAt ? s0.getContainersAt(gs.player.location, gs.player.gridPos || undefined) || [] : [];
+        const avail = containers.filter((c: any) => c.ownerType === "furniture" && !c.def?.locked);
+        if (avail.length) {
+          const cname = (avail[0].ownerId && avail[0].ownerId.includes("·")) ? avail[0].ownerId.split("·")[1] : "储物";
+          acts.push({ id: "store", icon: "📥", label: "存放物品", hint: `→ ${cname}(${avail[0].items?.length || 0}件)`, container: avail[0] });
+        }
+      }
+    } catch {}
     const foods = (gs.player.inventory || []).filter((i: any) => i.type === "consumable");
     if (foods.length) {
       const counts: Record<string, number> = {};
@@ -939,6 +995,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       gs.player.inventory.splice(idx, 1);
       s.saveState();
       ctx?.ui?.notify(`🍱 吃了 ${food.name}，HP ${gs.player.hp.current}/${gs.player.hp.max}`, "info");
+    } else if (act.id === "store") {
+      const container = act.container;
+      if (!container) { ctx?.ui?.notify("附近没有可用的容器", "warning"); return; }
+      const idx = (gs.player.inventory || []).findIndex((i: any) => !i.slot); // 选第一件非装备物品
+      if (idx < 0) { ctx?.ui?.notify("背包没有可存放的物品（有装备槽的先卸下）", "warning"); return; }
+      const item = gs.player.inventory[idx];
+      const tf = s.transferBetweenContainers;
+      const r = tf ? tf("backpack", container.id, item.name) : "引擎不可用";
+      s.saveState();
+      ctx?.ui?.notify(`📥 ${r}`, "info");
     }
   };
 
@@ -954,9 +1020,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     { icon: "🌈", label: "天气" },
     { icon: "👥", label: "NPC日程" },
     { icon: "🧠", label: "NPC记忆" },
+    { icon: "🏆", label: "成就" },
   ];
 
-  /** 六项菜单右侧的同步摘要（轻量，直接读 gameState，不等异步加载） */
+  /** 七项菜单右侧的同步摘要（轻量，直接读 gameState，不等异步加载） */
   const _infoSummary = (gs: any, idx: number): string => {
     try {
       if (idx === 0) {
@@ -982,17 +1049,29 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       if (idx === 3) return [gs.time?.weather, gs.time?.season].filter(Boolean).join(" · ") || "当前天气·预报";
       if (idx === 4) return "周边NPC按位置分组";
       if (idx === 5) return "NPC对你的记忆标签";
+      if (idx === 6) {
+        const flags = gs.flags || {};
+        let total = 0, unlocked = 0;
+        try {
+          const fs = require("node:fs"); const path = require("node:path");
+          const rules = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "data", "achievements.json"), "utf-8"));
+          total = rules.length;
+          unlocked = rules.filter((r: any) => !!flags[r.id]).length;
+        } catch {}
+        return total ? `${unlocked}/${total} 已解锁` : "未配置";
+      }
     } catch {}
     return "";
   };
 
-  /** 异步拼装六段情报（复用 helpers 现成渲染函数），完成后触发重绘 */
+  /** 异步拼装七段情报（复用 helpers 现成渲染函数），完成后触发重绘 */
   const _loadInfoLines = async () => {
     try {
       const h = require("./tools/helpers.ts");
       _infoSections = await Promise.all([
         h.renderAlertsLines(), h.renderQuestLines(), h.renderCalendarLines(),
         h.renderWeatherLines(), h.renderScheduleLines(), h.renderMemoryLines(),
+        h.renderAchievementLines(),
       ]);
     } catch (e: any) {
       console.error("[info-detail] 情报加载失败:", e?.message || e);
@@ -1201,10 +1280,23 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     else if(key===32){pushText(`我凝视着 ${name} 的眼睛，尝试施加暗示…`);ctx?.ui?.notify(`暗示${name}`, "info");_panelMode=false;}
   }
 
-  function _doTouch(gs:any,name:string){
+  function _doTouch(gs:any,name:string,levelIdx?:number){
     const ctx=getCtx();
     const aff=getNpcAffection(gs,name);const{updateRelation,saveState}=require("./engine/state.ts");
     const levels=[{n:"握手",min:0,rw:2,pen:2},{n:"摸头",min:30,rw:2,pen:5},{n:"拥抱",min:50,rw:3,pen:10},{n:"按摩",min:60,rw:3,pen:10,needL1:true},{n:"亲吻",min:70,rw:5,pen:15}];
+    // 指定了具体等级：只执行该项（需满足门槛）
+    if (levelIdx !== undefined && levelIdx >= 0 && levelIdx < levels.length) {
+      const l = levels[levelIdx]!;
+      if (aff < l.min || (l.needL1 && !gs.layer1Enabled)) {
+        ctx?.ui?.notify(`条件不满足：${l.n}需要好感≥${l.min}${l.needL1?" 且开启Layer1":""}`, "warning");
+        return;
+      }
+      const ok=Math.random()>0.2;const msg=ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`;
+      if(ok){updateRelation(gs.player.relationships,name,l.rw,l.n);ctx?.ui?.notify(`${l.n}${name} ✓ +${l.rw}`, "info");}
+      else{updateRelation(gs.player.relationships,name,-l.pen,`${l.n}被拒`);ctx?.ui?.notify(`${name}拒绝${l.n} -${l.pen}`, "warning");}
+      saveState();pushText(msg);_panelMode=false;return;
+    }
+    // 未指定 → 自动匹配最高可用（快捷按钮路径）
     for(let i=levels.length-1;i>=0;i--){
       const l=levels[i]!;if(aff>=l.min&&(!l.needL1||gs.layer1Enabled)){
         const ok=Math.random()>0.2;const msg=ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`;
@@ -1395,6 +1487,30 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           return out;
         }
 
+        // 确认对话框模式（拦截在渲染最前面，覆盖所有 Tab 内容）
+        if (_confirmMode) {
+          out.push(tr(""));
+          out.push(tr(head("确认")));
+          const actionLabels: Record<string,string> = { discard: "丢弃", deathmatch: "发起死斗", delete_save: "删除存档" };
+          const actionWarn = _confirmMode.action === "deathmatch" ? "（好感-50，关系降为死敌，不可撤销）" : "（不可撤销）";
+          const itemName = typeof _confirmMode.item === "string" ? _confirmMode.item : (_confirmMode.item?.name || "?");
+          out.push(tr(`  ${C.d}⚠ 确定要${actionLabels[_confirmMode.action] || _confirmMode.action}「${itemName}」？${C.r}`, "gear"));
+          out.push(tr(gray(`  ${actionWarn}`), "gear"));
+          out.push(tr(""));
+          out.push(tr(` ${_subCursor === 0 ? hi("▶") : " "} ① 确认`));
+          out.push(tr(` ${_subCursor === 1 ? hi("▶") : " "} ② 取消`));
+          out.push(tr(gray("─".repeat(46)), "gear"));
+          out.push(tr(gray("↑↓ 或 1/2 · Esc=取消"), "gear"));
+          // 跳过正常面板渲染（聚焦行只有确认和取消）
+          _focusItems = [{ type: "confirm_yes" }, { type: "confirm_no" }];
+          // Tab 栏仍显示（上下文提示哪个 Tab 下触发的）
+          out.push(tr(""));
+          const tbar = " " + ["自身","周边","房间","行动"].map((lb,i) => i===_tab ? `${C.O}${C.B}▶[${lb}]◀${C.r}` : gray(` [${lb}] `)).join(gray("│"));
+          out.push(tr(tbar));
+          _expanded = true; // 确认模式下保持展开
+          return out;
+        }
+
         // 收集焦点项并生成 Tab 栏
         _focusItems = [];
         const TABS = ["自身","周边","房间","行动"];
@@ -1412,8 +1528,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           const gdot2 = ` ${C.M}·${C.r} `; // 自身 Tab 全域可用（子面板 sex-detail body-detail 等也在此分支内）
           const eq = p.equipment || {};
           // 焦点项（顺序=显示顺序）：称号 · 声望 · 身体 · [性状态·性征] · 装备 · 技能 · 背包×n · 载具 · 队伍
+          _focusItems.push({ type: "identity" });
           _focusItems.push({ type: "titles" });
           _focusItems.push({ type: "reputation" });
+          _focusItems.push({ type: "relations" });
           _focusItems.push({ type: "body" });
           if (gs.layer1Enabled && p.sex) {
             _focusItems.push({ type: "sex", index: 0 }); // 性状态行
@@ -1421,11 +1539,22 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           }
           _focusItems.push({ type: "equip" });
           _focusItems.push({ type: "skills" });
-          const inv = p.inventory || [];
+          const inv = [...(p.inventory || [])].sort((a: any, b: any) => {
+            if (_sortMode === 1) return (a.name || "").localeCompare(b.name || "");
+            if (_sortMode === 2) return (a.weight || 0) - (b.weight || 0);
+            if (_sortMode === 3) return (b._acquiredAt || 0) - (a._acquiredAt || 0);
+            return (a.type || "").localeCompare(b.type || "");
+          });
+          // 背包头 + 逐件（头在前，与视觉顺序一致）
+          _focusItems.push({ type: "bag", item: inv[0] || null, index: -1 });
           for (let i = 0; i < inv.length; i++) { _focusItems.push({ type: "bag", item: inv[i], index: i }); }
           if (p.vehicle) { _focusItems.push({ type: "vehicle", vehicle: p.vehicle }); }
+          _focusItems.push({ type: "economy" });
+          _focusItems.push({ type: "combat" });
+          _focusItems.push({ type: "world" });
           _focusItems.push({ type: "party" });
           _focusItems.push({ type: "infoline" });
+          _focusItems.push({ type: "turnlog" });
 
           // 子菜单渲染
           if (_submenu === "item-detail" && _selectedTarget) {
@@ -1437,6 +1566,13 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (Array.isArray(it.effects) && it.effects.length)
               out.push(tr(`  效果: ${it.effects.map((e: any) => `${e.type}:${e.value}`).join("  ")}`));
             if (it.flavor) out.push(tr(`  描述: "${it.flavor}"`));
+            // 物品对比：有 slot 时显示当前槽位装备
+            if (it.slot && p.equipment[it.slot]) {
+              const cur = p.equipment[it.slot];
+              const curDmg = cur.damage?.dice ? ` ${gray(cur.damage.dice + " " + (cur.damage.damageType||""))}` : "";
+              out.push(tr(`  ${gray("── 当前装备 ──")}`));
+              out.push(tr(`  ${gray("槽位:")} ${gray(EQUIP_SLOTS_ALL.find(s => s.id === it.slot)?.label || it.slot)} ${gray("│")} ${cur.name}${curDmg}`));
+            }
             out.push(tr(`  ─ 操作 ─`));
             const acts = _buildItemActions(_selectedTarget);
             for (let i = 0; i < acts.length; i++) {
@@ -1444,10 +1580,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             }
           } else if (_submenu === "vehicle-detail" && _selectedTarget) {
             const v = _selectedTarget;
-            out.push(tr(`🚲 ${v.name || "载具"}`));
+            const isMounted = p.vehicle?.name === v.name;
+            out.push(tr(`🚲 ${v.name || "载具"}${isMounted ? ` ${gray("【骑行中】")}` : ""}`));
             out.push(tr(`  速度倍率 ×${v.speedMul || 1.5} · 状态良好`));
             out.push(tr(`  ─ 操作 ─`));
-            out.push(tr(`${_subCursor === 0 ? "▶" : " "} ① 设为当前骑行载具`));
+            out.push(tr(`${_subCursor === 0 ? "▶" : " "} ① ${isMounted ? "下车（放回背包）" : "设为当前骑行载具"}`));
             out.push(tr(`${_subCursor === 1 ? "▶" : " "} ② 检查状况`));
           } else if (_submenu === "info-detail") {
             // 二级：六项菜单 + 同步摘要（内容后台加载，进三级即看）
@@ -1532,29 +1669,285 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               out.push(tr(kv("态度", prof.attitude||"?")));
               out.push(tr(kv("经验", prof.experience||"?")));
             }
+            // 发育追踪（初始 vs 当前 body 变化）
+            let initBody: any = null;
+            try {
+              const fd = s.findCharacter(p.name);
+              if (fd?.base_age) {
+                const ib = s.getBodyForAge(fd, fd.base_age);
+                if (ib) initBody = ib;
+              }
+            } catch {}
+            if (initBody) {
+              out.push(tr(""));
+              out.push(tr(head("发育追踪")));
+              out.push(tr(kv("初始", `${initBody.height_cm||"?"}cm · ${initBody.weight_kg||"?"}kg · ${initBody.build||"?"}`)));
+              out.push(tr(kv("当前", `${b.height_cm||"?"}cm · ${b.weight_kg||"?"}kg · ${b.build||"?"}`)));
+              const dh = (b.height_cm ?? 0) - (initBody.height_cm ?? 0);
+              const dw = (b.weight_kg ?? 0) - (initBody.weight_kg ?? 0);
+              const dBuild = b.build !== initBody.build ? ` ${initBody.build}→${b.build}` : "";
+              const dhStr = dh > 0 ? `${C.G}+${dh}cm${C.r}` : dh < 0 ? `${C.d}${dh}cm${C.r}` : gray(`${dh}cm`);
+              const dwStr = dw > 0 ? `${C.G}+${dw.toFixed(1)}kg${C.r}` : dw < 0 ? `${C.d}${dw.toFixed(1)}kg${C.r}` : gray(`${dw.toFixed(1)}kg`);
+              out.push(tr(kv("变化", `${dhStr} ${gdot} ${dwStr}${dBuild ? gdot + gray(dBuild) : ""}`)));
+              if (b.diet) out.push(tr(kv("饮食", b.diet)));
+              if (b.exercise) out.push(tr(kv("运动", b.exercise)));
+            }
           } else if (_submenu === "skills-detail") {
             const sk = p.skills || {};
             const names = Object.keys(sk);
             out.push(tr(head("技能")));
             if (!names.length) { out.push(tr(kv("（无）", ""))); }
             else { for (const n of names) { const s = sk[n]; const lv = s?.level ?? s ?? 0; const exp = s?.exp ?? 0; const next = s?.nextLevel ?? (lv * 10); out.push(tr(kv(n, `Lv.${lv}  ${exp}/${next}`))); } }
+            // 能力（超能力/忍术等 Layer B）
+            const abs = p.abilities || {};
+            const abNames = Object.keys(abs);
+            if (abNames.length > 0) {
+              out.push(tr(""));
+              out.push(tr(head("能力")));
+              for (const n of abNames) {
+                const a = abs[n];
+                const lv = a?.level ?? a ?? 0;
+                const cd = a?.cooldownRemaining ?? 0;
+                const cdStr = cd > 0 ? `${C.d}冷却 ${cd} 回合${C.r}` : `${C.G}就绪${C.r}`;
+                out.push(tr(kv(n, `Lv.${lv}  ${cdStr}`)));
+              }
+            }
           } else if (_submenu === "party-detail") {
             const pty = p.party || [];
             out.push(tr(`── 队伍详情 ──`));
             if (!pty.length) { out.push(tr(`  （无队友）`)); }
             else { for (const nm of pty) { const rel = p.relationships?.[nm]; const npc = gs?.npcs?.[nm]; const aff = rel?.affection ?? 0; const rl = rel?.romance || rel?.stage || ""; const hpc = npc?.hp?.current ?? "?"; const hpm = npc?.hp?.max ?? "?"; out.push(tr(`  👤 ${nm}  💕${aff} ${rl}  ❤${hpc}/${hpm}`)); } }
+          } else if (_submenu === "container-pick" && _selectedTarget) {
+            const cpItems = (_selectedTarget as any)?._containerItems || [];
+            const cname = (_selectedTarget as any)?._containerName || "容器";
+            out.push(tr(head(`📂 ${cname}`), "gear"));
+            if (!cpItems.length) { out.push(tr(gray("  （容器是空的）"))); }
+            else {
+              for (let i = 0; i < cpItems.length; i++) {
+                const it = cpItems[i];
+                const on = _subCursor === i;
+                const meta = gray(`${it.type || "??"} · ${it.weight ?? 0}kg`);
+                out.push(tr(` ${on ? hi("▶") : " "} ${String.fromCodePoint(0x2460+i)} ${it.name}  ${meta}`, "gear", on));
+              }
+              const allIdx = cpItems.length;
+              out.push(tr(gray("  ── 快捷 ──"), "gear"));
+              out.push(tr(` ${_subCursor === allIdx ? hi("▶") : " "} ${String.fromCodePoint(0x2460+allIdx)} 📦 全部取出`, "gear", _subCursor === allIdx));
+            }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 选物品 · Enter=取到背包 · N=全部取出 · Esc=返回"), "gear"));
+          } else if (_submenu === "economy-detail") {
+            out.push(tr(head("经济"), "gear"));
+            if (!_econLines) { out.push(tr(gray("  …加载中"))); }
+            else { for (const ln of _econLines) out.push(tr(ln, "gear")); }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
+          } else if (_submenu === "combat-detail") {
+            out.push(tr(head("战斗"), "gear"));
+            if (!_combatLines) { out.push(tr(gray("  …加载中"))); }
+            else { for (const ln of _combatLines) out.push(tr(ln, "gear")); }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
+          } else if (_submenu === "world-detail") {
+            out.push(tr(head("世界"), "gear"));
+            if (!_worldLines) { out.push(tr(gray("  …加载中"))); }
+            else { for (const ln of _worldLines) out.push(tr(ln, "gear")); }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
+          } else if (_submenu === "turnlog-detail") {
+            out.push(tr(head("回合台账"), "gear"));
+            const recent = (gs.turnLog || []).slice(-8).reverse();
+            if (!recent.length) { out.push(tr(gray("  （暂无记录）"))); }
+            else {
+              for (const entry of recent) {
+                const tNum = entry.turn || "?";
+                const ts = entry.timestamp || "";
+                out.push(tr(""));
+                out.push(tr(`  ${C.G}T${tNum}${C.r} ${gray(`│ ${ts}`)} ${gray("│")} ${Y}${C.r}${entry.playerAction || "?"}`, "gear"));
+                if (entry.resolvedChanges) out.push(tr(`       ${gray("│")} ${gray(entry.resolvedChanges)}`, "gear"));
+                if (entry.sceneResult) out.push(tr(`       ${gray("│")} ${gray(entry.sceneResult)}`, "gear"));
+                if (entry.openHooks) out.push(tr(`       ${gray("│")} ${C.d}⚠ ${entry.openHooks}${C.r}`, "gear"));
+              }
+            }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
+          } else if (_submenu === "phone-main") {
+            // 手机主菜单
+            const phoneName = (_selectedTarget as any)?.name || (_selectedTarget as any)?.item?.name || "手机";
+            out.push(tr(head(`📱 ${phoneName}`), "gear"));
+            let pd: any = null;
+            try {
+              const { getPlayerPhoneData, getUnreadSummary } = require("../engine/phone.ts");
+              pd = getPlayerPhoneData(gs);
+            } catch {}
+            const unread = pd?.unreadCount ?? 0;
+            out.push(tr(gray(`  ── 📶 ${loc.slice(0,16)} │ ${unread > 0 ? `${C.G}${unread} 条未读${C.r}` : "无未读"} ──`), "gear"));
+            out.push(tr(""));
+            const phoneApps = [
+              { id: "messages", icon: "💬", label: "消息", hint: unread > 0 ? `🆕 ${unread} 条未读` : "" },
+              { id: "calllog", icon: "📞", label: "通话记录", hint: pd?.callLog?.length ? `${pd.callLog.length} 条` : "" },
+              { id: "contacts", icon: "👥", label: "通讯录", hint: pd?.contacts?.length ? `${pd.contacts.length} 人` : "" },
+              { id: "sns", icon: "🌐", label: "mixi", hint: pd?.snsPosts?.length ? `${pd.snsPosts.length} 条动态` : "" },
+              { id: "photos", icon: "📸", label: "相册", hint: pd?.photos?.length ? `${pd.photos.length} 张` : "" },
+            ];
+            for (let i = 0; i < phoneApps.length; i++) {
+              const app = phoneApps[i]!;
+              const on = _subCursor === i;
+              const hi2 = app.hint ? ` ${C.M}│${C.r} ` + (app.hint.includes("🆕") ? `${C.G}${app.hint}${C.r}` : gray(app.hint)) : "";
+              out.push(tr(` ${on ? hi("▶") : " "} ${String.fromCodePoint(0x2460+i)} ${app.icon} ${app.label}${hi2}`, "gear", on));
+            }
+            out.push(tr(gray("  ── 操作 ──"), "gear"));
+            out.push(tr(` ${_subCursor === 5 ? hi("▶") : " "} ⑥ 📴 合上手机`, "gear"));
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 选功能 · Enter 进入 · Esc/⑥ 合上"), "gear"));
+          } else if (_submenu === "phone-messages") {
+            out.push(tr(head("消息"), "gear"));
+            let pd: any = null;
+            try { const { getPlayerPhoneData } = require("../engine/phone.ts"); pd = getPlayerPhoneData(gs); } catch {}
+            const msgs: any[] = pd?.messages || [];
+            // 按联系人分组，取每组最后一条
+            const grouped: Map<string, { last: any; unread: number }> = new Map();
+            for (const m of msgs) {
+              const key = m.from === gs.player.name ? m.to : m.from;
+              const existing = grouped.get(key);
+              if (!existing || (m.timestamp > existing.last.timestamp)) {
+                grouped.set(key, { last: m, unread: (existing?.unread || 0) + (m.read ? 0 : 1) });
+              } else if (!m.read && m.to === gs.player.name) {
+                grouped.set(key, { last: m, unread: existing.unread + 1 });
+              }
+            }
+            const entries = Array.from(grouped.entries());
+            if (!entries.length) { out.push(tr(gray("  （没有消息）"))); }
+            else {
+              for (let i = 0; i < entries.length; i++) {
+                const [name, info] = entries[i]!;
+                const on = _subCursor === i;
+                const unreadStr = info.unread > 0 ? ` ${C.G}🆕${C.r}` : "";
+                const text = (info.last.text || "").slice(0, 30);
+                out.push(tr(` ${on ? hi("▶") : " "} ${String.fromCodePoint(0x2460+i)} ${name}${unreadStr}  ${gray(text)}`, "gear", on));
+              }
+            }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 选对话 · Enter 查看 · Esc 返回"), "gear"));
           } else if (_submenu === "reputation-detail") {
             const rep = p.reputation || {};
             const keys = Object.keys(rep);
-            out.push(tr(`── 声望详情 ──`));
-            if (!keys.length) { out.push(tr(`  （暂无声望）`)); }
+            out.push(tr(head("声望")));
+            if (!keys.length) { out.push(tr(gray("  （暂无声望）"))); }
             else { for (const k of keys) { const v = rep[k] ?? 0; out.push(tr(`  ${k}: ${v >= 0 ? "+" : ""}${v}`)); } }
+          } else if (_submenu === "relations-detail") {
+            out.push(tr(head("关系"), "gear"));
+            const rels = Object.entries(p.relationships || {}) as [string, any][];
+            // 分组：恋人 > 友好(≥50) > 普通(0-49) > 死敌(<0)
+            const lovers = rels.filter(([_, r]) => r.romance === "恋人");
+            const friends = rels.filter(([_, r]) => r.romance !== "恋人" && (r.affection || 0) >= 50);
+            const neutrals = rels.filter(([_, r]) => r.romance !== "恋人" && (r.affection || 0) >= 0 && (r.affection || 0) < 50);
+            const enemies = rels.filter(([_, r]) => (r.affection || 0) < 0 || r.stage === "死敌");
+            const grp = (icon: string, label: string, list: any[]) => {
+              out.push(tr(gray(`── ${icon} ${label} (${list.length}) ──`), "gear"));
+              if (!list.length) { out.push(tr(gray("  （无）"))); return; }
+              for (const [nm, r] of list) {
+                const aff = r.affection ?? 0;
+                const affStr = aff >= 50 ? `${C.G}好感${aff}${C.r}` : aff < 0 ? `${C.d}好感${aff}${C.r}` : gray(`好感${aff}`);
+                const npc = gs?.npcs?.[nm];
+                const sameRoom = npc && s.isSameLocation(npc.currentRoom, loc);
+                const roomStr = sameRoom ? gray("同室") : gray("不在同室");
+                const inParty = (p.party || []).includes(nm) ? ` ${gray("队伍中")}` : "";
+                out.push(tr(`  ${nm}  ${affStr} ${gray("·")} ${roomStr}${inParty}`, "gear"));
+              }
+            };
+            grp("❤️", "恋人", lovers);
+            grp("🤝", "友好", friends);
+            grp("😐", "普通", neutrals);
+            grp("💀", "死敌", enemies);
+            out.push(tr(gray("── 🏛️ 声望 ──"), "gear"));
+            const repKeys = Object.keys(p.reputation || {});
+            if (!repKeys.length) { out.push(tr(gray("  （暂无）"))); }
+            else {
+              const repStrs = repKeys.map(k => {
+                const v = p.reputation?.[k] ?? 0;
+                return `${k} ${v >= 0 ? `${C.G}+${v}${C.r}` : `${C.d}${v}${C.r}`}`;
+              }).join(` ${gray("·")} `);
+              out.push(tr(`  ${repStrs}`, "gear"));
+            }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
           } else if (_submenu === "titles-detail") {
             const tt = p.titles || [];
             out.push(tr(`── 称号详情 ──`));
             if (!tt.length) { out.push(tr(`  （暂无称号）`)); }
             else { for (const t of tt) { out.push(tr(`  🏅 ${t}`)); } }
-          } else if (_submenu === "sex-detail" && mode === "sex") {
+          } else if (_submenu === "identity-detail") {
+            out.push(tr(head("身份"), "gear"));
+            out.push(tr(gray("── 🏷️ 社会身份 ──"), "gear"));
+            out.push(tr(kv("姓名", p.name || "?")));
+            out.push(tr(kv("性别", p.gender || "?")));
+            out.push(tr(kv("年龄", `${p.age ?? t?.player_age ?? "?"}岁`)));
+            const sc = p.social_class || "?";
+            out.push(tr(kv("阶级", `${C.Y}${sc}${C.r}`)));
+            out.push(tr(kv("公开身份", gray(p.public_identity || p.memberships?.[0]?.title || "?"))));
+            out.push(tr(kv("伪装身份", p.public_identity && p.public_identity !== (p.memberships?.[0]?.title || "") ? gray(p.public_identity) : dim("(无)"))));
+            const axes = p.personal_axes || {};
+            if (Object.keys(axes).length > 0) {
+              out.push(tr(""));
+              out.push(tr(gray("── 🧭 立场坐标 ──"), "gear"));
+              for (const [ax, v] of Object.entries(axes) as [string, any][]) {
+                const val = v ?? 0;
+                const left = val < 0 ? Math.min(5, Math.abs(val)) : 0;
+                const right = val > 0 ? Math.min(5, Math.abs(val)) : 0;
+                const bar5 = `${C.G}${"■".repeat(left)}${C.r}${gray("□".repeat(5 - left - right))}${val > 0 ? C.d : C.r}${"■".repeat(right)}${C.r}`;
+                const lbl = val < 0 ? `${C.G}◀ 左倾 (${val})${C.r}` : val > 0 ? `${C.d}▶ 偏右 (${val})${C.r}` : gray(`○ 中立`);
+                out.push(tr(`  ${gray(ax)}  ${bar5}  ${lbl}`, "gear"));
+              }
+            }
+            // 组织
+            const mems = p.memberships || [];
+            out.push(tr(""));
+            out.push(tr(gray("── 🏛️ 所属组织 ──"), "gear"));
+            if (!mems.length) { out.push(tr(gray("  （无）"))); }
+            else {
+              for (const m of mems) {
+                let org: any = null;
+                try { const s0 = require("./engine/state.ts"); const orgs = s0.gameState?.organizations || {}; org = orgs[m.orgId]; } catch {}
+                const oname = org?.name || m.orgId || "?";
+                const role = m.role || "?";
+                const rank = m.rank ?? 0;
+                const stage = org?.lifecycle_stage || "?";
+                const active = !org?.archived;
+                out.push(tr(`  🏫 ${wb(oname)}  ${gray("│")} ${role} ${gray("│")} rank ${rank}/10 ${gray("│")} ${active ? gn("活跃") : gray("已归档")}${stage !== "?" ? gray("·"+stage) : ""}`, "gear"));
+                if (org) {
+                  out.push(tr(`    影响力 ${gn(org.influence||0)}/100  ${gray("·")} 凝聚力 ${gn(org.cohesion||0)}/100  ${gray("·")} 公信力 ${gn(org.public_legitimacy||0)}/100`, "gear"));
+                  if (org.class_base && Object.keys(org.class_base).length) {
+                    out.push(tr(`    阶级基本盘: ${Object.entries(org.class_base).map(([k2,v2]:any)=>`${k2} ${Math.round(v2*100)}%`).join(gray(" · "))}`, "gear"));
+                  }
+                  if (org.goals?.macroGoal) out.push(tr(`    目标: ${gray(org.goals.macroGoal)}`, "gear"));
+                }
+                // 权限
+                const permBits: string[] = [];
+                if (rank >= 1) permBits.push("进大本营");
+                if (rank >= 4) permBits.push("查受限信息");
+                if (rank >= 7) permBits.push("招募·动资·代表·开除");
+                if (rank >= 10) permBits.push("设目标·任免核心");
+                if (permBits.length) out.push(tr(`    权限: ${gray(permBits.join(" · "))}`, "gear"));
+              }
+            }
+            // 当前位置活跃组织
+            try {
+              const s0 = require("./engine/state.ts");
+              const activeOrgs = s0.getActiveOrgsForLocation ? s0.getActiveOrgsForLocation(loc) : [];
+              const otherOrgs = activeOrgs.filter((a:any) => !mems.some((m:any) => m.orgId === a.orgId));
+              if (otherOrgs.length > 0) {
+                out.push(tr(""));
+                out.push(tr(gray("── 🏙️ 当前位置活跃组织 ──"), "gear"));
+                for (const ao of otherOrgs.slice(0, 6)) {
+                  const repHere = ao.playerRep || 0;
+                  const repStr = repHere !== 0 ? (repHere > 0 ? `${C.G}+${repHere}${C.r}` : `${C.d}${repHere}${C.r}`) : gray("无");
+                  out.push(tr(`  ${ao.name}  ${gray("│")} ${ao.sector||"?"} ${gray("│")} ${dim((ao.scale||"?")+"·"+(ao.lifecycle_stage||"?"))} ${gray("│")} ${gray("声望:")} ${repStr}`, "gear"));
+                }
+              }
+            } catch {}
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
+          } else if (_submenu === "sex-detail") {
             const sx = p.sex;
             // 找 sex 对手：同房恋人或最高好感 NPC
             let partner: { name: string; sx: any } | null = null;
@@ -1573,9 +1966,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (sx) {
               // 自身一段
               const pMale = (p.gender || "").includes("男") && !(p.gender || "").includes("女");
+              const selfProf = sx.profile || {};
+              const adjExp: Record<string, number> = { "未开发": 10, "生涩": 10, "熟练": 0, "深度开发": -10 };
+              const selfTh = Math.max(55, (selfProf.climaxThreshold || 65)) + (adjExp[selfProf.experience] || 0);
+              const ejacBar = sq(sx.arousal || 0, selfTh, 7);
               const selfExtra = pMale ? "" : `  ${gray("💦")}${sx.squirtCount || 0}`;
               out.push(tr(`  ${gray("── 自身 ──")}`, "gear"));
-              out.push(tr(`  🔥 ${compact(sx.arousal || 0)}  💓 ${compact(sx.desire || 0)}  💫 ${gray("高潮")}${sx.climaxCount || 0}${gray("次")}${selfExtra}`, "gear"));
+              out.push(tr(`  💥 ${ejacBar} ${gray("高潮")}${sx.climaxCount || 0}${gray("次")}${selfExtra}`, "gear"));
+              out.push(tr(`  🔥 ${compact(sx.arousal || 0)}  💓 ${compact(sx.desire || 0)}`, "gear"));
             }
             if (partner) {
               const psx = partner.sx;
@@ -1587,8 +1985,12 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                   const fd = require("./engine/state.ts").findCharacter(partner.name);
                   pnrMale = (fd?.gender || "").includes("男") && !(fd.gender || "").includes("女");
                 } catch {}
+                const pnrProf = psx.profile || {};
+                const pnrTh = Math.max(55, (pnrProf.climaxThreshold || 65)) + (({ "未开发": 10, "生涩": 10, "熟练": 0, "深度开发": -10 } as Record<string,number>)[pnrProf.experience] || 0);
+                const pnrEjacBar = sq(psx.arousal || 0, pnrTh, 7);
                 const pnrExtra = pnrMale ? "" : `  ${gray("💦")}${psx.squirtCount || 0}`;
-                out.push(tr(`  🔥 ${compact(psx.arousal || 0)}  💓 ${compact(psx.desire || 0)}  💫 ${gray("高潮")}${psx.climaxCount || 0}${gray("次")}${pnrExtra}`, "gear"));
+                out.push(tr(`  💥 ${pnrEjacBar} ${gray("高潮")}${psx.climaxCount || 0}${gray("次")}${pnrExtra}`, "gear"));
+                out.push(tr(`  🔥 ${compact(psx.arousal || 0)}  💓 ${compact(psx.desire || 0)}`, "gear"));
               } else {
                 out.push(tr(gray(`  （无 SexState —— 引擎尚未为该 NPC 生成性状态）`), "gear"));
               }
@@ -1650,7 +2052,21 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const slot = eqSlots[i]!;
                 const item = eq[slot.id];
                 const stIcon = item ? (item.state === "ruined" ? " 💀" : item.state === "damaged" ? " ⚠️" : "") : "";
-              const disp = item ? (item.name || item) + stIcon : gray("—");
+              let eqHint = "";
+              if (item) {
+                if (item.damage?.dice) eqHint = ` ${C.G}${item.damage.dice}${item.damage.damageType ? " " + item.damage.damageType : ""}${C.r}`;
+                else if (item.effects?.length) {
+                  const bits = item.effects.slice(0, 2).map((e: any) => {
+                    if (e.type === "ac") return `AC${e.value > 0 ? "+" : ""}${e.value}`;
+                    if (e.type === "attribute") return `${e.attr || ""}${e.value > 0 ? "+" : ""}${e.value}`;
+                    if (e.type === "pocket") return `口袋Lv${e.value || 1}`;
+                    if (e.type === "warmth") return "防寒";
+                    return e.type;
+                  }).filter(Boolean);
+                  if (bits.length) eqHint = ` ${gray(bits.join("·"))}`;
+                }
+              }
+              const disp = item ? (item.name || item) + stIcon + eqHint : gray("—");
                 const cur = _subCursor === i ? hi("▶") : " ";
                 const lbl = "  " + slot.label;
                 out.push(tr(` ${cur} ${gray(padCol(lbl))} ${disp}`, "gear"));
@@ -1670,12 +2086,33 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               out.push(tr(`${C.M}|-[${C.r}${t.day_of_week || "?"}曜日${C.M}-${C.r}${gy}年${gm}月${gd}日${C.M}]${C.r}`));
             }
 
+            // 资金/声望/负重摘要行（常驻可见，三种状态）
+            const currWt = s.calcCurrentWeight(p.inventory || [], p.equipment || {});
+            const maxWt = s.calcMaxCarry(attrs.力量 ?? 10);
+            const over = s.isOverburdened(currWt, maxWt);
+            const wanted = p.reputation ? Object.entries(p.reputation as Record<string,number>).filter(([k]) => /警|通缉|wanted|cop/i.test(k)) : [];
+            const repKeys0 = Object.keys(p.reputation || {});
+            const topReps = repKeys0.filter(k => Math.abs(p.reputation?.[k] ?? 0) >= 3 || (p.reputation?.[k] ?? 0) < 0).slice(0, 3);
+            const repStr = wanted.length > 0 && (p.reputation as any)?.[wanted[0]![0]] > 0
+              ? `${C.d}通缉[${wanted[0]![0]}]${C.r}`
+              : topReps.length > 0
+                ? topReps.map(k => `${(p.reputation?.[k] ?? 0) >= 0 ? C.G : C.d}${k}${(p.reputation?.[k] ?? 0) >= 0 ? "+" : ""}${p.reputation?.[k]}${C.r}`).join(gdot)
+                : "";
+            const wtStr = over.overloaded ? `${C.d}⚠ 超重 ${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg${C.r}`
+              : over.encumbered ? `${C.Y}${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg${C.r}`
+              : gray(`${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg`);
+            const fundStr = `${C.Y}💰 ${C.r}¥${(p.funds ?? 0).toLocaleString()}`;
+            const parts: string[] = [fundStr];
+            if (repStr) parts.push(repStr);
+            parts.push(wtStr);
+            out.push(tr(parts.join(`  ${gdot}  `)));
+            out.push(tr(""));
+
             // 角色信息竖排
             const identity = p.public_identity || p.memberships?.[0]?.title || p.social_class || "";
-            out.push(tr(kv("姓名", p.name || "你")));
-            out.push(tr(kv("性别", p.gender || "?")));
-            out.push(tr(kv("年龄", `${p.age ?? t?.player_age ?? "?"}岁`)));
-            if (identity) out.push(tr(kv("身份", identity)));
+            const focusId = sel("identity");
+            const idVal = [p.name, p.gender, `${p.age ?? t?.player_age ?? "?"}岁`, identity].filter(Boolean).join(gdot);
+            out.push(tr(entry(focusId, '身份', idVal, gray('›'))));
             const tt = p.titles || [];
             const focusTitles = sel("titles");
             out.push(tr(entry(focusTitles, '称号', tt.length ? `「${tt[tt.length-1]}」${tt.length > 1 ? gray(` +${tt.length-1}`) : ""}` : dim('尚未获得'), gray('›'))));
@@ -1684,6 +2121,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             const repSum = repKeys.slice(0,3).map(k => `${k}${(rep[k]??0)>=0 ? `${C.G}+${rep[k]}${C.r}` : `${C.d}${rep[k]}${C.r}`}`).join(gdot);
             const focusRep = sel("reputation");
             out.push(tr(entry(focusRep, '声望', repKeys.length ? repSum : dim('默默无闻'), gray('›'))));
+            const relCount = Object.keys(p.relationships || {}).length;
+            const relSum = relCount ? `${relCount}人` : dim("无");
+            const focusRels = sel("relations");
+            out.push(tr(entry(focusRels, '关系', relSum, gray('›'))));
             out.push(tr(""));
 
             // 等级
@@ -1743,8 +2184,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(entry(focusSkills, '技能', skSum, gray('›')), 'gear'));
 
             // 背包——行可聚焦（Enter→首个物品），每件可选。摘要按类型分类计数
-            const bagHeaderIdx = _focusItems.length;
-            _focusItems.push({ type: "bag", item: inv[0] || null, index: -1 }); // -1=背包头
+            const bagHeaderIdx = _focusItems.findIndex(f => f.type === "bag" && f.index === -1);
             const focusBag = _panelMode && _cursor === bagHeaderIdx;
             const cats: Record<string, number> = {};
             for (const i2 of inv) {
@@ -1752,30 +2192,45 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               cats[t2] = (cats[t2] || 0) + 1;
             }
             const catSum = Object.entries(cats).map(([k, v]) => `${k}${v}`).join(gdot) || "0件";
+            const sortModes = ["类型","名称","重量","最近"];
+            const sortHint = `排序: ${sortModes.map((m,i) => i === _sortMode ? `${C.O}[${m}]${C.r}` : gray(m)).join(" ")}`;
             out.push(tr(entry(focusBag, '背包', catSum, inv.length>0 ? gray('›') : ''), 'gear'));
+            out.push(tr(`      ${gray("←→切")} ${sortHint}`, 'gear'));
             for (let i = 0; i < Math.min(inv.length, 6); i++) {
+              const bi = inv[i];
               const bagFocusIdx = _focusItems.findIndex(f => f.type === "bag" && f.index === i);
               const on = _panelMode && _cursor === bagFocusIdx;
-              const bi = inv[i];
               const stIcon = bi.state === "ruined" ? "💀" : bi.state === "damaged" ? "⚠️" : "";
               const meta = `${gray(`[${(bi.type || "??").slice(0, 2)}]`)} ${bi.name} ${gray(`${bi.weight ?? 0}kg`)}${stIcon}`;
               out.push(tr(`      ${cur(on)} ${gray(String.fromCodePoint(0x2460 + i))} ${meta}`, "gear", on));
             }
 
-            // 载具 / 队伍
+            // 载具 / 经济 / 战斗 / 队伍
             const focusVehicle = sel("vehicle");
             if (p.vehicle) {
               out.push(tr(entry(focusVehicle, '载具', '🚲'+p.vehicle.name, gray('×'+(p.vehicle.speedMul||1.5))), 'gear'));
             }
+            const focusEconomy = sel("economy");
+            out.push(tr(entry(focusEconomy, '经济', `🏪商店${gdot}🎲博弈${gdot}🏠房产`, gray('›')), 'gear'));
+            const focusCombat = sel("combat");
+            const wpn = p.equipment?.right_hand || p.equipment?.left_hand;
+            const wpnStr = wpn?.damage ? `${wpn.name}(${wpn.damage.dice||"?"})` : "徒手";
+            out.push(tr(entry(focusCombat, '战斗', `❤${hp}/${hpM}${gdot}AC${ac}${gdot}${wpnStr}`, gray('›')), 'gear'));
+            const focusWorld = sel("world");
+            const wsHint = gs?.worldState ? `${gs.worldState.regime?.slice(0,6)||"?"}${gdot}繁荣${gs.worldState.prosperity??0}` : gray("?");
+            out.push(tr(entry(focusWorld, '世界', wsHint, gray('›')), 'gear'));
             const pty = p.party || [];
             const focusParty = sel("party");
             out.push(tr(entry(focusParty, '队伍', pty.length ? pty.map(n => '👤'+n).join(gdot) : dim('（无队友）'), gray('›')), 'gear'));
             out.push(tr(""));
 
-            // 钱/负重 + 伤口 + 情报摘要行（警报红色前置常驻可见，Enter→info-detail）
-            out.push(tr(`  ${gold(`¥${p.funds ?? 0}`)}${gdot}💤${p.fatigue ?? 0}${gdot}${(p.weight ?? 0).toFixed(1)}kg`));
+            // 伤口 + 隐藏状态 + 情报摘要行
             if ((p.wounds || []).length > 0) {
               out.push(tr(gray(`  伤口: ${p.wounds.map((w:any) => w.name || w.bodyPart || "轻伤").join("、")}`)));
+            }
+            if (p.concealed || p.hiding_in) {
+              const hidingSpot = p.hiding_in ? ` · ${p.hiding_in}` : "";
+              out.push(tr(gray(`  🥷 躲藏中${hidingSpot}`)));
             }
             {
               const flags2: any = gs.flags || {};
@@ -1793,12 +2248,18 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 if (ev) calBit = `📅${String(ev).slice(0, 10)}`;
               } catch {}
               const segs2: string[] = [];
+              const hooks = gs.active_hooks || [];
+              if (hooks.length) segs2.push(`${C.d}🪝${hooks.length}${C.r}`);
               if (alertBits.length) segs2.push(`${C.d}${alertBits.join(" ")}${C.r}`);
               segs2.push(`📋任务${actives.length}`);
               if (calBit) segs2.push(calBit);
               const infoIdx = _focusItems.findIndex(f => f.type === "infoline");
               const onInfo = _panelMode && _cursor === infoIdx;
               out.push(tr(entry(onInfo, '情报', segs2.join(gdot), gray('›')), 'info'));
+              const tlogIdx = _focusItems.findIndex(f => f.type === "turnlog");
+              const onTlog = _panelMode && _cursor === tlogIdx;
+              const tlogN = (gs.turnLog || []).length;
+              out.push(tr(entry(onTlog, '台账', tlogN ? `${tlogN}回合` : dim("无记录"), gray('›')), 'info'));
             }
           }
         }
@@ -1916,10 +2377,43 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const lh = eq?.left_hand?.name || npc?.left_hand || "—";
               const rh = eq?.right_hand?.name || npc?.right_hand || "—";
               const cash = npc?.funds ?? "?";
+              const wealth = npc?.wealth ?? 0;
               const bagItems = (npc?.inventory || []).slice(0, 5).map((x: any) => x?.name || x).join("·") || "—";
               out.push(tr(`  ─ 携带 ─`));
-              out.push(tr(`  现金 ¥${cash} · 右:${rh} 左:${lh}`));
+              out.push(tr(`  现金 ¥${cash} · 资产 ¥${wealth.toLocaleString()} · 右:${rh} 左:${lh}`));
               out.push(tr(`  背包: ${bagItems}`));
+              // 服装 + NPC→NPC 关系（Lv2+）
+              const outfit = npc?.currentOutfit;
+              const npcRels = npc?.npcRelationships;
+              if (outfit || (npcRels && Object.keys(npcRels).length > 0)) {
+                out.push(tr(`  ─ 社交 ─`));
+                if (outfit) out.push(tr(`  穿着: ${outfit}`));
+                if (npcRels && Object.keys(npcRels).length > 0) {
+                  const relStrs = Object.entries(npcRels).slice(0, 4).map(([n2, r2]: any) => {
+                    const tone = r2?.tone ? ` (${r2.tone})` : "";
+                    return `${n2}:${r2?.stage||"?"}${tone}`;
+                  });
+                  out.push(tr(`  对他者: ${relStrs.join(gdot)}`));
+                }
+              }
+              // NPC 技能+能力（Lv3+）
+              if (il >= 3) {
+                const npcSk = npc?.skills || {};
+                const npcAb = npc?.abilities || {};
+                const skNames = Object.keys(npcSk).filter(k => (npcSk[k]?.level ?? npcSk[k] ?? 0) > 0);
+                const abNames = Object.keys(npcAb).filter(k => (npcAb[k]?.level ?? npcAb[k] ?? 0) > 0);
+                if (skNames.length || abNames.length) {
+                  out.push(tr(`  ─ 能力 ─`));
+                  if (skNames.length) out.push(tr(`  技能: ${skNames.map(k => `${k}Lv${npcSk[k]?.level ?? npcSk[k]}`).join(gdot)}`));
+                  if (abNames.length) {
+                    const abStrs = abNames.map(k => {
+                      const cd = npcAb[k]?.cooldownRemaining ?? 0;
+                      return `${k}Lv${npcAb[k]?.level ?? "?"}${cd > 0 ? ` ${C.d}CD${cd}${C.r}` : ""}`;
+                    });
+                    out.push(tr(`  能力: ${abStrs.join(gdot)}`));
+                  }
+                }
+              }
             }
             // 属性（Lv3+）
             if (il >= 3 && Object.keys(attrs).length > 0) {
@@ -1960,6 +2454,47 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 out.push(tr(`  父亲: ${pd.father||"?"} · 受孕日: 第${pd.day_conceived||"?"}天`));
                 out.push(tr(`  阶段: ${stageLabel[pd.stage] || pd.stage || "?"}`));
               }
+              // illness / injury
+              const ill = npcState.lifeEvents.find((e: any) => e.type === "illness" || e.type === "injury");
+              if (ill) {
+                const d = ill.data || {};
+                out.push(tr(`  ── 🤒 疾病/受伤 ──`));
+                out.push(tr(`  类型: ${d.illness||d.name||"?"} · 严重度: ${d.severity||"?"} (${d.severityValue||"?"}/10)`));
+                if (d.startedAt) out.push(tr(`  起始: 第${d.startedAt}天`));
+                if (d.symptoms) out.push(tr(`  症状: ${d.symptoms}`));
+              }
+              // conflict
+              const cnf = npcState.lifeEvents.find((e: any) => e.type === "conflict" || e.type === "feud");
+              if (cnf) {
+                const d = cnf.data || {};
+                out.push(tr(`  ── ⚔️ 冲突/纠纷 ──`));
+                out.push(tr(`  对象: ${d.target||"?"} · 原因: ${d.cause||"?"}`));
+                out.push(tr(`  状态: ${d.phase||d.status||"?"} · 开始: ${cnf.startedAt ? "第"+cnf.startedAt+"天" : "?"}`));
+                if (d.escalationRisk) out.push(tr(`  升级风险: ${d.escalationRisk}`));
+              }
+            }
+            // 驱动力 + 当前目标（Lv2+）
+            if (il >= 2 && npcState) {
+              const drives = npcState.current_drives || [];
+              const goal = npcState.current_goal;
+              if (drives.length || goal) {
+                out.push(tr(`  ─ 内面 ─`));
+                if (drives.length) out.push(tr(`  驱动力: ${drives.join(" · ")}`));
+                if (goal) out.push(tr(`  当前目标: ${goal}`));
+              }
+            }
+            // 组织+日程（Lv2+）
+            if (il >= 2) {
+              const sched = npcState?.scheduleGroup;
+              if (sched) out.push(tr(`  日程: ${sched}`));
+              const npcMems = npcState?.memberships || [];
+              if (npcMems.length) {
+                const memStrs = npcMems.map((m:any) => `${m.orgId||"?"}:${m.role||"?"} R${m.rank??"?"}`);
+                out.push(tr(`  组织: ${memStrs.join(gdot)}`));
+              }
+              // pending override
+              const po = npcState?.pendingOverride;
+              if (po) out.push(tr(`  ⚡ 临时行动: ${po.action} @ ${po.location}（${po.reason}）`));
             }
           }
           // 三级状态：恋爱子菜单
@@ -2088,6 +2623,19 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 out.push(tr(` ${curMark} ${padG(it.name)} ${C.M}│${C.r} ${gray(`步行${it.mins}分`)}${slow}`, "nav", on));
               }
             }
+            // 已探索地点段
+            const knownLocs = p.known_locations || [];
+            if (knownLocs.length > 0) {
+              out.push(tr(""));
+              out.push(tr(gray(`── 🗺️ 已探索 (${knownLocs.length}) ──`), "nav"));
+              const shown = knownLocs.slice(0, 8);
+              for (const kl of shown) {
+                let area = "";
+                try { const s0 = require("./engine/state.ts"); const nv = s0.getLocationNav(kl); area = nv?.breadcrumb?.slice(-2).join("·") || ""; } catch {}
+                out.push(tr(`  ${gray("·")} ${kl}${area ? "  " + gray(area) : ""}`, "nav"));
+              }
+              if (knownLocs.length > 8) out.push(tr(gray(`  … 还有 ${knownLocs.length - 8} 处`), "nav"));
+            }
           }
           // 家具详情子面板
           else if (_submenu === "furniture-detail" && _selectedTarget) {
@@ -2116,14 +2664,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const containers = st.getContainersAt ? st.getContainersAt(p.location, p.gridPos) : [];
               const furnContainers = containers.filter((c: any) => c.ownerType === "furniture" && (c.ownerId === ft.name || (c.ownerId && c.ownerId.startsWith(ft.name + "·"))));
               if (furnContainers.length > 0) {
-                out.push(tr(`  ── 容器 ──`));
+                out.push(tr(gray("  ── 容器 ──")));
                 const offset = ftActions.length;
                 for (let i = 0; i < furnContainers.length; i++) {
                   const fc = furnContainers[i];
                   const locked = !!(fc.def?.locked);
-                  const itemList = (fc.items || []).map((x: any) => x.name).join("·") || "空";
+                  const itemNames = (fc.items || []).map((x: any) => x.name).join("·") || "空";
                   const subName = (fc.ownerId && fc.ownerId.includes("·")) ? fc.ownerId.split("·")[1] : "储物";
-                  out.push(tr(`  ${_subCursor === offset + i ? "▶" : " "} ${String.fromCodePoint(0x2460+offset+i)} ${locked?"🔒":"📂"} ${subName} ${itemList}`));
+                  const cnt = (fc.items || []).length;
+                  const cntStr = cnt ? `${cnt}件` : "空";
+                  out.push(tr(`  ${_subCursor === offset + i ? "▶" : " "} ${String.fromCodePoint(0x2460+offset+i)} ${locked?"🔒":"📂"} ${subName} ${gray(cntStr)} ${itemNames ? gray("·") + " " + itemNames : ""}`));
                 }
                 (_selectedTarget as any)._furnContainers = furnContainers;
               }
@@ -2146,6 +2696,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             }
 
             out.push(tr(gray(`  📏 ${rm.width||"?"}m×${rm.height||"?"}m · 你在(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}) · ${(rm.atmosphere||"普通").slice(0, 25)}`)));
+            if (rm.controlled_by) {
+              try {
+                const s0 = require("./engine/state.ts");
+                const orgs = s0.gameState?.organizations || {};
+                const org = orgs[rm.controlled_by];
+                if (org) out.push(tr(gray(`  🏛️ 此区域由 ${org.name || rm.controlled_by} 控制`)));
+              } catch {}
+            }
             out.push(tr(head("家具")));
             let fCount = 0;
             for (let i = 0; i < _focusItems.length; i++) {
@@ -2369,6 +2927,22 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         // 列表可能在动作后变短（使用/丢弃/装备），光标越界一律夹回
         if (_cursor >= _focusItems.length) _cursor = Math.max(0, _focusItems.length - 1);
 
+        // 确认对话框模式：拦截所有按键，只处理确认/取消
+        if (_confirmMode) {
+          if (d === "\x1b" || d === "q") { _confirmMode = null; _subCursor = 0; return true; }
+          if (d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB") { _subCursor = _subCursor === 0 ? 1 : 0; return true; }
+          const isEnter2 = d === "\r" || d === "\n";
+          const num2 = /^[12]$/.test(d) ? parseInt(d) - 1 : -1;
+          if (isEnter2 || num2 >= 0) {
+            const choice = isEnter2 ? _subCursor : num2;
+            if (choice === 0 && _confirmMode.cb) { _confirmMode.cb(); }
+            _confirmMode = null;
+            _subCursor = 0;
+            return true;
+          }
+          return true; // 拦截所有其他按键
+        }
+
         // 如果是子菜单内部输入，单独消费
         if (_panelMode && _submenu) {
           // ESC/q 返回上一级
@@ -2398,8 +2972,13 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               _subCursor = _infoSecIdx;
             } else if (_submenu === "vehicle-detail" || _submenu === "furniture-detail" || _submenu === "equip-detail" ||
                        _submenu === "body-detail" || _submenu === "skills-detail" || _submenu === "party-detail" ||
-                       _submenu === "reputation-detail" || _submenu === "titles-detail" || _submenu === "sex-detail" ||
-                       _submenu === "go-nav" || _submenu === "info-detail") {
+                       _submenu === "reputation-detail" || _submenu === "relations-detail" || _submenu === "titles-detail" || _submenu === "sex-detail" ||
+                       _submenu === "identity-detail" ||
+                       _submenu === "go-nav" || _submenu === "info-detail" || _submenu === "economy-detail" || _submenu === "combat-detail" ||
+                       _submenu === "world-detail" || _submenu === "phone-main" ||
+                       _submenu === "phone-messages" ||
+                       _submenu === "turnlog-detail" ||
+                       _submenu === "container-pick") {
               _submenu = null;
               _subCursor = 0;
             } else if (_submenu === "settlement-detail") {
@@ -2521,7 +3100,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 if (_selectedTarget.affection < reqAff) {
                   ctx?.ui?.notify(`与${_selectedTarget.name}的关系不足以进行此接触(需好感度≥${reqAff})`, "warning");
                 } else {
-                  _doTouch(gs, _selectedTarget.name);
+                  _doTouch(gs, _selectedTarget.name, idx);
                   _submenu = null;
                   _panelMode = false;
                 }
@@ -2533,8 +3112,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
           // 观察/身体/技能/队伍/声望/称号/Sex/情报单段 子面板（只读，仅 Esc 退出）
           if (_submenu === "npc-observe" || _submenu === "body-detail" || _submenu === "skills-detail" ||
-              _submenu === "party-detail" || _submenu === "reputation-detail" || _submenu === "titles-detail" ||
-              _submenu === "sex-detail" || _submenu === "settlement-detail" || _submenu === "info-section") {
+              _submenu === "party-detail" || _submenu === "reputation-detail" || _submenu === "relations-detail" || _submenu === "titles-detail" ||
+              _submenu === "identity-detail" ||
+              _submenu === "sex-detail" || _submenu === "settlement-detail" || _submenu === "info-section" ||
+              _submenu === "economy-detail" || _submenu === "combat-detail" || _submenu === "world-detail" ||
+              _submenu === "turnlog-detail") {
             // 消费所有方向键和回车，防止漏到外层
             if (d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB" ||
                 d === "\x1b[C" || d === "\x1bOC" || d === "\x1b[D" || d === "\x1bOD" ||
@@ -2599,13 +3181,20 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 pushText(`我对 ${n} 抱拳行礼：「请赐教。」${n}摆出了架势。切磋开始！`);
                 ctx?.ui?.notify(`⚔ 与${n}切磋武艺`, "info");
               } else if (idx === 1) {
-                // 死斗
-                const rel = gs.player.relationships[n] || (gs.player.relationships[n] = { stage: "熟人", affection: 0, history: [], notes: "" });
-                rel.affection = Math.max(0, (rel.affection || 0) - 50);
-                rel.stage = "死敌";
-                gs.mode = "rpg";
-                pushText(`我向 ${n} 发起了死斗！一场你死我活的战斗即将展开……`);
-                ctx?.ui?.notify(`💀 向${n}发起死斗`, "warning");
+                // 死斗 → 确认对话框
+                _confirmMode = { action: "deathmatch", item: n, cb: () => {
+                  const rel = gs.player.relationships[n] || (gs.player.relationships[n] = { stage: "熟人", affection: 0, history: [], notes: "" });
+                  rel.affection = Math.max(0, (rel.affection || 0) - 50);
+                  rel.stage = "死敌";
+                  gs.mode = "rpg";
+                  require("./engine/state.ts").saveState();
+                  pushText(`我向 ${n} 发起了死斗！一场你死我活的战斗即将展开……`);
+                  ctx?.ui?.notify(`💀 向${n}发起死斗`, "warning");
+                  _submenu = null;
+                  _panelMode = false;
+                }};
+                _subCursor = 0;
+                return true;
               }
               require("./engine/state.ts").saveState();
               _submenu = null;
@@ -2677,7 +3266,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               try {
                 const s2 = require("./engine/state.ts");
                 const { interactFurniture } = require("./engine/furniture.ts");
-                const rm2 = s2.getRoom(p.location);
+                const rm2 = s2.getRoom(gs.player.location);
                 if (idx < ftActions.length) {
                   // 执行家具动作（async 用 void 触发，handleInput 是同步的）
                   const action = ftActions[idx];
@@ -2693,7 +3282,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                     ctx?.ui?.notify("操作失败", "error");
                   });
                 } else {
-                  // 容器操作
+                  // 容器 → 进入逐物选择子面板
                   const cIdx = idx - ftActions.length;
                   const container = ftContainers[cIdx];
                   if (!container) return false;
@@ -2701,19 +3290,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                     ctx?.ui?.notify("容器已锁", "warning");
                     return true;
                   }
-                  // 简单取物：列出物品 → 选一个取
                   if (!container.items?.length) {
                     ctx?.ui?.notify("容器是空的", "info");
                     return true;
                   }
-                  // 取第一件物品（简化：以后可以加子菜单选）
-                  const item = container.items[0];
-                  const transferFn = s2.transferBetweenContainers;
-                  if (transferFn) {
-                    const r = transferFn(container.id, "backpack", item.name);
-                    s2.saveState();
-                    ctx?.ui?.notify(r, "info");
-                  }
+                  (_selectedTarget as any)._containerItems = container.items;
+                  (_selectedTarget as any)._containerId = container.id;
+                  (_selectedTarget as any)._containerName = (container.ownerId && container.ownerId.includes("·")) ? container.ownerId.split("·")[1] : "储物";
+                  _submenu = "container-pick";
+                  _subCursor = 0;
+                  return true;
                 }
               } catch(e: any) {
                 console.error("[furniture] 操作异常:", e?.message || e);
@@ -2721,6 +3307,124 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               }
               // 执行后退出子菜单
               _submenu = null;
+              return true;
+            }
+            return false;
+          }
+
+          // 容器逐物选择控制
+          if (_submenu === "container-pick") {
+            const cpItems = (_selectedTarget as any)?._containerItems || [];
+            const total = cpItems.length + 1; // +1 = 全部取出
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + total - 1) % total; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % total; return true; }
+            if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "9")) {
+              const idx = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
+              const ctx = getCtx();
+              const cid = (_selectedTarget as any)?._containerId;
+              if (idx === cpItems.length) {
+                // 全部取出
+                if (!cpItems.length) { ctx?.ui?.notify("容器是空的", "info"); return true; }
+                try {
+                  const s2 = require("./engine/state.ts");
+                  const tf = s2.transferBetweenContainers;
+                  let ok = 0;
+                  for (const it of cpItems) {
+                    if (tf) { const r = tf(cid, "backpack", it.name); if (typeof r === "string" && r.includes("转移成功")) ok++; }
+                  }
+                  s2.saveState();
+                  ctx?.ui?.notify(`全部取出 ${ok}/${cpItems.length} 件`, "info");
+                } catch (e: any) { console.error("[container-pick] 全部取出失败:", e); ctx?.ui?.notify("操作异常", "error"); }
+              } else {
+                if (idx < 0 || idx >= cpItems.length) return false;
+                const item = cpItems[idx];
+                try {
+                  const s2 = require("./engine/state.ts");
+                  const tf = s2.transferBetweenContainers;
+                  const r = tf ? tf(cid, "backpack", item.name) : "引擎不可用";
+                  s2.saveState();
+                  ctx?.ui?.notify(r, "info");
+                } catch (e: any) { console.error("[container-pick] 取物失败:", e); ctx?.ui?.notify("操作异常", "error"); }
+              }
+              _submenu = "furniture-detail";
+              _subCursor = 0;
+              return true;
+            }
+            return false;
+          }
+
+          // 手机消息列表控制
+          if (_submenu === "phone-messages") {
+            let pd: any = null;
+            try { const { getPlayerPhoneData } = require("../engine/phone.ts"); pd = getPlayerPhoneData(gs); } catch {}
+            const msgs: any[] = pd?.messages || [];
+            const grouped: [string, {last:any;unread:number}][] = [];
+            const seen = new Map<string, {last:any;unread:number}>();
+            for (const m of msgs) {
+              const key = m.from === gs.player.name ? m.to : m.from;
+              const e = seen.get(key);
+              if (!e || m.timestamp > e.last.timestamp) seen.set(key, {last:m, unread:(e?.unread||0)+(m.read?0:1)});
+              else if (!m.read && m.to === gs.player.name) seen.set(key, {last:m, unread:e.unread+1});
+            }
+            // mark all as read
+            for (const m of msgs) if (!m.read) m.read = true;
+            const entries = Array.from(seen.entries());
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + entries.length - 1) % entries.length; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % entries.length; return true; }
+            if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "9")) {
+              const idx = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
+              if (idx >= 0 && idx < entries.length) {
+                const [name] = entries[idx]!;
+                const thread = msgs.filter((m:any) => m.from === name || m.to === name).sort((a:any,b:any) => (a.timestamp||"").localeCompare(b.timestamp||""));
+                if (thread.length) {
+                  // Show thread summary via notify + pushText as quick reply entry
+                  const lastMsgs = thread.slice(-5).map((m:any) => `${m.from===gs.player.name?"我":m.from}: ${m.text.slice(0,25)}`).join(" | ");
+                  pushText(`我打开与 ${name} 的对话。`);
+                  ctx?.ui?.notify(`${name} (${thread.length}条): ${lastMsgs}`, "info");
+                }
+                _submenu = null;
+                _subCursor = 0;
+                return true;
+              }
+            }
+            return false;
+          }
+
+          // 手机主菜单控制
+          if (_submenu === "phone-main") {
+            const apps = ["messages","calllog","contacts","sns","photos"];
+            const total = apps.length + 1; // + close
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + total - 1) % total; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % total; return true; }
+            if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "9")) {
+              const idx = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
+              if (idx === apps.length) { _submenu = "item-detail"; _subCursor = 0; return true; } // close
+              if (idx < 0 || idx >= apps.length) return false;
+              const ctx = getCtx();
+              const appId = apps[idx];
+              // 暂时全部走 pushText + notify（完整消息/对话面板留后续细化）
+              if (appId === "messages") {
+                _submenu = "phone-messages";
+                _subCursor = 0;
+                return true;
+              } else if (appId === "calllog") {
+                const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); return getPlayerPhoneData(gs); } catch { return null; } })();
+                const cls = pd?.callLog || [];
+                if (cls.length) { pushText(`我翻看通话记录。`); ctx?.ui?.notify(`最近通话：${cls.slice(-3).map((c:any)=>`${c.caller}→${c.callee}(${c.status})`).join(" | ")}`,"info"); }
+                else { ctx?.ui?.notify("没有通话记录", "info"); }
+              } else if (appId === "contacts") {
+                const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); const pdd = getPlayerPhoneData(gs); if (pdd) { const { syncContactsFromRelationships } = require("../engine/phone.ts"); syncContactsFromRelationships(gs, pdd); } return pdd; } catch { return null; } })();
+                if (pd?.contacts?.length) { ctx?.ui?.notify(`通讯录 ${pd.contacts.length} 人：${pd.contacts.slice(0,5).map((c:any)=>c.name).join("、")}`,"info"); }
+                else { ctx?.ui?.notify("通讯录为空（好感≥20的NPC自动添加）", "info"); }
+              } else if (appId === "sns") {
+                const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); return getPlayerPhoneData(gs); } catch { return null; } })();
+                const posts = pd?.snsPosts || [];
+                if (posts.length) { ctx?.ui?.notify(`mixi 最近 ${Math.min(3,posts.length)} 条: ${posts.slice(-3).map((p:any)=>p.author+":"+p.text.slice(0,15)).join(" | ")}`,"info"); }
+                else { ctx?.ui?.notify("mixi 时间线为空", "info"); }
+              } else if (appId === "photos") {
+                const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); return getPlayerPhoneData(gs); } catch { return null; } })();
+                ctx?.ui?.notify(`相册 ${pd?.photos?.length || 0} 张`, "info");
+              }
               return true;
             }
             return false;
@@ -2817,7 +3521,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + n - 1) % n; return true; }
             if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % n; return true; }
             const isEnterK = d === "\r" || d === "\n";
-            const numK = /^[1-6]$/.test(d) ? parseInt(d) - 1 : -1;
+            const numK = /^[1-7]$/.test(d) ? parseInt(d) - 1 : -1;
             if (isEnterK || numK >= 0) {
               _infoSecIdx = isEnterK ? _subCursor : numK;
               _submenu = "info-section";
@@ -2866,40 +3570,54 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 s.saveState();
                 ctx?.ui?.notify(`使用了 ${itemName}，HP ${p2.hp.current}/${p2.hp.max}`, "info");
               } else if (act.id === "equip") {
-                // 装备：原槽有物先回背包（与 tools/action/equip_item.ts 装备逻辑一致）
+                // 装备：原槽有物先回背包。mount 槽调引擎 mountVehicle 以正确设 p.vehicle。
                 const idx = p2.inventory.findIndex((i: any) => i.name === itemName);
                 if (idx < 0) { ctx?.ui?.notify(`背包里没有 ${itemName}`, "warning"); return true; }
                 const target = p2.inventory[idx];
                 const slot = target.slot;
-                if (p2.equipment[slot]) p2.inventory.push(p2.equipment[slot]);
-                p2.equipment[slot] = target;
-                p2.inventory.splice(idx, 1);
-                s.saveState();
-                ctx?.ui?.notify(`装备了 ${itemName}`, "info");
+                if (!slot) { ctx?.ui?.notify(`${itemName} 没有装备槽位`, "warning"); return true; }
+                if (slot === "mount") {
+                  const r = s.mountVehicle(itemName);
+                  ctx?.ui?.notify(r, r.includes("骑上") ? "info" : "warning");
+                } else {
+                  if (p2.equipment[slot]) p2.inventory.push(p2.equipment[slot]);
+                  p2.equipment[slot] = target;
+                  p2.inventory.splice(idx, 1);
+                  s.saveState();
+                  ctx?.ui?.notify(`装备了 ${itemName}`, "info");
+                }
+              } else if (act.id === "open_phone") {
+                _submenu = "phone-main";
+                _subCursor = 0;
+                return true;
               } else if (act.id === "discard") {
-                // 丢弃：装备来源先落回背包，再优先投进相邻家具容器（守恒）。
-                // 注意：禁止以 floor-* 为 transfer 目标——transferBetweenContainers 的
-                // "加入目标"分支没实现 room（state.ts:2378-2383），会 splice 掉物品不落地。
-                // 地板容器补全留待引擎任务；无容器时 splice 与旧 /bag 一致。
-                if (_selectedTarget.slotId && p2.equipment[_selectedTarget.slotId]) {
-                  p2.inventory.push(p2.equipment[_selectedTarget.slotId]);
-                  p2.equipment[_selectedTarget.slotId] = null;
-                }
-                let done = "";
-                try {
-                  const containers = s.getContainersAt(p2.location, p2.gridPos || undefined) || [];
-                  const furn = containers.find((c: any) => c.ownerType === "furniture" && !c.def?.locked);
-                  if (furn) {
-                    const r = s.transferBetweenContainers("backpack", furn.id, itemName);
-                    if (typeof r === "string" && r.includes("转移成功")) done = `已把 ${itemName} 丢进 ${furn.ownerId}`;
+                // 弹出确认对话框
+                _confirmMode = { action: "discard", item: it, cb: () => {
+                  if (_selectedTarget.slotId && p2.equipment[_selectedTarget.slotId]) {
+                    p2.inventory.push(p2.equipment[_selectedTarget.slotId]);
+                    p2.equipment[_selectedTarget.slotId] = null;
                   }
-                } catch (e) { console.error("[game-hud] 丢弃→容器失败", e); }
-                if (!done) {
-                  const idx = p2.inventory.findIndex((i: any) => i.name === itemName);
-                  if (idx >= 0) { p2.inventory.splice(idx, 1); s.saveState(); }
-                  done = `已丢弃 ${itemName}（散落无踪）`;
-                }
-                ctx?.ui?.notify(done, "warning");
+                  let done = "";
+                  try {
+                    const containers = s.getContainersAt(p2.location, p2.gridPos || undefined) || [];
+                    const furn = containers.find((c: any) => c.ownerType === "furniture" && !c.def?.locked);
+                    if (furn) {
+                      const r = s.transferBetweenContainers("backpack", furn.id, itemName);
+                      if (typeof r === "string" && r.includes("转移成功")) done = `已把 ${itemName} 丢进 ${furn.ownerId}`;
+                    }
+                  } catch (e) { console.error("[game-hud] 丢弃→容器失败", e); }
+                  if (!done) {
+                    const idx2 = p2.inventory.findIndex((i: any) => i.name === itemName);
+                    if (idx2 >= 0) { p2.inventory.splice(idx2, 1); s.saveState(); }
+                    done = `已丢弃 ${itemName}（散落无踪）`;
+                  }
+                  ctx?.ui?.notify(done, "warning");
+                  _submenu = null;
+                  _selectedTarget = null;
+                  _subCursor = 0;
+                }};
+                _subCursor = 0;
+                return true;
               }
               // 留在面板：纯引擎动作无正文可看，收面板会丢失反馈
               _submenu = null;
@@ -2919,12 +3637,21 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (d === "\r" || d === "\n" || d === "1" || d === "2") {
               const option = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
               const ctx = getCtx();
+              const vname = _selectedTarget?.name || "载具";
+              const isMounted = gs.player.vehicle?.name === vname;
               if (option === 0) {
-                pushText(`我骑上载具 ${_selectedTarget.name}。`);
-                ctx?.ui?.notify(`骑上${_selectedTarget.name}`, "info");
+                if (isMounted) {
+                  const r = s.dismountVehicle();
+                  ctx?.ui?.notify(r, "info");
+                  pushText(`我从 ${vname} 上下来了。`);
+                } else {
+                  const r = s.mountVehicle(vname);
+                  ctx?.ui?.notify(r, "info");
+                  pushText(`我骑上了 ${vname}。`);
+                }
               } else {
-                pushText(`检查 ${_selectedTarget.name} 车况。`);
-                ctx?.ui?.notify(`检查${_selectedTarget.name}车况：良好`, "info");
+                pushText(`我检查了一下 ${vname} 的状况。`);
+                ctx?.ui?.notify(`${vname}：状态良好`, "info");
               }
               _submenu = null;
               _panelMode = false;
@@ -2978,8 +3705,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           return true;
         }
 
-        // 面板激活中：← → 切 Tab（不在子菜单中时）
+        // 面板激活中：← → 切 Tab / 背包排序切模式
         if (!_submenu && (d === "\x1b[C" || d === "\x1bOC" || d === "\x1b[D" || d === "\x1bOD")) {
+          // 如果光标在背包头上，←→ 切换排序模式
+          const bagHeaderIdx = _focusItems.findIndex(f => f.type === "bag" && f.index === -1);
+          if (bagHeaderIdx >= 0 && _cursor === bagHeaderIdx) {
+            _sortMode = d === "\x1b[C" || d === "\x1bOC" ? (_sortMode + 1) % 4 : (_sortMode + 3) % 4;
+            return true;
+          }
           if (d === "\x1b[C" || d === "\x1bOC") _tab = (_tab + 1) % 4;
           else _tab = (_tab + 3) % 4;
           _cursor = 0;
@@ -3047,17 +3780,26 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             _loadInfoLines();
             return true;
           }
+          if (currentItem.type === "turnlog") { _submenu = "turnlog-detail"; _subCursor = 0; return true; }
 
           // 2.5 自身面板专用项（body/skills/party/reputation/titles）
-          if (currentItem.type === "body" || currentItem.type === "sex") {
-            _submenu = (gs.mode === "sex") ? "sex-detail" : "body-detail";
+          if (currentItem.type === "body") {
+            _submenu = "body-detail"; _subCursor = 0; return true;
+          }
+          if (currentItem.type === "sex") {
+            _submenu = "sex-detail"; _subCursor = 0; return true;
             _subCursor = 0;
             return true;
           }
           if (currentItem.type === "equip") { _submenu = "equip-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "skills") { _submenu = "skills-detail"; _subCursor = 0; return true; }
+          if (currentItem.type === "economy") { _submenu = "economy-detail"; _subCursor = 0; if (!_econLines) void _loadEconCombat(); return true; }
+          if (currentItem.type === "combat") { _submenu = "combat-detail"; _subCursor = 0; if (!_combatLines) void _loadEconCombat(); return true; }
+          if (currentItem.type === "world") { _submenu = "world-detail"; _subCursor = 0; if (!_worldLines) void _loadWorld(); return true; }
           if (currentItem.type === "party") { _submenu = "party-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "reputation") { _submenu = "reputation-detail"; _subCursor = 0; return true; }
+          if (currentItem.type === "relations") { _submenu = "relations-detail"; _subCursor = 0; return true; }
+          if (currentItem.type === "identity") { _submenu = "identity-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "titles") { _submenu = "titles-detail"; _subCursor = 0; return true; }
 
           // 3. 装备槽或背包项

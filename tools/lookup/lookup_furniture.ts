@@ -2,7 +2,7 @@ import { Type } from "typebox";
 
 export default {
     name: "lookup_furniture", label: "查家具与模板",
-    description: "浏览家具目录(templates)和场景模板(room_templates)。查有哪些可用、匹配关键词、或看某件的属性。",
+    description: "浏览家具目录(templates)和场景模板(room_templates)。查有哪些可用、匹配关键词、或看某件的属性。家具可放在floor或wall格子上——wall上的视为固定在墙上(黑板、时钟、灭火箱、广播喇叭、管道等)，交互同普通家具。",
     parameters: Type.Object({
       category: Type.Optional(Type.String({ description: "分类。furniture=查家具目录, room_template=查场景模板, all=都查" })),
       search: Type.Optional(Type.String({ description: "关键词。如'卫浴'、'拉面'、'床'。不传=列出分类概览" })),

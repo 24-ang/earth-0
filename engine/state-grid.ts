@@ -597,17 +597,19 @@ export function placeFurniture(x: number, y: number, itemName: string, furniture
   if (!room) return { success: false, reason: "当前位置没有地图" };
   if (x < 0 || x >= room.width || y < 0 || y >= room.height) return { success: false, reason: "坐标超出房间范围" };
   const cell = room.cells[y][x];
-  if (cell.type === "wall") return { success: false, reason: "不能放在墙上" };
   if (cell.type === "exit" || cell.type === "door") return { success: false, reason: "不能堵住门口" };
   if (cell.furniture) return { success: false, reason: `这里已经有${cell.furniture}了` };
-  const idx = gameState.player.inventory.findIndex((i: any) => i.name === itemName);
-  if (idx < 0) return { success: false, reason: `背包里没有${itemName}。需要先获取该物品（购买/拾荒/偷窃等）。` };
-  const placedItem = gameState.player.inventory[idx];
-  gameState.player.inventory.splice(idx, 1);
+  const isWall = cell.type === "wall";
+  if (!isWall) {
+    const idx = gameState.player.inventory.findIndex((i: any) => i.name === itemName);
+    if (idx < 0) return { success: false, reason: `背包里没有${itemName}。需要先获取该物品（购买/拾荒/偷窃等）。` };
+    const placedItem = gameState.player.inventory[idx];
+    gameState.player.inventory.splice(idx, 1);
+    cell.block = true;
+    (cell as any).furnitureWeight = placedItem.weight;
+  }
   cell.furniture = itemName;
-  (cell as any).furnitureWeight = placedItem.weight;  // 保留原始重量（放置再拾取不丢属性）
   cell.label = itemName.slice(0, 4);
-  cell.block = true;
   if (furnitureActions && Object.keys(furnitureActions).length > 0) (cell as any).furniture_actions = furnitureActions;
   saveState();
   return { success: true, reason: `放置了${itemName}（已从背包扣除）` };

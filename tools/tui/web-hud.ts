@@ -9,6 +9,7 @@
 import * as http from "node:http";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { pushUserText } from "../helpers.ts";
 
 // ── 运行时引用 ──
 let _pi: any = null;
@@ -225,9 +226,7 @@ async function triggerTurn(message: string) {
       _gameState._lastUserInput = message;
     }
     // 排队系统消息，终端 at 回复模式会自动消费
-    if (_ctx?.chat?.addSystemMessage) {
-      _ctx.chat.addSystemMessage(message);
-    }
+    pushUserText(message);
     console.log("[web-hud] queued:", message.slice(0, 60));
   } catch (e: any) {
     console.error("[web-hud] triggerTurn failed:", e.message || e);

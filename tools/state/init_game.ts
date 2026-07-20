@@ -1,4 +1,5 @@
 import { Type } from "typebox";
+import { pushUserText } from "../helpers.ts";
 
 function baseStats(age: number, gender: string) {
   if (age <= 6) {
@@ -271,13 +272,11 @@ export default {
     const startDay = currentDay();
     if (startDay > 1) {
       const completed = await fastForwardTimeline(startDay);
-      if (completed.length > 0 && _ctx?.chat) {
-        try {
-          _ctx.chat.addSystemMessage(
-            `[引擎] 时间线快进：从 day ${startDay} 开局，已自动完成 ${completed.length} 个过期事件。\n` +
-            completed.slice(0, 10).join(", ") + (completed.length > 10 ? `…等` : "")
-          );
-        } catch {}
+      if (completed.length > 0) {
+        pushUserText(
+          `[引擎] 时间线快进：从 day ${startDay} 开局，已自动完成 ${completed.length} 个过期事件。\n` +
+          completed.slice(0, 10).join(", ") + (completed.length > 10 ? `…等` : "")
+        );
       }
     }
 

@@ -102,29 +102,17 @@ import leaveOrgTool from "./action/leave_org.ts";
 import promoteMemberTool from "./action/promote_member.ts";
 import orgActionTool from "./action/org_action.ts";
 import adjustOrgRelationTool from "./action/adjust_org_relation.ts";
-import economyCommand from "./tui/economy.ts";
-import relationsCommand from "./tui/relations.ts";
-import statusCommand from "./tui/status.ts";
-import lookCommand from "./tui/look.ts";
 import identityCommand from "./tui/identity.ts";
-import goCommand from "./tui/go.ts";
 import saveCommand from "./tui/save.ts";
 import loadCommand from "./tui/load.ts";
 import savesCommand from "./tui/saves.ts";
 import newCommand from "./tui/new.ts";
 import redoCommand from "./tui/redo.ts";
-import sleepCommand from "./tui/sleep.ts";
 import layer1Command from "./tui/layer1.ts";
 import sexCommand from "./tui/sex.ts";
-import roomCommand from "./tui/room.ts";
-import trainCommand from "./tui/train.ts";
-import bagCommand from "./tui/bag.ts";
 import presetCommand from "./tui/preset.ts";
-import infoCommand from "./tui/info.ts";
 import rerollCommand from "./tui/reroll.ts";
 import worldCommand from "./tui/world.ts";
-import achievementsCommand from "./tui/achievements.ts";
-import choiceCommand from "./tui/choice.ts";
 import sandboxCommand from "./tui/sandbox.ts";
 
 function withToolTracking(tool: any) {
@@ -205,29 +193,16 @@ export function registerAll(pi: ExtensionAPI) {
   for (const t of trackedTools) if (t) pi.registerTool(withToolTracking(t));
 
   // Register Commands
-  pi.registerCommand("economy", economyCommand);
-  pi.registerCommand("relations", relationsCommand);
-  pi.registerCommand("status", statusCommand);
-  pi.registerCommand("look", lookCommand);
   pi.registerCommand("identity", identityCommand);
-  pi.registerCommand("go", goCommand);
   pi.registerCommand("save", saveCommand);
   pi.registerCommand("load", loadCommand);
   pi.registerCommand("saves", savesCommand);
   pi.registerCommand("new", newCommand);
   pi.registerCommand("redo", redoCommand);
-  pi.registerCommand("sleep", sleepCommand);
   pi.registerCommand("layer1", layer1Command);
   pi.registerCommand("sex", sexCommand);
-  pi.registerCommand("room", roomCommand);
-  pi.registerCommand("train", trainCommand);
-  pi.registerCommand("bag", bagCommand);
   pi.registerCommand("preset", presetCommand);
-  pi.registerCommand("info", infoCommand);
   pi.registerCommand("reroll", rerollCommand);
   pi.registerCommand("world", worldCommand);
-  pi.registerCommand("achievements", achievementsCommand);
-  pi.registerCommand("ach", achievementsCommand);
-  pi.registerCommand("choice", choiceCommand);
   pi.registerCommand("sandbox", sandboxCommand);
 }

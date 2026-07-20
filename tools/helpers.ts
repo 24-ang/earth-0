@@ -922,26 +922,7 @@ export async function showPhoneTUI(ctx: any, phoneItem: any) {
   await showMenu(ctx, `📱 ${phoneItem.name}${unreadStr}`, phoneMenu);
 }
 
-// ── 状态子面板渲染（被 runStatus 收编，原 /growth /combat /party）──
 
-export async function renderGrowthLines(): Promise<string[]> {
-  const { gameState } = await import("../engine/state.ts");
-  const p = gameState.player;
-  const lines: string[] = [];
-  lines.push(`📈 ${p.name} 发育面板 | ${p.age}岁 ${gameState.time.player_stage}`);
-  lines.push("────────────────────────────────────────");
-  if (p.body) {
-    const b = p.body;
-    lines.push(`📏 身高: ${b.height_cm}cm | 体重: ${b.weight_kg}kg | 体型: ${b.build}`);
-    if (b.measurements) lines.push(`📐 三围: ${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}${b.cup ? ` (${b.cup}cup)` : ""}`);
-    if (b.skin) lines.push(`🖐 肤色: ${b.skin.base_tone} | 肤质: ${b.skin.texture}`);
-  }
-  lines.push("────────────────────────────────────────");
-  lines.push(`🍽 饮食方案: ${p.body?.diet || "普通"}`);
-  lines.push(`🏃 运动方案: ${p.body?.exercise || "普通"}`);
-  lines.push("方案: 饮食(普通|节食|高蛋白|丰胸食谱) 运动(普通|规律|高强度)。每月末自动结算或调 monthly_growth。");
-  return lines;
-}
 
 export async function renderCombatLines(): Promise<string[]> {
   const { gameState, getCurrency, isSameLocation } = await import("../engine/state.ts");
@@ -973,28 +954,6 @@ export async function renderCombatLines(): Promise<string[]> {
   return lines;
 }
 
-export async function renderPartyLines(): Promise<string[]> {
-  const { gameState, getOrCreateNPC, findCharacter } = await import("../engine/state.ts");
-  const p = gameState.player;
-  const lines: string[] = [];
-  lines.push(`🛡️ 当前队伍状态 (队长: ${p.name})`);
-  lines.push("────────────────────────────────────────");
-  lines.push(`👤 [主角] ${p.name} (${p.gender}) | ${p.age}岁 | HP: ${p.hp.current}/${p.hp.max} | AC: ${p.ac} | 位置: ${p.location}`);
-  lines.push("────────────────────────────────────────");
-  if (p.party && p.party.length > 0) {
-    for (const name of p.party) {
-      const char = findCharacter(name);
-      const npcState = getOrCreateNPC(name);
-      if (char) {
-        lines.push(`👥 [队友] ${char.name} (${char.gender === "female" ? "女" : "男"}) | 位置: ${npcState.currentRoom || char.default_location}`);
-        if (char.attributes) { const a = char.attributes; lines.push(`   属性: 力${a.力量} 敏${a.敏捷} 体${a.体质} 智${a.智力} 感${a.感知} 魅${a.魅力}`); }
-      }
-    }
-  } else {
-    lines.push("ℹ️ （队伍目前没有其他成员，你正独自一人前行）");
-  }
-  return lines;
-}
 
 // ── 经济子面板渲染（被 /economy 收编，原 /shop /gamble /housing）──
 
@@ -1218,221 +1177,34 @@ export async function renderMemoryLines(): Promise<string[]> {
   return lines;
 }
 
-export async function runStatus(ctx: any) {
-  const { gameState, saveState, calcMaxCarry, calcCurrentWeight, isOverburdened, calcPocketVolume, calcInventoryVolume } = await import("../engine/state.ts");
-  const p = gameState.player;
-
-  const maxC = calcMaxCarry(p.attributes.力量);
-  const curW = calcCurrentWeight(p.inventory, p.equipment);
-  const burden = isOverburdened(curW, maxC);
-  const pocketVol = calcPocketVolume(p.equipment);
-  const invVol = calcInventoryVolume(p.inventory, p.equipment);
-
-  // 构建物品 flavor 速查表（从 itemsCatalog 读描述文本）
-  const flavorMap = new Map<string, string>();
-  try {
-    const { itemsCatalog } = await import("../engine/state.ts");
-    for (const cat of Object.values(itemsCatalog as any)) {
-      for (const [iname, item] of Object.entries(cat as any)) {
-        if ((item as any).flavor) flavorMap.set(iname, (item as any).flavor);
-      }
-    }
-  } catch (e) { console.error("runStatus: flavorMap lookup error", e); }
-
-  const buildMenu = () => {
-    const items: MenuItem[] = [];
-    const identityStr = p.public_identity ? ` | 🎭 伪装: ${p.public_identity}` : "";
-    items.push({ label: `👤 角色: ${p.name} (${p.gender}) | 年龄: ${p.age}岁${identityStr}`, detail: "" });
-    items.push({ label: `❤️ HP: ${p.hp.current}/${p.hp.max} | 🛡️ AC: ${p.ac} | 💰 资金: ${getCurrency()}${p.funds} | 💤 疲劳: ${p.fatigue ?? 0}/100`, detail: "" });
-    items.push({ label: `🏋️ 负重: ${curW}/${maxC}kg${burden.overloaded ? " ⚠️超重!" : burden.encumbered ? " 📦较重" : ""} | 📦 体积: ${invVol}${pocketVol > 0 ? `/${pocketVol}` : ""}L`, detail: "" });
-    items.push({ label: `📊 属性: 力${p.attributes.力量} 敏${p.attributes.敏捷} 体${p.attributes.体质} 智${p.attributes.智力} 感${p.attributes.感知} 魅${p.attributes.魅力}`, detail: "" });
-    const woundStr = p.wounds && p.wounds.length > 0 
-      ? p.wounds.map(w => `${w.severity}: ${w.text}`).join(", ")
-      : "健康";
-    items.push({ label: `🩸 伤势: ${woundStr}`, detail: "" });
-
-    if (p.body) {
-      const b = p.body;
-      let bodyStr = `📏 ${b.height_cm}cm ${b.weight_kg}kg ${b.build}`;
-      if (b.cup) bodyStr += ` ${b.cup}cup`;
-      if (b.measurements) bodyStr += ` 三围${b.measurements.bust}-${b.measurements.waist}-${b.measurements.hips}`;
-      if (b.leg_type) bodyStr += ` ${b.leg_type}腿`;
-      if (b.skin) bodyStr += ` 肤${b.skin.texture}·${b.skin.base_tone}`;
-      items.push({ label: bodyStr, detail: "" });
-    }
-
-    items.push({ label: "── 🌟 声望与派系 ──", detail: "" });
-    const reps = Object.entries(p.reputation || {});
-    if (reps.length > 0) {
-      items.push({ label: `  ${reps.map(([k, v]) => `${k}(${v})`).join(" | ")}`, detail: "" });
-    } else {
-      items.push({ label: `  (无)`, detail: "" });
-    }
-
-    items.push({ label: "── 🔎 更多面板 ──", detail: "" });
-    items.push({ label: "  📈 发育", detail: "身高/三围/饮食/运动", action: async (_d) => { await showPanel(ctx, "📈 发育", await renderGrowthLines()); } });
-    items.push({ label: "  ⚔️ 战力", detail: "HP/AC/周边NPC战力", action: async (_d) => { await showPanel(ctx, "⚔️ 战斗", await renderCombatLines()); } });
-    items.push({ label: "  👥 队伍", detail: "队友状态", action: async (_d) => { await showPanel(ctx, "👥 我的队伍", await renderPartyLines()); } });
-
-    items.push({ label: "── 装备槽位 (点击卸下) ──", detail: "" });
-    for (const [slotKey, slotName] of Object.entries(SLOT_NAMES)) {
-      const item = p.equipment[slotKey as any];
-      if (item) {
-        const flavor = flavorMap.get(item.name) || (item as any).flavor;
-        const desc = flavor ? `${item.name} — ${flavor}` : item.name;
-        items.push({
-          label: `  [${slotName}] ${desc}`,
-          detail: `🛡️ 卸下`,
-          action: (_done) => {
-            p.inventory.push(item);
-            p.equipment[slotKey as any] = null;
-            saveState();
-            ctx.ui.notify(`卸下了 ${item.name}`, "info");
-          }
-        });
-      } else {
-        items.push({
-          label: `  [${slotName}] (空)`,
-          detail: `➕ 穿戴`,
-          action: async (_done) => {
-            const fitItems = p.inventory.filter(it => it.slot === slotKey);
-            if (fitItems.length === 0) {
-              ctx.ui.notify(`背包中没有适合该槽位的装备`, "warning");
-              return;
-            }
-            await showMenu(ctx, `装备到 [${slotName}]`, fitItems.map(it => ({
-              label: it.name,
-              detail: `${it.type} ${it.weight}kg`,
-              action: (subDone) => {
-                p.equipment[slotKey as any] = it;
-                p.inventory.splice(p.inventory.indexOf(it), 1);
-                saveState();
-                ctx.ui.notify(`装备了 ${it.name}`, "info");
-                subDone();
-              }
-            })));
-          }
-        });
-      }
-    }
-
-    items.push({ label: "── 背包物品 (点击查看/操作) ──", detail: "" });
-    if (p.inventory.length > 0) {
-      p.inventory.forEach(it => {
-        const itFlavor = flavorMap.get(it.name) || (it as any).flavor;
-        const itDesc = itFlavor ? `${it.name} — ${itFlavor}` : it.name;
-        items.push({
-          label: `  ${itDesc}`,
-          detail: `${it.type} ${it.weight}kg`,
-          action: async (_done) => {
-            const isPhone = it.name.includes("手机") || it.effects?.some((e: any) => e.type === "communication");
-            const subItems: MenuItem[] = [
-              {
-                label: "🔍 查看详情",
-                action: (subDone) => {
-                  const lines = [
-                    `名称: ${it.name}`,
-                    `类型: ${it.type} | 重量: ${it.weight}kg | 体积: ${(it as any).volume ?? "?"}L | 状态: ${it.state}`,
-                    it.flavor ? `描述: ${it.flavor}` : "",
-                    it.damage ? `伤害: ${it.damage.dice} (${it.damage.damageType})` : "",
-                  ].filter(Boolean);
-                  if (it.effects && it.effects.length > 0) {
-                    lines.push("效果:");
-                    it.effects.forEach((eff: any) => {
-                      lines.push(`  - ${eff.type}: ${eff.value}${eff.group ? ` (${eff.group})` : ""}`);
-                    });
-                  }
-                  showPanel(ctx, it.name, lines);
-                  subDone();
-                }
-              }
-            ];
-
-            if (isPhone) {
-              subItems.push({
-                label: "📱 打开手机",
-                action: async (subDone) => {
-                  await showPhoneTUI(ctx, it);
-                  subDone();
-                }
-              });
-            }
-
-            if (it.slot) {
-              const slotName = SLOT_NAMES[it.slot] || it.slot;
-              subItems.push({
-                label: `🛡️ 装备到 [${slotName}]`,
-                action: (subDone) => {
-                  const slot = it.slot as any;
-                  if (p.equipment[slot]) p.inventory.push(p.equipment[slot]!);
-                  p.equipment[slot] = it;
-                  p.inventory.splice(p.inventory.indexOf(it), 1);
-                  saveState();
-                  ctx.ui.notify(`装备了 ${it.name}`, "info");
-                  subDone();
-                }
-              });
-            }
-
-            subItems.push({
-              label: "❌ 丢弃物品",
-              action: (subDone) => {
-                p.inventory.splice(p.inventory.indexOf(it), 1);
-                saveState();
-                ctx.ui.notify(`丢弃了 ${it.name}`, "info");
-                subDone();
-              }
-            });
-
-            await showMenu(ctx, it.name, subItems);
-          }
-        });
-      });
-    } else {
-      items.push({ label: "  （背包空空如也）", detail: "" });
-    }
-
-    items.push({ label: "── ⚙️ 系统与引擎状态 ──", detail: "" });
-    const activeFlags = Object.entries(gameState.flags)
-      .filter(([_, v]) => v)
-      .map(([k]) => k);
-    items.push({
-      label: `  [状态] 模式:${gameState.mode} | Layer1:${gameState.layer1Enabled ? "启用" : "禁用"} | 魔改:${gameState.auMode ? "启用" : "禁用"}`,
-      detail: `回合:${gameState.turn}`
-    });
-    items.push({
-      label: `  [天气] ${gameState.weather.type} (${gameState.weather.temp}°C)`,
-      detail: `时间:${gameState.time.game_date}`
-    });
-    items.push({
-      label: `  [标记] ${activeFlags.length > 0 ? activeFlags.join(", ") : "(空)"}`,
-      detail: "🔍 查看详情",
-      action: async (_done) => {
-        const lines = [
-          `当前世界模式: ${gameState.mode}`,
-          `Layer1 亲密引擎: ${gameState.layer1Enabled ? "ON" : "OFF"}`,
-          `魔改模式 (AU): ${gameState.auMode ? "ON" : "OFF"}`,
-          `游戏总回合数: ${gameState.turn}`,
-          `游戏当前时间: ${gameState.time.game_date} ${gameState.time.day_of_week}曜日 ${gameState.time.time_of_day}`,
-          `当前天气状况: ${gameState.weather.type} (${gameState.weather.temp}°C)`,
-          ``,
-          `所有已记录的世界/事件标记 (gameState.flags):`,
-          ...Object.entries(gameState.flags).map(([k, v]) => `  - ${k}: ${v}`),
-          Object.keys(gameState.flags).length === 0 ? "  （目前无任何事件标记）" : ""
-        ].filter(Boolean);
-        await showPanel(ctx, "⚙️ 系统与标记详情", lines);
-      }
-    });
-
-    return items;
-  };
-
-  await showMenu(ctx, `👤 状态与装备`, buildMenu);
+export async function renderAchievementLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const lines: string[] = [];
+  const flags = gameState.flags || {};
+  const achPath = path.resolve(process.cwd(), "data", "achievements.json");
+  let rules: { id: string; name: string; description: string }[] = [];
+  try { rules = JSON.parse(fs.readFileSync(achPath, "utf-8")); } catch { lines.push("（成就数据读取失败）"); return lines; }
+  if (!rules.length) { lines.push("（成就系统尚未配置）"); return lines; }
+  const unlocked = rules.filter(r => !!flags[r.id]);
+  const locked = rules.filter(r => !flags[r.id]);
+  lines.push(`🏆 成就 · ${unlocked.length}/${rules.length} 已解锁`);
+  lines.push("────────────────────────────────────────");
+  if (unlocked.length > 0) {
+    for (const a of unlocked) lines.push(`  🏆 ${a.name} — ${a.description}`);
+  } else {
+    lines.push("  （暂无已解锁成就）");
+  }
+  if (locked.length > 0) {
+    lines.push("────────────────────────────────────────");
+    lines.push(`🔒 未解锁 (${locked.length})`);
+    for (const a of locked.slice(0, 20)) lines.push(`  🔒 ${a.name}`);
+    if (locked.length > 20) lines.push(`  … 还有 ${locked.length - 20} 项`);
+  }
+  return lines;
 }
 
-// ── spawn_npc_agent / spawn_npc_agents 共用工具函数 ──
-
-/** 从 rendering.json 读取 npc_agent_model（fallback: flash） */
 export async function getNpcAgentModel(): Promise<string> {
   try {
     const fs = await import("node:fs");

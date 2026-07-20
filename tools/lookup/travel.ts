@@ -1,4 +1,5 @@
 import { Type } from "typebox";
+import { pushUserText } from "../helpers.ts";
 
 /**
  * 统一旅行工具 —— 合并 go_to_location + travel_intercity + complete_travel
@@ -174,13 +175,7 @@ export default {
             ? "描述车厢内的氛围、车窗外的风景。到达后请直接继续叙事。"
             : "描述沿途的街区和交通状况。到达后请直接继续叙事。";
 
-        if (ctx?.chat) {
-          try {
-            ctx.chat.addSystemMessage(
-              `玩家出发前往 ${dest}（${route}，约${minutes}分钟）。${vehicleHint}`
-            );
-          } catch {}
-        }
+        pushUserText(`玩家出发前往 ${dest}（${route}，约${minutes}分钟）。${vehicleHint}`);
 
         return {
           content: [
