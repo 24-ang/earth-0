@@ -1052,18 +1052,44 @@ export async function renderHousingLines(): Promise<string[]> {
 
 export async function renderCalendarLines(): Promise<string[]> {
   const { gameState } = await import("../engine/state.ts");
-  const { getTodayCalendar, getActiveQuests } = await import("../engine/timeline.ts");
+  const { getTodayCalendar } = await import("../engine/timeline.ts");
   const lines: string[] = [];
   lines.push(`📅 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日`);
   lines.push("────────────────────────────────────────");
   const todayEvent = getTodayCalendar();
-  if (todayEvent) { lines.push("📌 今日事件"); lines.push(`  ${todayEvent}`); }
+  if (todayEvent) { lines.push("📌 今日"); lines.push(`  ${todayEvent}`); }
   else lines.push("📌 今日: 无特殊事件");
-  lines.push("────────────────────────────────────────");
-  const quests = getActiveQuests();
-  lines.push(`📋 进行中的任务 (${quests.length})`);
-  if (quests.length > 0) for (const q of quests) lines.push(`  ▶ ${q.id} ${q.title || ""}`);
-  else lines.push("  (无)");
+
+  // 近期事件（未来7天）
+  try {
+    const { gameState: gs2 } = await import("../engine/state.ts");
+    const dynEvents: any[] = (gs2 as any).calendarEvents || [];
+    const allCalEvents: any[] = [];
+    try {
+      const { loadCalendar } = await import("../engine/timeline.ts");
+      const loaded = loadCalendar ? loadCalendar() : [];
+      allCalEvents.push(...loaded);
+    } catch {}
+    allCalEvents.push(...dynEvents);
+    // Filter future events within 7 days from now
+    const today = (gameState as any).turn || 0;
+    const future = allCalEvents
+      .filter((e: any) => {
+        const ed = e.day ?? e.start_day ?? 0;
+        return ed > today && ed <= today + 7;
+      })
+      .sort((a: any, b: any) => (a.day ?? 0) - (b.day ?? 0));
+    if (future.length > 0) {
+      lines.push("────────────────────────────────────────");
+      lines.push(`🔮 未来7天 (${future.length}件)`);
+      for (const ev of future) {
+        const d = (ev as any).day ?? 0;
+        const diff = d - today;
+        const locStr = (ev as any).location ? ` 📍${(ev as any).location}` : "";
+        lines.push(`  +${diff}天 ${(ev as any).text || (ev as any).date || "?"}${locStr}`);
+      }
+    }
+  } catch {}
   lines.push("────────────────────────────────────────");
   const hooks = gameState.active_hooks || [];
   lines.push(`🔗 待触发事件: ${hooks.length}`);
@@ -1084,6 +1110,155 @@ export async function renderQuestLines(): Promise<string[]> {
   const hooks = gameState.active_hooks || [];
   lines.push(`🔗 等待触发的剧情钩子: (${hooks.length})`);
   if (hooks.length > 0) for (const h of hooks) lines.push(`  - ${h.event_id} (${h.urgency || "?"}) ${(h.hook_text || "").slice(0, 40)}`);
+  return lines;
+}
+
+export async function renderQuestDetailLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const quests: Record<string, any> = gameState.quests || {};
+  const entries = Object.entries(quests);
+  const active = entries.filter(([, q]) => q.status === "active");
+  const completed = entries.filter(([, q]) => q.status === "completed");
+  const dead = entries.filter(([, q]) => q.status === "abandoned" || q.status === "expired");
+
+  if (entries.length === 0) {
+    lines.push("  (暂无任务记录)");
+    lines.push("  剧情钩子接受后会变成任务，通过 open_quest 开启");
+    return lines;
+  }
+
+  if (active.length > 0) {
+    lines.push(`◆ 进行中 (${active.length})`);
+    for (const [, q] of active) {
+      lines.push(`  ▸ ${q.title || q.id}`);
+      if (q.current_beat) lines.push(`    当前阶段: ${q.current_beat}`);
+      const nOutcomes = Object.keys(q.outcomes || {}).length;
+      lines.push(`    第${q.started_day}天开始  ·  已选择${nOutcomes}个分支`);
+    }
+  }
+
+  if (completed.length > 0) {
+    lines.push(`✓ 已完成 (${completed.length})`);
+    for (const [, q] of completed) {
+      lines.push(`  — ${q.title || q.id}`);
+    }
+  }
+
+  if (dead.length > 0) {
+    lines.push(`✗ 已结束 (${dead.length})`);
+    for (const [, q] of dead) {
+      lines.push(`  — ${q.title || q.id} [${q.status}]`);
+    }
+  }
+
+  // 事件历史计数
+  const completed2 = gameState.completed_events || [];
+  const dynamics2 = gameState.dynamicEvents || [];
+  if (completed2.length > 0 || dynamics2.length > 0) {
+    lines.push("");
+    lines.push(`📜 事件记录: 已完成${completed2.length}个 · 动态${dynamics2.length}个`);
+  }
+
+  return lines;
+}
+
+export async function renderWoundDetailLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const wounds: any[] = gameState.player.wounds || [];
+  const lines: string[] = [];
+  if (!wounds.length) {
+    lines.push("  (无伤势)");
+    return lines;
+  }
+  lines.push(`当前 ${wounds.length} 处伤势`);
+  for (const w of wounds) {
+    const sevIcon = w.severity === "重伤" || w.severity === "危重" ? "🔴" : w.severity === "中度" ? "🟡" : "🟢";
+    lines.push(`  ${sevIcon} [${w.severity || "轻伤"}] ${w.text || w.name || w.bodyPart || ""}`);
+    if (w.source) lines.push(`    来源: ${w.source}`);
+  }
+  lines.push("");
+  lines.push("伤势影响战斗和行动能力，随时间或治疗恢复");
+  return lines;
+}
+
+export async function renderOrgBrowserLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const orgs: Record<string, any> = gameState.organizations || {};
+  const entries = Object.entries(orgs).filter(([, o]: any) => !o.archived);
+  const archived = Object.entries(orgs).filter(([, o]: any) => o.archived);
+  const lines: string[] = [];
+  if (!entries.length && !archived.length) {
+    lines.push("  (无已知组织)");
+    return lines;
+  }
+
+  if (entries.length > 0) {
+    lines.push(`🏛️ 活跃组织 (${entries.length})`);
+    const bySector: Record<string, any[]> = {};
+    for (const [, o] of entries) {
+      const sec = (o as any).sector || "其他";
+      if (!bySector[sec]) bySector[sec] = [];
+      bySector[sec].push(o);
+    }
+    for (const [sec, list] of Object.entries(bySector)) {
+      lines.push(`── ${sec} (${list.length}) ──`);
+      for (const o of list) {
+        const scale = (o as any).scale || "?";
+        lines.push(`  ▸ ${(o as any).name || (o as any).id}  [${scale}]`);
+        lines.push(`    影响力${(o as any).influence||0} · 凝聚力${(o as any).cohesion||0} · 公信力${(o as any).public_legitimacy||0}`);
+        if ((o as any).leader) lines.push(`    领袖: ${(o as any).leader}`);
+        if ((o as any).lifecycle_stage) lines.push(`    阶段: ${(o as any).lifecycle_stage}`);
+      }
+    }
+  }
+
+  if (archived.length > 0) {
+    lines.push("");
+    lines.push(`💀 已消亡组织 (${archived.length})`);
+    for (const [, o] of archived) {
+      lines.push(`  — ${(o as any).name || (o as any).id} [${(o as any).scale || "?"}]`);
+    }
+  }
+
+  return lines;
+}
+
+export async function renderHookDetailLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const hooks: any[] = gameState.active_hooks || [];
+
+  if (hooks.length === 0) {
+    lines.push("  (暂无等待触发的剧情钩子)");
+    lines.push("  随着游戏推进，新的剧情钩子会自动出现");
+    lines.push("  最多同时存在 3 个，高优先级先出");
+    return lines;
+  }
+
+  lines.push(`当前 ${hooks.length} 个钩子（最多 3 个）`);
+  lines.push("");
+
+  const I: Record<string, string> = { high: "🔴", medium: "🟡", low: "🟢" };
+  const U: Record<string, string> = { high: "紧急", medium: "普通", low: "低优先" };
+
+  for (const h of hooks) {
+    const icon = I[h.urgency] || "⚪";
+    lines.push(`${icon} [${U[h.urgency] || h.urgency}] ${h.hook_text || h.event_id}`);
+    if (h.source_npc) lines.push(`  来源NPC: ${h.source_npc}`);
+    if (h.novelty) lines.push(`  新意: ${h.novelty}`);
+    const created = h.created_day;
+    const expires = h.expires_day;
+    if (created != null && expires != null) {
+      const window2 = expires - created;
+      lines.push(`  有效期: 第${created}天 → 第${expires}天（窗口${window2}天）`);
+    }
+    if (h.seen_count > 0) lines.push(`  已呈现${h.seen_count}次`);
+    if (h.iconic_lines?.length) {
+      lines.push(`  标志台词: 「${h.iconic_lines[0]}」`);
+    }
+  }
+
   return lines;
 }
 
@@ -1153,6 +1328,23 @@ export async function renderWeatherLines(): Promise<string[]> {
   lines.push(`🌡 季节: ${season} | 温度: ${gameState.weather?.temp ?? "?"}°C`);
   lines.push("────────────────────────────────────────");
   lines.push("提示: 天气影响移动速度、NPC出没、事件触发。暴雨天NPC倾向室内，下雪天操场不可用。");
+  return lines;
+}
+
+export async function renderWorldLines(): Promise<string[]> {
+  const { gameState, translateWorldState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const ws = gameState.worldState;
+  if (!ws) { lines.push("  （暂无世界状态数据）"); return lines; }
+  lines.push(`🌍 当前位置大势`);
+  lines.push("────────────────────────────────────────");
+  if (ws.regime) lines.push(`  政权 │ ${ws.regime}`);
+  if (ws.prosperity != null) lines.push(`  繁荣 │ ${ws.prosperity}`);
+  if (ws.stability != null) lines.push(`  稳定 │ ${ws.stability}`);
+  if (ws.tension != null) lines.push(`  紧张 │ ${ws.tension}`);
+  if (ws.tech != null) lines.push(`  科技 │ ${ws.tech}`);
+  const desc = translateWorldState ? translateWorldState(ws) : "";
+  if (desc) { lines.push("────────────────────────────────────────"); lines.push(desc); }
   return lines;
 }
 

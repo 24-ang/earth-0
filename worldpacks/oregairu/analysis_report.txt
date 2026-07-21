@@ -1,0 +1,152 @@
+Total characters: 141
+Characters with >=3 poor criteria: 109
+
+=== EMPTY (8-10 poor) (61 chars) ===
+  三色院堇子                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  东头伊佐奈                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  丸友和                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  乾心寿                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  乾纱寿叶                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  伊理户水斗                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  伊理户结女                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  佐条涉                  |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  佐藤                   |  68L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  佐藤博道                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  佐藤时雨                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  克莱因                  |  83L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  八满结                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  八王子直人                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  千寿村征                 |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  南晓月                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  和泉正宗                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  和泉纱雾                 |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  夏川爱华                 |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  奈良坂真绫                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  小吉                   |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  小美浪爱澄                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  小鸭                   |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  山田妖精                 |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  川波小暮                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  律茂真人                 |  86L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  户崎优                  |  83L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  才川晴香                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  新庄圭介                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  日向葵                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  更衣人偶                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  樱                    |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  永井圭                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  洋木茅春                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  浅村悠太                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  海斗                   |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  犬束秀                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  狼谷                   |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  猫崎享                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  神野惠                  |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  秋月加代子                |  83L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  秋月爱莉                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  秋月真理奈                |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  秋野樱                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  结城明日奈                |  86L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  羽生真由梨／真由罗            |  83L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  羽立桧菜                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  艾基尔                  |  83L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  莉兹贝特                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  葉月保雄                 |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  蒲田公英                 |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  西莉卡                  |  85L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  读卖栞                  |  83L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  长瀞早濑                 |  84L | 10/10 | empty_skills, no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  五条新菜                 |  88L |  9/10 | no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  古桥文乃                 |  87L |  9/10 | no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  唯我成幸                 |  88L |  9/10 | no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  如月雨露                 |  85L |  9/10 | empty_skills, no_hp, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  桐谷和人                 |  87L |  9/10 | no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  武元润香                 |  87L |  9/10 | no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+  绪方理珠                 |  87L |  9/10 | no_hp, generic_personality, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body, generic_appearance, generic_speech
+
+=== THIN (6-7 poor) (1 chars) ===
+  大贺太阳                 |  93L |  6/10 | no_hp, generic_anchors, no_tags, no_drives, no_body_by_age, generic_body
+
+=== BASIC (3-5 poor) (47 chars) ===
+  仲町千佳                 |  94L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  和泉幽希                 |  99L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  城廻巡                  |  94L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  大冈                   |  94L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  大和                   |  95L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  如月佑                  |  96L |  5/10 | generic_personality, no_tags, no_drives, no_body_by_age, generic_speech
+  如月綾乃                 |  84L |  5/10 | generic_personality, no_tags, no_drives, no_body_by_age, generic_speech
+  如月翔太                 |  73L |  5/10 | generic_personality, no_tags, no_drives, no_body_by_age, generic_speech
+  平冢静                  | 280L |  5/10 | empty_skills, no_hp, generic_personality, no_tags, generic_speech
+  户部翔                  |  94L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  折本香织                 |  83L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  比企谷八幡                | 159L |  5/10 | generic_personality, generic_anchors, no_tags, no_body_by_age, generic_speech
+  相模南                  |  96L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  雪之下大志                |  73L |  5/10 | empty_skills, generic_personality, no_drives, no_body_by_age, generic_speech
+  鹤见留美                 |  96L |  5/10 | no_hp, no_tags, no_drives, no_body_by_age, generic_body
+  一色彩羽                 | 102L |  4/10 | no_hp, no_tags, no_body_by_age, generic_body
+  三浦优美子                | 102L |  4/10 | no_hp, no_tags, no_body_by_age, generic_body
+  南梦芽                  | 171L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  叶山隼人                 | 102L |  4/10 | no_hp, no_tags, no_body_by_age, generic_body
+  喜咲亚理亚                | 180L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  天乃莉莉纱                | 184L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  如月真绫                 | 289L |  4/10 | generic_personality, no_tags, no_drives, generic_speech
+  宝多六花                 | 170L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  寻峰洋子                 | 171L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  川崎沙希                 | 102L |  4/10 | no_hp, no_tags, no_body_by_age, generic_body
+  式守都                  | 189L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  户冢彩加                 | 109L |  4/10 | generic_personality, no_tags, no_body_by_age, generic_speech
+  指宿凛凛澄                | 167L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  星野瑠美衣                | 176L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  樱岛麻衣                 | 171L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  橘京香                  | 141L |  4/10 | generic_personality, no_tags, no_drives, generic_speech
+  橘小春                  | 183L |  4/10 | generic_personality, no_tags, no_drives, generic_speech
+  橘结花                  | 166L |  4/10 | generic_personality, no_tags, no_drives, generic_speech
+  橘美花莉                 | 185L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  比企谷小町                | 108L |  4/10 | generic_personality, no_tags, no_body_by_age, generic_speech
+  水上諒真                 |  68L |  4/10 | generic_anchors, no_tags, no_drives, no_body_by_age
+  海老名姬菜                | 102L |  4/10 | no_hp, no_tags, no_body_by_age, generic_body
+  矶野上多绪                | 172L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  绫濑沙季                 | 181L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  羽生真由梨                | 181L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  诺诺亚                  | 182L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  雪之下绫乃                | 215L |  4/10 | generic_personality, no_tags, no_drives, generic_speech
+  雪之下阳乃                | 188L |  4/10 | generic_personality, no_tags, no_drives, generic_speech
+  高木                   | 168L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  黑川茜                  | 175L |  4/10 | no_hp, no_tags, no_drives, no_body_by_age
+  喜多川海梦                | 277L |  3/10 | no_tags, no_drives, no_body_by_age
+  材木座义辉                | 178L |  3/10 | generic_personality, no_body_by_age, generic_speech
+
+=== WELL-POPULATED (0-2 poor, 32 chars) ===
+  秋月孝三                 | 256L |  1/10 | no_tags
+  雪之下雪乃                | 3028L |  1/10 | no_tags
+  不知火舞                 | 178L |  2/10 | no_drives, no_body_by_age
+  佐久間義隆                | 210L |  2/10 | generic_anchors, no_tags
+  佐佐木                  | 304L |  2/10 | generic_anchors, no_tags
+  児玉源造                 | 207L |  2/10 | generic_anchors, no_tags
+  城户优斗                 | 267L |  2/10 | generic_anchors, no_tags
+  城户树                  | 268L |  2/10 | generic_anchors, no_tags
+  城户状真                 | 249L |  2/10 | generic_anchors, no_tags
+  大森和彦                 | 212L |  2/10 | generic_anchors, no_tags
+  山田                   | 360L |  2/10 | generic_anchors, no_tags
+  山田隆文                 | 180L |  2/10 | generic_anchors, no_tags
+  崔伊芙                  | 246L |  2/10 | generic_anchors, no_tags
+  崔伊薇                  | 353L |  2/10 | generic_anchors, no_tags
+  御堂咲子                 | 406L |  2/10 | generic_anchors, no_tags
+  御堂诚                  | 183L |  2/10 | generic_anchors, no_tags
+  新田裕也                 | 211L |  2/10 | generic_anchors, no_tags
+  本田朝阳                 | 377L |  2/10 | generic_anchors, no_tags
+  桐须真冬                 | 337L |  2/10 | generic_anchors, no_tags
+  椎名詩織                 | 347L |  2/10 | no_tags, no_drives
+  榊原賢治                 | 207L |  2/10 | generic_anchors, no_tags
+  樋口円香                 | 201L |  2/10 | no_tags, no_drives
+  浅仓透                  | 209L |  2/10 | no_tags, no_drives
+  牧野                   | 211L |  2/10 | generic_anchors, no_tags
+  由比滨结衣                | 333L |  2/10 | no_tags, no_body_by_age
+  白滨真纪                 | 393L |  2/10 | generic_anchors, no_tags
+  蓝泽芽衣                 | 373L |  2/10 | generic_anchors, no_tags
+  藤崎穗成美                | 448L |  2/10 | generic_anchors, no_tags
+  野村克則                 | 213L |  2/10 | generic_anchors, no_tags
+  青山悠希                 | 173L |  2/10 | generic_anchors, no_tags
+  黑崎弥生                 | 394L |  2/10 | generic_anchors, no_tags
+  黑川纱月                 | 410L |  2/10 | generic_anchors, no_tags
+

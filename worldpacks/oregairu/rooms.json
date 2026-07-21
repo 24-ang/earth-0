@@ -2896,7 +2896,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "更衣室",
+          "exitTo": "体育馆",
           "label": "DR"
         },
         {
@@ -3236,7 +3236,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "美术室",
+          "exitTo": "特别大楼1F走廊",
           "label": "DR"
         },
         {
@@ -4759,7 +4759,7 @@
         {
           "type": "exit",
           "block": false,
-          "exitTo": "千叶站",
+          "exitTo": "千葉駅前",
           "label": "EX"
         },
         {

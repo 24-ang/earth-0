@@ -5994,11 +5994,11 @@ test("HUD: 情报摘要行（警报前置）+ 二级菜单 + 单段异步加载"
   const outStr = widget.render(80).join("\n");
   if (!outStr.includes("情报")) throw new Error("自身 Tab 底部应有情报行");
   if (!outStr.includes("👮通缉")) throw new Error("wanted 时情报行应前置通缉标记");
-  // 焦点序（layer1关/空背包/无载具）：identity0 titles1 rep2 relations3 body4 equip5 skills6 bag头7 economy8 combat9 world10 party11 infoline12 turnlog13
-  for (let i = 0; i < 12; i++) widget.handleInput("\x1b[B");
+  // 焦点序（layer1关/空背包/无载具/无伤口）：identity0 titles1 rep2 relations3 body4 equip5 skills6 bag头7 economy8 combat9 party10 infoline11 turnlog12 story13
+  for (let i = 0; i < 11; i++) widget.handleInput("\x1b[B");
   widget.handleInput("\r");     // 进 info-detail 二级菜单
   const menuStr = widget.render(80).join("\n");
-  if (!menuStr.includes("警报") || !menuStr.includes("成就")) throw new Error("info-detail 应渲染七项菜单（含成就）");
+  if (!menuStr.includes("警报") || !menuStr.includes("成就")) throw new Error("info-detail 应渲染八项菜单（含成就）");
   if (!menuStr.includes("👮通缉")) throw new Error("警报项摘要应显示通缉");
   widget.handleInput("\r");     // 光标0=警报段 → info-section
   const t0 = Date.now();
@@ -6011,7 +6011,7 @@ test("HUD: 情报摘要行（警报前置）+ 二级菜单 + 单段异步加载"
   if (!loaded.includes("已被通缉")) throw new Error("警报段应异步加载出通缉详情");
   widget.handleInput("\x1b");   // Esc → 回二级菜单
   const backStr = widget.render(80).join("\n");
-  if (!backStr.includes("NPC记忆")) throw new Error("info-section Esc 应退回六项菜单");
+  if (!backStr.includes("成就")) throw new Error("info-section Esc 应退回八项菜单");
   widget.handleInput("\x1b");   // Esc → 回一级面板
   widget.render(80);
 });

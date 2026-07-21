@@ -707,7 +707,9 @@ export function loadState(filepath?: string): boolean {
   if (gameState.player?.location && !gameState.player.gridPos) {
     try {
       initPlayerGrid();
-    } catch {}
+    } catch (e) {
+      console.error("loadState: initPlayerGrid failed for location", gameState.player?.location, e);
+    }
   }
 
   // 旧档兜底：organizations 缺失或为空 → 从 worldpack 文件重新加载
@@ -1742,7 +1744,7 @@ export async function buildStatePrompt(): Promise<string> {
     tpl += `\n[日历] 今日特殊: ${todayCal}`;
   }
   // 课程表注入（玩家在学校时）
-  if (p.location.includes("総武高") || p.location.includes("总武高") || p.location.includes("教室") || p.location.includes("校") || p.location.includes("部室") || p.location.includes("体育") || p.location.includes("プール")) {
+  if (p.location.includes("教室") || p.location.includes("校") || p.location.includes("部室") || p.location.includes("体育") || p.location.includes("プール")) {
     try {
       const fs = await import("node:fs");
       const path = await import("node:path");
@@ -3887,14 +3889,6 @@ export function monthlyGrowth(diet: string, exercise: string): string {
   saveState();
   return `月末发育结算（${diet} / ${exercise}）: ${changes.join("，")}`;
 }
-
-// --- 天气 ---
-const SEASONS: Record<string, { types: string[]; temps: [number, number] }> = {
-  "春": { types: ["晴","多云","小雨","晴"], temps: [10, 22] },
-  "夏": { types: ["晴","晴","多云","小雨","雷阵雨"], temps: [22, 35] },
-  "秋": { types: ["晴","多云","阴","小雨"], temps: [8, 20] },
-  "冬": { types: ["晴","多云","阴","雪"], temps: [0, 10] },
-};
 
 export function refreshWeather(): string {
   transitionWeather(gameState);

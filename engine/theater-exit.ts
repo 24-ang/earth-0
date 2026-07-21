@@ -77,8 +77,8 @@ export async function settleTheaterExit(): Promise<string> {
     }
   }
 
-  // 写入记忆渗透
-  const involvedNPCs = new Set([...Object.keys(affectionShifts), "雪之下雪乃"]);
+  // 写入记忆渗透（仅好感度发生过偏移的 NPC）
+  const involvedNPCs = new Set(Object.keys(affectionShifts));
   for (const npcName of involvedNPCs) {
     const npc = gameState.npcs[npcName];
     if (npc) {

@@ -182,8 +182,8 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
 
   // ── 学校课时标签（极简——只告诉 GM 现在是上课/课间/午休/放学）──
   let schoolLabel = "";
-  if (location.includes("総武高") || location.includes("总武高") || location.includes("教室") ||
-      location.includes("体育") || location.includes("プール") || location.includes("校")) {
+  if (location.includes("教室") || location.includes("体育") || location.includes("プール") ||
+      (location.includes("校") && !location.includes("警察") && !location.includes("校正"))) {
     try {
       const { getCurrentPeriod } = require("./time.ts");
       const pi = getCurrentPeriod(gs.time.minute_of_day, gs.time.day_of_week);

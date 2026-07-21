@@ -43,8 +43,8 @@ export function generateBroadcastDanmaku(gs: GameState, lastNarrative: string): 
     resultDanmakus.push(`[弹幕] ${anonymousPool[rIdx]}`);
   }
 
-  // 2. 根据场景中出现的角色名匹配静态语录（以弹幕形式吐出）
-  const knownNpcs = ["雪之下雪乃", "由比滨结衣", "比企谷八幡", "户冢彩加"];
+  // 2. 根据模板中配置的角色名匹配弹幕（模板 key 即角色名，anonymous 除外）
+  const knownNpcs = Object.keys(templates).filter(k => k !== "anonymous");
   for (const name of knownNpcs) {
     if (lastNarrative.includes(name) && templates[name]) {
       const typeKey = lastNarrative.includes("尴尬") || lastNarrative.includes("抱") || lastNarrative.includes("走光")
@@ -119,9 +119,9 @@ export async function generateNPCCommentary(gs: GameState, lastNarrative: string
     }
   }
 
-  // 兜底
+  // 兜底：无任何匹配观众则跳过本轮评论
   if (!targetNpc) {
-    targetNpc = "雪之下雪乃";
+    return null;
   }
 
   const npcState = backupState.npcs[targetNpc];

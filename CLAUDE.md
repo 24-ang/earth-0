@@ -75,7 +75,7 @@
 - NPC 环境感知：天气/季节/房间家具/路人 全注入 NPC Agent prompt
 - Phase 1 场景导演规则（第0条）：走进空间→判断该有什么人→spawn_temp_npc
 
-**测试**：`npx tsx test.ts`（281）+ `npx tsx e2e-test.ts`（45）+ `npx tsx e2e-init-test.ts`（57）= **383 passed**，改完必跑，必须全绿。
+**测试**：`npx tsx test.ts` = **351 passed**，改完必跑，必须全绿。HUD 手工测试用 `/sandbox` + 对照 `docs/HUD测试手册.md`。
 
 ## 必须先读
 
@@ -150,5 +150,5 @@ worldpacks/      — 可切换的世界数据包（oregairu/）
 data/            — 跨世界通用数据 + TS静态导入兜底
 docs/            — PHILOSOPHY.md / decisions.md / module-template.md / AUDIT / COMPARISON
 extension.ts     — pi 框架扩展入口（四阶段编排，pi退化为传输层）
-e2e-test.ts (45) + e2e-init-test.ts (57) + test.ts (281) — 测试套件（383 passed）
+test.ts (351) — 测试套件（351 passed）
 ```

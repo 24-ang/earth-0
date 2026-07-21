@@ -415,7 +415,7 @@ export async function createRoom(
   if (!gameState.player.known_locations.includes(roomName)) {
     gameState.player.known_locations.push(roomName);
   }
-  saveState();
+  // saveState 由工具 wrapper (withToolTracking) 统一调用，这里不重复保存
   // 自动将玩家移入新创建的房间
   try {
     const { setPlayerLocation } = await import("./state.ts");
@@ -628,8 +628,8 @@ export function getItemTemplate(itemName: string): import("./types.ts").Item {
     }
     return structuredClone(itemData);
   }
-  const range = PRICE_RANGE?.["tool"] || [50, 500];
-  return { name: itemName, type: "tool", slot: "back", weight: 1.0, effects: [], state: "intact", volume: 0.5, price: Math.round((range[0] + range[1]) / 2) };
+  console.error(`getItemTemplate: "${itemName}" 不在物品目录中——由调用方决定是否继续（LLM 应合成具体物品）`);
+  return { name: itemName, type: "tool", slot: "back", weight: 1.0, effects: [], state: "intact", volume: 0.5, price: 0 };
 }
 
 export function removeFurniture(x: number, y: number): { success: boolean; reason: string; item?: string } {
