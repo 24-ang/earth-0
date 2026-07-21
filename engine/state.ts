@@ -703,6 +703,22 @@ export function loadState(filepath?: string): boolean {
   // 写回最新版本号
   gameState.schemaVersion = currentSchemaVersion;
 
+  // 旧档兜底：确保 body-detail 性器段可用
+  if (!gameState.player.sex) {
+    if (gameState.sexStates?.[gameState.player.name]) {
+      gameState.player.sex = structuredClone(gameState.sexStates[gameState.player.name]);
+    } else {
+      const isF = (gameState.player.gender || "").includes("女");
+      gameState.player.sex = {
+        profile: isF
+          ? { female: { breast: {}, vagina: {}, pubic_hair: {} }, attitude: "未开发", experience: "无" }
+          : { male: { penis: {}, testicles: {}, pubic_hair: {} }, attitude: "未开发", experience: "无" },
+        desire: 0, arousal: 0, cycleDay: 1, cyclePhase: "安全期",
+        climaxed: false, climaxCount: 0, squirtCount: 0, thoughts: [],
+      };
+    }
+  }
+
   // 加载后重建空间状态（仅 gridPos 为 null 时初始化，防止覆盖已持久化的位置）
   if (gameState.player?.location && !gameState.player.gridPos) {
     try {
@@ -4684,8 +4700,8 @@ export function getNamelessNPCs(loc: string, turn: number): NamelessNPC[] {
   if (estimate <= 0) return [];
 
   return [{
-    name: crowdType + " (~" + estimate + "人)",
-    act: typeAct + " (房间容量" + cap + ", " + zone + " " + timeLabel + ")",
+    name: crowdType,
+    act: typeAct,
     height: "",
     gridPos: [1, 1],
     clusterSize: estimate,

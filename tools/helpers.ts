@@ -126,25 +126,17 @@ export function setLastRenderedProse(prose: string) {
 
 export { parseRoleOptions } from "../engine/parse-options.ts";
 
-// ANSI 世界书风格（与 HUD 统一：灰底橙字金点缀）
-// C.M = \x1b[90m (gray), C.O = \x1b[38;5;208m (orange), C.Y = \x1b[33m (gold)
-const GM = "\x1b[90m";   // gray — border/separator/secondary
-const GO = "\x1b[38;5;208m"; // orange — active/selected/highlight
-const GY = "\x1b[33m";  // gold — money/warning
-const G0 = "\x1b[0m";   // reset
 export const TUI_THEME = {
-  border: GM,
-  borderActive: GO,
-  titleText: "\x1b[97m\x1b[1m",       // white bold — 标题文字
-  titleBracket: GM,                    // gray — 标题括号
-  reset: G0,
-  selected: GO + "\x1b[1m",           // orange bold — 选中行
-  selectedArrow: "▶",
-  itemDetail: GM,                     // gray — 副文本
-  keyHint: GM,                        // gray — 提示文字
-  keyText: GO,                        // orange — 按键名
-  separator: GM,                      // gray — 分隔线
-  hudText: GM,                        // gray — 状态栏文字
+  border: "\x1b[90m",        // Gray borders
+  borderActive: "\x1b[36m",   // Cyan highlighted borders
+  titleText: "\x1b[1m\x1b[36m", // Bold Cyan title text
+  reset: "\x1b[0m",           // Reset style
+  selected: "\x1b[7m\x1b[1m\x1b[36m", // Inverse + Bold Cyan
+  itemDetail: "\x1b[90m",    // Gray detail
+  keyHint: "\x1b[90m",       // Gray key hints
+  keyText: "\x1b[36m",       // Cyan highlight keys
+  separator: "\x1b[90m",     // Gray separator lines
+  hudText: "\x1b[33m",       // Yellow HUD text
 };
 
 export function getStringWidth(str: string): number {
@@ -300,35 +292,21 @@ const timeOfDayZH: Record<string, string> = {
 function buildStatusBarText(): string | null {
   try {
     if (gameState && gameState.time && gameState.player) {
-      const p = gameState.player;
-      const loc = p.location;
-      const t = gameState.time;
-      // 区域（面包屑第一层）
-      let region = loc;
-      try {
-        const { getLocationNav, getWorldRootName } = require("../engine/state-location.ts");
-        const nav = getLocationNav(loc);
-        region = (nav?.breadcrumb?.length > 1) ? nav.breadcrumb[0] : getWorldRootName();
-      } catch {}
-      // 时钟
-      let clock = "?", wx = "", season = "";
-      try {
-        const cp = require("../engine/time.ts").getClockParts(t);
-        clock = cp.display_time; season = cp.season;
-      } catch {}
-      wx = gameState.weather?.type || "";
-      // 平日/休日
-      const dow = t?.day_of_week || "";
-      const dayType = (dow === "土" || dow === "日" || dow === "六" || dow === "天") ? "休日" : "平日";
-      // 在场人数
+      const loc = gameState.player.location;
       const cLoc = normalizeLocationName(loc);
-      const npcsHere = Object.values(gameState.npcs || {}).filter((n: any) => normalizeLocationName(n.currentRoom) === cLoc).length;
-      const nameless = getNamelessNPCs(loc, gameState.turn).length;
-      const totalHere = npcsHere + nameless;
+      const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => normalizeLocationName(n.currentRoom) === cLoc).length;
+      const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
+      const totalCount = npcsHereCount + namelessCount;
+      // 列出同场 NPC 名（最多3个）
+      const named = Object.entries(gameState.npcs || {} as any)
+        .filter(([_, n]: [string, any]) => normalizeLocationName(n.currentRoom) === cLoc)
+        .slice(0, 3)
+        .map(([name]: [string, any]) => {
+          const a = gameState.player?.relationships?.[name]?.affection ?? 0;
+          return `${name}💕${a}`;
+        }).join(" ") || "无人";
 
-      const segs = [region, `${clock}${wx ? GM+"-"+wx+G0 : ""}`, `${season}${GM}·${G0}${dayType}`].filter(Boolean);
-      const summary = `${GM}|-[${G0}${segs.join(GM+"|"+G0)}${GM}]${G0}`;
-      return `📍 ${loc}  ${summary}  👥${totalHere}人  turn ${gameState.turn}`;
+      return `📍 ${loc} · 👥 ${named}${namelessCount>0?` +${namelessCount}路人`:""} · turn ${gameState.turn}`;
     }
   } catch (e) {
     console.error("buildStatusBarText error:", e);
@@ -366,52 +344,53 @@ export async function showPanel(ctx: any, title: string, lines: string[]): Promi
         render(width: number): string[] {
           const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
           const out: string[] = [];
-          const contentW = w - 4;
-
-          // 标题：世界书风格 【 title 】
-          const headBracket = TUI_THEME.titleBracket;
-          const headText = TUI_THEME.titleText;
-          out.push(`${TUI_THEME.border} ${G0}${headBracket}【 ${headText}${title}${G0}${headBracket} 】${G0}`);
-          out.push(`${TUI_THEME.border}${TUI_THEME.separator}─${"─".repeat(Math.max(0, w - 2))}${G0}`);
-
+          const titleW = getStringWidth(title);
+          
+          // Styled Top border
+          const topBorder = TUI_THEME.border + "┌─" + TUI_THEME.reset + 
+                            TUI_THEME.titleText + title + TUI_THEME.reset + " " +
+                            TUI_THEME.border + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐" + TUI_THEME.reset;
+          out.push(topBorder);
+          
           const maxScroll = Math.max(0, finalLines.length - PAGE);
           if (scroll > maxScroll) scroll = maxScroll;
           const view = finalLines.slice(scroll, scroll + PAGE);
-
+          
           const total = finalLines.length;
           const visibleCount = view.length;
           const thumbHeight = Math.max(1, Math.round((visibleCount / total) * visibleCount));
           const scrollableDistance = total - visibleCount;
           const thumbStart = scrollableDistance > 0 ? Math.round((scroll / scrollableDistance) * (visibleCount - thumbHeight)) : 0;
-
+          
+          const contentW = w - 4;
           for (let i = 0; i < visibleCount; i++) {
             const l = view[i]!;
-
+            
             // Check if this line is a sub-header or divider
             let lineContent = l;
             if (l.startsWith("──") && l.endsWith("──")) {
               // Section header
-              lineContent = headText + l + G0;
+              lineContent = TUI_THEME.titleText + l + TUI_THEME.reset;
             } else if (l.startsWith("──") || l.includes("────")) {
               // General divider
-              lineContent = TUI_THEME.separator + l + G0;
+              lineContent = TUI_THEME.separator + l + TUI_THEME.reset;
             }
-
+            
             const t = truncateToWidth(lineContent, contentW);
             const pad = Math.max(0, contentW - getStringWidth(t));
             const paddedContent = t + " ".repeat(pad);
-
+            
             let rightBorder = "│";
             if (total > PAGE) {
               const isScrollChar = i >= thumbStart && i < thumbStart + thumbHeight;
-              rightBorder = isScrollChar ? GO + "█" + G0 : GM + "░" + G0;
+              rightBorder = isScrollChar ? "\x1b[36m█\x1b[0m" : "\x1b[90m░\x1b[0m";
             }
-
-            out.push(TUI_THEME.border + "│ " + G0 + paddedContent + TUI_THEME.border + " " + rightBorder + G0);
+            
+            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + paddedContent + TUI_THEME.border + " " + rightBorder + TUI_THEME.reset);
           }
-
-          out.push(TUI_THEME.border + TUI_THEME.separator + "─" + "─".repeat(w - 2) + G0);
-
+          
+          out.push(TUI_THEME.border + "└" + "─".repeat(w - 2) + "┘" + TUI_THEME.reset);
+          
           const scrollHint = total > PAGE
             ? ` [${scroll + 1}-${Math.min(scroll + PAGE, total)}/${total}] ${TUI_THEME.keyText}↑↓/Space${TUI_THEME.keyHint} 滚动`
             : "";
@@ -462,22 +441,22 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
         render(width: number): string[] {
           const out: string[] = [];
           const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
-          const contentW = w - 4;
-
-          // 标题：世界书风格 【 title 】
-          const headBracket = TUI_THEME.titleBracket;
-          const headText = TUI_THEME.titleText;
-          const headStr = `${headBracket}【 ${headText}${title}${G0}${headBracket} 】${G0}`;
-          out.push(`${TUI_THEME.border} ${G0}${headStr}${TUI_THEME.border}${G0}`);
-          out.push(`${TUI_THEME.border}${TUI_THEME.separator}─${"─".repeat(Math.max(0, w - 2))}${G0}`);
-
-          // HUD 风格状态栏
+          const titleW = getStringWidth(title);
+          
+          // Styled Top border
+          const topBorder = TUI_THEME.border + "┌─" + TUI_THEME.reset + 
+                            TUI_THEME.titleText + title + TUI_THEME.reset + " " +
+                            TUI_THEME.border + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐" + TUI_THEME.reset;
+          out.push(topBorder);
+          
+          // TUI HUD Status Bar
           const statusText = buildStatusBarText();
           if (statusText) {
-            const barTrunc = truncateToWidth(statusText, contentW);
-            const barPad = Math.max(0, contentW - getStringWidth(barTrunc));
-            out.push(TUI_THEME.border + "│ " + G0 + TUI_THEME.hudText + barTrunc + G0 + " ".repeat(barPad) + TUI_THEME.border + " │" + G0);
-            out.push(TUI_THEME.border + TUI_THEME.separator + "─" + "─".repeat(w - 2) + G0);
+            const styledStatus = TUI_THEME.hudText + statusText + TUI_THEME.reset;
+            const barTrunc = truncateToWidth(styledStatus, w - 4);
+            const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
+            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + barTrunc + " ".repeat(barPad) + TUI_THEME.border + " │" + TUI_THEME.reset);
+            out.push(TUI_THEME.border + "├" + "─".repeat(w - 2) + "┤" + TUI_THEME.reset);
           }
 
           let start = Math.max(0, sel - 5);
@@ -485,51 +464,53 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
           if (end - start < 10) {
             start = Math.max(0, end - 10);
           }
-
+          
           const total = items.length;
           const visibleCount = end - start;
           const thumbHeight = Math.max(1, Math.round((visibleCount / total) * visibleCount));
           const scrollableDistance = total - visibleCount;
           const thumbStart = scrollableDistance > 0 ? Math.round((start / scrollableDistance) * (visibleCount - thumbHeight)) : 0;
 
+          const contentW = w - 4;
           for (let i = start; i < end; i++) {
             const it = items[i]!;
             const isSel = (i === sel);
             const isSeparator = it.label.startsWith("──");
-
+            
             let labelStr = it.label;
             let detailStr = it.detail ? " " + it.detail : "";
-
+            
             let lineContent = "";
             if (isSeparator) {
-              lineContent = TUI_THEME.separator + labelStr + G0;
+              lineContent = TUI_THEME.separator + labelStr + TUI_THEME.reset;
             } else {
               if (isSel) {
-                lineContent = TUI_THEME.selected + "▶ " + labelStr + (detailStr ? "  " + detailStr : "") + G0;
+                lineContent = TUI_THEME.selected + "▶ " + labelStr + (detailStr ? "  " + detailStr : "") + TUI_THEME.reset;
               } else {
-                lineContent = "  " + labelStr + (detailStr ? "  " + TUI_THEME.itemDetail + detailStr + G0 : "");
+                lineContent = "  " + labelStr + (detailStr ? "  " + TUI_THEME.itemDetail + detailStr + TUI_THEME.reset : "");
               }
             }
-
+            
             const t = truncateToWidth(lineContent, contentW);
             const pad = Math.max(0, contentW - getStringWidth(t));
             const paddedContent = t + " ".repeat(pad);
-
+            
+            const lineIdx = i - start;
             let rightBorder = "│";
-            if (total > 10) {
-              const isScrollChar = i >= Math.floor(thumbStart / visibleCount * total) && i < Math.floor((thumbStart + thumbHeight) / visibleCount * total);
-              rightBorder = isScrollChar ? GO + "█" + G0 : GM + "░" + G0;
+            if (total > visibleCount) {
+              const isScrollChar = lineIdx >= thumbStart && lineIdx < thumbStart + thumbHeight;
+              rightBorder = isScrollChar ? "\x1b[36m█\x1b[0m" : "\x1b[90m░\x1b[0m";
             }
-
-            out.push(TUI_THEME.border + "│ " + G0 + paddedContent + TUI_THEME.border + " " + rightBorder + G0);
+            
+            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + paddedContent + TUI_THEME.border + " " + rightBorder + TUI_THEME.reset);
           }
-
-          out.push(TUI_THEME.border + TUI_THEME.separator + "─" + "─".repeat(w - 2) + G0);
-
-          const countStr = `${sel + 1}/${total}`;
+          
+          out.push(TUI_THEME.border + "└" + "─".repeat(w - 2) + "┘" + TUI_THEME.reset);
+          
+          const countStr = `${sel + 1}/${items.length}`;
           const hintText = `${countStr}  ${TUI_THEME.keyText}↑↓${TUI_THEME.keyHint} 选择 · ${TUI_THEME.keyText}Enter${TUI_THEME.keyHint} 确认 · ${TUI_THEME.keyText}q/ESC${TUI_THEME.keyHint} 返回`;
           out.push(truncateToWidth(hintText, w));
-
+          
           return out;
         },
         handleInput(d: string) {
@@ -1071,44 +1052,18 @@ export async function renderHousingLines(): Promise<string[]> {
 
 export async function renderCalendarLines(): Promise<string[]> {
   const { gameState } = await import("../engine/state.ts");
-  const { getTodayCalendar } = await import("../engine/timeline.ts");
+  const { getTodayCalendar, getActiveQuests } = await import("../engine/timeline.ts");
   const lines: string[] = [];
   lines.push(`📅 ${gameState.time.game_date} ${gameState.time.day_of_week}曜日`);
   lines.push("────────────────────────────────────────");
   const todayEvent = getTodayCalendar();
-  if (todayEvent) { lines.push("📌 今日"); lines.push(`  ${todayEvent}`); }
+  if (todayEvent) { lines.push("📌 今日事件"); lines.push(`  ${todayEvent}`); }
   else lines.push("📌 今日: 无特殊事件");
-
-  // 近期事件（未来7天）
-  try {
-    const { gameState: gs2 } = await import("../engine/state.ts");
-    const dynEvents: any[] = (gs2 as any).calendarEvents || [];
-    const allCalEvents: any[] = [];
-    try {
-      const { loadCalendar } = await import("../engine/timeline.ts");
-      const loaded = loadCalendar ? loadCalendar() : [];
-      allCalEvents.push(...loaded);
-    } catch {}
-    allCalEvents.push(...dynEvents);
-    // Filter future events within 7 days from now
-    const today = (gameState as any).turn || 0;
-    const future = allCalEvents
-      .filter((e: any) => {
-        const ed = e.day ?? e.start_day ?? 0;
-        return ed > today && ed <= today + 7;
-      })
-      .sort((a: any, b: any) => (a.day ?? 0) - (b.day ?? 0));
-    if (future.length > 0) {
-      lines.push("────────────────────────────────────────");
-      lines.push(`🔮 未来7天 (${future.length}件)`);
-      for (const ev of future) {
-        const d = (ev as any).day ?? 0;
-        const diff = d - today;
-        const locStr = (ev as any).location ? ` 📍${(ev as any).location}` : "";
-        lines.push(`  +${diff}天 ${(ev as any).text || (ev as any).date || "?"}${locStr}`);
-      }
-    }
-  } catch {}
+  lines.push("────────────────────────────────────────");
+  const quests = getActiveQuests();
+  lines.push(`📋 进行中的任务 (${quests.length})`);
+  if (quests.length > 0) for (const q of quests) lines.push(`  ▶ ${q.id} ${q.title || ""}`);
+  else lines.push("  (无)");
   lines.push("────────────────────────────────────────");
   const hooks = gameState.active_hooks || [];
   lines.push(`🔗 待触发事件: ${hooks.length}`);
@@ -1129,155 +1084,6 @@ export async function renderQuestLines(): Promise<string[]> {
   const hooks = gameState.active_hooks || [];
   lines.push(`🔗 等待触发的剧情钩子: (${hooks.length})`);
   if (hooks.length > 0) for (const h of hooks) lines.push(`  - ${h.event_id} (${h.urgency || "?"}) ${(h.hook_text || "").slice(0, 40)}`);
-  return lines;
-}
-
-export async function renderQuestDetailLines(): Promise<string[]> {
-  const { gameState } = await import("../engine/state.ts");
-  const lines: string[] = [];
-  const quests: Record<string, any> = gameState.quests || {};
-  const entries = Object.entries(quests);
-  const active = entries.filter(([, q]) => q.status === "active");
-  const completed = entries.filter(([, q]) => q.status === "completed");
-  const dead = entries.filter(([, q]) => q.status === "abandoned" || q.status === "expired");
-
-  if (entries.length === 0) {
-    lines.push("  (暂无任务记录)");
-    lines.push("  剧情钩子接受后会变成任务，通过 open_quest 开启");
-    return lines;
-  }
-
-  if (active.length > 0) {
-    lines.push(`◆ 进行中 (${active.length})`);
-    for (const [, q] of active) {
-      lines.push(`  ▸ ${q.title || q.id}`);
-      if (q.current_beat) lines.push(`    当前阶段: ${q.current_beat}`);
-      const nOutcomes = Object.keys(q.outcomes || {}).length;
-      lines.push(`    第${q.started_day}天开始  ·  已选择${nOutcomes}个分支`);
-    }
-  }
-
-  if (completed.length > 0) {
-    lines.push(`✓ 已完成 (${completed.length})`);
-    for (const [, q] of completed) {
-      lines.push(`  — ${q.title || q.id}`);
-    }
-  }
-
-  if (dead.length > 0) {
-    lines.push(`✗ 已结束 (${dead.length})`);
-    for (const [, q] of dead) {
-      lines.push(`  — ${q.title || q.id} [${q.status}]`);
-    }
-  }
-
-  // 事件历史计数
-  const completed2 = gameState.completed_events || [];
-  const dynamics2 = gameState.dynamicEvents || [];
-  if (completed2.length > 0 || dynamics2.length > 0) {
-    lines.push("");
-    lines.push(`📜 事件记录: 已完成${completed2.length}个 · 动态${dynamics2.length}个`);
-  }
-
-  return lines;
-}
-
-export async function renderWoundDetailLines(): Promise<string[]> {
-  const { gameState } = await import("../engine/state.ts");
-  const wounds: any[] = gameState.player.wounds || [];
-  const lines: string[] = [];
-  if (!wounds.length) {
-    lines.push("  (无伤势)");
-    return lines;
-  }
-  lines.push(`当前 ${wounds.length} 处伤势`);
-  for (const w of wounds) {
-    const sevIcon = w.severity === "重伤" || w.severity === "危重" ? "🔴" : w.severity === "中度" ? "🟡" : "🟢";
-    lines.push(`  ${sevIcon} [${w.severity || "轻伤"}] ${w.text || w.name || w.bodyPart || ""}`);
-    if (w.source) lines.push(`    来源: ${w.source}`);
-  }
-  lines.push("");
-  lines.push("伤势影响战斗和行动能力，随时间或治疗恢复");
-  return lines;
-}
-
-export async function renderOrgBrowserLines(): Promise<string[]> {
-  const { gameState } = await import("../engine/state.ts");
-  const orgs: Record<string, any> = gameState.organizations || {};
-  const entries = Object.entries(orgs).filter(([, o]: any) => !o.archived);
-  const archived = Object.entries(orgs).filter(([, o]: any) => o.archived);
-  const lines: string[] = [];
-  if (!entries.length && !archived.length) {
-    lines.push("  (无已知组织)");
-    return lines;
-  }
-
-  if (entries.length > 0) {
-    lines.push(`🏛️ 活跃组织 (${entries.length})`);
-    const bySector: Record<string, any[]> = {};
-    for (const [, o] of entries) {
-      const sec = (o as any).sector || "其他";
-      if (!bySector[sec]) bySector[sec] = [];
-      bySector[sec].push(o);
-    }
-    for (const [sec, list] of Object.entries(bySector)) {
-      lines.push(`── ${sec} (${list.length}) ──`);
-      for (const o of list) {
-        const scale = (o as any).scale || "?";
-        lines.push(`  ▸ ${(o as any).name || (o as any).id}  [${scale}]`);
-        lines.push(`    影响力${(o as any).influence||0} · 凝聚力${(o as any).cohesion||0} · 公信力${(o as any).public_legitimacy||0}`);
-        if ((o as any).leader) lines.push(`    领袖: ${(o as any).leader}`);
-        if ((o as any).lifecycle_stage) lines.push(`    阶段: ${(o as any).lifecycle_stage}`);
-      }
-    }
-  }
-
-  if (archived.length > 0) {
-    lines.push("");
-    lines.push(`💀 已消亡组织 (${archived.length})`);
-    for (const [, o] of archived) {
-      lines.push(`  — ${(o as any).name || (o as any).id} [${(o as any).scale || "?"}]`);
-    }
-  }
-
-  return lines;
-}
-
-export async function renderHookDetailLines(): Promise<string[]> {
-  const { gameState } = await import("../engine/state.ts");
-  const lines: string[] = [];
-  const hooks: any[] = gameState.active_hooks || [];
-
-  if (hooks.length === 0) {
-    lines.push("  (暂无等待触发的剧情钩子)");
-    lines.push("  随着游戏推进，新的剧情钩子会自动出现");
-    lines.push("  最多同时存在 3 个，高优先级先出");
-    return lines;
-  }
-
-  lines.push(`当前 ${hooks.length} 个钩子（最多 3 个）`);
-  lines.push("");
-
-  const I: Record<string, string> = { high: "🔴", medium: "🟡", low: "🟢" };
-  const U: Record<string, string> = { high: "紧急", medium: "普通", low: "低优先" };
-
-  for (const h of hooks) {
-    const icon = I[h.urgency] || "⚪";
-    lines.push(`${icon} [${U[h.urgency] || h.urgency}] ${h.hook_text || h.event_id}`);
-    if (h.source_npc) lines.push(`  来源NPC: ${h.source_npc}`);
-    if (h.novelty) lines.push(`  新意: ${h.novelty}`);
-    const created = h.created_day;
-    const expires = h.expires_day;
-    if (created != null && expires != null) {
-      const window2 = expires - created;
-      lines.push(`  有效期: 第${created}天 → 第${expires}天（窗口${window2}天）`);
-    }
-    if (h.seen_count > 0) lines.push(`  已呈现${h.seen_count}次`);
-    if (h.iconic_lines?.length) {
-      lines.push(`  标志台词: 「${h.iconic_lines[0]}」`);
-    }
-  }
-
   return lines;
 }
 
@@ -1350,23 +1156,6 @@ export async function renderWeatherLines(): Promise<string[]> {
   return lines;
 }
 
-export async function renderWorldLines(): Promise<string[]> {
-  const { gameState, translateWorldState } = await import("../engine/state.ts");
-  const lines: string[] = [];
-  const ws = gameState.worldState;
-  if (!ws) { lines.push("  （暂无世界状态数据）"); return lines; }
-  lines.push(`🌍 当前位置大势`);
-  lines.push("────────────────────────────────────────");
-  if (ws.regime) lines.push(`  政权 │ ${ws.regime}`);
-  if (ws.prosperity != null) lines.push(`  繁荣 │ ${ws.prosperity}`);
-  if (ws.stability != null) lines.push(`  稳定 │ ${ws.stability}`);
-  if (ws.tension != null) lines.push(`  紧张 │ ${ws.tension}`);
-  if (ws.tech != null) lines.push(`  科技 │ ${ws.tech}`);
-  const desc = translateWorldState ? translateWorldState(ws) : "";
-  if (desc) { lines.push("────────────────────────────────────────"); lines.push(desc); }
-  return lines;
-}
-
 export async function renderMemoryLines(): Promise<string[]> {
   const { gameState, getMemoryTags, getOrCreateNPC } = await import("../engine/state.ts");
   const lines: string[] = [];
@@ -1385,6 +1174,203 @@ export async function renderMemoryLines(): Promise<string[]> {
     }
   }
   if (!found) { lines.push("（尚无NPC对你留下记忆标签）"); lines.push("记忆标签在关键剧情事件时由GM写入，注入后续NPC上下文。"); }
+  return lines;
+}
+
+export async function renderQuestDetailLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const quests: Record<string, any> = gameState.quests || {};
+  const entries = Object.entries(quests);
+  const active = entries.filter(([, q]) => q.status === "active");
+  const completed = entries.filter(([, q]) => q.status === "completed");
+  const dead = entries.filter(([, q]) => q.status === "abandoned" || q.status === "expired");
+
+  if (entries.length === 0) {
+    lines.push("  (暂无任务记录)");
+    lines.push("  剧情钩子接受后会变成任务，通过 open_quest 开启");
+    return lines;
+  }
+
+  if (active.length > 0) {
+    lines.push(`◆ 进行中 (${active.length})`);
+    for (const [, q] of active) {
+      lines.push(`  ▸ ${q.title || q.id}`);
+      if (q.current_beat) lines.push(`    当前阶段: ${q.current_beat}`);
+      const nOutcomes = Object.keys(q.outcomes || {}).length;
+      lines.push(`    第${q.started_day}天开始  ·  已选择${nOutcomes}个分支`);
+    }
+  }
+
+  if (completed.length > 0) {
+    lines.push(`✓ 已完成 (${completed.length})`);
+    for (const [, q] of completed) {
+      lines.push(`  — ${q.title || q.id}`);
+    }
+  }
+
+  if (dead.length > 0) {
+    lines.push(`✗ 已结束 (${dead.length})`);
+    for (const [, q] of dead) {
+      lines.push(`  — ${q.title || q.id} [${q.status}]`);
+    }
+  }
+
+  const completed2 = gameState.completed_events || [];
+  const dynamics2 = gameState.dynamicEvents || [];
+  if (completed2.length > 0 || dynamics2.length > 0) {
+    lines.push("");
+    lines.push(`📜 事件记录: 已完成${completed2.length}个 · 动态${dynamics2.length}个`);
+  }
+
+  return lines;
+}
+
+export async function renderHookDetailLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const hooks: any[] = gameState.active_hooks || [];
+
+  if (hooks.length === 0) {
+    lines.push("  (暂无等待触发的剧情钩子)");
+    lines.push("  随着游戏推进，新的剧情钩子会自动出现");
+    lines.push("  最多同时存在 3 个，高优先级先出");
+    return lines;
+  }
+
+  lines.push(`当前 ${hooks.length} 个钩子（最多 3 个）`);
+  lines.push("");
+
+  const I: Record<string, string> = { high: "🔴", medium: "🟡", low: "🟢" };
+  const U: Record<string, string> = { high: "紧急", medium: "普通", low: "低优先" };
+
+  for (const h of hooks) {
+    const icon = I[h.urgency] || "⚪";
+    lines.push(`${icon} [${U[h.urgency] || h.urgency}] ${h.hook_text || h.event_id}`);
+    if (h.source_npc) lines.push(`  来源NPC: ${h.source_npc}`);
+    if (h.novelty) lines.push(`  新意: ${h.novelty}`);
+    const created = h.created_day;
+    const expires = h.expires_day;
+    if (created != null && expires != null) {
+      const window2 = expires - created;
+      lines.push(`  有效期: 第${created}天 → 第${expires}天（窗口${window2}天）`);
+    }
+    if (h.seen_count > 0) lines.push(`  已呈现${h.seen_count}次`);
+    if (h.iconic_lines?.length) {
+      lines.push(`  标志台词: 「${h.iconic_lines[0]}」`);
+    }
+  }
+
+  return lines;
+}
+
+export async function renderWoundDetailLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const wounds: any[] = gameState.player.wounds || [];
+  const lines: string[] = [];
+  if (!wounds.length) {
+    lines.push("  (无伤势)");
+    return lines;
+  }
+  lines.push(`当前 ${wounds.length} 处伤势`);
+  for (const w of wounds) {
+    const sevIcon = w.severity === "重伤" || w.severity === "危重" ? "🔴" : w.severity === "中度" ? "🟡" : "🟢";
+    lines.push(`  ${sevIcon} [${w.severity || "轻伤"}] ${w.text || w.name || w.bodyPart || ""}`);
+    if (w.source) lines.push(`    来源: ${w.source}`);
+  }
+  lines.push("");
+  lines.push("伤势影响战斗和行动能力，随时间或治疗恢复");
+  return lines;
+}
+
+export async function renderOrgBrowserLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const orgs: Record<string, any> = gameState.organizations || {};
+  const entries = Object.entries(orgs).filter(([, o]: any) => !o.archived);
+  const archived = Object.entries(orgs).filter(([, o]: any) => o.archived);
+  const lines: string[] = [];
+  if (!entries.length && !archived.length) {
+    lines.push("  (无已知组织)");
+    return lines;
+  }
+
+  if (entries.length > 0) {
+    lines.push(`🏛️ 活跃组织 (${entries.length})`);
+    const bySector: Record<string, any[]> = {};
+    for (const [, o] of entries) {
+      const sec = (o as any).sector || "其他";
+      if (!bySector[sec]) bySector[sec] = [];
+      bySector[sec].push(o);
+    }
+    for (const [sec, list] of Object.entries(bySector)) {
+      lines.push(`── ${sec} (${list.length}) ──`);
+      for (const o of list) {
+        const scale = (o as any).scale || "?";
+        lines.push(`  ▸ ${(o as any).name || (o as any).id}  [${scale}]`);
+        lines.push(`    影响力${(o as any).influence||0} · 凝聚力${(o as any).cohesion||0} · 公信力${(o as any).public_legitimacy||0}`);
+        if ((o as any).leader) lines.push(`    领袖: ${(o as any).leader}`);
+        if ((o as any).lifecycle_stage) lines.push(`    阶段: ${(o as any).lifecycle_stage}`);
+      }
+    }
+  }
+
+  if (archived.length > 0) {
+    lines.push("");
+    lines.push(`💀 已消亡组织 (${archived.length})`);
+    for (const [, o] of archived) {
+      lines.push(`  — ${(o as any).name || (o as any).id} [${(o as any).scale || "?"}]`);
+    }
+  }
+
+  return lines;
+}
+
+export async function renderWorldLines(): Promise<string[]> {
+  const { gameState, translateWorldState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const ws = gameState.worldState;
+  if (!ws) { lines.push("  （暂无世界状态数据）"); return lines; }
+  lines.push(`🌍 当前位置大势`);
+  if (ws.regime) lines.push(`  政权 │ ${ws.regime}`);
+  if (ws.prosperity != null) lines.push(`  繁荣 │ ${ws.prosperity}`);
+  if (ws.stability != null) lines.push(`  稳定 │ ${ws.stability}`);
+  if (ws.tension != null) lines.push(`  紧张 │ ${ws.tension}`);
+  if (ws.tech != null) lines.push(`  科技 │ ${ws.tech}`);
+  const desc = translateWorldState ? translateWorldState(ws) : "";
+  if (desc) { lines.push(""); lines.push(desc); }
+  return lines;
+}
+
+export async function renderStoryLogLines(): Promise<string[]> {
+  const { gameState } = await import("../engine/state.ts");
+  const lines: string[] = [];
+  const ssf = gameState.storySoFar || "";
+  const tlog = gameState.turnLog || [];
+
+  if (ssf) {
+    lines.push("── 📖 故事摘要 ──");
+    const chunks = ssf.match(/.{1,60}/g) || [ssf];
+    for (const ch of chunks) lines.push(`  ${ch}`);
+    lines.push("");
+  }
+
+  if (tlog.length > 0) {
+    lines.push(`── 📋 最近回合 (共${tlog.length}条) ──`);
+    const recent = tlog.slice(-12).reverse();
+    for (const entry of recent) {
+      const tNum = entry.turn || "?";
+      const ts = entry.timestamp || "";
+      lines.push(`  T${tNum} ${ts} │ ${entry.playerAction || "?"}`);
+      if (entry.resolvedChanges && entry.resolvedChanges !== "无") lines.push(`       │ ${entry.resolvedChanges}`);
+      if (entry.sceneResult) lines.push(`       │ ${entry.sceneResult}`);
+    }
+  }
+
+  if (!ssf && !tlog.length) {
+    lines.push("  (暂无故事记录)");
+    lines.push("  随着游戏推进，回合日志和摘要会自动生成");
+  }
+
   return lines;
 }
 

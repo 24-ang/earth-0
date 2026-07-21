@@ -745,7 +745,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _lastEnterTime = 0; // 双击 Enter 进面板的时间戳
 
   // ── 三级状态机 ──
-  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "party-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "phone-contacts" | "phone-calllog" | "phone-sns" | "identity-detail" | "turnlog-detail" | "quest-detail" | "hook-detail" | "wound-detail" | "org-browser" | "story-detail" | "bag-empty" | null = null;
+  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "party-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | "bag-empty" | "bag-list" | null = null;
   let _subCursor = 0; // 子菜单内部光标
   let _selectedTarget: any = null; // 当前交互的目标实体 (如选中 NPC, 物品, 载具)
   let _pickSlot: string | null = null; // equip-detail 空槽 Enter → 选物品模式（slot id）, null=正常槽列表
@@ -762,10 +762,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _econLines: string[] | null = null;
   let _combatLines: string[] | null = null;
   let _worldLines: string[] | null = null;
-  let _questLines: string[] | null = null;
-  let _hookLines: string[] | null = null;
-  let _woundLines: string[] | null = null;
-  let _orgLines: string[] | null = null;
   const _gry = (s: string) => `${C.M}${s}${C.r}`;
   const _loadEconCombat = async () => {
     try {
@@ -798,46 +794,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     } catch (e) {
       console.error("[world-detail] 预加载失败:", e);
       _worldLines = [_gry("数据加载失败")];
-    }
-    try { _tuiRef?.requestRender?.(); } catch {}
-  };
-  const _loadQuestDetail = async () => {
-    try {
-      const h = require("./tools/helpers.ts");
-      _questLines = h.renderQuestDetailLines ? await h.renderQuestDetailLines() : [];
-    } catch (e) {
-      console.error("[quest-detail] 加载失败:", e);
-      _questLines = [_gry("数据加载失败")];
-    }
-    try { _tuiRef?.requestRender?.(); } catch {}
-  };
-  const _loadHookDetail = async () => {
-    try {
-      const h = require("./tools/helpers.ts");
-      _hookLines = h.renderHookDetailLines ? await h.renderHookDetailLines() : [];
-    } catch (e) {
-      console.error("[hook-detail] 加载失败:", e);
-      _hookLines = [_gry("数据加载失败")];
-    }
-    try { _tuiRef?.requestRender?.(); } catch {}
-  };
-  const _loadWoundDetail = async () => {
-    try {
-      const h = require("./tools/helpers.ts");
-      _woundLines = h.renderWoundDetailLines ? await h.renderWoundDetailLines() : [];
-    } catch (e) {
-      console.error("[wound-detail] 加载失败:", e);
-      _woundLines = [_gry("数据加载失败")];
-    }
-    try { _tuiRef?.requestRender?.(); } catch {}
-  };
-  const _loadOrgBrowser = async () => {
-    try {
-      const h = require("./tools/helpers.ts");
-      _orgLines = h.renderOrgBrowserLines ? await h.renderOrgBrowserLines() : [];
-    } catch (e) {
-      console.error("[org-browser] 加载失败:", e);
-      _orgLines = [_gry("数据加载失败")];
     }
     try { _tuiRef?.requestRender?.(); } catch {}
   };
@@ -1066,9 +1022,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     { icon: "🌍", label: "世界" },
     { icon: "🌈", label: "天气" },
     { icon: "🏆", label: "成就" },
+    { icon: "📜", label: "日志" },
   ];
 
-  /** 七项菜单右侧的同步摘要（轻量，直接读 gameState，不等异步加载） */
+  /** 九项菜单右侧的同步摘要（轻量，直接读 gameState，不等异步加载） */
   const _infoSummary = (gs: any, idx: number): string => {
     try {
       if (idx === 0) {
@@ -1117,18 +1074,24 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         } catch {}
         return total ? `${unlocked}/${total} 已解锁` : "未配置";
       }
+      if (idx === 8) {
+        const tlogN = (gs.turnLog || []).length;
+        const ssfLen = (gs.storySoFar || "").length;
+        if (!tlogN && !ssfLen) return "暂无记录";
+        return `${tlogN}回合 · ${ssfLen}字摘要`;
+      }
     } catch {}
     return "";
   };
 
-  /** 异步拼装七段情报（复用 helpers 现成渲染函数），完成后触发重绘 */
+  /** 异步拼装九段情报（复用 helpers 现成渲染函数），完成后触发重绘 */
   const _loadInfoLines = async () => {
     try {
       const h = require("./tools/helpers.ts");
       _infoSections = await Promise.all([
         h.renderAlertsLines(), h.renderQuestDetailLines(), h.renderHookDetailLines(),
         h.renderCalendarLines(), h.renderOrgBrowserLines(), h.renderWorldLines(),
-        h.renderWeatherLines(), h.renderAchievementLines(),
+        h.renderWeatherLines(), h.renderAchievementLines(), h.renderStoryLogLines(),
       ]);
     } catch (e: any) {
       console.error("[info-detail] 情报加载失败:", e?.message || e);
@@ -1382,7 +1345,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         const W = Math.max(20, w - 2) - 2; // 减 2 列给左侧竖线轨道 "│ "
         // 竖线轨道：聚焦区 → 粗橙 ┃，其余 → 灰 │
         const _secOf = (ft: string|null): string|null =>
-          !ft ? null : (ft === "titles" || ft === "reputation" || ft === "infoline") ? "info"
+          !ft ? null : (ft === "identity" || ft === "titles" || ft === "reputation" || ft === "infoline") ? "info"
           : (ft === "body" || ft === "sex" || ft === "equip" || ft === "skills" || ft === "bag" || ft === "vehicle" || ft === "party") ? "gear"
           : (ft === "gonav") ? "nav" : null;
         const tr = (s: string, sec?: string|null, focus?: boolean) => {
@@ -1536,7 +1499,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         dayType = (dow === "土" || dow === "日" || dow === "六" || dow === "天") ? "休日" : "平日";
         // 灰框白字（与开场日期行 |-[土曜日-…] 同款：|-[ ] | 分隔符灰，内容白）
         const summarySegs = [region, `${clock}${wx ? gray("-") + wx : ""}`, `${season}${gray("·")}${dayType}`].filter(Boolean);
-        const summaryLine = `${gray("|-[")}${summarySegs.join(gray("|"))}${gray("]")} ${modeLogo}${gs.pendingTravel ? ` ${C.Y}🚃${C.r}` : ""}`;
+        const summaryLine = `${gray("|-[")}${summarySegs.join(gray("|"))}${gray("]")} ${modeLogo}`;
 
         // 收起态：只显示摘要行
         if (!_expanded) {
@@ -1560,6 +1523,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           out.push(tr(gray("↑↓ 或 1/2 · Esc=取消"), "gear"));
           // 跳过正常面板渲染（聚焦行只有确认和取消）
           _focusItems = [{ type: "confirm_yes" }, { type: "confirm_no" }];
+          // Tab 栏仍显示（上下文提示哪个 Tab 下触发的）
+          out.push(tr(""));
+          const tbar = " " + ["自身","周边","房间","行动"].map((lb,i) => i===_tab ? `${C.O}${C.B}▶[${lb}]◀${C.r}` : gray(` [${lb}] `)).join(gray("│"));
+          out.push(tr(tbar));
           _expanded = true; // 确认模式下保持展开
           return out;
         }
@@ -1568,6 +1535,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         _focusItems = [];
         const TABS = ["自身","周边","房间","行动"];
         const hline = gray("─".repeat(Math.min(W, 80)));
+        out.push(tr(summaryLine));
+        out.push(tr(hline));
         const tabBar = " " + TABS.map((lb,i) =>
           i===_tab ? `${C.O}${C.B}▶[${lb}]◀${C.r}` : gray(` [${lb}] `)
         ).join(gray("│"));
@@ -1582,12 +1551,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           _focusItems.push({ type: "identity" });
           _focusItems.push({ type: "titles" });
           _focusItems.push({ type: "reputation" });
-          _focusItems.push({ type: "relations" });
           _focusItems.push({ type: "body" });
-          if (gs.layer1Enabled && p.sex) {
-            _focusItems.push({ type: "sex", index: 0 }); // 性状态行
-            if (_buildSexSegs(p).length) _focusItems.push({ type: "sex", index: 1 }); // 性征行
-          }
           _focusItems.push({ type: "equip" });
           _focusItems.push({ type: "skills" });
           const inv = [...(p.inventory || [])].sort((a: any, b: any) => {
@@ -1596,17 +1560,12 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (_sortMode === 3) return (b._acquiredAt || 0) - (a._acquiredAt || 0);
             return (a.type || "").localeCompare(b.type || "");
           });
-          // 背包头 + 逐件（头在前，与视觉顺序一致）
-          _focusItems.push({ type: "bag", item: inv[0] || null, index: -1 });
-          for (let i = 0; i < inv.length; i++) { _focusItems.push({ type: "bag", item: inv[i], index: i }); }
+          _focusItems.push({ type: "bag" });
           if (p.vehicle) { _focusItems.push({ type: "vehicle", vehicle: p.vehicle }); }
           _focusItems.push({ type: "economy" });
           _focusItems.push({ type: "combat" });
-          if ((p.wounds || []).length > 0) { _focusItems.push({ type: "wound" }); }
           _focusItems.push({ type: "party" });
           _focusItems.push({ type: "infoline" });
-          _focusItems.push({ type: "turnlog" });
-          _focusItems.push({ type: "story" });
 
           // 子菜单渲染
           if (_submenu === "item-detail" && _selectedTarget) {
@@ -1684,8 +1643,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (b.exercise && b.exercise !== "日常活动") out.push(tr(kv("运动", b.exercise)));
             if (b.plastic_surgery?.length) out.push(tr(kv("整形", b.plastic_surgery.join("、"))));
 
-            // Layer1 性器详情（按性别 + SexProfile）
-            if (gs.layer1Enabled && p.sex) {
+            // 性器详情（按性别 + SexProfile）——自己的身体不需要"开启模式"才能看
+            if (p.sex) {
               const sx = p.sex;
               const prof = sx.profile || {};
               out.push(tr(""));
@@ -1765,29 +1724,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               }
             }
           } else if (_submenu === "party-detail") {
-            out.push(tr(head("队伍详情"), "gear"));
             const pty = p.party || [];
-            if (!pty.length) { out.push(tr(gray("  （无队友）"))); }
-            else {
-              for (const nm of pty) {
-                const rel = p.relationships?.[nm];
-                const npc = gs?.npcs?.[nm];
-                const aff = rel?.affection ?? 0;
-                const rl = rel?.romance || rel?.stage || "";
-                const hpc = npc?.hp?.current ?? "?"; const hpm = npc?.hp?.max ?? "?";
-                const nloc = npc?.location || "?";
-                const sameRoom = nloc === p.location;
-                const wpn = npc?.equipment?.right_hand || npc?.equipment?.left_hand;
-                const ac2 = npc?.ac ?? 0;
-                const wnds = npc?.wounds || npc?.state?.wounds || [];
-                out.push(tr(`  👤 ${nm}  💕${aff} ${rl}`, "gear"));
-                out.push(tr(`    ❤${hpc}/${hpm}  AC${ac2}  ${sameRoom ? C.G + "同室" + C.r : gray(nloc.slice(-6))}`, "gear"));
-                if (wpn) out.push(tr(`    ⚔ ${wpn.name || wpn}`, "gear"));
-                if (wnds.length) out.push(tr(`    🤕 ${wnds.map((w:any)=>w.text||w.severity||"伤").join(" · ")}`, "gear"));
-              }
-            }
-            out.push(tr(gray("─".repeat(46)), "gear"));
-            out.push(tr(gray("队伍由 LLM 通过 add_to_party/remove_from_party 管理"), "gear"));
+            out.push(tr(`── 队伍详情 ──`));
+            if (!pty.length) { out.push(tr(`  （无队友）`)); }
+            else { for (const nm of pty) { const rel = p.relationships?.[nm]; const npc = gs?.npcs?.[nm]; const aff = rel?.affection ?? 0; const rl = rel?.romance || rel?.stage || ""; const hpc = npc?.hp?.current ?? "?"; const hpm = npc?.hp?.max ?? "?"; out.push(tr(`  👤 ${nm}  💕${aff} ${rl}  ❤${hpc}/${hpm}`)); } }
           } else if (_submenu === "container-pick" && _selectedTarget) {
             const cpItems = (_selectedTarget as any)?._containerItems || [];
             const cname = (_selectedTarget as any)?._containerName || "容器";
@@ -1806,11 +1746,26 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             }
             out.push(tr(gray("─".repeat(46)), "gear"));
             out.push(tr(gray("↑↓ 选物品 · Enter=取到背包 · N=全部取出 · Esc=返回"), "gear"));
+          } else if (_submenu === "bag-list") {
+            const inv3: any[] = gs.player.inventory || [];
+            out.push(tr(head("背包"), "gear"));
+            if (!inv3.length) {
+              out.push(tr(gray("  （背包是空的）"), "gear"));
+            } else {
+              for (let i = 0; i < inv3.length; i++) {
+                const it = inv3[i];
+                const on = _subCursor === i;
+                const stIcon = it.state === "ruined" ? "💀" : it.state === "damaged" ? "⚠️" : "";
+                const meta = gray("[" + (it.type || "??").slice(0, 2) + "] " + it.name + " " + (it.weight ?? 0) + "kg") + stIcon;
+                out.push(tr(" " + (on ? hi("▶") : " ") + " " + gray(String.fromCodePoint(0x2460 + i)) + " " + meta, "gear", on));
+              }
+            }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 选物品 · Enter 查看详情 · Esc 返回"), "gear"));
           } else if (_submenu === "economy-detail") {
             out.push(tr(head("个人财经"), "gear"));
             out.push(tr(gray("── 💰 资金 ──"), "gear"));
             out.push(tr(kv("余额", gold(`¥${(p.funds ?? 0).toLocaleString()}`))));
-            // 时薪参考（只读——LLM 可以编其他工作）
             try {
               const ec = require("./engine/state.ts").economyConfig || {};
               const rates = ec.job_rates || {};
@@ -1820,11 +1775,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 out.push(tr(kv("时薪参考", gray(jobStr))));
               }
             } catch {}
-            // 房产
-            const props = p.properties || {};
-            const propKeys = Object.keys(props);
             out.push(tr(""));
             out.push(tr(gray("── 🏠 房产 ──"), "gear"));
+            const props = p.properties || {};
+            const propKeys = Object.keys(props);
             if (!propKeys.length) {
               out.push(tr(gray("  暂无房产或安全屋")));
             } else {
@@ -1838,12 +1792,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 if (storage.length) out.push(tr(`    储物: ${storage.length}件`));
               }
             }
-            // 博弈
+            out.push(tr(""));
+            out.push(tr(gray("── 🎲 博弈 ──"), "gear"));
             try {
               const underRep = p.reputation?.["underworld"] ?? 0;
               const underAff = p.relationships?.["underworld_merchant"]?.affection ?? 0;
-              out.push(tr(""));
-              out.push(tr(gray("── 🎲 博弈 ──"), "gear"));
               out.push(tr(kv("地下声望", `${underRep}/10`)));
               out.push(tr(kv("黑商好感", `${underAff}/100`)));
               out.push(tr(gray("  可用: 双骰(DC7) · 21点(DC11) — 通过 LLM gamble_bet")));
@@ -1864,10 +1817,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
           } else if (_submenu === "turnlog-detail") {
             out.push(tr(head("回合台账"), "gear"));
-            const allLogs = gs.turnLog || [];
-            const totalLogs = allLogs.length;
-            const recent = allLogs.slice(-20).reverse();
-            out.push(tr(gray(`共 ${totalLogs} 条 · 显示最近 ${Math.min(20, totalLogs)} 条`), "gear"));
+            const recent = (gs.turnLog || []).slice(-8).reverse();
             if (!recent.length) { out.push(tr(gray("  （暂无记录）"))); }
             else {
               for (const entry of recent) {
@@ -1882,56 +1832,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             }
             out.push(tr(gray("─".repeat(46)), "gear"));
             out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
-          } else if (_submenu === "quest-detail") {
-            out.push(tr(head("任务日志"), "info"));
-            if (!_questLines) { out.push(tr(gray("  ...加载中"))); }
-            else { for (const ln of _questLines) out.push(tr(`  ${ln}`, "info")); }
-            out.push(tr(gray("─".repeat(46)), "info"));
-            out.push(tr(gray("↑↓ 滚动 · Enter 无操作（只读）· Esc 返回"), "info"));
-          } else if (_submenu === "hook-detail") {
-            out.push(tr(head("剧情钩子"), "info"));
-            if (!_hookLines) { out.push(tr(gray("  ...加载中"))); }
-            else { for (const ln of _hookLines) out.push(tr(`  ${ln}`, "info")); }
-            out.push(tr(gray("─".repeat(46)), "info"));
-            out.push(tr(gray("↑↓ 滚动 · Enter 无操作（只读）· Esc 返回"), "info"));
-          } else if (_submenu === "wound-detail") {
-            out.push(tr(head("伤势详情"), "gear"));
-            if (!_woundLines) { out.push(tr(gray("  ...加载中"))); }
-            else { for (const ln of _woundLines) out.push(tr(`  ${ln}`, "gear")); }
-            out.push(tr(gray("─".repeat(46)), "gear"));
-            out.push(tr(gray("↑↓ 滚动 · Enter 无操作（只读）· Esc 返回"), "gear"));
-          } else if (_submenu === "org-browser") {
-            out.push(tr(head("势力总览"), "info"));
-            if (!_orgLines) { out.push(tr(gray("  ...加载中"))); }
-            else { for (const ln of _orgLines) out.push(tr(`  ${ln}`, "info")); }
-            out.push(tr(gray("─".repeat(46)), "info"));
-            out.push(tr(gray("↑↓ 滚动 · Enter 无操作（只读）· Esc 返回"), "info"));
-          } else if (_submenu === "story-detail") {
-            out.push(tr(head("故事回顾"), "info"));
-            const ssf = gs.storySoFar || "";
-            if (!ssf) { out.push(tr(gray("  （尚无故事摘要）"))); }
-            else {
-              const chars = ssf.split("");
-              let line = "  ";
-              for (const ch of chars) {
-                line += ch;
-                if (line.length >= 42) { out.push(tr(line, "info")); line = "  "; }
-              }
-              if (line.length > 2) out.push(tr(line, "info"));
-            }
-            out.push(tr(gray("─".repeat(46)), "info"));
-            out.push(tr(gray("↑↓ 滚动 · 自动摘要（回合日志压缩）· Esc 返回"), "info"));
-          } else if (_submenu === "bag-empty") {
-            out.push(tr(head("背包"), "gear"));
-            out.push(tr(gray("  （背包空空如也）"), "gear"));
-            out.push(tr(""));
-            out.push(tr(gray("  💡 如何获取物品："), "gear"));
-            out.push(tr(gray("  1. 告诉 LLM '给我一件〇〇' → LLM 用 spawn_item"), "gear"));
-            out.push(tr(gray("  2. 搜刮家具容器（房间 Tab 找到容器 → Enter）"), "gear"));
-            out.push(tr(gray("  3. 商店购买（有商店的地点用 buy_item）"), "gear"));
-            out.push(tr(gray("  4. NPC赠予 / 偷窃 / 捡垃圾"), "gear"));
-            out.push(tr(gray("─".repeat(46)), "gear"));
-            out.push(tr(gray("Esc 返回"), "gear"));
           } else if (_submenu === "phone-main") {
             // 手机主菜单
             const phoneName = (_selectedTarget as any)?.name || (_selectedTarget as any)?.item?.name || "手机";
@@ -1990,61 +1890,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             }
             out.push(tr(gray("─".repeat(46)), "gear"));
             out.push(tr(gray("↑↓ 选对话 · Enter 查看 · Esc 返回"), "gear"));
-          } else if (_submenu === "phone-contacts") {
-            out.push(tr(head("通讯录"), "gear"));
-            let pd2: any = null;
-            try { const { getPlayerPhoneData, syncContactsFromRelationships } = require("../engine/phone.ts"); pd2 = getPlayerPhoneData(gs); if (pd2) syncContactsFromRelationships(gs, pd2); } catch {}
-            const contacts: any[] = pd2?.contacts || [];
-            if (!contacts.length) { out.push(tr(gray("  （通讯录为空）"))); out.push(tr(gray("  好感≥20的NPC自动加入通讯录"))); }
-            else {
-              out.push(tr(gray(`  ${contacts.length} 位联系人（好感≥20自动同步）`), "gear"));
-              for (let i = 0; i < contacts.length; i++) {
-                const c = contacts[i]!;
-                const rel = p.relationships?.[c.name];
-                const aff = rel?.affection ?? 0;
-                const canCall = aff >= 40;
-                const on = _subCursor === i;
-                const info = [c.number, c.relation].filter(Boolean).join(" · ");
-                const status = canCall ? `${C.G}可联系${C.r}` : gray("仅查看");
-                out.push(tr(` ${on ? hi("▶") : " "} ${String.fromCodePoint(0x2460+i)} ${c.name}  💕${aff}  ${gray(info)}  ${status}`, "gear", on));
-              }
-            }
-            out.push(tr(gray("─".repeat(46)), "gear"));
-            out.push(tr(gray("↑↓ 浏览 · Enter 无操作（只读）· Esc 返回"), "gear"));
-          } else if (_submenu === "phone-calllog") {
-            out.push(tr(head("通话记录"), "gear"));
-            let pd2: any = null;
-            try { const { getPlayerPhoneData } = require("../engine/phone.ts"); pd2 = getPlayerPhoneData(gs); } catch {}
-            const callLog: any[] = pd2?.callLog || [];
-            if (!callLog.length) { out.push(tr(gray("  （无通话记录）"))); }
-            else {
-              const recent = callLog.slice(-20).reverse();
-              for (const cl of recent) {
-                const statusIcon = cl.status === "answered" ? "✅" : cl.status === "missed" ? "❌" : cl.status === "rejected" ? "🚫" : "📞";
-                const dur = cl.duration_seconds ? `${cl.duration_seconds}秒` : "";
-                const dir = cl.caller === p.name ? `${gray("→")} ${cl.callee}` : `${gray("←")} ${cl.caller}`;
-                out.push(tr(`  ${statusIcon} ${dir}  ${gray(dur)}  ${gray(cl.startTime || "")}`, "gear"));
-              }
-            }
-            out.push(tr(gray("─".repeat(46)), "gear"));
-            out.push(tr(gray("↑↓ 浏览 · Enter 无操作（只读）· Esc 返回"), "gear"));
-          } else if (_submenu === "phone-sns") {
-            out.push(tr(head("mixi 时间线"), "gear"));
-            let pd2: any = null;
-            try { const { getPlayerPhoneData } = require("../engine/phone.ts"); pd2 = getPlayerPhoneData(gs); } catch {}
-            const posts: any[] = pd2?.snsPosts || [];
-            if (!posts.length) { out.push(tr(gray("  （时间线为空）"))); out.push(tr(gray("  暂无动态——NPC或玩家发帖后会出现在这里"))); }
-            else {
-              const recent = posts.slice(-30).reverse();
-              for (const p2 of recent) {
-                const name = p2.author === gs.player.name ? `${C.G}你${C.r}` : p2.author;
-                const plat = p2.platform === "twitter" ? "🐦" : "🌐";
-                out.push(tr(`  ${plat} ${name}  ${gray(p2.timestamp || "")}  ❤${p2.likes || 0}`, "gear"));
-                out.push(tr(`    ${p2.text || ""}`, "gear"));
-              }
-            }
-            out.push(tr(gray("─".repeat(46)), "gear"));
-            out.push(tr(gray("↑↓ 浏览 · NPC通过 post_sns 发帖 · Esc 返回"), "gear"));
           } else if (_submenu === "reputation-detail") {
             const rep = p.reputation || {};
             const keys = Object.keys(rep);
@@ -2093,6 +1938,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(`── 称号详情 ──`));
             if (!tt.length) { out.push(tr(`  （暂无称号）`)); }
             else { for (const t of tt) { out.push(tr(`  🏅 ${t}`)); } }
+          } else if (_submenu === "bag-empty") {
+            out.push(tr(head("背包"), "gear"));
+            out.push(tr(gray("  （背包空空如也）"), "gear"));
+            out.push(tr(""));
+            out.push(tr(gray("  💡 如何获取物品："), "gear"));
+            out.push(tr(gray("  1. 家具容器搜刮（房间 Tab → 容器 → Enter）"), "gear"));
+            out.push(tr(gray("  2. 告诉 LLM 要一件 → spawn_item"), "gear"));
+            out.push(tr(gray("  3. 商店购买 → buy_item"), "gear"));
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("Esc 返回"), "gear"));
           } else if (_submenu === "identity-detail") {
             out.push(tr(head("身份"), "gear"));
             out.push(tr(gray("── 🏷️ 社会身份 ──"), "gear"));
@@ -2301,24 +2156,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (t?.game_date) {
               const [gy, gm, gd] = String(t.game_date).split("-");
               out.push(tr(`${C.M}|-[${C.r}${t.day_of_week || "?"}曜日${C.M}-${C.r}${gy}年${gm}月${gd}日${C.M}]${C.r}`));
-            // 状态指示器（旅行中 / AU模式）
-            {
-              const statusBits: string[] = [];
-              if (gs.pendingTravel) {
-                const pt: any = gs.pendingTravel;
-                statusBits.push(`${C.Y}🚃 旅行中: ${pt.route} → ${pt.to}（${pt.minutes}分钟 · ${pt.timeOfDay}）${C.r}`);
-              }
-              if (gs.auMode) {
-                statusBits.push(`${C.M}🌌 AU模式${C.r}`);
-              }
-              if (gs.academic_year_offset && gs.academic_year_offset !== 0) {
-                const off = gs.academic_year_offset;
-                statusBits.push(`${C.M}🎓 学年${off > 0 ? "+" : ""}${off}${C.r}`);
-              }
-              if (statusBits.length) {
-                out.push(tr(statusBits.join(gdot)));
-              }
-            }
             }
 
             // 资金/声望/负重摘要行（常驻可见，三种状态）
@@ -2344,10 +2181,9 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(""));
 
             // 角色信息竖排
-            const identity = p.public_identity || p.memberships?.[0]?.title || p.social_class || "";
+            const identity = p.public_identity || p.memberships?.[0]?.title || "";
             const focusId = sel("identity");
-            const idVal = [p.name, p.gender, `${p.age ?? t?.player_age ?? "?"}岁`, identity].filter(Boolean).join(gdot);
-            out.push(tr(entry(focusId, '身份', idVal, gray('›'))));
+            out.push(tr(entry(focusId, '身份', identity || dim("?") , gray('›'))));
             const tt = p.titles || [];
             const focusTitles = sel("titles");
             out.push(tr(entry(focusTitles, '称号', tt.length ? `「${tt[tt.length-1]}」${tt.length > 1 ? gray(` +${tt.length-1}`) : ""}` : dim('尚未获得'), gray('›'))));
@@ -2356,14 +2192,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             const repSum = repKeys.slice(0,3).map(k => `${k}${(rep[k]??0)>=0 ? `${C.G}+${rep[k]}${C.r}` : `${C.d}${rep[k]}${C.r}`}`).join(gdot);
             const focusRep = sel("reputation");
             out.push(tr(entry(focusRep, '声望', repKeys.length ? repSum : dim('默默无闻'), gray('›'))));
-            const relCount = Object.keys(p.relationships || {}).length;
-            const relSum = relCount ? `${relCount}人` : dim("无");
-            const focusRels = sel("relations");
-            out.push(tr(entry(focusRels, '关系', relSum, gray('›'))));
             out.push(tr(""));
 
-            // 等级
-            out.push(tr(kv("等级", `Lv.${p.level ?? 1}  EXP ${p.exp ?? 0}/${(p.level ?? 1) * 100}`)));
             // 状态条（■□ 方块 10 格）
             out.push(tr(kv("体力", sq(hp, hpM, 10, hp / hpM < 0.3))));
             const pools = p.resourcePools || {};
@@ -2376,15 +2206,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               out.push(tr(kv("欲望", `💓 ${sq(p.sex.desire||0, 100, 10)}`)));
             }
             out.push(tr(kv("防御", `AC ${ac}`)));
-            // 濒死豁免（战斗中倒下时可见，3成功=稳定 3失败=死亡）
-            if (p.deathSaves) {
-              const ds = p.deathSaves;
-              const live = ds.successes ?? 0;
-              const dead = ds.failures ?? 0;
-              const liveBar = `${C.G}${"■".repeat(live)}${C.M}${"□".repeat(3 - live)}${C.r}`;
-              const deadBar = dead > 0 ? `${C.d}${"■".repeat(dead)}${C.M}${"□".repeat(3 - dead)}${C.r}` : `${C.M}□□□${C.r}`;
-              out.push(tr(kv("濒死", `${liveBar} 生${live}/3  ${deadBar} 死${dead}/3`)));
-            }
 
             // 属性竖排（带偏离注解，10=常人）
             for (const nm of ["力量","敏捷","体质","智力","感知","魅力","幸运"]) {
@@ -2403,99 +2224,41 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             const bodySum = bodyParts.join(gdot) || "?";
             const focusBody = sel("body");
             out.push(tr(entry(focusBody, '身体', bodySum, gray("›")), "gear"));
-            // Sex 状态摘要（仅 Layer1 开启时）——两行可聚焦，Enter→body-detail
-            if (gs.layer1Enabled && p.sex) {
-              const sx = p.sex;
-              const sxSum = `${C.d}🔥 ${sx.arousal||0}${C.r}${gdot}💓 ${sx.desire||0}${gdot}高潮${sx.climaxCount||0}次`;
-              const sexIdx0 = _focusItems.findIndex(f => f.type === "sex" && f.index === 0);
-              out.push(tr(entry(_panelMode && _cursor === sexIdx0, '性状态', sxSum, gray('›')), 'gear'));
-              const segs = _buildSexSegs(p);
-              if (segs.length) {
-                const sexIdx1 = _focusItems.findIndex(f => f.type === "sex" && f.index === 1);
-                out.push(tr(entry(_panelMode && _cursor === sexIdx1, '性征', segs.join(gdot), gray('›')), 'gear'));
-              }
-            }
-
             const genderSlots = getEquipSlots(p.gender);
             const eqCount = genderSlots.filter(s2 => eq[s2.id]).length;
             const focusEquip = sel("equip");
             out.push(tr(entry(focusEquip, '装备', eqCount+'/'+genderSlots.length+' 件穿戴', gray('›')), 'gear'));
 
             const sk = p.skills || {};
-            const skNames = Object.keys(sk).filter(k => (sk[k]?.level ?? sk[k] ?? 0) > 0);
-            const skSum = skNames.length ? skNames.map(k => `${k}${C.M}Lv${C.r}${sk[k]?.level ?? sk[k]}`).join(gdot) : dim("（无）");
+            const skCount = Object.keys(sk).filter(k => (sk[k]?.level ?? sk[k] ?? 0) > 0).length;
+            const skSum = skCount ? `${skCount}项` : dim("（无）");
             const focusSkills = sel("skills");
             out.push(tr(entry(focusSkills, '技能', skSum, gray('›')), 'gear'));
 
-            // 背包——行可聚焦（Enter→首个物品），每件可选。摘要按类型分类计数
-            const bagHeaderIdx = _focusItems.findIndex(f => f.type === "bag" && f.index === -1);
-            const focusBag = _panelMode && _cursor === bagHeaderIdx;
-            const cats: Record<string, number> = {};
-            for (const i2 of inv) {
-              const t2 = (i2.type || "其他").slice(0, 2);
-              cats[t2] = (cats[t2] || 0) + 1;
-            }
-            const catSum = Object.entries(cats).map(([k, v]) => `${k}${v}`).join(gdot) || "0件";
-            out.push(tr(entry(focusBag, '背包', catSum, gray('›')), 'gear'));
-            if (inv.length > 0) {
-              const sortModes = ["类型","名称","重量","最近"];
-              const sortHint = `排序: ${sortModes.map((m,i) => i === _sortMode ? `${C.O}[${m}]${C.r}` : gray(m)).join(" ")}`;
-              out.push(tr(`      ${gray("←→切")} ${sortHint}`, 'gear'));
-            }
-            for (let i = 0; i < Math.min(inv.length, 6); i++) {
-              const bi = inv[i];
-              const bagFocusIdx = _focusItems.findIndex(f => f.type === "bag" && f.index === i);
-              const on = _panelMode && _cursor === bagFocusIdx;
-              const stIcon = bi.state === "ruined" ? "💀" : bi.state === "damaged" ? "⚠️" : "";
-              const meta = `${gray(`[${(bi.type || "??").slice(0, 2)}]`)} ${bi.name} ${gray(`${bi.weight ?? 0}kg`)}${stIcon}`;
-              out.push(tr(`      ${cur(on)} ${gray(String.fromCodePoint(0x2460 + i))} ${meta}`, "gear", on));
-            }
+            // 背包——只显示件数，Enter 打开背包列表
+            const bagCount = (p.inventory || []).length;
+            const catSum = bagCount ? `${bagCount}件` : "0件";
+            out.push(tr(entry(_panelMode && _cursor === _focusItems.findIndex(f => f.type === "bag"), '背包', catSum, gray('›')), 'gear'));
 
             // 载具 / 经济 / 战斗 / 队伍
             const focusVehicle = sel("vehicle");
             if (p.vehicle) {
               out.push(tr(entry(focusVehicle, '载具', '🚲'+p.vehicle.name, gray('×'+(p.vehicle.speedMul||1.5))), 'gear'));
             }
-            // 经济：显示资金+房产摘要
-            {
-              const focusEconomy = sel("economy");
-              const props = p.properties || {};
-              const propKeys = Object.keys(props);
-              const renting = propKeys.filter(k => props[k]?.type === "rent");
-              const inArrears = renting.filter(k => (props[k]?.arrears_days || 0) > 0);
-              const econParts = [gold(`¥${(p.funds ?? 0).toLocaleString()}`)];
-              if (propKeys.length) {
-                const own = propKeys.length - renting.length;
-                const bits = [];
-                if (own > 0) bits.push(`自有${own}处`);
-                if (renting.length) bits.push(`租房${renting.length}处`);
-                econParts.push(bits.join(gdot));
-              }
-              if (inArrears.length) econParts.push(`${C.d}欠租${inArrears.length}处${C.r}`);
-              out.push(tr(entry(focusEconomy, '经济', econParts.join(gdot), gray('›')), 'gear'));
-            }
-            // 战斗：只显示武器（体力/AC已在状态条）
-            {
-              const focusCombat = sel("combat");
-              const wpn = p.equipment?.right_hand || p.equipment?.left_hand;
-              const wpnStr = wpn?.damage ? `${wpn.name} (${wpn.damage.dice||"?"})` : "徒手";
-              out.push(tr(entry(focusCombat, '战斗', wpnStr, gray('›')), 'gear'));
-            }
+            const focusEconomy = sel("economy");
+            out.push(tr(entry(focusEconomy, '经济', `${gold(`¥${(p.funds ?? 0).toLocaleString()}`)}`, gray('›')), 'gear'));
+            const focusCombat = sel("combat");
+            const wpn = p.equipment?.right_hand || p.equipment?.left_hand;
+            const wpnStr = wpn?.damage ? `${wpn.name}(${wpn.damage.dice||"?"})` : "徒手";
+            out.push(tr(entry(focusCombat, '战斗', wpnStr, gray('›')), 'gear'));
             const pty = p.party || [];
             const focusParty = sel("party");
             out.push(tr(entry(focusParty, '队伍', pty.length ? pty.map(n => '👤'+n).join(gdot) : dim('（无队友）'), gray('›')), 'gear'));
 
-            // 伤口入口行（有伤时才显示，替换旧单行摘要）
+            // 伤口 + 隐藏状态 + 情报摘要行
             if ((p.wounds || []).length > 0) {
-              const focusWound = sel("wound");
-              const wSum = p.wounds.map((w:any) => {
-                const sev = w.severity === "重伤" || w.severity === "危重" ? `${C.d}${w.severity}${C.r}`
-                  : w.severity === "中度" ? `${C.Y}${w.severity}${C.r}` : gray(w.severity || "轻伤");
-                return `${sev} ${w.text || w.bodyPart || w.name || ""}`;
-              }).join(" · ");
-              out.push(tr(entry(focusWound, "伤口", wSum, gray("›")), "gear"));
+              out.push(tr(gray(`  伤口: ${p.wounds.map((w:any) => w.name || w.bodyPart || "轻伤").join("、")}`)));
             }
-            // 隐藏状态
             if (p.concealed || p.hiding_in) {
               const hidingSpot = p.hiding_in ? ` · ${p.hiding_in}` : "";
               out.push(tr(gray(`  🥷 躲藏中${hidingSpot}`)));
@@ -2507,6 +2270,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (flags2.steal_alert) alertBits.push("🚨警报");
               if (flags2.identity_exposed) alertBits.push("🎭暴露");
               if (flags2.school_alert) alertBits.push("🏫警戒");
+              const quests = gs.quests || {};
+              const actives = Object.values(quests).filter((q: any) => q.status === "active");
               let calBit = "";
               try {
                 const { getTodayCalendar } = require("./engine/timeline.ts");
@@ -2516,17 +2281,9 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const segs2: string[] = [];
               if (alertBits.length) segs2.push(`${C.d}${alertBits.join(" ")}${C.r}`);
               if (calBit) segs2.push(calBit);
-              const infoSum = segs2.length ? segs2.join(gdot) : dim("无异常");
               const infoIdx = _focusItems.findIndex(f => f.type === "infoline");
               const onInfo = _panelMode && _cursor === infoIdx;
-              out.push(tr(entry(onInfo, '情报', infoSum, gray('›')), 'info'));
-              const tlogIdx = _focusItems.findIndex(f => f.type === "turnlog");
-              const onTlog = _panelMode && _cursor === tlogIdx;
-              const tlogN = (gs.turnLog || []).length;
-              out.push(tr(entry(onTlog, '台账', tlogN ? `${tlogN}回合` : dim("无记录"), gray('›')), 'info'));
-              const storyLen = (gs.storySoFar || "").length;
-              const focusStory = sel("story");
-              out.push(tr(entry(focusStory, "回顾", storyLen ? `${storyLen}字故事摘要` : dim("尚无"), gray("›")), "info"));
+              out.push(tr(entry(onInfo, '情报', segs2.length ? segs2.join(gdot) : dim("无异常"), gray('›')), 'info'));
             }
           }
         }
@@ -3243,8 +3000,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                        _submenu === "identity-detail" ||
                        _submenu === "go-nav" || _submenu === "info-detail" || _submenu === "economy-detail" || _submenu === "combat-detail" ||
                        _submenu === "world-detail" || _submenu === "phone-main" ||
-                       _submenu === "phone-messages" || _submenu === "phone-contacts" || _submenu === "phone-calllog" || _submenu === "phone-sns" || _submenu === "bag-empty" ||
-                       _submenu === "turnlog-detail" || _submenu === "quest-detail" || _submenu === "hook-detail" || _submenu === "wound-detail" || _submenu === "org-browser" || _submenu === "story-detail" ||
+                       _submenu === "phone-messages" || _submenu === "bag-empty" || _submenu === "bag-list" ||
+                       _submenu === "turnlog-detail" ||
                        _submenu === "container-pick") {
               _submenu = null;
               _subCursor = 0;
@@ -3382,8 +3139,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               _submenu === "party-detail" || _submenu === "reputation-detail" || _submenu === "relations-detail" || _submenu === "titles-detail" ||
               _submenu === "identity-detail" ||
               _submenu === "sex-detail" || _submenu === "settlement-detail" || _submenu === "info-section" ||
-              _submenu === "economy-detail" || _submenu === "combat-detail" || _submenu === "world-detail" || _submenu === "phone-contacts" || _submenu === "phone-calllog" || _submenu === "phone-sns" || _submenu === "bag-empty" ||
-              _submenu === "turnlog-detail" || _submenu === "quest-detail" || _submenu === "hook-detail" || _submenu === "wound-detail" || _submenu === "org-browser" || _submenu === "story-detail") {
+              _submenu === "economy-detail" || _submenu === "combat-detail" || _submenu === "world-detail" ||
+              _submenu === "turnlog-detail") {
             // 消费所有方向键和回车，防止漏到外层
             if (d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB" ||
                 d === "\x1b[C" || d === "\x1bOC" || d === "\x1b[D" || d === "\x1bOD" ||
@@ -3580,6 +3337,22 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           }
 
           // 容器逐物选择控制
+          if (_submenu === "bag-list") {
+            const inv3 = gs.player.inventory || [];
+            const n = inv3.length;
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + n - 1) % Math.max(1, n); return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % Math.max(1, n); return true; }
+            if (d === "\r" || d === "\n") {
+              const it = inv3[_subCursor];
+              if (it) {
+                _selectedTarget = { type: "bag", item: it, index: _subCursor };
+                _submenu = "item-detail";
+                _subCursor = 0;
+              }
+              return true;
+            }
+            return false;
+          }
           if (_submenu === "container-pick") {
             const cpItems = (_selectedTarget as any)?._containerItems || [];
             const total = cpItems.length + 1; // +1 = 全部取出
@@ -3669,23 +3442,25 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (idx < 0 || idx >= apps.length) return false;
               const ctx = getCtx();
               const appId = apps[idx];
-              // 消息/通讯录/通话/SNS 有完整面板；相册暂走 notify
+              // 暂时全部走 pushText + notify（完整消息/对话面板留后续细化）
               if (appId === "messages") {
                 _submenu = "phone-messages";
                 _subCursor = 0;
                 return true;
               } else if (appId === "calllog") {
-                _submenu = "phone-calllog";
-                _subCursor = 0;
-                return true;
+                const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); return getPlayerPhoneData(gs); } catch { return null; } })();
+                const cls = pd?.callLog || [];
+                if (cls.length) { pushText(`我翻看通话记录。`); ctx?.ui?.notify(`最近通话：${cls.slice(-3).map((c:any)=>`${c.caller}→${c.callee}(${c.status})`).join(" | ")}`,"info"); }
+                else { ctx?.ui?.notify("没有通话记录", "info"); }
               } else if (appId === "contacts") {
-                _submenu = "phone-contacts";
-                _subCursor = 0;
-                return true;
+                const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); const pdd = getPlayerPhoneData(gs); if (pdd) { const { syncContactsFromRelationships } = require("../engine/phone.ts"); syncContactsFromRelationships(gs, pdd); } return pdd; } catch { return null; } })();
+                if (pd?.contacts?.length) { ctx?.ui?.notify(`通讯录 ${pd.contacts.length} 人：${pd.contacts.slice(0,5).map((c:any)=>c.name).join("、")}`,"info"); }
+                else { ctx?.ui?.notify("通讯录为空（好感≥20的NPC自动添加）", "info"); }
               } else if (appId === "sns") {
-                _submenu = "phone-sns";
-                _subCursor = 0;
-                return true;
+                const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); return getPlayerPhoneData(gs); } catch { return null; } })();
+                const posts = pd?.snsPosts || [];
+                if (posts.length) { ctx?.ui?.notify(`mixi 最近 ${Math.min(3,posts.length)} 条: ${posts.slice(-3).map((p:any)=>p.author+":"+p.text.slice(0,15)).join(" | ")}`,"info"); }
+                else { ctx?.ui?.notify("mixi 时间线为空", "info"); }
               } else if (appId === "photos") {
                 const pd = (() => { try { const { getPlayerPhoneData } = require("../engine/phone.ts"); return getPlayerPhoneData(gs); } catch { return null; } })();
                 ctx?.ui?.notify(`相册 ${pd?.photos?.length || 0} 张`, "info");
@@ -3786,7 +3561,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + n - 1) % n; return true; }
             if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % n; return true; }
             const isEnterK = d === "\r" || d === "\n";
-            const numK = /^[1-7]$/.test(d) ? parseInt(d) - 1 : -1;
+            const numK = /^[1-9]$/.test(d) ? parseInt(d) - 1 : -1;
             if (isEnterK || numK >= 0) {
               _infoSecIdx = isEnterK ? _subCursor : numK;
               _submenu = "info-section";
@@ -4046,12 +3821,12 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             return true;
           }
           if (currentItem.type === "turnlog") { _submenu = "turnlog-detail"; _subCursor = 0; return true; }
-          if (currentItem.type === "story") { _submenu = "story-detail"; _subCursor = 0; return true; }
 
           // 2.5 自身面板专用项（body/skills/party/reputation/titles）
           if (currentItem.type === "body") {
             _submenu = "body-detail"; _subCursor = 0; return true;
           }
+          if (currentItem.type === "identity") { _submenu = "identity-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "sex") {
             _submenu = "sex-detail"; _subCursor = 0; return true;
             _subCursor = 0;
@@ -4059,32 +3834,32 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           }
           if (currentItem.type === "equip") { _submenu = "equip-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "skills") { _submenu = "skills-detail"; _subCursor = 0; return true; }
-          if (currentItem.type === "economy") { _submenu = "economy-detail"; _subCursor = 0; return true; }
+          if (currentItem.type === "economy") { _submenu = "economy-detail"; _subCursor = 0; if (!_econLines) void _loadEconCombat(); return true; }
           if (currentItem.type === "combat") { _submenu = "combat-detail"; _subCursor = 0; if (!_combatLines) void _loadEconCombat(); return true; }
+          if (currentItem.type === "world") { _submenu = "world-detail"; _subCursor = 0; if (!_worldLines) void _loadWorld(); return true; }
           if (currentItem.type === "party") { _submenu = "party-detail"; _subCursor = 0; return true; }
-          if (currentItem.type === "wound") { _submenu = "wound-detail"; _subCursor = 0; if (!_woundLines) void _loadWoundDetail(); return true; }
           if (currentItem.type === "reputation") { _submenu = "reputation-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "relations") { _submenu = "relations-detail"; _subCursor = 0; return true; }
-          if (currentItem.type === "identity") { _submenu = "identity-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "titles") { _submenu = "titles-detail"; _subCursor = 0; return true; }
 
-          // 3. 装备槽或背包项
-          if (currentItem.type === "slot" || currentItem.type === "bag") {
+          // 3. 背包 Enter → 打开背包列表子面板
+          if (currentItem.type === "bag") {
+            const inv0 = gs.player.inventory || [];
+            if (inv0.length) {
+              _submenu = "bag-list";
+              _subCursor = 0;
+            } else {
+              _submenu = "bag-empty";
+              _subCursor = 0;
+            }
+            return true;
+          }
+          // 装备槽项
+          if (currentItem.type === "slot") {
             if (currentItem.item) {
               _selectedTarget = currentItem;
               _submenu = "item-detail";
               _subCursor = 0;
-            } else if (currentItem.type === "bag" && currentItem.index === -1) {
-              // 背包头行：空背包时提示，有物时进第一个物品
-              const inv0 = gs.player.inventory || [];
-              if (inv0.length) {
-                _selectedTarget = { type: "bag", item: inv0[0], index: 0 };
-                _submenu = "item-detail";
-                _subCursor = 0;
-              } else {
-                _submenu = "bag-empty";
-                _subCursor = 0;
-              }
             } else {
               ctx?.ui?.notify("空装备槽：去背包选中防具或武器穿戴。", "info");
             }

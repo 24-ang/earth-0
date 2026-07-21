@@ -241,9 +241,20 @@ export default {
     try {
       const { getOrCreateSexState } = stateMod;
       await getOrCreateSexState(params.name);
-    } catch (e: any) {
-      // sex.ts 不存在时静默跳过（公开 repo 不含成人内容）
-      console.error("init_game: 生殖器档案生成失败", e.message || String(e));
+    } catch (e: any) { console.error("init_game: 生殖器档案生成失败", e.message || String(e)); }
+    // 确保玩家 body-detail 的性器段可用——sexStates[name] 和 player.sex 是不同的字段
+    if (!gs.player.sex && gs.sexStates?.[params.name]) {
+      gs.player.sex = structuredClone(gs.sexStates[params.name]);
+    }
+    if (!gs.player.sex) {
+      const isF = (params.gender || "").includes("女") && !(params.gender || "").includes("男");
+      gs.player.sex = {
+        profile: isF
+          ? { female: { breast: {}, vagina: {}, pubic_hair: {} }, attitude: "未开发", experience: "无" }
+          : { male: { penis: {}, testicles: {}, pubic_hair: {} }, attitude: "未开发", experience: "无" },
+        desire: 0, arousal: 0, cycleDay: 1, cyclePhase: "安全期",
+        climaxed: false, climaxCount: 0, squirtCount: 0, thoughts: [],
+      };
     }
 
     // ── 位置 ──
