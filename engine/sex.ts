@@ -558,6 +558,19 @@ export async function settleAfterSex(
     }
   }
 
+  // 累计插入次数（本次结算增量）
+  const insertParts = ["秘部", "口", "肛", "子宫"];
+  state.insertCounts ??= {};
+  const sessionInsertCounts: Record<string, number> = {};
+  for (const part of partsTouched) {
+    if (insertParts.includes(part)) {
+      state.insertCounts[part] = (state.insertCounts[part] || 0) + 1;
+      sessionInsertCounts[part] = 1;  // 每回合settle时，该部位本轮被使用=至少1次
+    }
+  }
+  // 如果有插入部位，记1次（一个sex session中每个部位至少被插入1次）
+  // 注：未来如需精确计数（如"插了50下"），需在sex_touch每轮传入insertCount
+
   // 结算后重置
   const report: SettlementReport = {
     duration_minutes: durationMinutes,
@@ -568,6 +581,7 @@ export async function settleAfterSex(
     thoughts: [...(state.thoughts ?? [])],
     milestonesChanged: milestonesChanged.length > 0 ? milestonesChanged : undefined,
     conceived: conceived ? true : undefined,
+    insertCounts: Object.keys(sessionInsertCounts).length > 0 ? sessionInsertCounts : undefined,
   };
 
   // 重置本轮状态，保留欲望值
@@ -615,6 +629,10 @@ export function formatSettlement(report: SettlementReport, charName: string): st
   }
   out += `用时: ${report.duration_minutes}分钟 | 高潮: ${report.climaxCount}次`;
   if (report.squirtCount > 0) out += ` | 潮吹: ${report.squirtCount}次`;
+  if (report.insertCounts && Object.keys(report.insertCounts).length > 0) {
+    const icBits = Object.entries(report.insertCounts).map(([k, v]) => `${k}:${v}`);
+    out += ` | 插入: ${icBits.join(" ")}`;
+  }
   out += `\n评级: ${emoji} ${report.rating}`;
 
   if (Object.keys(report.partsGrowth).length > 0) {
@@ -664,6 +682,8 @@ export function createSexState(name: string, profile: SexProfile): SexState {
     stamina: 100,
     contraceptionUsed: "none",
     condomBroken: false,
+    insertCounts: {},
+    maxInsertDepth: {},
   };
 }
 

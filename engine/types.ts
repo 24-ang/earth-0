@@ -150,6 +150,7 @@ export interface SexProfile {
   female?: {
     breast: { cup: string; shape: "半球"|"水滴"|"圆盘"|"纺锤"|"吊钟"|"扁平"; nipple_size: "凹陷"|"小"|"普通"|"大"|"突出"; nipple_color: "淡粉"|"粉色"|"浅褐"|"深褐"; areola_size: "小"|"普通"|"宽"|"扩散"; feel: "紧实"|"柔软"|"弹力" };
     vagina: { type: "馒头"|"蝴蝶"|"一线天"|"贝壳"|"闭合"; labia_size: "小"|"普通"|"突出"; depth_cm: number; tightness: "极紧"|"紧致"|"普通"|"宽松"; inner_color: "淡粉"|"玫瑰"|"深红"; feel: "紧致吸吮"|"紧致"|"普通"|"宽松"|"名器" };
+    anus: { depth_cm: number; tightness: "极紧"|"紧致"|"普通"|"宽松" };
     pubic_hair: { amount: "无"|"稀疏"|"普通"|"浓密"; color: "黑色"|"褐色"|"金色"; style: "自然"|"修剪"|"剃除" };
     clitoris: "隐藏"|"小"|"普通"|"敏感突出";
   };
@@ -194,8 +195,9 @@ export interface SettlementReport {
   partsGrowth: Record<string, number>;
   rating: "SSS" | "SS" | "S" | "A" | "B" | "C";
   thoughts: Thought[];
-  milestonesChanged?: string[];  // 本次结算触发的里程碑变化描述
+  milestonesChanged?: string[];
   conceived?: boolean;
+  insertCounts?: Record<string, number>;  // 本次结算新增的插入次数: { 秘部, 肛, 口 }
 }
 
 export interface SexState {
@@ -212,6 +214,8 @@ export interface SexState {
   stamina?: number;       // 0-100 (男方持久度)
   contraceptionUsed?: "condom" | "pill" | "none";
   condomBroken?: boolean;
+  insertCounts?: Record<string, number>;  // 累计插入次数: { 秘部, 口, 肛, 子宫 }
+  maxInsertDepth?: Record<string, number>;  // 最深插入记录(cm): { 秘部, 肛 }
 }
 
 // --- 装备槽 ---

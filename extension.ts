@@ -1367,7 +1367,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           `  ${padCol(key)} │ ${val}`;
         /** 入口行（身体/装备/技能/背包/队伍等可聚焦项），对齐到 kv 的 │ 列 */
         const entry = (focus: boolean, label: string, val: string, suffix?: string) =>
-          ` ${focus ? hi("▶") : " "} ${padCol(label)} ${C.M}│${C.r} ${val}${suffix ? " " + suffix : ""}`;
+          ` ${focus ? hi("▶") : " "}${padCol(label)} ${C.M}│${C.r} ${val}${suffix ? " " + suffix : ""}`;
         /** 进度条: bar(45,100,10) → "██████░░░░ [45/100]"，low=true 变红。max<=0 时按空条处理 */
         const bar = (val: number, max: number, w: number = 10, low = false): string => {
           const pct = max > 0 ? Math.max(0, Math.min(1, val / max)) : 0;
@@ -1644,23 +1644,23 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (b.plastic_surgery?.length) out.push(tr(kv("整形", b.plastic_surgery.join("、"))));
 
             // 性器详情（按性别 + SexProfile）——自己的身体不需要"开启模式"才能看
-            if (p.sex) {
-              const sx = p.sex;
-              const prof = sx.profile || {};
+            {
+              const sx = p.sex || ({} as any);
+              const prof = (sx.profile) || {};
               out.push(tr(""));
               out.push(tr(head("性器")));
-              if (isF && prof.female) {
-                const f = prof.female;
-                out.push(tr(kv("乳房", `${f.breast.shape||"?"} · ${f.breast.cup||"?"} · 乳首${f.breast.nipple_size||"?"}·${f.breast.nipple_color||"?"}`)));
-                out.push(tr(kv("膣", `${f.vagina.type||"?"} · ${f.vagina.tightness||"?"} · ${f.vagina.depth_cm||"?"}cm · ${f.vagina.inner_color||"?"}`)));
+              if (isF) {
+                const f = prof.female || {};
+                out.push(tr(kv("乳房", `${f.breast?.shape||"?"} · ${f.breast?.cup||"?"} · 乳首${f.breast?.nipple_size||"?"}·${f.breast?.nipple_color||"?"}`)));
+                out.push(tr(kv("膣", `${f.vagina?.type||"?"} · ${f.vagina?.tightness||"?"} · ${f.vagina?.depth_cm||"?"}cm · ${f.vagina?.inner_color||"?"}`)));
                 out.push(tr(kv("陰核", f.clitoris || "?")));
-                out.push(tr(kv("陰毛", `${f.pubic_hair.amount||"?"} · ${f.pubic_hair.color||"?"} · ${f.pubic_hair.style||"?"}`)));
-              } else if (prof.male) {
-                const m = prof.male;
-                out.push(tr(kv("阴茎", `${m.penis.length_cm||"?"}cm · ${m.penis.shape||"?"} · ${m.penis.circumcised?"包皮":"无包皮"}`)));
-                out.push(tr(kv("勃起", `${m.penis.erect_length_cm||"?"}cm × ${m.penis.erect_girth_cm||"?"}cm`)));
+                out.push(tr(kv("陰毛", `${f.pubic_hair?.amount||"?"} · ${f.pubic_hair?.color||"?"} · ${f.pubic_hair?.style||"?"}`)));
+              } else {
+                const m = prof.male || {};
+                out.push(tr(kv("阴茎", `${m.penis?.length_cm||"?"}cm · ${m.penis?.shape||"?"} · ${m.penis?.circumcised?"包皮":"无包皮"}`)));
+                out.push(tr(kv("勃起", `${m.penis?.erect_length_cm||"?"}cm × ${m.penis?.erect_girth_cm||"?"}cm`)));
                 out.push(tr(kv("睾丸", m.testicles?.size || "?")));
-                out.push(tr(kv("陰毛", `${m.pubic_hair.amount||"?"} · ${m.pubic_hair.color||"?"} · ${m.pubic_hair.style||"?"}`)));
+                out.push(tr(kv("陰毛", `${m.pubic_hair?.amount||"?"} · ${m.pubic_hair?.color||"?"} · ${m.pubic_hair?.style||"?"}`)));
               }
               out.push(tr(kv("周期", `第${sx.cycleDay||0}天 · ${sx.cyclePhase||"?"}`)));
               out.push(tr(kv("高潮", `${sx.climaxCount||0}次 · 潮吹${sx.squirtCount||0}次`)));
@@ -1951,9 +1951,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           } else if (_submenu === "identity-detail") {
             out.push(tr(head("身份"), "gear"));
             out.push(tr(gray("── 🏷️ 社会身份 ──"), "gear"));
-            out.push(tr(kv("姓名", p.name || "?")));
-            out.push(tr(kv("性别", p.gender || "?")));
-            out.push(tr(kv("年龄", `${p.age ?? t?.player_age ?? "?"}岁`)));
             const sc = p.social_class || "?";
             out.push(tr(kv("阶级", `${C.Y}${sc}${C.r}`)));
             out.push(tr(kv("公开身份", gray(p.public_identity || p.memberships?.[0]?.title || "?"))));
@@ -2181,9 +2178,12 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(""));
 
             // 角色信息竖排
+            out.push(tr(kv("姓名", p.name || "?")));
+            out.push(tr(kv("性别", p.gender || "?")));
+            out.push(tr(kv("年龄", `${p.age ?? t?.player_age ?? "?"}岁`)));
             const identity = p.public_identity || p.memberships?.[0]?.title || "";
             const focusId = sel("identity");
-            out.push(tr(entry(focusId, '身份', identity || dim("?") , gray('›'))));
+            out.push(tr(entry(focusId, '身份', identity || dim("?"), gray('›'))));
             const tt = p.titles || [];
             const focusTitles = sel("titles");
             out.push(tr(entry(focusTitles, '称号', tt.length ? `「${tt[tt.length-1]}」${tt.length > 1 ? gray(` +${tt.length-1}`) : ""}` : dim('尚未获得'), gray('›'))));
