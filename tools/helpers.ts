@@ -126,17 +126,25 @@ export function setLastRenderedProse(prose: string) {
 
 export { parseRoleOptions } from "../engine/parse-options.ts";
 
+// ANSI 世界书风格（与 HUD 统一：灰底橙字金点缀）
+// C.M = \x1b[90m (gray), C.O = \x1b[38;5;208m (orange), C.Y = \x1b[33m (gold)
+const GM = "\x1b[90m";   // gray — border/separator/secondary
+const GO = "\x1b[38;5;208m"; // orange — active/selected/highlight
+const GY = "\x1b[33m";  // gold — money/warning
+const G0 = "\x1b[0m";   // reset
 export const TUI_THEME = {
-  border: "\x1b[90m",        // Gray borders
-  borderActive: "\x1b[36m",   // Cyan highlighted borders
-  titleText: "\x1b[1m\x1b[36m", // Bold Cyan title text
-  reset: "\x1b[0m",           // Reset style
-  selected: "\x1b[7m\x1b[1m\x1b[36m", // Inverse + Bold Cyan
-  itemDetail: "\x1b[90m",    // Gray detail
-  keyHint: "\x1b[90m",       // Gray key hints
-  keyText: "\x1b[36m",       // Cyan highlight keys
-  separator: "\x1b[90m",     // Gray separator lines
-  hudText: "\x1b[33m",       // Yellow HUD text
+  border: GM,
+  borderActive: GO,
+  titleText: "\x1b[97m\x1b[1m",       // white bold — 标题文字
+  titleBracket: GM,                    // gray — 标题括号
+  reset: G0,
+  selected: GO + "\x1b[1m",           // orange bold — 选中行
+  selectedArrow: "▶",
+  itemDetail: GM,                     // gray — 副文本
+  keyHint: GM,                        // gray — 提示文字
+  keyText: GO,                        // orange — 按键名
+  separator: GM,                      // gray — 分隔线
+  hudText: GM,                        // gray — 状态栏文字
 };
 
 export function getStringWidth(str: string): number {
@@ -292,21 +300,35 @@ const timeOfDayZH: Record<string, string> = {
 function buildStatusBarText(): string | null {
   try {
     if (gameState && gameState.time && gameState.player) {
-      const loc = gameState.player.location;
+      const p = gameState.player;
+      const loc = p.location;
+      const t = gameState.time;
+      // 区域（面包屑第一层）
+      let region = loc;
+      try {
+        const { getLocationNav, getWorldRootName } = require("../engine/state-location.ts");
+        const nav = getLocationNav(loc);
+        region = (nav?.breadcrumb?.length > 1) ? nav.breadcrumb[0] : getWorldRootName();
+      } catch {}
+      // 时钟
+      let clock = "?", wx = "", season = "";
+      try {
+        const cp = require("../engine/time.ts").getClockParts(t);
+        clock = cp.display_time; season = cp.season;
+      } catch {}
+      wx = gameState.weather?.type || "";
+      // 平日/休日
+      const dow = t?.day_of_week || "";
+      const dayType = (dow === "土" || dow === "日" || dow === "六" || dow === "天") ? "休日" : "平日";
+      // 在场人数
       const cLoc = normalizeLocationName(loc);
-      const npcsHereCount = Object.values(gameState.npcs || {}).filter((n: any) => normalizeLocationName(n.currentRoom) === cLoc).length;
-      const namelessCount = getNamelessNPCs(loc, gameState.turn).length;
-      const totalCount = npcsHereCount + namelessCount;
-      // 列出同场 NPC 名（最多3个）
-      const named = Object.entries(gameState.npcs || {} as any)
-        .filter(([_, n]: [string, any]) => normalizeLocationName(n.currentRoom) === cLoc)
-        .slice(0, 3)
-        .map(([name]: [string, any]) => {
-          const a = gameState.player?.relationships?.[name]?.affection ?? 0;
-          return `${name}💕${a}`;
-        }).join(" ") || "无人";
+      const npcsHere = Object.values(gameState.npcs || {}).filter((n: any) => normalizeLocationName(n.currentRoom) === cLoc).length;
+      const nameless = getNamelessNPCs(loc, gameState.turn).length;
+      const totalHere = npcsHere + nameless;
 
-      return `📍 ${loc} · 👥 ${named}${namelessCount>0?` +${namelessCount}路人`:""} · turn ${gameState.turn}`;
+      const segs = [region, `${clock}${wx ? GM+"-"+wx+G0 : ""}`, `${season}${GM}·${G0}${dayType}`].filter(Boolean);
+      const summary = `${GM}|-[${G0}${segs.join(GM+"|"+G0)}${GM}]${G0}`;
+      return `📍 ${loc}  ${summary}  👥${totalHere}人  turn ${gameState.turn}`;
     }
   } catch (e) {
     console.error("buildStatusBarText error:", e);
@@ -344,53 +366,52 @@ export async function showPanel(ctx: any, title: string, lines: string[]): Promi
         render(width: number): string[] {
           const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
           const out: string[] = [];
-          const titleW = getStringWidth(title);
-          
-          // Styled Top border
-          const topBorder = TUI_THEME.border + "┌─" + TUI_THEME.reset + 
-                            TUI_THEME.titleText + title + TUI_THEME.reset + " " +
-                            TUI_THEME.border + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐" + TUI_THEME.reset;
-          out.push(topBorder);
-          
+          const contentW = w - 4;
+
+          // 标题：世界书风格 【 title 】
+          const headBracket = TUI_THEME.titleBracket;
+          const headText = TUI_THEME.titleText;
+          out.push(`${TUI_THEME.border} ${G0}${headBracket}【 ${headText}${title}${G0}${headBracket} 】${G0}`);
+          out.push(`${TUI_THEME.border}${TUI_THEME.separator}─${"─".repeat(Math.max(0, w - 2))}${G0}`);
+
           const maxScroll = Math.max(0, finalLines.length - PAGE);
           if (scroll > maxScroll) scroll = maxScroll;
           const view = finalLines.slice(scroll, scroll + PAGE);
-          
+
           const total = finalLines.length;
           const visibleCount = view.length;
           const thumbHeight = Math.max(1, Math.round((visibleCount / total) * visibleCount));
           const scrollableDistance = total - visibleCount;
           const thumbStart = scrollableDistance > 0 ? Math.round((scroll / scrollableDistance) * (visibleCount - thumbHeight)) : 0;
-          
-          const contentW = w - 4;
+
           for (let i = 0; i < visibleCount; i++) {
             const l = view[i]!;
-            
+
             // Check if this line is a sub-header or divider
             let lineContent = l;
             if (l.startsWith("──") && l.endsWith("──")) {
               // Section header
-              lineContent = TUI_THEME.titleText + l + TUI_THEME.reset;
+              lineContent = headText + l + G0;
             } else if (l.startsWith("──") || l.includes("────")) {
               // General divider
-              lineContent = TUI_THEME.separator + l + TUI_THEME.reset;
+              lineContent = TUI_THEME.separator + l + G0;
             }
-            
+
             const t = truncateToWidth(lineContent, contentW);
             const pad = Math.max(0, contentW - getStringWidth(t));
             const paddedContent = t + " ".repeat(pad);
-            
+
             let rightBorder = "│";
             if (total > PAGE) {
               const isScrollChar = i >= thumbStart && i < thumbStart + thumbHeight;
-              rightBorder = isScrollChar ? "\x1b[36m█\x1b[0m" : "\x1b[90m░\x1b[0m";
+              rightBorder = isScrollChar ? GO + "█" + G0 : GM + "░" + G0;
             }
-            
-            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + paddedContent + TUI_THEME.border + " " + rightBorder + TUI_THEME.reset);
+
+            out.push(TUI_THEME.border + "│ " + G0 + paddedContent + TUI_THEME.border + " " + rightBorder + G0);
           }
-          
-          out.push(TUI_THEME.border + "└" + "─".repeat(w - 2) + "┘" + TUI_THEME.reset);
-          
+
+          out.push(TUI_THEME.border + TUI_THEME.separator + "─" + "─".repeat(w - 2) + G0);
+
           const scrollHint = total > PAGE
             ? ` [${scroll + 1}-${Math.min(scroll + PAGE, total)}/${total}] ${TUI_THEME.keyText}↑↓/Space${TUI_THEME.keyHint} 滚动`
             : "";
@@ -441,22 +462,22 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
         render(width: number): string[] {
           const out: string[] = [];
           const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
-          const titleW = getStringWidth(title);
-          
-          // Styled Top border
-          const topBorder = TUI_THEME.border + "┌─" + TUI_THEME.reset + 
-                            TUI_THEME.titleText + title + TUI_THEME.reset + " " +
-                            TUI_THEME.border + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐" + TUI_THEME.reset;
-          out.push(topBorder);
-          
-          // TUI HUD Status Bar
+          const contentW = w - 4;
+
+          // 标题：世界书风格 【 title 】
+          const headBracket = TUI_THEME.titleBracket;
+          const headText = TUI_THEME.titleText;
+          const headStr = `${headBracket}【 ${headText}${title}${G0}${headBracket} 】${G0}`;
+          out.push(`${TUI_THEME.border} ${G0}${headStr}${TUI_THEME.border}${G0}`);
+          out.push(`${TUI_THEME.border}${TUI_THEME.separator}─${"─".repeat(Math.max(0, w - 2))}${G0}`);
+
+          // HUD 风格状态栏
           const statusText = buildStatusBarText();
           if (statusText) {
-            const styledStatus = TUI_THEME.hudText + statusText + TUI_THEME.reset;
-            const barTrunc = truncateToWidth(styledStatus, w - 4);
-            const barPad = Math.max(0, (w - 4) - getStringWidth(barTrunc));
-            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + barTrunc + " ".repeat(barPad) + TUI_THEME.border + " │" + TUI_THEME.reset);
-            out.push(TUI_THEME.border + "├" + "─".repeat(w - 2) + "┤" + TUI_THEME.reset);
+            const barTrunc = truncateToWidth(statusText, contentW);
+            const barPad = Math.max(0, contentW - getStringWidth(barTrunc));
+            out.push(TUI_THEME.border + "│ " + G0 + TUI_THEME.hudText + barTrunc + G0 + " ".repeat(barPad) + TUI_THEME.border + " │" + G0);
+            out.push(TUI_THEME.border + TUI_THEME.separator + "─" + "─".repeat(w - 2) + G0);
           }
 
           let start = Math.max(0, sel - 5);
@@ -464,53 +485,51 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
           if (end - start < 10) {
             start = Math.max(0, end - 10);
           }
-          
+
           const total = items.length;
           const visibleCount = end - start;
           const thumbHeight = Math.max(1, Math.round((visibleCount / total) * visibleCount));
           const scrollableDistance = total - visibleCount;
           const thumbStart = scrollableDistance > 0 ? Math.round((start / scrollableDistance) * (visibleCount - thumbHeight)) : 0;
 
-          const contentW = w - 4;
           for (let i = start; i < end; i++) {
             const it = items[i]!;
             const isSel = (i === sel);
             const isSeparator = it.label.startsWith("──");
-            
+
             let labelStr = it.label;
             let detailStr = it.detail ? " " + it.detail : "";
-            
+
             let lineContent = "";
             if (isSeparator) {
-              lineContent = TUI_THEME.separator + labelStr + TUI_THEME.reset;
+              lineContent = TUI_THEME.separator + labelStr + G0;
             } else {
               if (isSel) {
-                lineContent = TUI_THEME.selected + "▶ " + labelStr + (detailStr ? "  " + detailStr : "") + TUI_THEME.reset;
+                lineContent = TUI_THEME.selected + "▶ " + labelStr + (detailStr ? "  " + detailStr : "") + G0;
               } else {
-                lineContent = "  " + labelStr + (detailStr ? "  " + TUI_THEME.itemDetail + detailStr + TUI_THEME.reset : "");
+                lineContent = "  " + labelStr + (detailStr ? "  " + TUI_THEME.itemDetail + detailStr + G0 : "");
               }
             }
-            
+
             const t = truncateToWidth(lineContent, contentW);
             const pad = Math.max(0, contentW - getStringWidth(t));
             const paddedContent = t + " ".repeat(pad);
-            
-            const lineIdx = i - start;
+
             let rightBorder = "│";
-            if (total > visibleCount) {
-              const isScrollChar = lineIdx >= thumbStart && lineIdx < thumbStart + thumbHeight;
-              rightBorder = isScrollChar ? "\x1b[36m█\x1b[0m" : "\x1b[90m░\x1b[0m";
+            if (total > 10) {
+              const isScrollChar = i >= Math.floor(thumbStart / visibleCount * total) && i < Math.floor((thumbStart + thumbHeight) / visibleCount * total);
+              rightBorder = isScrollChar ? GO + "█" + G0 : GM + "░" + G0;
             }
-            
-            out.push(TUI_THEME.border + "│ " + TUI_THEME.reset + paddedContent + TUI_THEME.border + " " + rightBorder + TUI_THEME.reset);
+
+            out.push(TUI_THEME.border + "│ " + G0 + paddedContent + TUI_THEME.border + " " + rightBorder + G0);
           }
-          
-          out.push(TUI_THEME.border + "└" + "─".repeat(w - 2) + "┘" + TUI_THEME.reset);
-          
-          const countStr = `${sel + 1}/${items.length}`;
+
+          out.push(TUI_THEME.border + TUI_THEME.separator + "─" + "─".repeat(w - 2) + G0);
+
+          const countStr = `${sel + 1}/${total}`;
           const hintText = `${countStr}  ${TUI_THEME.keyText}↑↓${TUI_THEME.keyHint} 选择 · ${TUI_THEME.keyText}Enter${TUI_THEME.keyHint} 确认 · ${TUI_THEME.keyText}q/ESC${TUI_THEME.keyHint} 返回`;
           out.push(truncateToWidth(hintText, w));
-          
+
           return out;
         },
         handleInput(d: string) {
