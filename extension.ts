@@ -2832,46 +2832,39 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               }
             }
 
-            out.push(tr(gray(`  📏 ${rm.width||"?"}m×${rm.height||"?"}m · 你在(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}) · ${(rm.atmosphere||"普通").slice(0, 25)}`)));
+            // 房间描述行
+            const gpStr = `${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}`;
+            out.push(tr(`  ${gray(`📏 ${rm.width||"?"}m×${rm.height||"?"}m · 你(${gpStr}) · ${(rm.atmosphere||"普通").slice(0,25)}`)}`));
             if (rm.controlled_by) {
               try {
                 const s0 = require("./engine/state.ts");
                 const orgs = s0.gameState?.organizations || {};
                 const org = orgs[rm.controlled_by];
-                if (org) out.push(tr(gray(`  🏛️ 此区域由 ${org.name || rm.controlled_by} 控制`)));
+                if (org) out.push(tr(gray(`  🏛️ ${org.name || rm.controlled_by} 控制此区域`)));
               } catch {}
             }
-            out.push(tr(head("家具")));
-            let fCount = 0;
+            // 家具
             for (let i = 0; i < _focusItems.length; i++) {
               const item = _focusItems[i];
-              const sel = _panelMode && i === _cursor ? hi("▶") : " ";
-              if (item.type === "furniture") {
-                const sub = (item.label && item.label.trim()) ? ` · ${item.label.trim()}` : "";
-                const acts = furnitureActions(item.name);
-                const on2 = _panelMode && i === _cursor;
-                const nm = on2 ? `${C.O}${C.B}${item.name}${C.r}` : item.name;
-                out.push(tr(`    ${sel} 📦 ${nm}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`, null, on2));
-                fCount++;
-              }
+              if (item.type !== "furniture") continue;
+              const on2 = _panelMode && i === _cursor;
+              const sel = on2 ? hi("▶") : " ";
+              const nm = on2 ? `${C.O}${C.B}${item.name}${C.r}` : item.name;
+              const sub = (item.label && item.label.trim()) ? ` · ${item.label.trim()}` : "";
+              const acts = furnitureActions(item.name);
+              out.push(tr(`    ${sel} 📦 ${nm}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`, null, on2));
             }
-            if (!fCount) out.push(tr(gray(`    （空）`)));
-
-            out.push(tr(head("出口")));
-            let eCount = 0;
+            // 出口
             for (let i = 0; i < _focusItems.length; i++) {
               const item = _focusItems[i];
-              const sel = _panelMode && i === _cursor ? hi("▶") : " ";
-              if (item.type === "exit") {
-                const on3 = _panelMode && i === _cursor;
-                const arrow = on3 ? `${C.O}→${C.r}` : gray("→");
-                const eName = on3 ? `${C.O}${C.B}${item.exitTo}${C.r}` : item.exitTo;
-                out.push(tr(`    ${sel} 🚪 ${arrow} ${eName}${gray(`(${item.x},${item.y})`)}`, null, on3));
-                eCount++;
-              }
+              if (item.type !== "exit") continue;
+              const on3 = _panelMode && i === _cursor;
+              const sel = on3 ? hi("▶") : " ";
+              const arrow = on3 ? `${C.O}→${C.r}` : gray("→");
+              const eName = on3 ? `${C.O}${C.B}${item.exitTo}${C.r}` : item.exitTo;
+              out.push(tr(`    ${sel} 🚪 ${arrow} ${eName}${gray(`(${item.x},${item.y})`)}`, null, on3));
             }
-            if (!eCount) out.push(tr(gray(`    （无）`)));
-            // 外出入口（跨区导航，Enter → go-nav 子面板）
+            // 外出
             {
               const goIdx = _focusItems.length;
               _focusItems.push({ type: "gonav" });
