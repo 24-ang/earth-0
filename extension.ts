@@ -763,7 +763,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _lastEnterTime = 0; // 双击 Enter 进面板的时间戳
 
   // ── 三级状态机 ──
-  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "npc-direct" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | "bag-empty" | "bag-list" | null = null;
+  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-party-ops" | "npc-combat" | "npc-steal" | "npc-romance" | "npc-direct" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | "bag-empty" | "bag-list" | null = null;
   let _subCursor = 0; // 子菜单内部光标
   let _selectedTarget: any = null; // 当前交互的目标实体 (如选中 NPC, 物品, 载具)
   let _pickSlot: string | null = null; // equip-detail 空槽 Enter → 选物品模式（slot id）, null=正常槽列表
@@ -1214,16 +1214,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       return acts;
     }
     const party = gs?.player?.party || [];
-    const following = gs?.player?.following || [];
     const inParty = party.includes(name);
-    const inFollowing = following.includes(name);
-    const partyFull = party.length >= 3 && !inParty; // 同行上限 3 人
+    const partyFull = party.length >= 3 && !inParty;
     const acts: { label: string; key: number; locked: boolean }[] = [
       { label: "①搭话", key: 0, locked: false },
       { label: aff < 10 ? "②接触≥10" : "②接触", key: 1, locked: aff < 10 },
       { label: hasInsight ? "③观察" : "③观察·洞察", key: 2, locked: false },
-      { label: inFollowing ? "④取消跟随" : "④跟随", key: 9, locked: false },
-      { label: inParty ? "⑤取消同行" : (aff < 40 && !lover) ? "⑤同行≥40" : partyFull ? "⑤同行🈵" : "⑤同行", key: 3, locked: inParty ? false : (aff < 40 && !lover) || partyFull },
+      { label: "④同行", key: 9, locked: false },
+      { label: inParty ? "⑤组队操作" : (aff < 40 && !lover) ? "⑤组队≥40" : partyFull ? "⑤组队🈵" : "⑤组队", key: 3, locked: (aff < 40 && !lover) || partyFull },
       { label: aff < 50 ? "⑥恋爱≥50" : "⑥恋爱", key: 4, locked: aff < 50 },
       { label: "⑦战斗", key: 5, locked: false },
       { label: hasStealth ? "⑧窃取" : "⑧窃取·潜行", key: 6, locked: !hasStealth },
@@ -1270,35 +1268,24 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     else if(key===1){if(aff<10){ctx?.ui?.notify(`与${name}关系还不够熟`,"warning");return;}_doTouch(gs,name);}
     // key===2 → 观察子面板（由 handleInput 路由，不经过这里）
     else if(key===3){
-      if(aff<40&&!lover){ctx?.ui?.notify(`好感需≥40或恋人`,"warning");return;}
+      // ⑤组队 → 不推正文，加入队伍后开子菜单
+      if(aff<40&&!lover){ctx?.ui?.notify("好感需≥40或恋人","warning");return;}
       const partyFull = pty.length >= 3 && !pty.includes(name);
-      if(partyFull){ctx?.ui?.notify("同行已满（最多3人）","warning");return;}
-      if(pty.includes(name)){
-        gs.player.party=pty.filter((n:string)=>n!==name);
-        pushText(`${name}离开了同行。`);
-        ctx?.ui?.notify(`${name} 分开`, "info");
-      } else {
+      if(partyFull){ctx?.ui?.notify("组队已满（最多3人）","warning");return;}
+      if(!pty.includes(name)){
         gs.player.party=[...pty,name];
-        // 加入同行时自动从跟随中移除
-        gs.player.following = (gs.player.following||[]).filter((n:string)=>n!==name);
-        pushText(`${name}加入了同行。`);
-        ctx?.ui?.notify(`${name} 同行`, "info");
+        require("./engine/state.ts").saveState();
+        ctx?.ui?.notify(`${name} 组队`, "info");
       }
-      require("./engine/state.ts").saveState();_panelMode=false;
+      // 开子菜单（不关面板）
+      _submenu = "npc-party-ops";
+      _subCursor = 0;
     }
     else if(key===9){
-      // ④跟随 toggle（无门槛）
-      const fol: string[] = gs?.player?.following || [];
-      if(fol.includes(name)){
-        gs.player.following = fol.filter((n:string)=>n!==name);
-        pushText(`${name}不再跟随。`);
-        ctx?.ui?.notify(`${name} 取消跟随`, "info");
-      } else {
-        gs.player.following = [...fol, name];
-        pushText(`${name}跟上了我。`);
-        ctx?.ui?.notify(`${name} 跟随中`, "info");
-      }
-      require("./engine/state.ts").saveState();_panelMode=false;
+      // ④同行 → 推正文，由 NPC Agent 决定是否跟来
+      pushText(`我邀请 ${name} 一起同行。`);
+      ctx?.ui?.notify(`邀请${name}同行…`, "info");
+      _panelMode=false;
     }
     else if(key===4){
       if(aff<50){ctx?.ui?.notify("好感需≥50","warning");return;}
@@ -2783,6 +2770,20 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(`  ${_subCursor === 0 ? "▶" : " "} ① 💌 告白交往${canConfess ? "" : " (需好感70+)"}`));
             out.push(tr(`  ${_subCursor === 1 ? "▶" : " "} ② 📅 邀请约会${canDate ? "" : " (需好感50+)"}`));
           }
+          // 三级状态：组队操作子菜单
+          else if (_submenu === "npc-party-ops" && _selectedTarget) {
+            const n4 = _selectedTarget;
+            out.push(tr(`⚙ 组队操作: ${n4.name}`));
+            out.push(tr(`  (按数字直选 或 ↑↓+Enter 选择)`));
+            const ops = [
+              { label: "① 给物品", desc: "从背包选物品交给对方" },
+              { label: "② 指挥", desc: "攻击/防御/侦察/支援" },
+              { label: "③ 离队", desc: "让对方离开队伍，恢复自主行动" },
+            ];
+            for (let i = 0; i < ops.length; i++) {
+              out.push(tr(`  ${_subCursor === i ? "▶" : " "} ${ops[i].label} — ${ops[i].desc}`));
+            }
+          }
           // 三级状态：战斗子菜单
           // 三级状态：指挥同行者
           else if (_submenu === "npc-direct" && _selectedTarget) {
@@ -3275,7 +3276,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           if (d === "\x1b" || d === "q") {
             // 装备选物品模式的 Esc 只退出选物品模式，回正常槽列表
             if (_submenu === "equip-detail" && _pickSlot) { _pickSlot = null; _subCursor = 0; return true; }
-            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-direct" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance" || (_submenu === "sex-detail" && _selectedTarget)) {
+            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-party-ops" || _submenu === "npc-direct" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance" || (_submenu === "sex-detail" && _selectedTarget)) {
               _submenu = "npc-detail";
               _subCursor = 0;
             } else if (_submenu === "npc-detail") {
@@ -3347,45 +3348,17 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             const npcActs = _buildNpcActions(gs, _selectedTarget.name);
             const actionCount = npcActs.length;
             const actionKeys = npcActs.map(a => a.key);
-            const inParty2 = (gs.player?.party || []).includes(_selectedTarget.name);
-            const totalSlots = inParty2 ? actionCount + 3 : actionCount; // +3 同行操作
             if (d === "\x1b[C" || d === "\x1bOC" || d === "l") {
-              _subCursor = (_subCursor + 1) % totalSlots;
+              _subCursor = (_subCursor + 1) % actionCount;
               return true;
             }
             if (d === "\x1b[D" || d === "\x1bOD" || d === "h") {
-              _subCursor = (_subCursor + totalSlots - 1) % totalSlots;
+              _subCursor = (_subCursor + actionCount - 1) % actionCount;
               return true;
             }
             // 键盘 1-9 直选或者 Enter 触发
             if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "9")) {
               const isEnter = d === "\r" || d === "\n";
-              // 同行操作按钮处理（subCursor >= actionCount）
-              if (inParty2 && _subCursor >= actionCount) {
-                const opIdx = _subCursor - actionCount;
-                if (opIdx === 0) {
-                  // ①给物品 → _pickGift 模式
-                  _pickGift = _selectedTarget.name;
-                  _subCursor = 0;
-                  return true;
-                } else if (opIdx === 1) {
-                  // ②指挥 → npc-direct 子菜单
-                  _submenu = "npc-direct";
-                  _subCursor = 0;
-                  return true;
-                } else if (opIdx === 2) {
-                  // ③分开 → 确认弹窗
-                  _confirmMode = { action: "part_ways", item: _selectedTarget.name, cb: () => {
-                    const pt = gs.player?.party || [];
-                    gs.player.party = pt.filter((n2: string) => n2 !== _selectedTarget.name);
-                    pushText(`${_selectedTarget.name}离开了同行。`);
-                    getCtx()?.ui?.notify(`${_selectedTarget.name} 分开`, "info");
-                    try { const st = require("./engine/state.ts"); st.saveState(); } catch {}
-                  }};
-                  _subCursor = 0;
-                  return true;
-                }
-              }
               const key = isEnter ? (actionKeys[_subCursor] ?? _subCursor) : parseInt(d) - 1;
 
               if (key === 0) {
@@ -3544,6 +3517,38 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               }
               _submenu = null;
               _panelMode = false;
+              return true;
+            }
+            return false;
+          }
+
+          // 组队操作子菜单控制
+          if (_submenu === "npc-party-ops") {
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + 2) % 3; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % 3; return true; }
+            if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "3")) {
+              const idx = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
+              const n5 = _selectedTarget?.name;
+              if (idx === 0) {
+                // 给物品 → _pickGift 打开发送模式（回到 npc-detail 渲染选物品）
+                _pickGift = n5;
+                _submenu = "npc-detail";
+                _subCursor = 0;
+              } else if (idx === 1) {
+                // 指挥 → npc-direct 子菜单
+                _submenu = "npc-direct";
+                _subCursor = 0;
+              } else if (idx === 2) {
+                // 离队 → 确认弹窗
+                _confirmMode = { action: "part_ways", item: n5, cb: () => {
+                  const pt = gs.player?.party || [];
+                  gs.player.party = pt.filter((s: string) => s !== n5);
+                  try { require("./engine/state.ts").saveState(); } catch {}
+                  getCtx()?.ui?.notify(`${n5} 离队`, "info");
+                  _submenu = null;
+                }};
+                _subCursor = 0;
+              }
               return true;
             }
             return false;
