@@ -114,6 +114,10 @@ export async function runPhase1(
 
   for (const action of result.actions) {
     if (action.confidence < 0.7) continue;
+    if (typeof action.tool !== "string" || !action.tool) {
+      console.warn(`Phase1: action has invalid/missing tool, skipping`, { tool: action.tool, params: action.params });
+      continue;
+    }
     if (!allowedTools.includes(action.tool)) {
       console.warn(`Phase1: tool "${action.tool}" not in whitelist, skipping`);
       continue;
