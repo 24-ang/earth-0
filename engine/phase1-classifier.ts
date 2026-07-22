@@ -363,8 +363,8 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     '{"actions": [...], "summary": "...", "scene_footer": {"posture": "坐在靠窗的椅子上", "location_detail": "千葉-総武高校-教室", "main_quest": "暂无"}}',
     "",
     "scene_footer 每回合更新。三条都 ≤20字、文学质感:",
-    "  posture        = 当前姿态+感官细节(温度/触觉)",
-    "  location_detail = 地区-城市-具体位置(一层层往下)",
+    "  posture        = **玩家**当前姿态+感官细节(温度/触觉)。不要把NPC的状态写在这里",
+    "  location_detail = 从给定的玩家「当前位置」展开(一层层往下)，不是NPC或其他人的位置",
     "  main_quest      = 难度:任务名。难度 SSS~E，无主线填「暂无」。",
   ].filter(Boolean).join("\n");
 }
