@@ -155,6 +155,98 @@ export async function runPhase1(
   };
 }
 
+// ── Phase 1.6: 玩家选项生成（引擎侧，settlement 后调用）──
+
+export interface PlayerOption {
+  text: string;
+  tag?: string;
+  category?: "普通" | "对话" | "行动" | "互动" | "移动" | "观察" | "特殊";
+}
+
+export async function generatePlayerOptions(ctx: any): Promise<PlayerOption[]> {
+  const { gameState } = await import("./state.ts");
+  const gs = gameState;
+  const p = gs.player;
+  if (!p) return [];
+
+  const mode = gs.mode || "rpg";
+  const loc = p.location || "???";
+  const npcsHere = getPresentNPCNames(gs);
+  const nearby = npcsHere.length;
+  const hasTarget = nearby > 0;
+
+  // Build context blocks per mode
+  const blocks: string[] = [
+    `模式: ${mode}`,
+    `位置: ${loc}`,
+    `在场NPC(${nearby}): ${npcsHere.length > 0 ? npcsHere.join("、") : "无人"}`,
+  ];
+
+  // NPC summaries (affections, stages)
+  if (hasTarget) {
+    const summaries: string[] = [];
+    for (const [n, npc] of Object.entries(gs.npcs || {})) {
+      if (!(npc as any).alive) continue;
+      try {
+        const { isSameLocation } = await import("./state.ts");
+        if (!isSameLocation((npc as any).currentRoom, loc)) continue;
+        const aff = p.relationships?.[n]?.affection ?? 0;
+        const stage = p.relationships?.[n]?.stage || "陌生";
+        const romance = p.relationships?.[n]?.romance || "";
+        const label = romance === "恋人" ? "恋人" : stage;
+        summaries.push(`${n}:${label}:${aff}`);
+      } catch {}
+    }
+    if (summaries.length) blocks.push(`NPC关系: ${summaries.join(" | ")}`);
+  }
+
+  // Mode-specific context
+  if (mode === "sex" && p.sex) {
+    const sx = p.sex;
+    blocks.push(`性状态: 兴奋${sx.arousal||0}/100 欲望${sx.desire||0}/100 高潮${sx.climaxCount||0}次`);
+    if (sx.cyclePhase) blocks.push(`周期: ${sx.cyclePhase}·第${sx.cycleDay||0}天`);
+  }
+
+  // What just happened
+  const summary = (gs as any)._phase1Summary || "";
+  if (summary) blocks.push(`上一轮: ${summary}`);
+
+  const prompt = [
+    "你是游戏选项生成器。根据玩家当前场景自动生成4-6个可选的【扮演选项】或【行动选项】。输出纯JSON数组。",
+    "",
+    "## 当前状态",
+    ...blocks.map(b => `- ${b}`),
+    "",
+    "## 生成规则",
+    hasTarget && mode !== "sex"
+      ? `有NPC在场。选项应混合对话和行动。每项包含text和可选的tag(普通/理智/吐槽/大胆/观察/互动/移动)。至少2个对话向、1个行动向。`
+      : mode === "sex"
+      ? `sex模式。选项应覆盖爱抚/亲吻/进入/挑逗/结束等sex动作。tag用相关动词。`
+      : `无人。选项应是场景探索向——观察周围、移动到某处、休息、使用物品等。`,
+    "",
+    "## 禁止",
+    "- 不要生成玩家不会做的选项（比如玩家是男高中生就不要生成'提裙行礼'）",
+    "- 不要生成需要不存在物品的选项",
+    hasTarget ? "" : "- 有NPC在场时不要生成对话选项——那是搭话后的内容",
+    "",
+    "## 输出格式",
+    `[{"text":"选项文本","tag":"标签"},...]`,
+    "",
+    "直接输出JSON数组，不要任何解释。",
+  ].filter(Boolean).join("\n");
+
+  try {
+    const raw = await generateCompletion(prompt, 512, ctx, undefined,
+      "你是选项生成器。只输出JSON数组。");
+    const json = raw.trim().replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim();
+    const opts: PlayerOption[] = JSON.parse(json);
+    return Array.isArray(opts) ? opts.slice(0, 9) : [];
+  } catch (e) {
+    console.error("generatePlayerOptions: parse failed", (e as Error).message);
+    return [];
+  }
+}
+
 // ── 分类 prompt 组装 ──
 
 export function buildClassificationPrompt(playerInput: string, gs: any, startup = false): string {

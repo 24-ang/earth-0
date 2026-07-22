@@ -241,6 +241,12 @@ export default function (pi: ExtensionAPI) {
     const { detectInteractionMode: detectIM } = await import("./engine/detect-mode.ts");
     gameState.interactionMode = detectIM(gameState, postScheduleCount).interactionMode;
 
+    // ── Phase 1.6: 玩家选项生成（引擎侧，settlement + NPC日程更新后调用）──
+    try {
+      const { generatePlayerOptions } = await import("./engine/phase1-classifier.ts");
+      (gameState as any)._pendingOptions = await generatePlayerOptions(ctx);
+    } catch (e: any) { console.error("[Phase1.6] option generation failed:", e.message); }
+
     // ── 切镜/幕间消费（viewpoint.ts 的异步 promise → 追加到 NPC 回应后）──
     let viewpointText = "";
     try {
@@ -1420,15 +1426,22 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         const rm=s.getRoom(loc);
         const prose=(gs as any)._renderedProse||"";
 
-        // 更新选项缓存
-        const ph=prose.length;
-        const pk=ph+prose.slice(-30);
+        // 更新选项缓存（从 Phase 1.6 _pendingOptions 读取）
+        const pk = prose.length + String((gs as any)._pendingOptions?.length || 0);
         if(pk!==_lastProseHash){
           _lastProseHash=pk;
           _choicesCache=[];
           _choiceTags=[];
           _condOptsCache=[];
-          if(prose){
+          // 优先读 Phase 1.6 生成的选项
+          const pending = (gs as any)._pendingOptions;
+          if (pending && Array.isArray(pending) && pending.length > 0) {
+            for (const o of pending) {
+              _choicesCache.push(o.text || "");
+              _choiceTags.push(o.tag || "");
+            }
+          } else if (prose) {
+            // 回退：从 Phase 3 叙事中解析（旧路径）
             try {
               const{parseRoleOptions}=require("./engine/parse-options.ts");
               const r=parseRoleOptions(prose);
@@ -2832,9 +2845,9 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               }
             }
 
-            // 房间描述行
-            const gpStr = `${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"}`;
-            out.push(tr(`  ${gray(`📏 ${rm.width||"?"}m×${rm.height||"?"}m · 你(${gpStr}) · ${(rm.atmosphere||"普通").slice(0,25)}`)}`));
+            // 房间名 + 尺寸
+            out.push(tr(`${C.W}${C.B}${loc}${C.r}`));
+            out.push(tr(`  ${gray(`${rm.width||"?"}m×${rm.height||"?"}m · 你(${p.gridPos?.[0]??"?"},${p.gridPos?.[1]??"?"})`)}`));
             if (rm.controlled_by) {
               try {
                 const s0 = require("./engine/state.ts");
@@ -2878,14 +2891,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               } catch { goHint = "跨区导航"; }
               out.push(tr(` ${onGo ? hi("▶") : " "} 🚶 ${padCol("外出")} ${C.M}│${C.r} ${goHint} ${gray("›")}`, "nav", onGo));
             }
-            // 页脚三连（Phase 1 LLM 生成优先，空则引擎 fallback）
-            out.push(tr(""));
+            // 页脚 + 房间氛围（不空行，连续输出）
             const sf = gs._sceneFooter as { posture: string; location_detail: string; main_quest: string } | null;
             if (sf?.posture || sf?.location_detail || sf?.main_quest) {
               if (sf.posture) out.push(tr(gray(`  |-[${sf.posture}]`)));
               if (sf.location_detail) out.push(tr(gray(`  |-[${sf.location_detail}]`)));
               if (sf.main_quest && sf.main_quest !== "暂无")
                 out.push(tr(gray(`  |-[主线任务:${sf.main_quest}]`)));
+              // 房间氛围跟在页脚后面
+              const atm = (rm?.atmosphere || "").trim();
+              if (atm) out.push(tr(gray(`  |-[${atm.slice(0, 30)}]`)));
             } else {
               const postureBits: string[] = [];
               if (p.hiding_in) postureBits.push(p.hiding_in);
@@ -2900,6 +2915,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const quests = gs.quests || {};
               const mainQuest = Object.values(quests).find((q: any) => q.status === "active") as any;
               if (mainQuest?.title) out.push(tr(gray(`  |-[主线任务:${mainQuest.title}]`)));
+              const atm2 = (rm?.atmosphere || "").trim();
+              if (atm2) out.push(tr(gray(`  |-[${atm2.slice(0, 30)}]`)));
             }
           }
         }
