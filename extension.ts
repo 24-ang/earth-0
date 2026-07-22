@@ -1453,15 +1453,25 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           } catch {}
         }
 
+        // 距离计算（玩家 gridPos → NPC gridPos）
+        const calcDist = (gp: any): number => {
+          const pp = p.gridPos;
+          if (!pp || !gp || !rm) return 2;
+          const dx = (gp[0]||0) - (pp[0]||0);
+          const dy = (gp[1]||0) - (pp[1]||0);
+          return Math.round(Math.sqrt(dx*dx + dy*dy) * (rm.cellSize||1) * 10) / 10;
+        };
+
         // 加载周边人物
         const nearby=Object.entries(gs.npcs||{}).filter(([_,n]:any)=>n.alive!==false&&s.isSameLocation(n.currentRoom,loc));
         _peopleCache=nearby.map(([name,npc]:[string,any])=>{
           const rel=p.relationships?.[name];
+          const gp = npc.gridPos||npc.grid_pos||[0,0];
           return{
-            name, type:"named", gp:npc.gridPos||npc.grid_pos||[0,0],
+            name, type:"named", gp,
             height:getNpcHeight(name, npc),
-            posDesc:posLabel(npc.gridPos||npc.grid_pos,rm),
-            dist:npc.distance||npc.dist||2,
+            posDesc:posLabel(gp,rm),
+            dist:calcDist(gp),
             affection:rel?.affection??0, stage:rel?.stage||"陌生", romance:rel?.romance||"",
             lh:npc.equipment?.left_hand?.name||npc.left_hand||"",
             rh:npc.equipment?.right_hand?.name||npc.right_hand||"",
@@ -1472,9 +1482,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           const rc=s.getNamelessNPCs(loc,gs.turn)as any[];
           const sc=(gs as any)._testCrowd||[];
           for(const c of[...rc,...sc]) {
+            const cgp = c.gridPos||[0,0];
             _peopleCache.push({
-              name:c.name||"???", type:"crowd", gp:c.gridPos||[0,0], height:c.height||"?",
-              posDesc:posLabel(c.gridPos,rm), dist:"?", clusterSize:c.count||c.clusterSize||1,
+              name:c.name||"???", type:"crowd", gp:cgp, height:c.height||"?",
+              posDesc:posLabel(cgp,rm), dist:calcDist(cgp), clusterSize:c.count||c.clusterSize||1,
               action:c.act||c.action||"", affection:0, stage:"", romance:"", lh:"", rh:"", lastWords:""
             });
           }
@@ -2693,7 +2704,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (n.type === "named") {
                 const a = n.affection;
                 const gp = (n.gp && n.gp[0] != null) ? `(${n.gp[0]},${n.gp[1]})` : "";
-                const pos = `${C.M}|-[${C.r}${gp}${n.posDesc || "?"}${n.dist !== undefined && n.dist !== "?" ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
+                const pos = `${C.M}|-[${C.r}${gp}${n.posDesc || "?"}${n.dist > 0 ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
                 if (on) {
                   out.push(tr(`${hi("▶ ")}${C.O}${C.B}${n.name}${C.r} ${hi("◀")}  ${n.height}cm ${pos}`, null, true));
                 } else {
@@ -2707,7 +2718,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               } else {
                 const crowdName = n.clusterSize && n.clusterSize > 1 ? `${n.name}×${n.clusterSize}` : n.name;
                 const gp3 = (n.gp && n.gp[0] != null) ? `(${n.gp[0]},${n.gp[1]})` : "";
-                const pos2 = `${C.M}|-[${C.r}${gp3}${n.posDesc || "?"}${n.dist !== undefined && n.dist !== "?" ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
+                const pos2 = `${C.M}|-[${C.r}${gp3}${n.posDesc || "?"}${n.dist > 0 ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
                 const hRaw = String(n.height || "");
                 const hDisp = hRaw === "?" || !hRaw ? "" : hRaw.includes("cm") ? hRaw : `${hRaw}cm`;
                 const hPart = hDisp ? `  ${hDisp}` : "";
