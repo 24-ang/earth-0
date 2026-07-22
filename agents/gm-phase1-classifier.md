@@ -44,7 +44,7 @@
 - `spawn_item`: 创建物品。name(物品名), source(来源描述)。剧情获得的钥匙/信/道具。
 
 ### NPC 管理
-- `schedule_override`: 让 NPC 偏离日常日程。npc(NPC名), reason(原因), duration(持续时间)。
+- `schedule_override`: 覆盖NPC日程（人生遭遇突发情况时必调）。npc, location, action, reason。until不填=永久有效。临时情况（看病/逃课）才填until(YYYY-MM-DD)。
 
 ### 剧情/任务
 - `add_memory_tag`: 写入记忆标签。target(NPC名), tag(标签), category(分类)。

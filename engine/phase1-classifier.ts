@@ -96,6 +96,8 @@ export async function runPhase1(
   // 2. 调 LLM 获取 JSON
   let result: ClassificationResult;
   try {
+    const { setProfileLabel } = await import("../tools/helpers.ts");
+    setProfileLabel("P1·分类");
     const raw = await generateCompletion(prompt, 1024, ctx, undefined,
       "你是一个JSON分类器。你的唯一任务是输出合法JSON。不要输出任何其他文字、解释、markdown或叙事。如果无法确定意图，输出空actions数组。");
     result = parseClassificationOutput(raw);
@@ -249,6 +251,8 @@ export async function generatePlayerOptions(ctx: any): Promise<PlayerOption[]> {
   ].filter(Boolean).join("\n");
 
   try {
+    const { setProfileLabel: setLabelO } = await import("../tools/helpers.ts");
+    setLabelO("P1.6·选项");
     const raw = await generateCompletion(prompt, 512, ctx, undefined,
       "你是选项生成器。只输出JSON数组。");
     const json = raw.trim().replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "").trim();
@@ -339,6 +343,11 @@ export function buildClassificationPrompt(playerInput: string, gs: any, startup 
     "  🚗 载具: mount_vehicle, dismount_vehicle",
     "  📖 自习: study（指定科目+小时数，自动检定+推进时间）",
 "  📋 管理: schedule_override, table_crud, add_memory_tag, add_calendar_event",
+"  ⚠️ NPC 日程管理（导演职责——你做判断，引擎不替你猜）:",
+"     NPC 人生遭遇突发情况（穿越/逃难/流落荒岛/长期住院…）→ schedule_override 不填until=永久覆盖。",
+"     混乱期活下来是第一位的，没心情搞规律日程 → table_crud 把 scheduleGroup 改成\"自由人\"。",
+"     稳定后（找到营地/入学/定居）→ 再改回或建新日程组。",
+"     导演 LLM 不调 = 引擎按旧模板走 → NPC 穿越第二天准时回总武高上课。",
     "  🏛️ 组织/势力: create_organization（动态创建社团/帮派/圈子——引擎数据驱动）, lookup_org（查势力详情，声望决定可见度）, contribute_to_org（向势力捐款/完成任务/背叛/招募成员）",
     "  🏗️ 地点: create_location（创建新地点并注入skybox属性——繁荣度/稳定度/体制/经济类型/外交立场）",
     "  🆕 新游戏: init_game（仅当玩家明确说「新游戏」「重新开始」——「我是XX」不是新游戏）",
