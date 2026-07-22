@@ -2839,7 +2839,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const sub = (item.label && item.label.trim()) ? ` · ${item.label.trim()}` : "";
                 const acts = furnitureActions(item.name);
                 const on2 = _panelMode && i === _cursor;
-                out.push(tr(`    ${sel} 📦 ${item.name}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`, null, on2));
+                const nm = on2 ? `${C.O}${C.B}${item.name}${C.r}` : item.name;
+                out.push(tr(`    ${sel} 📦 ${nm}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`, null, on2));
                 fCount++;
               }
             }
@@ -2852,7 +2853,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const sel = _panelMode && i === _cursor ? hi("▶") : " ";
               if (item.type === "exit") {
                 const on3 = _panelMode && i === _cursor;
-                out.push(tr(`    ${sel} 🚪 → ${item.exitTo}${gray(`(${item.x},${item.y})`)}`, null, on3));
+                const eName = on3 ? `${C.O}${C.B}${item.exitTo}${C.r}` : item.exitTo;
+                out.push(tr(`    ${sel} 🚪 ${gray("›")} ${eName}${gray(`(${item.x},${item.y})`)}`, null, on3));
                 eCount++;
               }
             }
@@ -2961,10 +2963,12 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (!_choicesCache.length) { out.push(tr(gray(`  输入文字推进剧情后，选项自动出现`))); }
             else {
               for (let i = 0; i < Math.min(_choicesCache.length, 6); i++) {
-                const idx = String.fromCodePoint(0x2460 + i);
+                const idx = `${i + 1}.`;
                 const tag = _choiceTags[i] || "";
-                const sel = _panelMode && i === _cursor ? hi("▶") : " ";
-                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`, "gear"));
+                const on = _panelMode && i === _cursor;
+                const sel = on ? hi("▶") : " ";
+                const txt = on ? `${C.O}${C.B}${_choicesCache[i]}${C.r}` : _choicesCache[i];
+                out.push(tr(`${sel} ${gray(idx)} ${txt}${tag ? gray(` [${tag}]`) : ""}`, null, on));
               }
             }
           }
@@ -2985,18 +2989,21 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             } else {
               const nStd = Math.min(_choicesCache.length, 6);
               for (let i = 0; i < nStd; i++) {
-                const idx = String.fromCodePoint(0x2460 + i);
+                const idx = `${i + 1}.`;
                 const tag = _choiceTags[i] || "";
-                const sel = _panelMode && i === _cursor ? hi("▶") : " ";
-                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`, "gear", _panelMode && i === _cursor));
+                const on4 = _panelMode && i === _cursor;
+                const sel = on4 ? hi("▶") : " ";
+                const txt = on4 ? `${C.O}${C.B}${_choicesCache[i]}${C.r}` : _choicesCache[i];
+                out.push(tr(`${sel} ${gray(idx)} ${txt}${tag ? gray(` [${tag}]`) : ""}`, null, on4));
               }
               // 条件选项：编号顺延，条件 tag 橙色（DLC2.09 风格）
               for (let j = 0; j < _condOptsCache.length && nStd + j < 9; j++) {
                 const co = _condOptsCache[j];
                 const fi = _choicesCache.length + j; // focusItems 中的真实下标
-                const idx = String.fromCodePoint(0x2460 + nStd + j);
-                const sel = _panelMode && fi === _cursor ? hi("▶") : " ";
-                out.push(tr(`${sel} ${gray(idx)} ${co.text} ${hi(`[${co.tag}]`)}`, "gear", _panelMode && fi === _cursor));
+                const idx = `${nStd + j + 1}.`;
+                const on5 = _panelMode && fi === _cursor;
+                const sel = on5 ? hi("▶") : " ";
+                out.push(tr(`${sel} ${gray(idx)} ${co.text} ${hi(`[${co.tag}]`)}`, null, on5));
               }
               // 常驻动作：等待/睡觉/吃东西（引擎直改不推正文），编号继续顺延
               if (standing.length) {
@@ -3005,10 +3012,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 for (let k2 = 0; k2 < standing.length; k2++) {
                   const sa = standing[k2];
                   const fi = _choicesCache.length + _condOptsCache.length + k2;
-                  const idx = String.fromCodePoint(0x2460 + nShown + k2);
-                  const sel = _panelMode && fi === _cursor ? hi("▶") : " ";
+                  const idx = `${nShown + k2 + 1}.`;
+                  const on6 = _panelMode && fi === _cursor;
+                  const sel = on6 ? hi("▶") : " ";
                   const lbl = sa.hot ? hi(`${sa.icon} ${sa.label}`) : `${sa.icon} ${sa.label}`;
-                  out.push(tr(`${sel} ${gray(idx)} ${lbl} ${dim(`(${sa.hint})`)}`, "gear", _panelMode && fi === _cursor));
+                  out.push(tr(`${sel} ${gray(idx)} ${lbl} ${dim(`(${sa.hint})`)}`, null, on6));
                 }
               }
             }
