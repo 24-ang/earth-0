@@ -589,6 +589,22 @@ async function loadTool(toolName: string): Promise<any | null> {
     promote_member: "../tools/action/promote_member.ts",
     org_action: "../tools/action/org_action.ts",
     adjust_org_relation: "../tools/action/adjust_org_relation.ts",
+    init_game: "../tools/state/init_game.ts",
+    settle_scene: "../tools/action/settle_scene.ts",
+    init_profile: "../tools/state/init_profile.ts",
+    grant_skill_exp: "../tools/state/grant_skill_exp.ts",
+    set_flags: "../tools/state/set_flags.ts",
+    instantiate_residence: "../tools/action/instantiate_residence.ts",
+    create_location: "../tools/lookup/create_location.ts",
+    create_room: "../tools/action/create_room.ts",
+    create_character: "../tools/state/create_character.ts",
+    set_npc_relation: "../tools/state/set_npc_relation.ts",
+    open_quest: "../tools/action/open_quest.ts",
+    create_story_hook: "../tools/action/create_story_hook.ts",
+    replay_pov: "../tools/action/replay_pov.ts",
+    create_organization: "../tools/action/create_organization.ts",
+    lookup_org: "../tools/lookup/lookup_org.ts",
+    masturbate: "../tools/action/sex_touch.ts",
   };
 
   const relPath = toolPaths[toolName];
