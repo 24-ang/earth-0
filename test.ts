@@ -6385,8 +6385,8 @@ test("Party System: physical follow and schedule bypass", async () => {
   if (gameState.npcs[companionName].currentRoom !== gameState.player.location) {
     throw new Error("Teammate did not follow player location change");
   }
-  if (gameState.npcs[companionName].action !== "同行中") {
-    throw new Error("Teammate action is not 同行中: " + gameState.npcs[companionName].action);
+  if (gameState.npcs[companionName].action !== "组队中") {
+    throw new Error("Teammate action is not 组队中: " + gameState.npcs[companionName].action);
   }
 
   // 2. updateNPCSchedules -> Companion schedule is bypassed

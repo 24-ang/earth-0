@@ -1099,15 +1099,15 @@ export function setPlayerLocation(loc: string): void {
     initPlayerGrid();
   }
 
-  // 队友/跟随者跟随移动
-  const followers = [...(gameState.player.party || []), ...(gameState.player.following || [])];
-  if (followers.length > 0) {
+  // 组队/同行 跟随移动
+  const followers = new Set([...(gameState.player.party || []), ...(gameState.player.following || [])]);
+  if (followers.size > 0) {
     for (const name of followers) {
       const npc = gameState.npcs[name];
       if (npc && npc.alive !== false) {
         npc.currentRoom = key;
-        npc.gridPos = null; // 重新进入场景时分配坐标
-        npc.action = (gameState.player.party || []).includes(name) ? "同行中" : "跟随中";
+        npc.gridPos = null;
+        npc.action = (gameState.player.party || []).includes(name) ? "组队中" : "同行中";
       }
     }
   }
@@ -1391,7 +1391,6 @@ function ensureCollectors(): void {
       const gs = s();
       const lines: string[] = [];
 
-      // 同行者（完整信息）
       for (const name of party) {
         const npc = gs.npcs[name];
         if (!npc) continue;
@@ -1402,13 +1401,13 @@ function ensureCollectors(): void {
           .filter(([_, sk]) => (sk as any).level > 0)
           .map(([k, sk]) => `${k}:Lv${(sk as any).level}`)
           .join(", ") || "无";
-        lines.push(`  • ${name}: HP ${npc.hp.current}/${npc.hp.max} | 属性: ${attrStr} | 技能: ${skillsStr} | ${npc.action || "同行中"}`);
+        lines.push(`  • ${name}: HP ${npc.hp.current}/${npc.hp.max} | 属性: ${attrStr} | 技能: ${skillsStr} | ${npc.action || "组队中"}`);
       }
-
-      // 跟随者（轻量信息）
       for (const name of following) {
         if (party.includes(name)) continue;
-        lines.push(`  • ${name}（跟随中）`);
+        const npc = gs.npcs[name];
+        if (!npc) continue;
+        lines.push(`  • ${name}: ${npc.action || "同行中"}`);
       }
 
       // NPC 间关系（同行者之间）
@@ -3984,13 +3983,13 @@ export async function updateNPCSchedules(): Promise<string[]> {
   const activeOverrides = await getActiveScheduleOverrides();
 
   for (const [name, npc] of Object.entries(gameState.npcs)) {
-    // 同行/跟随 屏蔽日程计算
-    const following = gameState.player.following || [];
-    const party = gameState.player.party || [];
-    if (party.includes(name) || following.includes(name)) {
+    // 组队/同行 屏蔽日程计算
+    const pty = gameState.player.party || [];
+    const fol = gameState.player.following || [];
+    if (pty.includes(name) || fol.includes(name)) {
       npc.currentRoom = gameState.player.location;
       npc.gridPos = null;
-      npc.action = party.includes(name) ? "同行中" : "跟随中";
+      npc.action = pty.includes(name) ? "组队中" : "同行中";
       continue;
     }
 

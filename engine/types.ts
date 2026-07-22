@@ -261,7 +261,7 @@ export interface PlayerState {
   flags: Record<string, boolean>;
   alive: boolean;
   party: string[];
-  following: string[];  // 轻量跟随——引擎落地（移动跟随+日程屏蔽），但不解锁 HUD 操作
+  following: string[];  // 同行邀请: pushText后引擎落地(移动跟随+日程屏蔽)，防飞人
   gridPos: [number, number] | null;
   reputation: Record<string, number>;  // 多维声望，键=日程模板组名
   known_locations: string[];           // 已探索地点

@@ -1220,7 +1220,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       { label: "①搭话", key: 0, locked: false },
       { label: aff < 10 ? "②接触≥10" : "②接触", key: 1, locked: aff < 10 },
       { label: hasInsight ? "③观察" : "③观察·洞察", key: 2, locked: false },
-      { label: "④同行", key: 9, locked: false },
+      { label: (gs?.player?.following || []).includes(name) ? "④同行 ✓" : "④同行", key: 9, locked: false },
       { label: inParty ? "⑤组队操作" : (aff < 40 && !lover) ? "⑤组队≥40" : partyFull ? "⑤组队🈵" : "⑤组队", key: 3, locked: (aff < 40 && !lover) || partyFull },
       { label: aff < 50 ? "⑥恋爱≥50" : "⑥恋爱", key: 4, locked: aff < 50 },
       { label: "⑦战斗", key: 5, locked: false },
@@ -1282,10 +1282,17 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       _subCursor = 0;
     }
     else if(key===9){
-      // ④同行 → 推正文，由 NPC Agent 决定是否跟来
-      pushText(`我邀请 ${name} 一起同行。`);
-      ctx?.ui?.notify(`邀请${name}同行…`, "info");
-      _panelMode=false;
+      // ④同行 → 推正文 + 引擎落地(防飞人)
+      const fol2: string[] = gs?.player?.following || [];
+      if (fol2.includes(name)) {
+        gs.player.following = fol2.filter((n2:string) => n2 !== name);
+        ctx?.ui?.notify(`${name} 不再同行`, "info");
+      } else {
+        gs.player.following = [...fol2, name];
+        pushText(`我邀请 ${name} 一起同行。`);
+        ctx?.ui?.notify(`邀请${name}同行`, "info");
+      }
+      require("./engine/state.ts").saveState();_panelMode=false;
     }
     else if(key===4){
       if(aff<50){ctx?.ui?.notify("好感需≥50","warning");return;}
@@ -1986,8 +1993,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const npc = gs?.npcs?.[nm];
                 const sameRoom = npc && s.isSameLocation(npc.currentRoom, loc);
                 const roomStr = sameRoom ? gray("同室") : gray("不在同室");
-                const inParty = (p.party || []).includes(nm) ? ` ${gray("同行中")}` : (p.following || []).includes(nm) ? ` ${gray("跟随中")}` : "";
-                out.push(tr(`  ${nm}  ${affStr} ${gray("·")} ${roomStr}${inParty}`, "gear"));
+                const badge = (p.party || []).includes(nm) ? ` ${gray("组队中")}` : (p.following || []).includes(nm) ? ` ${gray("同行中")}` : "";
+                out.push(tr(`  ${nm}  ${affStr} ${gray("·")} ${roomStr}${badge}`, "gear"));
               }
             };
             grp("❤️", "恋人", lovers);
