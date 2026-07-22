@@ -87,7 +87,7 @@ export default function (pi: ExtensionAPI) {
     ];
 
     const { showMenu } = await import("./tools/helpers.ts");
-    await showMenu(ctx, "🌍 earth-0", items.filter(i => i.action));
+    await showMenu(ctx, "🌍 earth-0", items.filter(i => i.action), { style: "hud" });
     if (!gameState._startup) gameState._startup = "new";
 
     // 🎮 启动游戏面板 + Web HUD 服务器
@@ -420,6 +420,8 @@ export default function (pi: ExtensionAPI) {
     });
 
     try {
+      const { setProfileLabel } = await import("./tools/helpers.ts");
+      setProfileLabel("P3·渲染");
       let rendered = await generateCompletion(gmPrompt, 32768, ctx, flagModel);
       if (rendered) {
         // Lint 扫描

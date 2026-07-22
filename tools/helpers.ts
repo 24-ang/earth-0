@@ -220,7 +220,17 @@ export function setGenerateCompletionOverride(fn: typeof generateCompletionOverr
   generateCompletionOverride = fn;
 }
 
+let _label = "";
+export function setProfileLabel(s: string) { _label = s; }
+
 export async function generateCompletion(promptText: string, maxTokens: number, ctx: any, flagModel?: string, systemPrompt?: string): Promise<string> {
+  try {
+    if (_label) {
+      const { record } = await import("../engine/prompt-profiler.ts");
+      record(_label, flagModel || "default", promptText, maxTokens);
+      _label = "";
+    }
+  } catch {}
   if (generateCompletionOverride) {
     return generateCompletionOverride(promptText, maxTokens, ctx, flagModel, systemPrompt);
   }
@@ -415,7 +425,8 @@ export async function showPanel(ctx: any, title: string, lines: string[]): Promi
   );
 }
 
-export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem[] | (() => MenuItem[])): Promise<void> {
+export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem[] | (() => MenuItem[]), opts?: { style?: "box" | "hud" }): Promise<void> {
+  const style = opts?.style || "box";
   return ctx.ui.custom(
     (tui: any, _theme: any, _kb: any, done: any) => {
       let sel = 0;
@@ -442,8 +453,43 @@ export async function showMenu(ctx: any, title: string, itemsOrBuilder: MenuItem
           const out: string[] = [];
           const w = Math.min(width, tui.visibleWidth?.() ?? width) - 1;
           const titleW = getStringWidth(title);
-          
-          // Styled Top border
+
+          if (style === "hud") {
+            const C = { r:"\x1b[0m", O:"\x1b[38;5;216m", G:"\x1b[38;5;114m", Y:"\x1b[38;5;215m", M:"\x1b[38;5;243m", W:"\x1b[38;5;252m", B:"\x1b[1m" };
+            const gray = (s: string) => `${C.M}${s}${C.r}`;
+            const hi = (s: string) => `${C.O}${s}${C.r}`;
+            const head = (s: string) => `${C.M}【 ${C.r}${C.W}${C.B}${s}${C.r}${C.M} 】${C.r}`;
+
+            out.push("");
+            out.push(` ${head(title)}`);
+            out.push("");
+
+            // Status bar line
+            const statusText = buildStatusBarText();
+            if (statusText) {
+              const statusClean = statusText.replace(/\x1b\[[0-9;]*m/g, "");
+              out.push(` ${C.M}│${C.r} ${gray(statusClean)}`);
+              out.push(` ${C.M}│${C.r}`);
+            }
+
+            for (let i = 0; i < items.length; i++) {
+              const it = items[i]!;
+              if (it.label.startsWith("──")) continue; // skip separators in HUD style
+              const isSel = i === sel;
+              const rail = isSel ? `${C.O}${C.B}┃${C.r}` : `${C.M}│${C.r}`;
+              const bullet = isSel ? `${hi("▶")} ` : "  ";
+              const detail = it.detail ? `  ${gray(it.detail)}` : "";
+              const label = isSel ? `${C.O}${C.B}${it.label}${C.r}` : it.label;
+              out.push(` ${rail} ${bullet}${label}${detail}`);
+            }
+
+            out.push(` ${C.M}│${C.r}`);
+            out.push(` ${gray("─".repeat(46))}`);
+            out.push(` ${gray("↑↓ 选择 · Enter 确认 · q/ESC 返回")}`);
+            return out;
+          }
+
+          // ── Box style (original) ──
           const topBorder = TUI_THEME.border + "┌─" + TUI_THEME.reset + 
                             TUI_THEME.titleText + title + TUI_THEME.reset + " " +
                             TUI_THEME.border + "─".repeat(Math.max(0, w - 4 - titleW)) + "┐" + TUI_THEME.reset;
