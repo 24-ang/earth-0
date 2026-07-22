@@ -55,7 +55,7 @@ export default function (pi: ExtensionAPI) {
         action: async (d: () => void) => { gameState._startup = "new"; gameState._newGame = true; d(); },
       },
       {
-        label: "▶️ 继续游戏",
+        label: "💾 继续游戏",
         detail: hasAutoSave ? autoDate : "没有进度",
         action: hasAutoSave ? async (d: () => void) => {
           loadState();
