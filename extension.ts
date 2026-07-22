@@ -1179,7 +1179,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     const hasInsight = (pSkills.洞察 || 0) >= 1;
     const hasStealth = (pSkills.潜行 || 0) >= 1;
     const hasPsych = (pSkills.心理 || pSkills.话术 || 0) >= 1;
-    if (mode === "sex") {
+    if (mode === "sex" && gs.player?.sex?.profile?.name === name) {
       const acts: { label: string; key: number; locked: boolean }[] = [
         { label: "①爱抚", key: 20, locked: false },
         { label: "②亲吻", key: 21, locked: false },
@@ -1266,10 +1266,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     else if(key===23){pushText(`我变换了体位。`);ctx?.ui?.notify("变换体位", "info");_panelMode=false;}
     else if(key===24){pushText(`我对 ${name} 说着挑逗的话。`);ctx?.ui?.notify(`挑逗${name}`, "info");_panelMode=false;}
     else if(key===25){
-      // ⑥状态 → 展开自身 sex-detail
-      pushText(`我看了看 ${name} 的状态。`);
-      ctx?.ui?.notify(`查看${name}性状态`, "info");
-      _panelMode=false;
+      // ⑥状态 → 打开 sex-detail 子面板
+      _submenu = "sex-detail";
+      _subCursor = 0;
+      return;
     }
     else if(key===26){gs.mode=gs._prevMode||"gal";gs._prevMode=undefined;require("./engine/state.ts").saveState();pushText(`我和 ${name} 结束了亲密。`);ctx?.ui?.notify("结束亲密", "info");_panelMode=false;}
     else if(key===7){
@@ -1345,11 +1345,12 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         const W = Math.max(20, w - 2) - 2; // 减 2 列给左侧竖线轨道 "│ "
         // 竖线轨道：聚焦区 → 粗橙 ┃，其余 → 灰 │
         const _secOf = (ft: string|null): string|null =>
-          !ft ? null : (ft === "identity" || ft === "titles" || ft === "reputation" || ft === "infoline") ? "info"
-          : (ft === "body" || ft === "sex" || ft === "equip" || ft === "skills" || ft === "bag" || ft === "vehicle" || ft === "party") ? "gear"
-          : (ft === "gonav") ? "nav" : null;
+          !ft ? null
+          : (ft === "titles" || ft === "reputation" || ft === "infoline" || ft === "confirm_yes" || ft === "confirm_no") ? "info"
+          : (ft === "identity" || ft === "body" || ft === "equip" || ft === "skills" || ft === "bag" || ft === "vehicle" || ft === "party" || ft === "economy" || ft === "combat" || ft === "wound" || ft === "people" || ft === "furniture" || ft === "exit" || ft === "choice" || ft === "standing" || ft === "relations") ? "gear"
+          : (ft === "gonav") ? "nav" : "gear";
         const tr = (s: string, sec?: string|null, focus?: boolean) => {
-          const active = sec && sec === _secOf(_panelMode ? _focusItems[_cursor]?.type : null);
+          const active = focus !== undefined ? focus : (sec && sec === _secOf(_panelMode ? _focusItems[_cursor]?.type : null));
           const rail = active ? `${C.O}${C.B}┃${C.r} ` : `${C.M}│${C.r} `;
           return rail + truncAnsi(s, W);
         };
@@ -1367,7 +1368,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           `  ${padCol(key)} │ ${val}`;
         /** 入口行（身体/装备/技能/背包/队伍等可聚焦项），对齐到 kv 的 │ 列 */
         const entry = (focus: boolean, label: string, val: string, suffix?: string) =>
-          ` ${focus ? hi("▶") : " "}${padCol(label)} ${C.M}│${C.r} ${val}${suffix ? " " + suffix : ""}`;
+          ` ${focus ? hi("▶") : " "}${focus ? `${C.O}${padCol(label)}${C.r}` : padCol(label)} ${C.M}│${C.r} ${val}${suffix ? " " + suffix : ""}`;
         /** 进度条: bar(45,100,10) → "██████░░░░ [45/100]"，low=true 变红。max<=0 时按空条处理 */
         const bar = (val: number, max: number, w: number = 10, low = false): string => {
           const pct = max > 0 ? Math.max(0, Math.min(1, val / max)) : 0;
@@ -2162,15 +2163,15 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(kv("年龄", `${p.age ?? t?.player_age ?? "?"}岁`)));
             const identity = p.public_identity || p.memberships?.[0]?.title || "";
             const focusId = sel("identity");
-            out.push(tr(entry(focusId, '身份', identity || dim("?"), gray('›'))));
+            out.push(tr(entry(focusId, '身份', identity || dim("?"), gray('›')), "gear", focusId));
             const tt = p.titles || [];
             const focusTitles = sel("titles");
-            out.push(tr(entry(focusTitles, '称号', tt.length ? `「${tt[tt.length-1]}」${tt.length > 1 ? gray(` +${tt.length-1}`) : ""}` : dim('尚未获得'), gray('›'))));
+            out.push(tr(entry(focusTitles, '称号', tt.length ? `「${tt[tt.length-1]}」${tt.length > 1 ? gray(` +${tt.length-1}`) : ""}` : dim('尚未获得'), gray('›')), "info", focusTitles));
             const rep = p.reputation || {};
             const repKeys = Object.keys(rep);
             const repSum = repKeys.slice(0,3).map(k => `${k}${(rep[k]??0)>=0 ? `${C.G}+${rep[k]}${C.r}` : `${C.d}${rep[k]}${C.r}`}`).join(gdot);
             const focusRep = sel("reputation");
-            out.push(tr(entry(focusRep, '声望', repKeys.length ? repSum : dim('默默无闻'), gray('›'))));
+            out.push(tr(entry(focusRep, '声望', repKeys.length ? repSum : dim('默默无闻'), gray('›')), "info", focusRep));
             out.push(tr(""));
 
             // 状态条（■□ 方块 10 格）
@@ -2202,17 +2203,17 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (isFemale && b.cup) bodyParts.push(`${b.cup}-cup`);
             const bodySum = bodyParts.join(gdot) || "?";
             const focusBody = sel("body");
-            out.push(tr(entry(focusBody, '身体', bodySum, gray("›")), "gear"));
+            out.push(tr(entry(focusBody, '身体', bodySum, gray("›")), "gear", focusBody));
             const genderSlots = getEquipSlots(p.gender);
             const eqCount = genderSlots.filter(s2 => eq[s2.id]).length;
             const focusEquip = sel("equip");
-            out.push(tr(entry(focusEquip, '装备', eqCount+'/'+genderSlots.length+' 件穿戴', gray('›')), 'gear'));
+            out.push(tr(entry(focusEquip, '装备', eqCount+'/'+genderSlots.length+' 件穿戴', gray('›')), 'gear', focusEquip));
 
             const sk = p.skills || {};
             const skCount = Object.keys(sk).filter(k => (sk[k]?.level ?? sk[k] ?? 0) > 0).length;
             const skSum = skCount ? `${skCount}项` : dim("（无）");
             const focusSkills = sel("skills");
-            out.push(tr(entry(focusSkills, '技能', skSum, gray('›')), 'gear'));
+            out.push(tr(entry(focusSkills, '技能', skSum, gray('›')), 'gear', focusSkills));
 
             // 背包——件数+负重，Enter 打开背包列表
             const bagCount = (p.inventory || []).length;
@@ -2222,22 +2223,23 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             const wtStr = over.overloaded ? `${C.d}⚠超重${C.r} `
               : over.encumbered ? `${C.Y}${C.r} ` : "";
             const catSum = bagCount ? `${bagCount}件` : "0件";
-            out.push(tr(entry(_panelMode && _cursor === _focusItems.findIndex(f => f.type === "bag"), '背包', `${catSum}  ${wtStr}${gray(`${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg`)}`, gray('›')), 'gear'));
+            const focusBag = _panelMode && _cursor === _focusItems.findIndex(f => f.type === "bag");
+            out.push(tr(entry(focusBag, '背包', `${catSum}  ${wtStr}${gray(`${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg`)}`, gray('›')), 'gear', focusBag));
 
             // 载具 / 经济 / 战斗 / 队伍
             const focusVehicle = sel("vehicle");
             if (p.vehicle) {
-              out.push(tr(entry(focusVehicle, '载具', '🚲'+p.vehicle.name, gray('×'+(p.vehicle.speedMul||1.5))), 'gear'));
+              out.push(tr(entry(focusVehicle, '载具', '🚲'+p.vehicle.name, gray('×'+(p.vehicle.speedMul||1.5))), 'gear', focusVehicle));
             }
             const focusEconomy = sel("economy");
-            out.push(tr(entry(focusEconomy, '经济', `${gold(`¥${(p.funds ?? 0).toLocaleString()}`)}`, gray('›')), 'gear'));
+            out.push(tr(entry(focusEconomy, '经济', `${gold(`¥${(p.funds ?? 0).toLocaleString()}`)}`, gray('›')), 'gear', focusEconomy));
             const focusCombat = sel("combat");
             const wpn = p.equipment?.right_hand || p.equipment?.left_hand;
             const wpnStr = wpn?.damage ? `${wpn.name}(${wpn.damage.dice||"?"})` : "徒手";
-            out.push(tr(entry(focusCombat, '战斗', wpnStr, gray('›')), 'gear'));
+            out.push(tr(entry(focusCombat, '战斗', wpnStr, gray('›')), 'gear', focusCombat));
             const pty = p.party || [];
             const focusParty = sel("party");
-            out.push(tr(entry(focusParty, '队伍', pty.length ? pty.map(n => '👤'+n).join(gdot) : dim('（无队友）'), gray('›')), 'gear'));
+            out.push(tr(entry(focusParty, '队伍', pty.length ? pty.map(n => '👤'+n).join(gdot) : dim('（无队友）'), gray('›')), 'gear', focusParty));
 
             // 伤口 + 隐藏状态 + 情报摘要行
             if ((p.wounds || []).length > 0) {
@@ -2267,14 +2269,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (calBit) segs2.push(calBit);
               const infoIdx = _focusItems.findIndex(f => f.type === "infoline");
               const onInfo = _panelMode && _cursor === infoIdx;
-              out.push(tr(entry(onInfo, '情报', segs2.length ? segs2.join(gdot) : dim("无异常"), gray('›')), 'info'));
+              out.push(tr(entry(onInfo, '情报', segs2.length ? segs2.join(gdot) : dim("无异常"), gray('›')), 'info', onInfo));
             }
           }
         }
 
         // ── 周边 Tab 渲染 ──
         else if (_tab === 1) {
-          for (let i = 0; i < _peopleCache.length; i++) {
+          for (let i = 0; i < Math.min(_peopleCache.length, 8); i++) {
             _focusItems.push({ type: "people", npc: _peopleCache[i], index: i });
           }
 
@@ -2284,24 +2286,81 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           // 二级状态：展示 NPC 操作列表
           else if (_submenu === "npc-detail" && _selectedTarget) {
             const n = _selectedTarget;
-            const statusLabel = getNPCStatusLabel(gs, n.name);
-            out.push(tr(`${hi(`▶ ${n.name} ◀`)}  ${gray(`${n.height}cm · ${n.posDesc} · 隔${n.dist}m`)}`));
-            out.push(tr(gray(`    ${statusLabel} · 💕${n.affection}/100 · 携带: ${[n.rh, n.lh].filter(Boolean).join("·") || "—"}`)));
-            if (n.lastWords) out.push(tr(`    ${dim(`「${n.lastWords}」`)}`));
+            const mode = gs.mode || "rpg";
+            const sx = (gs.sexStates || {})[n.name];
+            const layer1 = gs.layer1Enabled && sx && n.type !== "crowd";
+            const rhItem = n.rh || "—";
+            const lhItem = n.lh || "—";
+            const carryStr = `${lhItem}|${rhItem}`;
 
-            out.push(tr(head("快捷操作")));
+            if (mode === "sex" && p.sex?.profile?.name === n.name) {
+              // ── Sex 模式 ──
+              const gpStrSx = (n.gp && n.gp[0] != null) ? `(${n.gp[0]},${n.gp[1]})` : "";
+              out.push(tr(`${hi(`▶ ${n.name} ◀`)}  ${gray(`${n.height}cm |-[${gpStrSx}${n.posDesc}·隔${n.dist}m]`)}`));
+              out.push(tr(``));
+              out.push(tr(`  ${gray("──── 女方 ────")}`));
+              out.push(tr(`  ${gray("[兴奋]")} ${sq(sx.arousal||0, 100)}`));
+              out.push(tr(`  ${gray("[欲望]")} ${sq(sx.desire||0, 100)}`));
+              const cl = ["","卵泡期","排卵期","黄体期"][["生理期","卵泡期","排卵期","黄体期"].indexOf(sx.cyclePhase)] || sx.cyclePhase || "?";
+              out.push(tr(`  ${gray("[周期]")} ${cl}`));
+              if (sx.cycleDay) out.push(tr(`  第${sx.cycleDay}天`));
+              const prof = sx.profile || {};
+              if (prof.attitude) out.push(tr(`  ${gray("[态度]")} ${prof.attitude}`));
+              if (prof.experience) out.push(tr(`  ${gray("[经验]")} ${prof.experience}`));
+              const contra = sx.contraceptionUsed || "none";
+              const contraL = contra === "pill" ? "药" : contra === "condom" ? "套" : "无";
+              out.push(tr(`  ${gray("[避孕]")} ${contraL}`));
+              const ic = sx.insertCounts || {};
+              const hasIC = ic["秘部"] || ic["口"] || ic["肛"] || ic["子宫"];
+              if (hasIC) {
+                out.push(tr(`  ${gray("[插入]")}`));
+                out.push(tr(`  穴 ${ic["秘部"]||0}  口 ${ic["口"]||0}  肛 ${ic["肛"]||0}  宫 ${ic["子宫"]||0}`));
+              }
+              if (prof.bodyParts && Object.keys(prof.bodyParts).length > 0) {
+                out.push(tr(`  ${gray("[开发]")}`));
+                const bpBits = Object.entries(prof.bodyParts as Record<string,any>).slice(0,5)
+                  .map(([k,v]: any) => `${k}${gray("Lv")}${Math.floor((v?.development||0)*10)/10}`);
+                if (bpBits.length) out.push(tr(`  ${bpBits.join("  ")}`));
+              }
+              out.push(tr(`  高潮 ${sx.climaxCount||0}次${sx.squirtCount ? `  ${gray("💦")}${sx.squirtCount}` : ""}`));
+              if (n.lastWords) out.push(tr(`  ${dim(`「${n.lastWords}」`)}`));
+              if (n.action) out.push(tr(`  ${gray(`*${n.action}*`)}`));
+              out.push(tr(``));
+              out.push(tr(`  ${gray("──── 男方 ────")}`));
+              const pSx = p.sex || {};
+              out.push(tr(`  ${gray("[射精]")} ${sq(pSx.arousal||0, 100)}`));
+              out.push(tr(`  ${gray("[体位]")} ${(prof.positions||["正常位"]).join(gray("·"))}`));
+              out.push(tr(`  高潮 ${pSx.climaxCount||0}次`));
+            } else {
+              // ── RPG 模式 ──
+              const gpStr2 = (n.gp && n.gp[0] != null) ? `(${n.gp[0]},${n.gp[1]})` : "";
+              out.push(tr(`${hi(`▶ ${n.name} ◀`)}  ${gray(`${n.height}cm |-[${gpStr2}${n.posDesc}·隔${n.dist}m]`)}`));
+              if (n.type === "crowd") {
+                if (n.action) out.push(tr(`  ${gray(`*${n.action}*`)}`));
+              } else {
+                const stageLabel = n.romance === "恋人" ? "恋人" : n.stage || "陌生";
+                out.push(tr(`  ${gray(`[${stageLabel}]`)} ${sq(n.affection, 100)}${gray(`·${carryStr}`)}`));
+                if (layer1) {
+                  const prof2 = sx.profile || {};
+                  out.push(tr(`  ${gray("[兴奋]")} ${sq(sx.arousal||0, 100)}${gray(`·${prof2.experience||"?"}|${prof2.attitude||"?"}|${sx.cyclePhase||"?"}`)}`));
+                }
+                if (n.lastWords) out.push(tr(`  ${dim(`「${n.lastWords}」`)}`));
+                if (n.action) out.push(tr(`  ${gray(`*${n.action}*`)}`));
+              }
+            }
+            // 操作按钮栏
             const npcActions = _buildNpcActions(gs, n.name);
-            // 按钮栏：>5 个拆两行；选中=橙粗▶◀，锁定=灰，可用=默认
             const btn = (ac: any, idx: number) =>
               _subCursor === idx ? `${C.O}${C.B}▶${ac.label}◀${C.r}`
               : ac.locked ? gray(` ${ac.label} `)
               : ` ${ac.label} `;
+            out.push(tr(``));
             if (npcActions.length > 5) {
               const half = Math.ceil(npcActions.length / 2);
-              out.push(tr(`    ` + npcActions.slice(0, half).map((ac, i) => btn(ac, i)).join(" ")));
-              out.push(tr(`    ` + npcActions.slice(half).map((ac, i) => btn(ac, i + half)).join(" ")));
+              out.push(tr(`  ` + npcActions.slice(0, half).map((ac, i) => btn(ac, i)).join(" ")));
+              out.push(tr(`  ` + npcActions.slice(half).map((ac, i) => btn(ac, i + half)).join(" ")));
             } else {
-              out.push(tr(`    ` + npcActions.map((ac, idx) => btn(ac, idx)).join(" ")));
+              out.push(tr(`  ` + npcActions.map((ac, idx) => btn(ac, idx)).join(" ")));
             }
           }
           // 三级状态：搭话子菜单
@@ -2505,6 +2564,54 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (po) out.push(tr(`  ⚡ 临时行动: ${po.action} @ ${po.location}（${po.reason}）`));
             }
           }
+          // 三级状态：性状态详情（从 npc-detail ⑥状态 进入）
+          else if (_submenu === "sex-detail" && _selectedTarget) {
+            const n = _selectedTarget;
+            const sx2 = (gs.sexStates || {})[n.name];
+            out.push(tr(head(`性状态 · ${n.name}`)));
+            if (sx2) {
+              out.push(tr(``));
+              out.push(tr(`  ${gray("[兴奋]")} ${sq(sx2.arousal||0, 100)}`));
+              out.push(tr(`  ${gray("[欲望]")} ${sq(sx2.desire||0, 100)}`));
+              const cl3 = ["生理期","卵泡期","排卵期","黄体期"][["生理期","卵泡期","排卵期","黄体期"].indexOf(sx2.cyclePhase)] || sx2.cyclePhase || "?";
+              out.push(tr(`  ${gray("[周期]")} ${cl3}`));
+              if (sx2.cycleDay) out.push(tr(`  第${sx2.cycleDay}天`));
+              const prof3 = sx2.profile || {};
+              if (prof3.attitude) out.push(tr(`  ${gray("[态度]")} ${prof3.attitude}  ${gray("[经验]")} ${prof3.experience}`));
+              if (sx2.contraceptionUsed) out.push(tr(`  ${gray("[避孕]")} ${sx2.contraceptionUsed === "pill" ? "药" : sx2.contraceptionUsed === "condom" ? "套" : sx2.contraceptionUsed}`));
+              out.push(tr(``));
+              const ic3 = sx2.insertCounts || {};
+              const hasIC3 = ic3["秘部"] || ic3["口"] || ic3["肛"] || ic3["子宫"];
+              if (hasIC3) {
+                out.push(tr(`  ${gray("[插入累计]")}  穴 ${gray(`${ic3["秘部"]||0}次`)}  口 ${gray(`${ic3["口"]||0}次`)}  肛 ${gray(`${ic3["肛"]||0}次`)}  宫 ${gray(`${ic3["子宫"]||0}次`)}`));
+                const md = sx2.maxInsertDepth || {};
+                const mdV = md["秘部"] ? `${md["秘部"]}cm` : "-";
+                const mdA = md["肛"] ? `${md["肛"]}cm` : "-";
+                out.push(tr(`  最深 穴${gray(mdV)}  肛${gray(mdA)}`));
+                out.push(tr(``));
+              }
+              if (prof3.bodyParts && Object.keys(prof3.bodyParts).length > 0) {
+                out.push(tr(`  ${gray("[开发]")}  口 ${gray(`Lv${Math.floor((prof3.bodyParts["口"]?.development||0)*10)/10}`)}  穴 ${gray(`Lv${Math.floor((prof3.bodyParts["秘部"]?.development||0)*10)/10}`)}  菊 ${gray(`Lv${Math.floor((prof3.bodyParts["肛"]?.development||0)*10)/10}`)}  胸 ${gray(`Lv${Math.floor((prof3.bodyParts["胸"]?.development||0)*10)/10}`)}`));
+                out.push(tr(``));
+              }
+              if (sx2.milestones) {
+                const m2 = sx2.milestones;
+                if (m2.firstKiss?.given) out.push(tr(`  ${gray("[初吻]")} ${m2.firstKiss.partner}(${gray(m2.firstKiss.date||"?")})`));
+                if (m2.virginity && !m2.virginity.isVirgin) out.push(tr(`  ${gray("[初夜]")} ${m2.virginity.lostTo}(${gray(m2.virginity.lostAt||"?")})`));
+                if (m2.analVirginity && !m2.analVirginity.isVirgin) out.push(tr(`  ${gray("[菊初]")} ${m2.analVirginity.lostTo}(${gray(m2.analVirginity.lostAt||"?")})`));
+                if (m2.firstKiss || (!m2.virginity?.isVirgin) || (!m2.analVirginity?.isVirgin)) out.push(tr(``));
+              }
+              if (sx2.thoughts?.length) {
+                out.push(tr(`  ${gray("── 心里话 ──")}`));
+                sx2.thoughts.slice(-5).forEach((t3: any) => out.push(tr(`  「${t3.text}」`)));
+              }
+            } else {
+              out.push(tr(gray(`  （无 SexState）`)));
+            }
+            out.push(tr(``));
+            out.push(tr(gray("─".repeat(36))));
+            out.push(tr(gray("Esc 返回 npc-detail")));
+          }
           // 三级状态：恋爱子菜单
           else if (_submenu === "npc-romance" && _selectedTarget) {
             const n = _selectedTarget;
@@ -2580,27 +2687,38 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const col = aff >= 90 ? C.Y : aff >= 70 ? C.O : aff >= 40 ? C.G : aff >= 20 ? "" : C.M;
               return `${col}[${label}]${col ? C.r : ""}`;
             };
-            out.push(tr(head("周边动态")));
             for (let i = 0; i < Math.min(_peopleCache.length, 8); i++) {
               const n = _peopleCache[i]!;
               const on = _panelMode && i === _cursor;
               if (n.type === "named") {
                 const a = n.affection;
-                const nameDisp = on ? `${hi("▶")} ${C.W}${C.B}${n.name}${C.r} ${hi("◀")}` : `  ${C.W}${C.B}${n.name}${C.r}`;
-                const pos = `${C.M}|-[${C.r}${n.posDesc || "?"}${n.dist !== undefined && n.dist !== "?" ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
-                const act = n.action ? ` ${dim(`*${String(n.action).slice(0, 20)}*`)}` : "";
-                out.push(tr(` ${nameDisp}  ${n.height}cm ${pos}${act}`));
-                const carry = [n.rh, n.lh].filter(Boolean).join("·") || "—";
-                out.push(tr(`      ${stageBadge(n.name, a)} ${sq(a, 100, 5)} ${C.M}·${C.r} 携带 ${carry}`));
-                if (n.lastWords) out.push(tr(`      ${dim(`「${n.lastWords}」`)}`));
+                const gp = (n.gp && n.gp[0] != null) ? `(${n.gp[0]},${n.gp[1]})` : "";
+                const pos = `${C.M}|-[${C.r}${gp}${n.posDesc || "?"}${n.dist !== undefined && n.dist !== "?" ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
+                if (on) {
+                  out.push(tr(`${hi("▶ ")}${C.O}${C.B}${n.name}${C.r} ${hi("◀")}  ${n.height}cm ${pos}`, null, true));
+                } else {
+                  out.push(tr(`  ${C.W}${C.B}${n.name}${C.r}  ${n.height}cm ${pos}`, null, false));
+                }
+                const lh2 = n.lh || "—";
+                const rh2 = n.rh || "—";
+                out.push(tr(`  ${C.M}│${C.r} ${stageBadge(n.name, a)} ${sq(a, 100, 5)}${C.M}·${C.r}${lh2}|${rh2}`, null, on));
+                if (n.lastWords) out.push(tr(`  ${C.M}│${C.r}${dim(`「${n.lastWords}」`)}`, null, on));
+                if (n.action) out.push(tr(`  ${C.M}│${C.r} ${C.M}*${String(n.action).slice(0, 20)}*${C.r}`, null, on));
               } else {
-                const act = n.action ? ` ${dim(`*${String(n.action).slice(0, 25)}*`)}` : "";
-                out.push(tr(gray(`   |-[${n.name}${n.clusterSize && n.clusterSize > 1 ? `×${n.clusterSize}` : ""}] ${n.height !== "?" && n.height ? `${n.height}·` : ""}${n.posDesc || "?"}${act}`)));
+                const crowdName = n.clusterSize && n.clusterSize > 1 ? `${n.name}×${n.clusterSize}` : n.name;
+                const gp3 = (n.gp && n.gp[0] != null) ? `(${n.gp[0]},${n.gp[1]})` : "";
+                const pos2 = `${C.M}|-[${C.r}${gp3}${n.posDesc || "?"}${n.dist !== undefined && n.dist !== "?" ? `${C.M}·隔${n.dist}m${C.r}` : ""}${C.M}]${C.r}`;
+                const hRaw = String(n.height || "");
+                const hDisp = hRaw === "?" || !hRaw ? "" : hRaw.includes("cm") ? hRaw : `${hRaw}cm`;
+                const hPart = hDisp ? `  ${hDisp}` : "";
+                if (on) {
+                  out.push(tr(`${hi("▶ ")}${C.O}${C.B}${crowdName}${C.r} ${hi("◀")}${hPart} ${pos2}`, null, true));
+                } else {
+                  out.push(tr(`  ${C.W}${C.B}${crowdName}${C.r}${hPart} ${pos2}`, null, false));
+                }
+                if (n.action) out.push(tr(`  ${C.M}│${C.r} ${gray(`*${String(n.action).slice(0, 25)}*`)}`, null, on));
               }
             }
-            // 底栏
-            out.push(tr(""));
-            out.push(tr(gray(`  |-[${loc}${clock ? " · " + clock : ""}]`)));
           }
         }
 
@@ -2720,7 +2838,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (item.type === "furniture") {
                 const sub = (item.label && item.label.trim()) ? ` · ${item.label.trim()}` : "";
                 const acts = furnitureActions(item.name);
-                out.push(tr(`    ${sel} 📦 ${item.name}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`));
+                out.push(tr(`    ${sel} 📦 ${item.name}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`, "gear"));
                 fCount++;
               }
             }
@@ -2732,7 +2850,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const item = _focusItems[i];
               const sel = _panelMode && i === _cursor ? hi("▶") : " ";
               if (item.type === "exit") {
-                out.push(tr(`    ${sel} 🚪 → ${item.exitTo}${gray(`(${item.x},${item.y})`)}`));
+                out.push(tr(`    ${sel} 🚪 → ${item.exitTo}${gray(`(${item.x},${item.y})`)}`, "gear"));
                 eCount++;
               }
             }
@@ -2844,7 +2962,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const idx = String.fromCodePoint(0x2460 + i);
                 const tag = _choiceTags[i] || "";
                 const sel = _panelMode && i === _cursor ? hi("▶") : " ";
-                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`));
+                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`, "gear"));
               }
             }
           }
@@ -2868,7 +2986,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const idx = String.fromCodePoint(0x2460 + i);
                 const tag = _choiceTags[i] || "";
                 const sel = _panelMode && i === _cursor ? hi("▶") : " ";
-                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`));
+                out.push(tr(`${sel} ${gray(idx)} ${_choicesCache[i]}${tag ? gray(` [${tag}]`) : ""}`, "gear", _panelMode && i === _cursor));
               }
               // 条件选项：编号顺延，条件 tag 橙色（DLC2.09 风格）
               for (let j = 0; j < _condOptsCache.length && nStd + j < 9; j++) {
@@ -2876,7 +2994,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const fi = _choicesCache.length + j; // focusItems 中的真实下标
                 const idx = String.fromCodePoint(0x2460 + nStd + j);
                 const sel = _panelMode && fi === _cursor ? hi("▶") : " ";
-                out.push(tr(`${sel} ${gray(idx)} ${co.text} ${hi(`[${co.tag}]`)}`));
+                out.push(tr(`${sel} ${gray(idx)} ${co.text} ${hi(`[${co.tag}]`)}`, "gear", _panelMode && fi === _cursor));
               }
               // 常驻动作：等待/睡觉/吃东西（引擎直改不推正文），编号继续顺延
               if (standing.length) {
@@ -2888,7 +3006,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                   const idx = String.fromCodePoint(0x2460 + nShown + k2);
                   const sel = _panelMode && fi === _cursor ? hi("▶") : " ";
                   const lbl = sa.hot ? hi(`${sa.icon} ${sa.label}`) : `${sa.icon} ${sa.label}`;
-                  out.push(tr(`${sel} ${gray(idx)} ${lbl} ${dim(`(${sa.hint})`)}`));
+                  out.push(tr(`${sel} ${gray(idx)} ${lbl} ${dim(`(${sa.hint})`)}`, "gear", _panelMode && fi === _cursor));
                 }
               }
             }
@@ -2957,7 +3075,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           if (d === "\x1b" || d === "q") {
             // 装备选物品模式的 Esc 只退出选物品模式，回正常槽列表
             if (_submenu === "equip-detail" && _pickSlot) { _pickSlot = null; _subCursor = 0; return true; }
-            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance") {
+            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance" || (_submenu === "sex-detail" && _selectedTarget)) {
               _submenu = "npc-detail";
               _subCursor = 0;
             } else if (_submenu === "npc-detail") {
@@ -3038,6 +3156,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               } else if (key === 6) {
                 // 窃取子菜单
                 _submenu = "npc-steal";
+                _subCursor = 0;
+              } else if (key === 25) {
+                // ⑥状态 → 打开 sex-detail 子面板
+                _submenu = "sex-detail";
                 _subCursor = 0;
               } else {
                 // 其他普通操作，调用 _handleNpcAction 并关闭菜单
@@ -3767,10 +3889,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
           // 1. 周边 NPC 交互项
           if (currentItem.type === "people") {
-            if (currentItem.npc.type !== "named") {
-              if (isEnter) ctx?.ui?.notify("路人不能深度交互，请聚焦命名NPC", "info");
-              return false;
-            }
             // 缓存交互目标，进入二级操作面板
             _selectedTarget = currentItem.npc;
             _submenu = "npc-detail";
