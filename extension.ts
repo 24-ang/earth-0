@@ -2838,7 +2838,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (item.type === "furniture") {
                 const sub = (item.label && item.label.trim()) ? ` · ${item.label.trim()}` : "";
                 const acts = furnitureActions(item.name);
-                out.push(tr(`    ${sel} 📦 ${item.name}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`, "gear"));
+                const on2 = _panelMode && i === _cursor;
+                out.push(tr(`    ${sel} 📦 ${item.name}${gray(`(${item.x},${item.y})${sub}  ${acts}`)}`, null, on2));
                 fCount++;
               }
             }
@@ -2850,7 +2851,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const item = _focusItems[i];
               const sel = _panelMode && i === _cursor ? hi("▶") : " ";
               if (item.type === "exit") {
-                out.push(tr(`    ${sel} 🚪 → ${item.exitTo}${gray(`(${item.x},${item.y})`)}`, "gear"));
+                const on3 = _panelMode && i === _cursor;
+                out.push(tr(`    ${sel} 🚪 → ${item.exitTo}${gray(`(${item.x},${item.y})`)}`, null, on3));
                 eCount++;
               }
             }
