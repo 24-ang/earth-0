@@ -160,6 +160,7 @@ export async function runPhase1(
 
   // 5. 存场景页脚供 widget 显示
   gameState._sceneFooter = result.sceneFooter || null;
+  (gameState as any)._sceneFooterLocation = gameState.player.location;
 
   return {
     directorNote,

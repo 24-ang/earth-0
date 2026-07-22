@@ -103,6 +103,8 @@ import promoteMemberTool from "./action/promote_member.ts";
 import orgActionTool from "./action/org_action.ts";
 import adjustOrgRelationTool from "./action/adjust_org_relation.ts";
 import identityCommand from "./tui/identity.ts";
+import goCommand from "./tui/go.ts";
+import trainCommand from "./tui/train.ts";
 import saveCommand from "./tui/save.ts";
 import loadCommand from "./tui/load.ts";
 import savesCommand from "./tui/saves.ts";
@@ -195,10 +197,12 @@ export function registerAll(pi: ExtensionAPI) {
 
   // Register Commands
   pi.registerCommand("identity", identityCommand);
+  pi.registerCommand("go", goCommand);
   pi.registerCommand("save", saveCommand);
   pi.registerCommand("load", loadCommand);
   pi.registerCommand("saves", savesCommand);
   pi.registerCommand("new", newCommand);
+  pi.registerCommand("train", trainCommand);
   pi.registerCommand("redo", redoCommand);
   pi.registerCommand("layer1", layer1Command);
   pi.registerCommand("sex", sexCommand);

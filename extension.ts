@@ -238,6 +238,16 @@ export default function (pi: ExtensionAPI) {
       console.error("Phase2: auto-spawn NPCs failed:", e);
     }
 
+    // ── Phase 2.5: 恋爱关系 NPC 偶尔主动（低概率·高冷却·仅提醒 LLM 可以不等玩家）──
+    try {
+      const proactive = await checkProactiveNPCs(ctx);
+      if (proactive) {
+        npcResponses = npcResponses ? npcResponses + "\n" + proactive : proactive;
+      }
+    } catch (e) {
+      console.error("Phase2.5: proactive NPC check failed:", e);
+    }
+
     // 清空本轮换装追踪（Phase 2 NPC Agent 已消费完毕）
     const { clearOutfitChangesThisTurn } = await import("./engine/state.ts");
     clearOutfitChangesThisTurn();
@@ -491,7 +501,7 @@ async function engineOnlyPhase1(ctx: any) {
   };
 }
 
-/** Phase 2: 自动检测同场 NPC 并 spawn */
+/** Phase 2: 自动检测同场 NPC 并 spawn。统一走 generateNpcAgentResponse（与 spawn_npc_agent 工具同一真相源） */
 async function autoSpawnNPCs(ctx: any): Promise<string> {
   const { gameState, isSameLocation } = await import("./engine/state.ts");
 
@@ -510,93 +520,106 @@ async function autoSpawnNPCs(ctx: any): Promise<string> {
   const lastTools = gameState._lastTurnToolsCalled || [];
   if (lastTools.includes("spawn_npc_agent") || lastTools.includes("spawn_npc_agents")) return "";
 
-  // 选情感权重最高的 NPC（好感度 → 有关系标签 → 有 hook → 随机）
+  // 选情感权重最高的 NPC
   const scored = presentNPCs.map(name => {
     let score = 0;
     const rel = gameState.player?.relationships?.[name];
     if (rel?.affection) score += rel.affection;
     if (rel?.stage === "亲密" || rel?.stage === "好友") score += 20;
-    // 有活跃 hook 的加分
     const hooks = gameState.active_hooks || [];
     if (hooks.some((h: any) => h.target_npc === name || h.source_npc === name)) score += 30;
     return { name, score };
   });
   scored.sort((a, b) => b.score - a.score);
 
-  // 只 spawn 1-2 个
   const toSpawn = scored.slice(0, 2);
   if (toSpawn.length === 0) return "";
+  (gameState as any)._proactiveSkipNames = toSpawn.map(n => n.name);
+
+  // 统一走 generateNpcAgentResponse（天气/房间/SexState/shortTermBuffer/三层输出格式 — 全量上下文）
+  const { generateNpcAgentResponse } = await import("./tools/state/spawn_npc_agent.ts");
+
+  const results = await Promise.all(toSpawn.map(async ({ name }) => {
+    try {
+      const response = await generateNpcAgentResponse(
+        name,
+        "场景中有玩家在场。基于你的性格，自然地做出反应——可以是被动观察到玩家进入，也可以是主动打招呼。",
+        ctx,
+      );
+      return response ? `[${name}] ${response}` : "";
+    } catch (e) {
+      console.error(`Phase2: auto-spawn ${name} failed:`, e);
+      return "";
+    }
+  }));
+
+  return results.filter(Boolean).join("\n");
+}
+
+/** Phase 2.5: 检测 NPC 是否应主动找玩家互动。
+ *  三层覆盖：恋人(约/聊/黏) · 暧昧(推进关系) · 暗恋/追求(主动告白或示好)
+ *  每回合最多触发 1 个 NPC，同 NPC 冷却 3 回合，全局冷却 3 回合。 */
+async function checkProactiveNPCs(ctx: any): Promise<string> {
+  const { gameState, isSameLocation } = await import("./engine/state.ts");
+  const loc = gameState.player?.location;
+  if (!loc || !gameState.npcs) return "";
+
+  // 冷却检查
+  const cooldown = (gameState as any)._lastProactiveTurn || 0;
+  if (gameState.turn - cooldown < 3) return "";
+
+  // 跳过刚被 autoSpawnNPCs 生成过的 NPC（防双重输出）
+  const skipNames: string[] = (gameState as any)._proactiveSkipNames || [];
+
+  interface Candidate { name: string; tier: "lover" | "ambiguous" | "crush"; aff: number }
+  const candidates: Candidate[] = [];
+
+  for (const [n, npc] of Object.entries(gameState.npcs) as [string, any][]) {
+    if (!isSameLocation(npc.currentRoom, loc) || npc.alive === false) continue;
+    if (skipNames.includes(n)) continue;
+    const rel = gameState.player?.relationships?.[n];
+    const aff: number = rel?.affection ?? 0;
+    const rom = rel?.romance ?? null;
+
+    if (rom === "恋人" && aff >= 70) {
+      candidates.push({ name: n, tier: "lover", aff });
+    } else if (rom === "暧昧" && aff >= 60) {
+      candidates.push({ name: n, tier: "ambiguous", aff });
+    } else if (!rom && aff >= 70) {
+      // 暗恋/高好感未确认：NPC 可能主动追求
+      candidates.push({ name: n, tier: "crush", aff });
+    }
+  }
+
+  if (candidates.length === 0) return "";
+
+  // 概率：恋人 8%，暧昧 5%，暗恋 3%（低概率防围转）
+  const tierChance: Record<string, number> = { lover: 0.08, ambiguous: 0.05, crush: 0.03 };
+  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+  if (!chosen || Math.random() > (tierChance[chosen.tier] || 0.08)) return "";
+
+  (gameState as any)._lastProactiveTurn = gameState.turn;
+
+  // 统一走 generateNpcAgentResponse（完整上下文：天气/房间/SexState/shortTermBuffer/三层输出格式）
+  const tierSceneContext: Record<string, string> = {
+    lover: `你是${chosen.name}，${gameState.player?.name || "维"}的恋人（好感${chosen.aff}）。基于你的性格主动做或说点什么——想约会、分享最近的事、或者单纯想待在一起。`,
+    ambiguous: `你和${gameState.player?.name || "维"}处于暧昧期（好感${chosen.aff}），互有好感但还没正式交往。基于你的性格，你可能想推进关系——暗示心意、制造独处机会、或者吃醋。`,
+    crush: `你对${gameState.player?.name || "维"}有好感（好感${chosen.aff}），但对方似乎还不知道你的心意。基于你的性格，你可能想主动接近——找借口搭话、间接试探、鼓起勇气告白、或者默默关注。`,
+  };
 
   try {
-    const { generateCompletion, getNpcAgentModel, recordNpcAgentAction, buildPresentLine } = await import("./tools/helpers.ts");
-    const { findCharacter, getOrCreateNPC, recallRelevantMemories, getNpcCurrentAge, getBodyForAge, getNPCOutfitDesc, getAppearanceForAge, translateWorldState, getOutfitChangesThisTurn } = await import("./engine/state.ts");
-    const charStages = await import("./data/character_stages.json", { with: { type: "json" } });
-
-    const results = await Promise.all(toSpawn.map(async ({ name }) => {
-      try {
-        const src = findCharacter(name);
-        if (!src) return "";
-        const npc = getOrCreateNPC(name);
-        const rel = gameState.player?.relationships?.[name];
-        const affection = rel?.affection ?? 0;
-        const stage = rel?.stage ?? "陌生";
-        const curAge = getNpcCurrentAge(src.base_age || 16);
-        const body = getBodyForAge(src, curAge);
-        const app = getAppearanceForAge(src, curAge);
-        const outfit = getNPCOutfitDesc(name);
-        const cs = (charStages as any)[name];
-        const stageKey = curAge <= 11 ? "幼儿_小学" : curAge <= 14 ? "中学" : curAge <= 17 ? "高中" : "成年";
-        const personality = cs?.[stageKey] || "";
-        const presentOthers = toSpawn.filter(n => n.name !== name).map(n => n.name);
-        const memories = recallRelevantMemories(name, {
-          location: loc,
-          presentNPCs: presentOthers,
-        });
-
-        const presentLine = await buildPresentLine(gameState, body?.height_cm || 160, presentOthers);
-        const wsLine = translateWorldState(gameState.worldState);
-
-        const prompt = [
-          `你是${name}。你现在正在${loc}。`,
-          presentLine,
-          wsLine,
-          `性格: ${personality || "（暂无）"}`,
-          `外貌: ${[app?.hair_color, app?.hair_style].filter(Boolean).join("")}，${app?.eye_color ? app.eye_color + "眼睛" : ""}`,
-          `穿着: ${outfit}`,
-          `关系: ${stage}（好感${affection}）`,
-          memories.length > 0 ? `过往记忆: ${memories.join("；")}` : "",
-          (() => {
-            const changes = getOutfitChangesThisTurn();
-            if (changes.length === 0) return "";
-            const myChange = changes.find(c => c.npc === name);
-            const otherChanges = changes.filter(c => c.npc !== name);
-            const lines: string[] = [];
-            if (myChange) lines.push(`你刚换上了${myChange.to}服装（${myChange.desc}）。之前穿的是${myChange.from}。思考或说话时自然提及换装动作，不要假装衣服一直穿着。`);
-            for (const oc of otherChanges) lines.push(`${oc.npc}刚换上了${oc.to}服装（${oc.desc}）。`);
-            return lines.length > 0 ? `[换装] ${lines.join(" ")}` : "";
-          })(),
-          "",
-          "场景中有玩家在场。基于你的性格，自然地做出反应——可以是被动观察到玩家进入，也可以是主动打招呼。",
-          "不要写叙事，只输出你的内心独白和回应（参考角色轮格式）。",
-        ].filter(Boolean).join("\n");
-
-        const model = await getNpcAgentModel();
-        const response = await generateCompletion(prompt, 512, ctx, model);
-        if (response) {
-          await recordNpcAgentAction(name, response, outfit || "", loc);
-          return `[${name}] ${response}`;
-        }
-      } catch (e) {
-        console.error(`Phase2: auto-spawn ${name} failed:`, e);
-      }
-      return "";
-    }));
-
-    return results.filter(Boolean).join("\n");
+    const { generateNpcAgentResponse } = await import("./tools/state/spawn_npc_agent.ts");
+    const response = await generateNpcAgentResponse(
+      chosen.name,
+      tierSceneContext[chosen.tier] || tierSceneContext.lover,
+      ctx,
+      { initiative: true },
+    );
+    if (response) return `[${chosen.name}] ${response}`;
   } catch (e) {
-    console.error("Phase2: autoSpawnNPCs failed:", e);
-    return "";
+    console.error("checkProactiveNPCs: failed:", e);
   }
+  return "";
 }
 
 /** 解析 NPC 回应字符串为 Record<name, text> */
@@ -765,7 +788,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _lastEnterTime = 0; // 双击 Enter 进面板的时间戳
 
   // ── 三级状态机 ──
-  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-party-ops" | "npc-combat" | "npc-steal" | "npc-romance" | "npc-direct" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | "bag-empty" | "bag-list" | null = null;
+  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-party-ops" | "npc-combat" | "npc-steal" | "npc-romance" | "npc-date-plan" | "npc-direct" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | "bag-empty" | "bag-list" | null = null;
   let _subCursor = 0; // 子菜单内部光标
   let _selectedTarget: any = null; // 当前交互的目标实体 (如选中 NPC, 物品, 载具)
   let _pickSlot: string | null = null; // equip-detail 空槽 Enter → 选物品模式（slot id）, null=正常槽列表
@@ -878,7 +901,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   // ── 外出导航（房间 Tab「外出」子面板，吃掉旧 /go /train）──
   let _goNavItems: any[] = []; // {kind:"header",label} | {kind:"dest",mode:"walk"|"train"|"unknown",name,mins,rawMins?,fare?,station?}
 
-  /** 构建外出目的地列表。known_locations 过滤 = 信息可见性守恒（没去过的显示❓不可选） */
+  // ── 约会规划子面板 ──
+  let _datePlanState: { step: "location" | "time"; location?: string; destinations?: any[] } | null = null;
+
+  /** 构建外出目的地列表。对齐 /go 全部七段：返回上级/校内建筑/同层/下属地点/周边/电车/其他地区。
+   *  known_locations 过滤 = 信息可见性守恒（没去过的显示❓不可选） */
   const _buildGoNav = (gs: any, s: any): any[] => {
     const p = gs.player;
     const loc = p.location;
@@ -887,33 +914,78 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     const { estimateTravelMinutes } = require("./tools/helpers.ts");
     const nav = s.getLocationNav(loc);
     const mul = p.vehicle?.speedMul || 1;
+    const vehicleName = p.vehicle?.name;
     const items: any[] = [];
     const walk = (name: string, rawMins: number) => {
       items.push({ kind: "dest", mode: "walk", name, rawMins, mins: Math.max(1, Math.round(rawMins / mul)) });
     };
+    // ① 返回上级
     if (nav.parent && !s.isSameLocation(nav.parent, loc)) {
       items.push({ kind: "header", label: "── 返回上级 ──" });
       walk(nav.parent, estimateTravelMinutes(loc, nav.parent));
     }
+    // ② 校内建筑 → 楼层 → 房间（三级扁平化为 🏫 教学楼·2F·2年J班）
+    if (nav.schoolTree && nav.schoolTree.length > 0) {
+      items.push({ kind: "header", label: "── 校内建筑 ──" });
+      for (const bld of nav.schoolTree) {
+        for (const fl of bld.children) {
+          for (const rm of fl.children) {
+            if (s.isSameLocation(rm.name, loc)) continue;
+            const label = `${bld.name}·${fl.name}·${rm.name}`;
+            if (isKnown(rm.name)) {
+              items.push({ kind: "dest", mode: "walk", name: rm.name, rawMins: 2, mins: 2, displayName: label });
+            } else {
+              items.push({ kind: "dest", mode: "unknown", name: rm.name, mins: 0, displayName: `❓ ${label}` });
+            }
+          }
+        }
+      }
+    }
+    // ③ 同层房间
     const rooms = (nav.rooms || []).filter((r: string) => !s.isSameLocation(r, loc) && isKnown(r));
     if (rooms.length) {
-      items.push({ kind: "header", label: "── 同层 ──" });
+      items.push({ kind: "header", label: "── 同层房间 ──" });
       for (const r of rooms) walk(r, estimateTravelMinutes(loc, r));
     }
-    const nearby = nav.nearby || [];
-    if (nearby.length) {
-      items.push({ kind: "header", label: mul > 1 ? `── 附近 🚲×${mul} ──` : "── 附近 ──" });
-      for (const n of nearby) {
+    // ④ 下属地点（非 schoolTree 路径的 children）
+    const children = (nav.children || []).filter((c: string) => !s.isSameLocation(c, loc));
+    const knownChildren = children.filter(c => isKnown(c));
+    if (knownChildren.length > 0) {
+      items.push({ kind: "header", label: "── 下属地点 ──" });
+      for (const c of knownChildren) walk(c, estimateTravelMinutes(loc, c));
+    }
+    const unknownChildren = children.filter(c => !isKnown(c));
+    if (unknownChildren.length > 0) {
+      if (knownChildren.length === 0) items.push({ kind: "header", label: "── 下属地点 ──" });
+      for (const c of unknownChildren) {
+        items.push({ kind: "dest", mode: "unknown", name: c, mins: Math.max(1, Math.round(estimateTravelMinutes(loc, c) / mul)) });
+      }
+    }
+    // ⑤ 周边（≤8分钟步行可达）
+    const nearbyClose = (nav.nearby || []).filter(n => (n.minutes / mul) <= 8);
+    if (nearbyClose.length > 0) {
+      const modeIcon = vehicleName ? "🚲" : "🚶";
+      const speedLabel = mul > 1 ? ` ×${mul}` : "";
+      items.push({ kind: "header", label: `── ${modeIcon} 周边${speedLabel} ──` });
+      for (const n of nearbyClose) {
         if (isKnown(n.name)) walk(n.name, n.minutes);
         else items.push({ kind: "dest", mode: "unknown", name: n.name, mins: Math.max(1, Math.round(n.minutes / mul)) });
       }
     }
+    // ⑥ 电车
     for (const st of nav.stations || []) {
       if (!st.destinations?.length) continue;
       items.push({ kind: "header", label: `── 电车 🚉 ${st.name} ──` });
       for (const d of st.destinations) {
         items.push({ kind: "dest", mode: "train", name: d.name, mins: d.minutes, fare: Math.round(d.minutes * 20), station: st.name });
       }
+    }
+    // ⑦ 其他地区（已知地点但导航树覆盖不到）
+    const navNames = new Set(items.filter(it => it.kind === "dest").map(it => it.name));
+    const strayKnown = known.filter(k => !navNames.has(k) && !s.isSameLocation(k, loc));
+    if (strayKnown.length > 0) {
+      items.push({ kind: "header", label: "── 其他地区 ──" });
+      for (const k of strayKnown) walk(k, estimateTravelMinutes(loc, k));
     }
     return items;
   };
@@ -1220,14 +1292,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     const partyFull = party.length >= 3 && !inParty;
     const acts: { label: string; key: number; locked: boolean }[] = [
       { label: "①搭话", key: 0, locked: false },
-      { label: aff < 10 ? "②接触≥10" : "②接触", key: 1, locked: aff < 10 },
-      { label: hasInsight ? "③观察" : "③观察·洞察", key: 2, locked: false },
+      { label: "②接触", key: 1, locked: aff < 10 },
+      { label: "③观察", key: 2, locked: false },
       { label: (gs?.player?.following || []).includes(name) ? "④同行 ✓" : "④同行", key: 9, locked: false },
       { label: inParty ? "⑤组队操作" : (aff < 40 && !lover) ? "⑤组队≥40" : partyFull ? "⑤组队🈵" : "⑤组队", key: 3, locked: (aff < 40 && !lover) || partyFull },
       { label: aff < 50 ? "⑥恋爱≥50" : "⑥恋爱", key: 4, locked: aff < 50 },
       { label: "⑦战斗", key: 5, locked: false },
-      { label: hasStealth ? "⑧窃取" : "⑧窃取·潜行", key: 6, locked: !hasStealth },
-      { label: hasPsych ? "⑨暗示" : "⑨暗示·心理", key: 7, locked: !hasPsych },
+      { label: "⑧窃取", key: 6, locked: !hasStealth },
+      { label: "⑨暗示", key: 7, locked: !hasPsych },
     ];
     if (lover && aff >= 80) {
       acts.push({ label: "⑨亲密", key: 8, locked: false });
@@ -1258,16 +1330,39 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     return "查看/使用";
   }
 
+  /** 自动移动玩家到目标 NPC 或家具相邻格。返回移动叙事文本或 null。 */
+  function _autoMoveToTarget(gs:any, targetX:number, targetY:number, targetName?:string): string|null {
+    const pp = gs.player.gridPos;
+    if (!pp) return null;
+    const px = pp[0]??0, py = pp[1]??0;
+    const tx = targetX??0, ty = targetY??0;
+    // 已在相邻格（含同格）不移动
+    if (Math.abs(px-tx)<=1 && Math.abs(py-ty)<=1) return null;
+    const s = require("./engine/state.ts");
+    const rm = s.getRoom(gs.player.location);
+    const w = rm?.width ?? 100, h = rm?.height ?? 100;
+    // 移动到目标相邻格（选最近的有效位置）
+    const nx = Math.max(0, Math.min(w-1, tx + (px>tx?1:px<tx?-1:0)));
+    const ny = Math.max(0, Math.min(h-1, ty + (py>ty?1:py<ty?-1:0)));
+    gs.player.gridPos = [nx, ny];
+    s.saveState();
+    return targetName ? `我走到${targetName}身边。` : `我走近了些。`;
+  }
+
   function _handleNpcAction(gs:any,name:string,key:number){
     const ctx=getCtx();
     const aff=getNpcAffection(gs,name);const lover=isNpcLover(gs,name);
     const pty:string[]=gs?.player?.party||[];
+    // 自动靠近 NPC（查 gridPos）
+    const npcData = gs.npcs?.[name];
+    const ngp = npcData?.gridPos || npcData?.grid_pos;
+    const movePrefix = (ngp ? _autoMoveToTarget(gs, ngp[0], ngp[1], name) : null) || "";
     if(key===0){
-      pushText(`我找 ${name} 聊天。`);
+      pushText(movePrefix + `我找 ${name} 聊天。`);
       ctx?.ui?.notify(`向${name}搭话`, "info");
       _panelMode=false;
     }
-    else if(key===1){if(aff<10){ctx?.ui?.notify(`与${name}关系还不够熟`,"warning");return;}_doTouch(gs,name);}
+    else if(key===1){if(aff<10){ctx?.ui?.notify(`与${name}关系还不够熟`,"warning");return;}_doTouch(gs,name,movePrefix);}
     // key===2 → 观察子面板（由 handleInput 路由，不经过这里）
     else if(key===3){
       // ⑤组队 → 不推正文，加入队伍后开子菜单
@@ -1291,34 +1386,34 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         ctx?.ui?.notify(`${name} 不再同行`, "info");
       } else {
         gs.player.following = [...fol2, name];
-        pushText(`我邀请 ${name} 一起同行。`);
+        pushText(movePrefix + `我邀请 ${name} 一起同行。`);
         ctx?.ui?.notify(`邀请${name}同行`, "info");
       }
       require("./engine/state.ts").saveState();_panelMode=false;
     }
     else if(key===4){
       if(aff<50){ctx?.ui?.notify("好感需≥50","warning");return;}
-      _doDate(gs,name);_panelMode=false;
+      _doDate(gs,name,movePrefix);_panelMode=false;
     }
     // key===5/6 → 战斗/窃取子菜单，key===4 → 恋爱子菜单（由 handleInput 路由）
     // key===20-26 → Sex 模式专用操作
-    else if(key===20){pushText(`我轻轻抚摸 ${name}。`);ctx?.ui?.notify(`爱抚${name}`, "info");_panelMode=false;}
-    else if(key===21){pushText(`我吻向 ${name}。`);ctx?.ui?.notify(`亲吻${name}`, "info");_panelMode=false;}
-    else if(key===22){pushText(`我进入 ${name} 的身体。`);ctx?.ui?.notify(`进入${name}`, "info");_panelMode=false;}
-    else if(key===23){pushText(`我变换了体位。`);ctx?.ui?.notify("变换体位", "info");_panelMode=false;}
-    else if(key===24){pushText(`我对 ${name} 说着挑逗的话。`);ctx?.ui?.notify(`挑逗${name}`, "info");_panelMode=false;}
+    else if(key===20){pushText(movePrefix + `我轻轻抚摸 ${name}。`);ctx?.ui?.notify(`爱抚${name}`, "info");_panelMode=false;}
+    else if(key===21){pushText(movePrefix + `我吻向 ${name}。`);ctx?.ui?.notify(`亲吻${name}`, "info");_panelMode=false;}
+    else if(key===22){pushText(movePrefix + `我进入 ${name} 的身体。`);ctx?.ui?.notify(`进入${name}`, "info");_panelMode=false;}
+    else if(key===23){pushText(movePrefix + `我变换了体位。`);ctx?.ui?.notify("变换体位", "info");_panelMode=false;}
+    else if(key===24){pushText(movePrefix + `我对 ${name} 说着挑逗的话。`);ctx?.ui?.notify(`挑逗${name}`, "info");_panelMode=false;}
     else if(key===25){
       // ⑥状态 → 打开 sex-detail 子面板
       _submenu = "sex-detail";
       _subCursor = 0;
       return;
     }
-    else if(key===26){gs.mode=gs._prevMode||"gal";gs._prevMode=undefined;require("./engine/state.ts").saveState();pushText(`我和 ${name} 结束了亲密。`);ctx?.ui?.notify("结束亲密", "info");_panelMode=false;}
+    else if(key===26){gs.mode=gs._prevMode||"gal";gs._prevMode=undefined;require("./engine/state.ts").saveState();pushText(movePrefix + `我和 ${name} 结束了亲密。`);ctx?.ui?.notify("结束亲密", "info");_panelMode=false;}
     else if(key===7){
       // ⑧暗示 — 需心理或话术技能
       const hasPsych = (gs?.player?.skills?.心理 || gs?.player?.skills?.话术 || 0) >= 1;
       if(!hasPsych){ctx?.ui?.notify("需要心理或话术技能Lv1+", "warning");return;}
-      pushText(`我对 ${name} 发出了微妙的暗示。`);
+      pushText(movePrefix + `我对 ${name} 发出了微妙的暗示。`);
       ctx?.ui?.notify(`对${name}使用暗示`, "info");
       _panelMode=false;
     }
@@ -1335,19 +1430,20 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         ctx?.ui?.notify(`${name}拒绝了…好感-15`, "warning");
       }
       require("./engine/state.ts").saveState();
-      pushText(ok?`${name}红着脸点了点头…`:``);
+      pushText(ok?movePrefix+`${name}红着脸点了点头…`:movePrefix+`${name}拒绝了亲密接触。好感-15。`);
       _panelMode=false;
     }
     // 技能交互
-    else if(key===30){pushText(`我对 ${name} 进行伤势检查与包扎治疗。`);ctx?.ui?.notify(`医疗${name}`, "info");_panelMode=false;}
-    else if(key===31){pushText(`我施展话术，试图说服 ${name}。`);ctx?.ui?.notify(`说服${name}`, "info");_panelMode=false;}
-    else if(key===32){pushText(`我凝视着 ${name} 的眼睛，尝试施加暗示…`);ctx?.ui?.notify(`暗示${name}`, "info");_panelMode=false;}
+    else if(key===30){pushText(movePrefix + `我对 ${name} 进行伤势检查与包扎治疗。`);ctx?.ui?.notify(`医疗${name}`, "info");_panelMode=false;}
+    else if(key===31){pushText(movePrefix + `我施展话术，试图说服 ${name}。`);ctx?.ui?.notify(`说服${name}`, "info");_panelMode=false;}
+    else if(key===32){pushText(movePrefix + `我凝视着 ${name} 的眼睛，尝试施加暗示…`);ctx?.ui?.notify(`暗示${name}`, "info");_panelMode=false;}
   }
 
-  function _doTouch(gs:any,name:string,levelIdx?:number){
+  function _doTouch(gs:any,name:string,movePrefix?:string,levelIdx?:number){
     const ctx=getCtx();
     const aff=getNpcAffection(gs,name);const{updateRelation,saveState}=require("./engine/state.ts");
     const levels=[{n:"握手",min:0,rw:2,pen:2},{n:"摸头",min:30,rw:2,pen:5},{n:"拥抱",min:50,rw:3,pen:10},{n:"按摩",min:60,rw:3,pen:10,needL1:true},{n:"亲吻",min:70,rw:5,pen:15}];
+    const mp = (movePrefix||"");
     // 指定了具体等级：只执行该项（需满足门槛）
     if (levelIdx !== undefined && levelIdx >= 0 && levelIdx < levels.length) {
       const l = levels[levelIdx]!;
@@ -1355,7 +1451,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         ctx?.ui?.notify(`条件不满足：${l.n}需要好感≥${l.min}${l.needL1?" 且开启Layer1":""}`, "warning");
         return;
       }
-      const ok=Math.random()>0.2;const msg=ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`;
+      const ok=Math.random()>0.2;const msg=mp+(ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`);
       if(ok){updateRelation(gs.player.relationships,name,l.rw,l.n);ctx?.ui?.notify(`${l.n}${name} ✓ +${l.rw}`, "info");}
       else{updateRelation(gs.player.relationships,name,-l.pen,`${l.n}被拒`);ctx?.ui?.notify(`${name}拒绝${l.n} -${l.pen}`, "warning");}
       saveState();pushText(msg);_panelMode=false;return;
@@ -1363,7 +1459,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     // 未指定 → 自动匹配最高可用（快捷按钮路径）
     for(let i=levels.length-1;i>=0;i--){
       const l=levels[i]!;if(aff>=l.min&&(!l.needL1||gs.layer1Enabled)){
-        const ok=Math.random()>0.2;const msg=ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`;
+        const ok=Math.random()>0.2;const msg=mp+(ok?`我与${name}${l.n}。✓ 好感+${l.rw}`:`${name}拒绝了${l.n}。✗ 好感-${l.pen}`);
         if(ok){updateRelation(gs.player.relationships,name,l.rw,l.n);ctx?.ui?.notify(`${l.n}${name} ✓ +${l.rw}`, "info");}
         else{updateRelation(gs.player.relationships,name,-l.pen,`${l.n}被拒`);ctx?.ui?.notify(`${name}拒绝${l.n} -${l.pen}`, "warning");}
         saveState();pushText(msg);_panelMode=false;return;
@@ -1372,7 +1468,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     ctx?.ui?.notify("条件未满足","warning");
   }
 
-  function _doDate(gs:any,name:string){
+  function _doDate(gs:any,name:string,movePrefix?:string){
     const ctx=getCtx();
     const aff=getNpcAffection(gs,name);if(aff<50)return;
     const rel=gs.player.relationships[name]||(gs.player.relationships[name]={stage:"熟人",affection:aff,history:[],notes:""});
@@ -1380,7 +1476,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     if(ok){rel.affection=Math.min(100,(rel.affection||0)+5);ctx?.ui?.notify(`约${name}成功 ✓ +5`, "info");}
     else{rel.affection=Math.max(0,(rel.affection||0)-5);ctx?.ui?.notify(`${name}说有事… -5`, "warning");}
     require("./engine/state.ts").saveState();
-    pushText(ok?`我约 ${name} 周末出去玩。${name}：「好啊。」好感+5`:`约 ${name} 出去玩，但${name}说有事。好感-5`);
+    const mp = (movePrefix||"");
+    pushText(ok?mp+`我约 ${name} 周末出去玩。${name}：「好啊。」好感+5`:mp+`约 ${name} 出去玩，但${name}说有事。好感-5`);
   }
 
   const widget = {
@@ -1568,8 +1665,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         } catch {}
 
         // ── 收起态摘要行（始终作为第一行）：[ 区域|HH:MM-天气|季节 ] + 模式 logo ──
-        const modeLogo = mode === "sex" ? "🔞" : mode === "gal" ? "🌸"
-          : gs.interactionMode === "novel" ? "📖" : "🎮";
+        // 双图标：模式logo + 节奏logo。sex锁死turn_based不重复显示节奏
+        const modeLogo = mode === "sex" ? "🔞" : mode === "gal" ? "🌸" : "🎮";
+        const rhythmLogo = mode === "sex" ? "" : gs.interactionMode === "novel" ? "📖" : "💬";
+        const logoLine = (modeLogo + (rhythmLogo ? "·" + rhythmLogo : "")).trim();
         let region = loc, clock = "", season = "", wx = "", dayType = "";
         try {
           const sl = require("./engine/state-location.ts");
@@ -1587,7 +1686,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         dayType = (dow === "土" || dow === "日" || dow === "六" || dow === "天") ? "休日" : "平日";
         // 灰框白字（与开场日期行 |-[土曜日-…] 同款：|-[ ] | 分隔符灰，内容白）
         const summarySegs = [region, `${clock}${wx ? gray("-") + wx : ""}`, `${season}${gray("·")}${dayType}`].filter(Boolean);
-        const summaryLine = `${gray("|-[")}${summarySegs.join(gray("|"))}${gray("]")} ${modeLogo}`;
+        const summaryLine = `${gray("|-[")}${summarySegs.join(gray("|"))}${gray("]")} ${logoLine}`;
 
         // 收起态：只显示摘要行
         if (!_expanded) {
@@ -1649,7 +1748,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             return (a.type || "").localeCompare(b.type || "");
           });
           _focusItems.push({ type: "bag" });
-          if (p.vehicle) { _focusItems.push({ type: "vehicle", vehicle: p.vehicle }); }
+          _focusItems.push({ type: "vehicle", vehicle: p.vehicle || null });
           _focusItems.push({ type: "economy" });
           _focusItems.push({ type: "combat" });
           _focusItems.push({ type: "infoline" });
@@ -2197,27 +2296,30 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 }
               }
             } else {
-              // 装备详情：N 槽竖排（按性别），槽上 Enter 进 item-detail
+              // 装备详情：全部槽竖排，Enter 进 item-detail，手机有快捷入口
+              const eqSlots = getEquipSlots(p.gender);
               out.push(tr(head("装备"), "gear"));
               for (let i = 0; i < eqSlots.length; i++) {
                 const slot = eqSlots[i]!;
                 const item = eq[slot.id];
                 const stIcon = item ? (item.state === "ruined" ? " 💀" : item.state === "damaged" ? " ⚠️" : "") : "";
-              let eqHint = "";
-              if (item) {
-                if (item.damage?.dice) eqHint = ` ${C.G}${item.damage.dice}${item.damage.damageType ? " " + item.damage.damageType : ""}${C.r}`;
-                else if (item.effects?.length) {
-                  const bits = item.effects.slice(0, 2).map((e: any) => {
-                    if (e.type === "ac") return `AC${e.value > 0 ? "+" : ""}${e.value}`;
-                    if (e.type === "attribute") return `${e.attr || ""}${e.value > 0 ? "+" : ""}${e.value}`;
-                    if (e.type === "pocket") return `口袋Lv${e.value || 1}`;
-                    if (e.type === "warmth") return "防寒";
-                    return e.type;
-                  }).filter(Boolean);
-                  if (bits.length) eqHint = ` ${gray(bits.join("·"))}`;
+                let eqHint = "";
+                if (item) {
+                  if (item.damage?.dice) eqHint = ` ${C.G}${item.damage.dice}${item.damage.damageType ? " " + item.damage.damageType : ""}${C.r}`;
+                  else if (item.effects?.length) {
+                    const bits = item.effects.slice(0, 2).map((e: any) => {
+                      if (e.type === "ac") return `AC${e.value > 0 ? "+" : ""}${e.value}`;
+                      if (e.type === "attribute") return `${e.attr || ""}${e.value > 0 ? "+" : ""}${e.value}`;
+                      if (e.type === "pocket") return `口袋Lv${e.value || 1}`;
+                      if (e.type === "warmth") return "防寒";
+                      return e.type;
+                    }).filter(Boolean);
+                    if (bits.length) eqHint = ` ${gray(bits.join("·"))}`;
+                  }
                 }
-              }
-              const disp = item ? (item.name || item) + stIcon + eqHint : gray("—");
+                const hasPhone = !!(item?.phoneData || (item?.effects?.some((e: any) => e.type === "communication")));
+                const phoneHint = hasPhone ? ` ${C.G}📱${C.r}` : "";
+                const disp = item ? (item.name || item) + stIcon + eqHint + phoneHint : gray("—");
                 const cur = _subCursor === i ? hi("▶") : " ";
                 const lbl = "  " + slot.label;
                 out.push(tr(` ${cur} ${gray(padCol(lbl))} ${disp}`, "gear"));
@@ -2309,8 +2411,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
             // 载具 / 经济 / 战斗 / 队伍
             const focusVehicle = sel("vehicle");
-            if (p.vehicle) {
-              out.push(tr(entry(focusVehicle, '载具', '🚲'+p.vehicle.name, gray('×'+(p.vehicle.speedMul||1.5))), 'gear', focusVehicle));
+            const v = p.vehicle;
+            if (v) {
+              out.push(tr(entry(focusVehicle, '驾驶', '🚲'+v.name, gray('×'+(v.speedMul||1.5))), 'gear', focusVehicle));
+            } else {
+              out.push(tr(entry(focusVehicle, '驾驶', gray('—'), gray('›')), 'gear', focusVehicle));
             }
             const focusEconomy = sel("economy");
             out.push(tr(entry(focusEconomy, '经济', `${gold(`¥${(p.funds ?? 0).toLocaleString()}`)}`, gray('›')), 'gear', focusEconomy));
@@ -2773,11 +2878,46 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           else if (_submenu === "npc-romance" && _selectedTarget) {
             const n = _selectedTarget;
             const aff = getNpcAffection(gs, n.name);
+            const isLover = isNpcLover(gs, n.name);
             out.push(tr(`💕 恋爱: ${n.name}`));
-            const canConfess = aff >= 70;
+            const canConfess = aff >= 70 && !isLover;
             const canDate = aff >= 50;
-            out.push(tr(`  ${_subCursor === 0 ? "▶" : " "} ① 💌 告白交往${canConfess ? "" : " (需好感70+)"}`));
+            if (isLover) {
+              out.push(tr(`  ${_subCursor === 0 ? "▶" : " "} ① 💔 分手`));
+            } else {
+              out.push(tr(`  ${_subCursor === 0 ? "▶" : " "} ① 💌 告白交往${canConfess ? "" : " (需好感70+)"}`));
+            }
             out.push(tr(`  ${_subCursor === 1 ? "▶" : " "} ② 📅 邀请约会${canDate ? "" : " (需好感50+)"}`));
+          }
+          // 三级状态：约会规划子菜单
+          else if (_submenu === "npc-date-plan" && _selectedTarget) {
+            const n2 = _selectedTarget;
+            out.push(tr(`💕 约会规划: ${n2.name}`));
+            if (_datePlanState?.step === "location") {
+              out.push(tr(gray(`  ── 选择约会地点 ──`)));
+              const dests = _datePlanState?.destinations || [];
+              if (!dests.length) {
+                out.push(tr(gray(`  （暂无可去的地点——先探索世界吧）`)));
+              } else {
+                for (let i = 0; i < dests.length; i++) {
+                  const d = dests[i];
+                  const nm = d.name.length > 20 ? d.name.slice(0, 19) + "…" : d.name;
+                  const onD = _subCursor === i;
+                  out.push(tr(`  ${onD ? hi("▶") : " "} ${padCol(nm)} ${gray(`步行${d.mins}分`)}`, null, onD));
+                }
+              }
+              out.push(tr(gray(`  ↑↓选地点 · Enter确认 · Esc返回`)));
+            } else if (_datePlanState?.step === "time") {
+              const TIME_OPTIONS = ["现在", "今天放学后", "周末", "明天"];
+              out.push(tr(gray(`  ── 选择时间 ──`)));
+              const locLabel = (_datePlanState?.location || "?").length > 24 ? (_datePlanState?.location || "?").slice(0, 23) + "…" : (_datePlanState?.location || "?");
+              out.push(tr(gray(`  地点: ${locLabel}`)));
+              for (let i = 0; i < TIME_OPTIONS.length; i++) {
+                const onT = _subCursor === i;
+                out.push(tr(`  ${onT ? hi("▶") : " "} ${String.fromCodePoint(0x2460 + i)} ${TIME_OPTIONS[i]}`, null, onT));
+              }
+              out.push(tr(gray(`  ↑↓选时间 · Enter确认 · Esc返回上一步`)));
+            }
           }
           // 三级状态：组队操作子菜单
           else if (_submenu === "npc-party-ops" && _selectedTarget) {
@@ -2929,13 +3069,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (it.kind === "header") { out.push(tr(`  ${gray(it.label)}`, "nav")); continue; }
               const on = _panelMode && _subCursor === i;
               const curMark = on ? hi("▶") : " ";
+              const label = it.displayName || it.name;
               if (it.mode === "unknown") {
-                out.push(tr(` ${curMark} ${gray("❓ " + padG(it.name))} ${gray(`步行${it.mins}分 · 未探索`)}`, "nav"));
+                const minsStr = it.mins > 0 ? `步行${it.mins}分` : "";
+                out.push(tr(` ${curMark} ${gray("❓ " + padG(label))} ${gray(minsStr + " · 未探索")}`, "nav"));
               } else if (it.mode === "train") {
-                out.push(tr(` ${curMark} ${padG("→ " + it.name)} ${C.M}│${C.r} ${gold(`¥${it.fare}`)} ${gray(`· ${it.mins}分`)}`, "nav", on));
+                out.push(tr(` ${curMark} ${padG("→ " + label)} ${C.M}│${C.r} ${gold(`¥${it.fare}`)} ${gray(`· ${it.mins}分`)}`, "nav", on));
               } else {
                 const slow = (it.rawMins ?? 0) >= 15 ? ` ${hi("💭旅途叙事")}` : "";
-                out.push(tr(` ${curMark} ${padG(it.name)} ${C.M}│${C.r} ${gray(`步行${it.mins}分`)}${slow}`, "nav", on));
+                const unit = it.mins <= 2 ? "" : `步行${it.mins}分`;
+                out.push(tr(` ${curMark} ${padG(label)} ${C.M}│${C.r} ${gray(unit)}${slow}`, "nav", on));
               }
             }
             // 已探索地点段
@@ -2998,8 +3141,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(gray(`  （无房间数据）`)));
           } else {
             const cells = rm.cells || [];
-            for (let y = 0; y < rm.height; y++) {
-              for (let x = 0; x < rm.width; x++) {
+            const height = rm.height || cells.length || 0;
+            const width = rm.width || (cells[0]?.length || 0);
+            for (let y = 0; y < height; y++) {
+              for (let x = 0; x < width; x++) {
                 const c = cells[y]?.[x];
                 if (c?.furniture) {
                   _focusItems.push({ type: "furniture", name: c.furniture, x, y, label: c.label });
@@ -3007,6 +3152,22 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 if ((c?.type === "exit" || c?.type === "door") && c?.exitTo) {
                   _focusItems.push({ type: "exit", exitTo: c.exitTo, x, y });
                 }
+              }
+            }
+            // 兜底：cells 无家具时从模板原始数据列出
+            if (!_focusItems.some(it => it.type === "furniture") && (rm.furniture || rm.template_id)) {
+              let fallbackFurns: any[] = rm.furniture || [];
+              if (!fallbackFurns.length && rm.template_id) {
+                try {
+                  const tpl = require("./engine/state.ts").ROOMS?.[rm.template_id] || require("./worldpacks/oregairu/room_templates.json")?.[rm.template_id];
+                  if (tpl?.furniture) fallbackFurns = tpl.furniture;
+                } catch {}
+              }
+              for (let i = 0; i < fallbackFurns.length; i++) {
+                const f = fallbackFurns[i];
+                const fx = f.x ?? f.grid?.[0] ?? 0;
+                const fy = f.y ?? f.grid?.[1] ?? i;
+                _focusItems.push({ type: "furniture", name: f.name || f.type || "?", x: fx, y: fy, label: f.label || "" });
               }
             }
 
@@ -3054,11 +3215,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const area = nav2.breadcrumb?.[nav2.breadcrumb.length - 2] || "";
                 goHint = `${area ? area + "·" : ""}${nDest}处可去`;
               } catch { goHint = "跨区导航"; }
-              out.push(tr(` ${onGo ? hi("▶") : " "} 🚶 ${padCol("外出")} ${C.M}│${C.r} ${goHint} ${gray("›")}`, "nav", onGo));
+              out.push(tr(` ${onGo ? hi("▶") : " "} 🌍 ${padCol(`外出导航`)} ${C.M}│${C.r} ${goHint} ${gray("›")}`, "nav", onGo));
             }
             // 页脚 + 房间氛围（不空行，连续输出）
+            // 只显示和当前位置匹配的 sceneFooter（防换房串位）
             const sf = gs._sceneFooter as { posture: string; location_detail: string; main_quest: string } | null;
-            if (sf?.posture || sf?.location_detail || sf?.main_quest) {
+            const sfLoc = (gs as any)._sceneFooterLocation;
+            const sfValid = sf && sfLoc && sfLoc === loc;
+            if (sfValid && (sf?.posture || sf?.location_detail || sf?.main_quest)) {
               if (sf.posture) out.push(tr(gray(`  |-[${sf.posture}]`)));
               if (sf.location_detail) out.push(tr(gray(`  |-[${sf.location_detail}]`)));
               if (sf.main_quest && sf.main_quest !== "暂无")
@@ -3285,7 +3449,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           if (d === "\x1b" || d === "q") {
             // 装备选物品模式的 Esc 只退出选物品模式，回正常槽列表
             if (_submenu === "equip-detail" && _pickSlot) { _pickSlot = null; _subCursor = 0; return true; }
-            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-party-ops" || _submenu === "npc-direct" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance" || (_submenu === "sex-detail" && _selectedTarget)) {
+            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-party-ops" || _submenu === "npc-direct" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance" || _submenu === "npc-date-plan" || (_submenu === "sex-detail" && _selectedTarget)) {
+              if (_submenu === "npc-date-plan") {
+                if (_datePlanState?.step === "time") { _datePlanState.step = "location"; _subCursor = 0; return true; }
+                _datePlanState = null; _submenu = "npc-romance"; _subCursor = 1; return true;
+              }
               _submenu = "npc-detail";
               _subCursor = 0;
             } else if (_submenu === "npc-detail") {
@@ -3369,6 +3537,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "9")) {
               const isEnter = d === "\r" || d === "\n";
               const key = isEnter ? (actionKeys[_subCursor] ?? _subCursor) : parseInt(d) - 1;
+
+              // 自动靠近 NPC（打开子菜单前先移动）
+              const npcData2 = gs.npcs?.[_selectedTarget?.name];
+              const ngp2 = npcData2?.gridPos || npcData2?.grid_pos;
+              if (ngp2) _autoMoveToTarget(gs, ngp2[0], ngp2[1]);
 
               if (key === 0) {
                 // 搭话
@@ -3495,6 +3668,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
           // 恋爱子菜单控制
           if (_submenu === "npc-romance") {
+            const loverRomance = isNpcLover(gs, _selectedTarget?.name);
             if (d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB") {
               _subCursor = _subCursor === 0 ? 1 : 0;
               return true;
@@ -3505,7 +3679,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               const n = _selectedTarget?.name;
               const aff = getNpcAffection(gs, n);
               if (idx === 0) {
-                // 告白
+                // 已是恋人 → 分手；否则 → 告白
+                if (isNpcLover(gs, n)) {
+                  const rel = gs.player.relationships[n];
+                  if (rel) { rel.romance = null; rel.affection = Math.max(0, (rel.affection || 0) - 30); }
+                  require("./engine/state.ts").saveState();
+                  pushText(`我和${n}分手了。好感-30。`);
+                  ctx?.ui?.notify(`与${n}分手了…好感-30`, "warning");
+                  _submenu = null; _panelMode = false;
+                  return true;
+                }
                 if (aff < 70) { ctx?.ui?.notify("好感需≥70", "warning"); return false; }
                 const rel = gs.player.relationships[n] || (gs.player.relationships[n] = { stage: "熟人", affection: aff, history: [], notes: "" });
                 const ok = Math.random() > 0.25;
@@ -3520,13 +3703,62 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 }
                 require("./engine/state.ts").saveState();
               } else if (idx === 1) {
-                // 约会
+                // 约会 → 打开地点+时间规划子菜单
                 if (aff < 50) { ctx?.ui?.notify("好感需≥50", "warning"); return false; }
-                _doDate(gs, n);
+                _datePlanState = { step: "location", destinations: _buildGoNav(gs, require("./engine/state.ts")).filter((d: any) => d.kind === "dest") };
+                _submenu = "npc-date-plan";
+                _subCursor = 0;
+                return true;
               }
               _submenu = null;
               _panelMode = false;
               return true;
+            }
+            return false;
+          }
+
+          // 约会规划子菜单控制
+          if (_submenu === "npc-date-plan") {
+            // Esc / q → 返回恋爱子菜单或回退一步
+            if (d === "\x1b" || d === "q") {
+              if (_datePlanState?.step === "time") {
+                _datePlanState.step = "location"; _subCursor = 0;
+                return true;
+              }
+              _datePlanState = null; _submenu = "npc-romance"; _subCursor = 1;
+              return true;
+            }
+            const n = _selectedTarget?.name;
+            if (_datePlanState?.step === "location") {
+              const dests = _datePlanState?.destinations || [];
+              if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + dests.length - 1) % Math.max(1, dests.length); return true; }
+              if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % Math.max(1, dests.length); return true; }
+              if ((d === "\r" || d === "\n") && dests.length > 0) {
+                const sel = dests[_subCursor];
+                if (!sel) return false;
+                _datePlanState.step = "time"; _datePlanState.location = sel.name; _subCursor = 0;
+                return true;
+              }
+            } else if (_datePlanState?.step === "time") {
+              const TIME_OPTIONS = ["现在", "今天放学后", "周末", "明天"];
+              if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + TIME_OPTIONS.length - 1) % TIME_OPTIONS.length; return true; }
+              if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % TIME_OPTIONS.length; return true; }
+              if (d === "\r" || d === "\n") {
+                const timeLabel = TIME_OPTIONS[_subCursor];
+                const location = _datePlanState?.location || "附近";
+                // 好感±5 保留机械结算，叙事交 LLM
+                const aff2 = getNpcAffection(gs, n);
+                const rel = gs.player.relationships[n] || (gs.player.relationships[n] = { stage: "熟人", affection: aff2, history: [], notes: "" });
+                const ok = Math.random() > 0.2;
+                if (ok) { rel.affection = Math.min(100, (rel.affection || 0) + 5); getCtx()?.ui?.notify(`约${n}去${location} ✓ +5`, "info"); }
+                else { rel.affection = Math.max(0, (rel.affection || 0) - 5); getCtx()?.ui?.notify(`${n}说有事… -5`, "warning"); }
+                require("./engine/state.ts").saveState();
+                pushText(ok
+                  ? `我约 ${n}${timeLabel}去${location}。${n}：「好啊。」好感+5。`
+                  : `我约 ${n}${timeLabel}去${location}，但${n}说有事。好感-5。`);
+                _datePlanState = null; _submenu = null; _panelMode = false;
+                return true;
+              }
             }
             return false;
           }
@@ -3904,20 +4136,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               }
               return false;
             }
-            // 正常槽列表模式
+            // 正常槽列表模式（所有槽可聚焦）
             const eqSlots2 = getEquipSlots(gs.player.gender);
-            const n = eqSlots2.length;
-            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + n - 1) % n; return true; }
-            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % n; return true; }
+            const n2 = eqSlots2.length;
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + n2 - 1) % n2; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % n2; return true; }
             if (d === "\r" || d === "\n") {
               const slot = eqSlots2[_subCursor]!;
               const item = gs.player.equipment?.[slot.id];
-              if (item) {
-                _selectedTarget = { type: "slot", slotId: slot.id, label: slot.label, item };
-                _submenu = "item-detail";
-                _subCursor = 0;
-              } else {
-                // 空槽 → 进入选物品模式（背包里该槽兼容物品列表）
+              if (!item) {
+                // 空槽 → 进选物品模式
                 const inv2 = gs.player.inventory || [];
                 const compat = inv2.filter((i: any) => i.slot === slot.id);
                 if (!compat.length) {
@@ -3926,11 +4154,32 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                   _pickSlot = slot.id;
                   _subCursor = 0;
                 }
+                return true;
               }
+              // 手机快捷打开
+              if (item.phoneData || (item.effects?.some((e: any) => e.type === "communication"))) {
+                try {
+                  const { openPhone } = require("../engine/phone.ts");
+                  const { gameState: gs2 } = require("./state.ts");
+                  const pd = openPhone(gs2.player, gs2, item.name);
+                  if (pd) {
+                    _selectedTarget = { type: "phone", phoneData: pd, phoneItem: item };
+                    _submenu = "phone-main";
+                    _subCursor = 0;
+                    return true;
+                  }
+                } catch (e) { console.error("[equip] phone shortcut failed:", e); }
+              }
+              _selectedTarget = { type: "slot", slotId: slot.id, label: slot.label, item };
+              _submenu = "item-detail";
+              _subCursor = 0;
               return true;
             }
             return false;
           }
+
+          // equip-detail _pickSlot 模式（背包选物品——从自身 tab 的 _focusItems equip 入口走空槽触发）
+          // 此分支仅当 _pickSlot 被外部设置后生效，不再由 equip-detail 内部 Enter 触发
 
           // 外出导航控制（↑↓ 跳过段头和未探索项，Enter 出发）
           if (_submenu === "go-nav") {
@@ -4271,6 +4520,10 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
           // 4. 载具项
           if (currentItem.type === "vehicle") {
+            if (!currentItem.vehicle) {
+              getCtx()?.ui?.notify("你没有在驾驶任何载具。用 mount_vehicle 工具骑行。", "info");
+              return true;
+            }
             _selectedTarget = currentItem.vehicle;
             _submenu = "vehicle-detail";
             _subCursor = 0;
@@ -4279,6 +4532,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
           // 5. 房间元素 (家具 / 出口) 交互项
           if (currentItem.type === "furniture") {
+            // 自动靠近家具
+            _autoMoveToTarget(gs, currentItem.x ?? 0, currentItem.y ?? 0, currentItem.name);
             _selectedTarget = currentItem;
             _submenu = "furniture-detail";
             _subCursor = 0;

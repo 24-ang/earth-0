@@ -82,6 +82,18 @@ export function getRoom(roomName: string): import("./types.ts").RoomGrid | null 
     const inKnown = gameState.player?.known_locations?.some((k: string) => isSameLocation(k, roomName));
     const isDynamic = Object.values(LOCATIONS_DELTA).some((arr: string[]) => arr.includes(roomName));
     if (inKnown || isDynamic) {
+      // 反向查找：如果有 ROOMS 条目的 exitTo 指向这里 → 直接返回那间（防父节点/子房间名不匹配）
+      for (const [rk, rg] of Object.entries(ROOMS)) {
+        if (!rg?.cells) continue;
+        for (const row of rg.cells) {
+          if (!row) continue;
+          for (const cell of row) {
+            if ((cell?.type === "exit" || cell?.type === "door") && cell.exitTo && isSameLocation(cell.exitTo, roomName)) {
+              return rg;
+            }
+          }
+        }
+      }
       const w = 10, h = 10;
       const cells: any[][] = [];
       for (let y = 0; y < h; y++) {
