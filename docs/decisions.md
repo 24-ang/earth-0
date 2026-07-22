@@ -225,21 +225,30 @@
 
 **不要做**：❌ 并行后再加串行依赖（如一个 NPC 的输出喂给另一个）。
 
-**相关代码**：`extension.ts:autoSpawnNPCs()`
+**相关代码**：`extension.ts:autoSpawnNPCs()`, `extension.ts:checkProactiveNPCs()`（Phase 2.5 恋人主动检测）
 
 ---
 
-## 24. `_toolsLocked` — Fallback 渲染防双重执行
+## 24. `_toolsLocked` — 每回合解锁→执行→上锁→渲染→echo
 
-**是什么**：Phase 1 结束后 `gameState._toolsLocked = true`。`withToolTracking()` 包装器在 execute 前检查该标志——如果已上锁，拦截并返回 `"[引擎已拦截] 渲染阶段禁止调用工具。"`。Phase 1 分类器直接 import 原始模块不走 wrapper，不受影响。
+**是什么**：每轮对话的完整生命周期：
+1. `before_agent_start` → `_toolsLocked = false`（解锁）
+2. Phase 1 分类 LLM → JSON → 引擎执行工具（工具可用）
+3. settlement
+4. `_toolsLocked = true`（上锁）
+5. Phase 3 裸 stream 渲染（零工具）
+6. pi 主 agent echo 预生成正文（工具锁保护 → 即使 pi agent 带 tool definitions 也无法调用）
 
-**为什么**：当 Phase 3 渲染失败时 pi 主 agent 会接管续写叙事。它携带完整 tool definitions，可能在描述剧情时误调工具导致双重执行（钱被扣两次、NPC 被 spawn 两次）。锁机制是结构性的——物理上阻止调用，不是 prompt 劝说。
+存档加载时强制 `_toolsLocked = false`（`state.ts:537`）。
+每回合重置——不是一次性"永远锁"。
+
+**为什么**：当 Phase 3 渲染失败时 pi 主 agent 会接管续写叙事。它携带完整 tool definitions，可能在描述剧情时误调工具导致双重执行。锁机制是结构性的——物理上阻止调用，不是 prompt 劝说。
 
 **放弃了什么**：无。Phase 1 直调原始模块不经过 wrapper，锁不住 Phase 1（这正是设计目的）。
 
-**不要做**：❌ 在 Phase 1 结束前上锁。❌ 用 prompt 替代锁（违反 PHILOSOPHY §1.3）。
+**不要做**：❌ 在 Phase 1 结束前上锁。❌ 用 prompt 替代锁。❌ 永久上锁不重置——锁只活一轮。
 
-**相关代码**：`tools/registry.ts:124-143` (withToolTracking), `extension.ts:118-165` (解锁+上锁)
+**相关代码**：`extension.ts:135` (解锁), `extension.ts:219` (上锁), `state.ts:537` (load 时清锁), `tools/registry.ts:124-143` (withToolTracking)
 
 ---
 
@@ -251,7 +260,7 @@
 
 **不要做**：❌ 在调用方再手动拼装在场描述字符串。❌ 绕过 buildPresentLine 直接写死 "在场人物: 玩家"。
 
-**相关代码**：`tools/helpers.ts:990-1050` (buildPresentLine), `tools/state/spawn_npc_agent.ts`, `tools/state/spawn_npc_agents.ts`, `extension.ts`
+**相关代码**：`tools/helpers.ts:1583` (buildPresentLine), `tools/state/spawn_npc_agent.ts:generateNpcAgentResponse()`（统一入口，三个调用方都走它；buildPresentLine 由该函数内部消费）
 
 ```
 ## N. 决策标题
@@ -747,3 +756,54 @@
 **不要做**：❌ 引擎判断"这个 NPC 该不该飞回学校"。❌ 让 LLM 填 `"2099-12-31"` 这种假值。
 
 **相关代码**：`tools/action/schedule_override.ts`, `engine/state.ts:4004-4008`（pendingOverride 过期判断）, `agents/gm-state.md:22`, `engine/phase1-classifier.ts:349-354`
+
+---
+
+## 36. `generateNpcAgentResponse` — NPC prompt 统一真相源
+
+**是什么**：`tools/state/spawn_npc_agent.ts` 新增导出函数 `generateNpcAgentResponse(npcName, sceneContext, ctx, opts?)`。三个调用方统一走它：
+- `spawn_npc_agent` 工具 execute()（Phase 1 LLM 手动调用）
+- `extension.ts:autoSpawnNPCs()`（Phase 2 自动管道）
+- `extension.ts:checkProactiveNPCs()`（Phase 2.5 恋爱 NPC 主动检测）
+
+prompt 全量注入：天气/季节/房间家具/SexState（欲望/周期/情绪/里程碑）/shortTermBuffer（即时对话历史）/NPC 间关系识别/换装感知/三层输出格式（内心独白→本能反应→消化→回应）/todayContext。
+
+**为什么**：autoSpawnNPCs 以前自己拼 prompt（110 行内联），缺失 SexState/shortTermBuffer/三层输出格式/房间感知/天气。三条路径各自拼不同质量的 prompt → NPC 言行质量不一致。现在统一一个真相源。
+
+**放弃了什么**：完整 prompt 比旧 autoSpawn 多一个数量级的 token → Phase 2 稍慢（但 NPC 在场时本来就少，影响可控）。
+
+**不要做**：❌ 在任何调用方再自己拼 NPC prompt。❌ 绕过 generateNpcAgentResponse 用 generateCompletion 直接生成 NPC 回应。
+
+**相关代码**：`tools/state/spawn_npc_agent.ts:generateNpcAgentResponse()`, `extension.ts:505-547` (autoSpawnNPCs), `extension.ts:559-620` (checkProactiveNPCs)
+
+---
+
+## 37. `getRoom` 反向 exitTo 查找
+
+**是什么**：`engine/state-grid.ts:getRoom()` 在 fallback 路径（location 在 known_locations 但不在 ROOMS 中）创建 10×10 空房间之前，先扫描所有 ROOMS 的 `exitTo` 字段——如果某个已存在房间的出口指向该 location，直接返回那间。
+
+**为什么**：`create_room` + `travel` 组合使用时，`create_room` 创建"書店主厅"，`travel` 把 player.location 设为父节点"猫と月·隠れ家書店"。`getRoom("猫と月·隠れ家書店")` 不命中 ROOMS key → 走 fallback → 创建空的 10×10 覆盖掉已部署的家具。反向查找通过 exitTo 链找到子房间。
+
+**放弃了什么**：O(R×W×H) 扫描——但 ROOMS 条目数小（<100），仅在 getRoomKey 不命中时触发。
+
+**不要做**：❌ 依赖反向查找替代正确的 `setPlayerLocation` 调用。它是兜底，不是主路径。
+
+**相关代码**：`engine/state-grid.ts:84-96`
+
+---
+
+## 38. `/go` 和 `/train` TUI 命令还原
+
+**是什么**：HUD overhaul（7月20日）删除的 `/go` 和 `/train` 命令于 7月23日还原。`/go` → `runNavigation(ctx, skip)` — 七段层级菜单（返回上级/校内建筑三层/同层/下属地点/其他地区/近邻车站/8分钟周边）。`/go skip` 直达模式。`/train` → 二级菜单选出发站→目的地→扣钱→电车叙事。HUD 房间 tab 的"外出导航"同步扩展为七段。
+
+**为什么**：HUD 的外出导航被简化了，`/go` 的完整七段菜单逻辑（校内建筑三层扁平化、下属地点、8分钟周边过滤）被丢掉。LLM 也无法直接调 navigation 工具——`/go` 是玩家主动导航的主要入口。
+
+**放弃了什么**：无。两个入口共存——HUD 内嵌 + TUI 弹窗菜单。
+
+**不要做**：❌ 再次删除。❌ 让 HUD 外出导航和 /go 菜单内容不一致。
+
+**相关代码**：`tools/tui/go.ts`, `tools/tui/train.ts`, `tools/helpers.ts:635-806` (runNavigation), `extension.ts:908-990` (_buildGoNav 七段对齐)
+
+---
+
+> 最后更新：2026-07-23。新决策随时追加。

@@ -1,6 +1,0 @@
-[
-  { "id": "messages", "type": "messaging", "icon": "✉", "label": "短信", "era": "all", "region": "all" },
-  { "id": "calls", "type": "calling", "icon": "☎", "label": "通话", "era": "all", "region": "all" },
-  { "id": "news", "type": "browser", "icon": "📰", "label": "新闻", "era": "all", "region": "all" },
-  { "id": "contacts", "type": "contacts", "icon": "👥", "label": "联系人", "era": "all", "region": "all" }
-]
