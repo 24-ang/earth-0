@@ -133,6 +133,18 @@ export default function (pi: ExtensionAPI) {
     if (!_hudReady) { _hudReady = true; try { ctx.ui.setHiddenThinkingLabel("🧠"); ctx.ui.setToolsExpanded(false); } catch {} }
     const { gameState, saveState } = await import("./engine/state.ts");
     gameState._toolsLocked = false;
+
+    // ── 处理待创建的 SexState（key=8 → key=⑨亲密 → _pendingSexTarget）──
+    if ((gameState as any)._pendingSexTarget) {
+      try {
+        const targetName = (gameState as any)._pendingSexTarget as string;
+        delete (gameState as any)._pendingSexTarget;
+        const sState = await (await import("./engine/state.ts")).getOrCreateSexState(targetName);
+        if (sState) gameState.player.sex = sState;
+        saveState();
+      } catch (e) { console.error("pendingSexTarget failed:", e); }
+    }
+
     const { runSettlement } = await import("./engine/settlement.ts");
     const { runPhase1 } = await import("./engine/phase1-classifier.ts");
 
@@ -1291,16 +1303,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       const ok=Math.random()>0.2;
       if(ok){
         gs.mode="sex";gs.layer1Enabled=true;
-        // 创建 SexState 并触发重绘
-        ;(async ()=>{
-          try {
-            const m = await import("./engine/state.ts");
-            const sState = await m.getOrCreateSexState(name);
-            if (sState) gs.player.sex = sState;
-            m.saveState();
-            ctx?.ui?.requestRender?.();
-          } catch {}
-        })();
+        // 标记待创建 SexState（由 before_agent_start 同步处理后再跑选项）
+        (gs as any)._pendingSexTarget = name;
         ctx?.ui?.notify(`与${name}进入亲密模式`, "info");
       } else {
         const rel=gs.player.relationships[name];if(rel)rel.affection=Math.max(0,(rel.affection||0)-15);
@@ -1425,6 +1429,31 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         const gs = s.gameState;
         const p = gs?.player;
         if (!p) return [];
+
+        // 补 SexState（key=8 → before_agent_start 还没到时 render 先跑）
+        if ((gs as any)._pendingSexTarget) {
+          const targetName = (gs as any)._pendingSexTarget as string;
+          delete (gs as any)._pendingSexTarget;
+          try {
+            const sexMod = require("./engine/sex.ts");
+            const { gameState } = require("./engine/state.ts");
+            gameState.sexStates ??= {};
+            if (!gameState.sexStates[targetName]) {
+              const SEX_PROFILES = sexMod.SEX_PROFILES || {};
+              let profile = SEX_PROFILES[targetName];
+              if (!profile) {
+                const char = require("./engine/state.ts").findCharacter(targetName);
+                const gnd = (char as any)?.gender || "女";
+                profile = { attitude: "顺从", experience: "生涩", likes: [], dislikes: [], baselineDesire: 30, cycleDay: 0, climaxThreshold: 60, bodyParts: { "秘部": { sensitivity: 3, development: 1, preference: "普通" }, "口": { sensitivity: 2, development: 0, preference: "排斥" }, "胸": { sensitivity: 3, development: 0, preference: "普通" }, "肛": { sensitivity: 1, development: 0, preference: "排斥" } } } as any;
+                if (gnd !== "男") { profile.female = { breast: { cup: "B", shape: "半球" as any, nipple_size: "普通" as any, nipple_color: "粉色" as any, areola_size: "普通" as any, feel: "柔软" as any }, vagina: { type: "闭合" as any, labia_size: "普通" as any, depth_cm: 10, tightness: "普通" as any, inner_color: "淡粉" as any, feel: "普通" as any }, pubic_hair: { amount: "普通" as any, color: "黑色" as any, style: "自然" as any }, clitoris: "普通" as any }; } else { profile.male = { penis: { length_cm: 14, girth_cm: 10, erect_length_cm: 17, erect_girth_cm: 12, shape: "直" as any, head_size: "普通" as any, circumcised: false, color: "普通" as any }, testicles: { size: "普通" as any }, pubic_hair: { amount: "普通" as any, color: "黑色" as any, style: "自然" as any } }; }
+              }
+              const sz = sexMod.createSexState(targetName, profile);
+              if (sz) gameState.sexStates[targetName] = sz;
+            }
+            p.sex = gameState.sexStates[targetName] || null;
+            s.saveState();
+          } catch (e: any) { console.error("render SexState creation failed:", e.message); }
+        }
 
         const out: string[] = [];
         const loc = p.location||"???";
