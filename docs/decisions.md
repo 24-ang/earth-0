@@ -695,3 +695,55 @@
 **不要做**：❌ 在两个文件里写相同的内容。❌ 假设其中一个废弃了。
 
 **相关代码**：`engine/state.ts:866-876`（resolvePersonality）, `engine/state.ts:1285-1329`（npc-details collector）
+
+---
+
+## 33. 队伍/同行：两层关系（following + party）
+
+**是什么**：NPC 跟玩家行动有两种方式：
+- **④同行**（`player.following`）：推正文"我邀请 XX 同行"→引擎落地（移动跟随+日程屏蔽防飞人）。无好感门槛。不推正文的话 NPC Agent 决定是否跟来。
+- **⑤组队**（`player.party`）：好感≥40/恋人直接加入，不推正文。加入后自动打开组队操作子菜单（①给物品/②指挥/③离队）。上限 3 人。
+
+两层都引擎落地——`setPlayerLocation` + `updateNPCSchedules` 遍历两组，NPCHUD 动作设为"组队中"/"同行中"。
+
+**为什么**：
+- 防飞人是硬需求——NPC 说跟着你却在下回合飞回学校，体验断裂
+- 同行 = 叙事行为（"跟我来"）→ LLM 决定是否同意 → 引擎保住位置一致性
+- 组队 = 机械操作（好感够了直接加）→ HUD 直调引擎，不费 LLM token
+
+**不要做**：❌ 把组队操作做成 inline 行而非子菜单（和搭话风格不一致）。❌ 让组队按钮推正文（浪费 token，LLM 不需要知道引擎加了个队友）。
+
+**相关代码**：`engine/types.ts:263-264`（PlayerState）, `engine/state.ts:1101-1112`（setPlayerLocation）, `engine/state.ts:3984-3993`（updateNPCSchedules）, `extension.ts:1221-1230`（_buildNpcActions）, `extension.ts:1294-1300`（_handleNpcAction）
+
+---
+
+## 34. Phase1 分类器：批量无效回退 + 上限保护
+
+**是什么**：Phase1 分类 LLM 有时输出大量无 `tool` 字段的 action（叙事模式下被误导）。加了双重保护：
+1. action 数上限 12（`slice(0, 12)`）
+2. 有效 action < 30% → 直接 `keywordFallback`（不走工具执行）
+3. 连续 3 次执行失败且零成功 → `keywordFallback`
+
+**为什么**：
+- 分类 LLM 被 narrative 文本误导时，会输出 40+ 条 world-building 伪 action（`tool: undefined`），console 刷屏且浪费 token
+- 这是 LLM 天性——不能靠 prompt 根治，需要引擎级兜底
+- 回退后走关键词匹配，至少能命中 travel/buy_item 等高频操作
+
+**不要做**：❌ 提高 confidence 阈值（会误杀正常低置信 action）。❌ 完全禁止 LLM 输出多 action（新游戏初始化需要批量调用）。
+
+**相关代码**：`engine/phase1-classifier.ts:116-146`
+
+---
+
+## 35. schedule_override：`until` 为空 = 永久覆盖
+
+**是什么**：`schedule_override` 工具的 `until` 参数不填 → `expiresAt` 为空字符串 → 引擎不判断过期（`if (ov.expiresAt && ov.expiresAt < date)`）。导演 LLM 判断 NPC 该永久偏离日常时（穿越/逃难/定居新世界）不填 until；临时偏离（看病/逃课/约会）才填日期。
+
+**为什么**：
+- 旧代码用 `"2099-12-31"` 假永久——NPC 活到 2100 年就飞回去了，且语义不清
+- 引擎早已支持 `expiresAt` 为空不判断过期——只是工具描述没说
+- 日程管理是导演 LLM 的职责（§1.2 "引擎不该替 LLM 做叙事判断"）——混乱期改"自由人"，稳定后重建日程
+
+**不要做**：❌ 引擎判断"这个 NPC 该不该飞回学校"。❌ 让 LLM 填 `"2099-12-31"` 这种假值。
+
+**相关代码**：`tools/action/schedule_override.ts`, `engine/state.ts:4004-4008`（pendingOverride 过期判断）, `agents/gm-state.md:22`, `engine/phase1-classifier.ts:349-354`

@@ -385,6 +385,8 @@ NPC Agent prompt 注入今天的生活上下文（星期、天气、性格、最
 
 LLM 不输出 intent → 走现有模板。**模板是兜底，LLM 是增强。**
 
+导演 LLM 也可直接调 `schedule_override` 设永久覆盖（不填 `until` = 不过期）。NPC 人生遭遇突发情况（穿越/逃难/长期住院）时，导演判断改"自由人"或设永久覆盖。稳定后重建日程。引擎不替 LLM 做这个判断。
+
 ### 12.3 兜底质量的重要性
 
 即使 LLM 不输出 intent，模板也不该让所有人宅家。`schedule_templates.json` 的 weekday_evening 不应是纯 `"自宅"`。它应该是多样的、有选择性的、自然的——因为没人每天都直接回家。
