@@ -1291,6 +1291,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       const ok=Math.random()>0.2;
       if(ok){
         gs.mode="sex";gs.layer1Enabled=true;
+        // 创建 SexState 并触发重绘
+        ;(async ()=>{
+          try {
+            const m = await import("./engine/state.ts");
+            const sState = await m.getOrCreateSexState(name);
+            if (sState) gs.player.sex = sState;
+            m.saveState();
+            ctx?.ui?.requestRender?.();
+          } catch {}
+        })();
         ctx?.ui?.notify(`与${name}进入亲密模式`, "info");
       } else {
         const rel=gs.player.relationships[name];if(rel)rel.affection=Math.max(0,(rel.affection||0)-15);
