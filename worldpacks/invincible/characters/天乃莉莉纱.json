@@ -1,0 +1,184 @@
+{
+  "name": "天乃莉莉纱",
+  "source": "2.5次元的诱惑 / Invincible (日本NPC)",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "干燥玫瑰粉及肩短发、淡蓝色眼睛、红框半框眼镜。二次元体型的社恐阴角美少女。",
+  "hair_color": "干燥玫瑰粉",
+  "hair_style": "及肩中短发 Bob 头",
+  "eye_color": "淡蓝色",
+  "hair_accessories": "红框半框眼镜",
+  "outfits": {
+    "school": {
+      "top": "总武高制服外套",
+      "bottom": "黑白百褶裙",
+      "legs": "黑色过膝袜",
+      "feet": "皮鞋",
+      "acc": "红色蝴蝶结",
+      "desc": "标准总武高制服，领口红色蝴蝶结。"
+    }
+  },
+  "body": {
+    "height_cm": 163,
+    "weight_kg": 47,
+    "build": "纤细",
+    "cup": "C",
+    "leg_type": "修长",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 2,
+    "敏捷": 3,
+    "体质": 3,
+    "智力": 8,
+    "感知": 12,
+    "魅力": 13
+  },
+  "skills": {
+    "口才": 3,
+    "学习": 6,
+    "手工": 9
+  },
+  "personality_brief": "社恐阴角——日常说话吞吐眼神闪躲。但对ACG的狂热能瞬间切换人格：语速极快充满热情，为完美还原角色不惜一切努力。被莉莉艾露拯救了童年，现在用Cosplay拯救自己。",
+  "personality_stages": {
+    "6": "安静内向的女孩，在学校不合群。被动画角色莉莉艾露拯救——那是她第一次觉得世界上有理解自己的人。",
+    "12": "因ACG兴趣被同学排挤变得更加退缩。私下对Cosplay的热情开始萌芽。",
+    "16": "加入漫研社，第一次Cosplay被奥村认可后找到容身之所。日常仍是社恐阴角，进入宅模式后判若两人。拥有完全再现(ROM)角色的惊人能力。"
+  },
+  "speech_style": "日常声音细若蚊蝇，常用那个...开头。进入宅模式后语速极快充满热情。对奥村称呼前辈，语气充满依赖。话题转到莉莉艾露时会进入滔滔不绝状态。",
+  "anchors": {
+    "emotional": "社恐阴角——在现实社交中极度不安，但对ACG有近乎偏执的狂热。被莉莉艾露拯救了童年，从此Cosplay成为她与世界对话的方式。在宅领域有惊人的行动力和完美主义。",
+    "intimate": "对奥村前辈有深度依赖——他是第一个认可她Cosplay的人。在他面前会放松警惕。情感表达极其笨拙——不会说喜欢但会熬夜为他做最完美的Cos服。",
+    "private": "小学时因ACG兴趣被排挤的经历影响深远。对现充社交有恐惧。父亲是著名摄影师，家境富裕但亲情冷淡。漫研社和莉莉艾露是她的一切。"
+  },
+  "likes": [
+    "莉莉艾露",
+    "奥村正宗",
+    "Cosplay",
+    "制作Cos服"
+  ],
+  "dislikes": [
+    "现实社交",
+    "体育",
+    "现充氛围",
+    "被注视"
+  ],
+  "default_location": "千叶县稻毛区",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "16": "高中生",
+    "18": "大学生"
+  },
+  "schedule_group": "高中生",
+  "funds": 5000,
+  "sex_profile": {
+    "baselineDesire": 30,
+    "attitude": "羞涩",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "C",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 13,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "浅褐",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 4,
+        "development": 0,
+        "preference": "害羞"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 16,
+    "climaxThreshold": 45,
+    "likes": [
+      "被温柔引导",
+      "Cosplay角色扮演",
+      "安全的环境"
+    ],
+    "dislikes": [
+      "被注视身体",
+      "太快的节奏",
+      "现实社交压力"
+    ]
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": -1
+  },
+  "default_location_by_age": {
+    "16": "西千葉"
+  },
+  "grade": 2,
+  "homeroom": "F",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

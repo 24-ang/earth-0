@@ -1,0 +1,2676 @@
+{
+  "GDA Pentagon - Main Atrium": {
+    "width": 12,
+    "height": 10,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "开阔的GDA指挥中心中庭。高挑的天花板，巨大的全息地球投影在中央旋转，四周环绕着数十个工作台，显示屏上滚动着全球超自然事件数据。墙壁是冷酷的灰色金属面板。安保人员严密巡逻。",
+    "directions": {
+      "北": "Cecil办公室 方向",
+      "南": "入口安检 (磁卡+生物识别双重验证)",
+      "东": "装备区 (武器柜和装甲存放处)",
+      "西": "拘留区 (能量牢房，关押危险超人类)"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "Grayson Residence - Living Room": {
+    "width": 8,
+    "height": 6,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "温馨的郊区中产家庭客厅。棕色皮沙发靠墙放着，茶几上总是放着一杯黛比的咖啡。墙上挂着家庭照片——马克的毕业照、诺兰的旅行作家签售会合影。壁炉上方的相框里是三人满脸笑容的全家福。",
+    "directions": {
+      "北": "厨房",
+      "南": "前门 (通往街道)",
+      "东": "Mark的房间",
+      "西": "楼梯 (通往二楼)"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "Grayson Residence - Mark's Room": {
+    "width": 5,
+    "height": 5,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "典型的19岁男生的卧室。墙上贴着Invincible的第一张报纸剪报，桌上堆满了社区大学的课本。床铺勉强整理过——黛比坚持的。衣柜角落塞着那件黄色紧身英雄服。",
+    "directions": {
+      "西": "走廊 (通往客厅)"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "Guardians of the Globe HQ - Assembly Room": {
+    "width": 10,
+    "height": 8,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "全球护卫队总部的圆形会议厅。中央是一个巨大的圆桌，每把椅子背后挂着对应英雄的标志。墙边立着一排纪念雕像——最初代护卫队成员的白色大理石雕像，底座刻着他们的名字。空气中有一种沉重的肃穆感。窗外是卫星基地的停机坪。",
+    "directions": {
+      "北": "健身房 (训练器材和战斗模拟室)",
+      "南": "停机坪出口",
+      "东": "医务室",
+      "西": "通讯控制室"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "芝加哥市中心街道": {
+    "width": 10,
+    "height": 10,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "芝加哥繁忙的市中心街道。出租车鸣笛声此起彼伏，商贩在人行道上摆摊，巨大的电子广告牌播放着全球护卫队的周边广告。人行道旁的围栏还残留着几个月前超人战斗的修复痕迹。头顶偶尔有人影掠过——多半是某个赶路的英雄。",
+    "directions": {
+      "北": "商业区",
+      "南": "南区",
+      "东": "湖滨大道 (密歇根湖方向)",
+      "西": "工业区 (地下拳赛场方向)"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "Art's Costume Shop": {
+    "width": 5,
+    "height": 4,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "老旧但一尘不染的小裁缝店。墙上挂满了各种英雄和反派的制服样本——从Invincible的初代制服到黑力士的装甲。Art Rosenbaum在柜台后仔细缝着一件新的紧身衣。空气里有一股布料+熨斗的味道。角落里堆着特殊面料的样品册。",
+    "directions": {
+      "北": "裁缝工作台",
+      "南": "店门 (通往芝加哥市中心街道)",
+      "东": "试衣间",
+      "西": "布料储藏室"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "千叶县稻毛区": {
+    "width": 8,
+    "height": 8,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "千叶县稻毛区的宁静住宅区。独栋房屋错落有致，远处能看到東京湾。和美国的超英喧嚣不同，这里的日常安静得像个平行世界。偶尔有乌鸦飞过。",
+    "directions": {
+      "北": "千葉駅方向",
+      "南": "海岸方向",
+      "东": "東京方向",
+      "西": "总武高中方向"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "日本东京": {
+    "width": 10,
+    "height": 10,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "2008年的东京。涉谷十字路口的人潮永远不断，巨大的电子屏幕上偶尔出现全球护卫队的新闻片段。超英文化在这里被翻译成了一套完全不同的语言——动画、漫画和扭蛋。",
+    "directions": {
+      "北": "新宿方向",
+      "南": "品川方向",
+      "东": "秋叶原方向",
+      "西": "涩谷方向"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  },
+  "千葉駅前": {
+    "width": 6,
+    "height": 6,
+    "cellSize": 2,
+    "floor": 1,
+    "origin": [
+      0,
+      0
+    ],
+    "atmosphere": "千叶站前的小广场。通勤族匆匆经过，高中生们在便利店门口聊天。相比芝加哥的超级英雄日常，这里显得格外普通——但普通也是奢侈。",
+    "directions": {
+      "北": "千叶县稻毛区方向",
+      "南": "车站入口",
+      "东": "商店街",
+      "西": "住宅区"
+    },
+    "cells": [
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ],
+      [
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        },
+        {
+          "type": "floor",
+          "block": false
+        }
+      ]
+    ]
+  }
+}

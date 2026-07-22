@@ -1,0 +1,22 @@
+{
+  "id": "",
+  "name": "美国政府（2008年）",
+  "type": "政府",
+  "scale": "local",
+  "sector": "politics",
+  "coreLocation": "Chicago",
+  "leader": "",
+  "members": [],
+  "description": "",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "美国政府（2008年）",
+      "level": "common",
+      "text": "美国政府（2008年）。"
+    }
+  ]
+}

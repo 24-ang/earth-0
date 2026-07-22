@@ -1,0 +1,24 @@
+{
+  "id": "coalition_of_planets",
+  "name": "行星联盟 (Coalition of Planets)",
+  "type": "星际联盟",
+  "scale": "national",
+  "sector": "military",
+  "coreLocation": "Talescria/故事星",
+  "leader": "Thaedus/撒迪厄斯（被崔格杀害）→ Allen/艾伦接任",
+  "members": [
+    "Space Racer/太空骑士，无限射线武器持有者"
+  ],
+  "description": "外交 → 说服一个中立星球加入联盟。或说服联盟支援你的星球。 情报交换 → 你对维特鲁姆的了解是联盟最需要的商品。 参军 → 你有超能力？太空骑士给你一把枪。没有？后勤部缺人。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "行星联盟 (Coalition of Planets)",
+      "level": "common",
+      "text": "行星联盟 (Coalition of Planets)。基地: Talescria/故事星。状态: 防御性联盟, 无核心强战力而依赖科技与数量, 秩序·共存。经济来源: 成员国分摊军费 + 战利品回收。核心资产: 多元科技融合，没有最强个体但有最多花样。领导者: Thaedus/撒迪厄斯（被崔格杀害）→ Allen/艾伦接任。Internal_Rot: \"成员国各怀心思，有些只想躲，不想打\" External_Ally: \"Nolan & Mark（叛变的维特鲁姆人）\" External_Prey: \"维特鲁姆帝国\"外交 → 说服一个中立星球加入联盟。或说服联盟支援你的星球。 情报交换 → 你对维特鲁姆的了解是联盟最需要的商品。 参军 → 你有超能力？太空骑士给你一把枪。没有？后勤部缺人。"
+    }
+  ]
+}

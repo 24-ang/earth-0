@@ -1,0 +1,93 @@
+{
+  "city": "芝加哥",
+  "regions": {
+    "芝加哥市中心": {
+      "label": "Downtown",
+      "parent": "Chicago",
+      "landmarks": [
+        "芝加哥市中心街道",
+        "Art's Costume Shop",
+        "地下拳赛场"
+      ],
+      "feel": "2008年秋天的芝加哥。摩天楼群间穿梭着超级英雄的身影，地铁在脚下隆隆作响。密歇根湖的风从东边吹来。"
+    },
+    "Grayson住宅区": {
+      "label": "Suburb",
+      "parent": "Chicago",
+      "landmarks": [
+        "Grayson Residence - Living Room",
+        "Grayson Residence - Mark's Room"
+      ],
+      "feel": "安静的郊区住宅区。草坪修剪整齐，邻家的狗偶尔吠几声。和普通美国家庭没什么两样——除了这户人家的父亲是世界上最强大的超人类。"
+    },
+    "GDA五角大楼": {
+      "label": "GDA HQ",
+      "parent": "Washington DC Metro",
+      "landmarks": [
+        "GDA Pentagon - Main Atrium"
+      ],
+      "feel": "五角大楼地下深处的机密设施。你在登记表上签的名字很可能从未存在。"
+    },
+    "护卫队基地": {
+      "label": "Guardians HQ",
+      "parent": "Satellite Location",
+      "landmarks": [
+        "Guardians of the Globe HQ - Assembly Room"
+      ],
+      "feel": "全球护卫队的卫星基地。英雄雕像沿墙排列，圆形会议厅中央的巨大圆桌每把椅子背后挂着对应成员的标志。"
+    },
+    "日本千叶": {
+      "label": "Chiba, Japan",
+      "parent": "Japan",
+      "landmarks": [
+        "千叶县稻毛区",
+        "日本东京",
+        "千葉駅前"
+      ],
+      "feel": "太平洋另一端的日本千叶县。2008年，这里还没有被超级英雄浪潮完全波及——但偶尔能看到GDA的侦察机从东京湾方向飞来。"
+    }
+  },
+  "transit": {
+    "cta_train": {
+      "name": "芝加哥CTA地铁",
+      "stations": [
+        "芝加哥市中心",
+        "Grayson住宅区"
+      ],
+      "price": 2,
+      "duration": 25
+    },
+    "gda_transport": {
+      "name": "GDA专用运输机",
+      "stations": [
+        "GDA五角大楼",
+        "护卫队基地",
+        "芝加哥市中心"
+      ],
+      "price": 0,
+      "duration": 10
+    },
+    "international_flight": {
+      "name": "国际航班 (芝加哥→东京)",
+      "stations": [
+        "芝加哥市中心",
+        "日本东京"
+      ],
+      "price": 1200,
+      "duration": 780
+    }
+  },
+  "connections": {
+    "chicago_chiba": {
+      "name": "芝加哥↔千叶国际航线",
+      "stations": [
+        "芝加哥",
+        "千叶"
+      ],
+      "price": 1500,
+      "duration": 840,
+      "source_world": "invincible",
+      "target_world": "oregairu"
+    }
+  }
+}

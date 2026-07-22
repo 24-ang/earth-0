@@ -1,0 +1,17 @@
+{
+  "grayson_house": {
+    "name": "郊区独栋住宅",
+    "desc": "芝加哥郊区的标准独栋两层住宅。正面草坪，车库，三间卧室。和普通的美国中产家庭没什么两样。",
+    "rooms": {
+      "Grayson Residence - Living Room": {"type": "common"},
+      "Grayson Residence - Mark's Room": {"type": "player"}
+    }
+  },
+  "chicago_apt": {
+    "name": "芝加哥公寓",
+    "desc": "芝加哥市区普通公寓楼里的一间。有独立卫生间和小厨房。暖气在冬天很响。",
+    "rooms": {
+      "公寓单间": {"type": "player"}
+    }
+  }
+}

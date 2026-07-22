@@ -1,0 +1,16 @@
+{
+  "id": "________",
+  "title": "侦察器",
+  "source": "Invincible",
+  "trigger": "故事节奏合适时触发",
+  "expires_days": 365,
+  "repeatable": false,
+  "hook": {
+    "text": "",
+    "urgency": 5
+  },
+  "iconic_scenes": "",
+  "perception_levels": [],
+  "on_expire": "GDA获战力扫描→所有暴露者Heat上升。",
+  "hooks_text": "Cecil掌握了你的读数。下次见你，他会用这个数字谈判？"
+}

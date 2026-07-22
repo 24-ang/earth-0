@@ -1,0 +1,24 @@
+{
+  "id": "powerplex",
+  "name": "电力plex (Powerplex)",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "美国",
+  "leader": "本人，家人死于Invincible战斗的附带伤害",
+  "members": [
+    "无，独行"
+  ],
+  "description": "被误伤 → 如果你看起来像Mark，或跟Mark一组，你会被卷入。 调解 → 他不是疯子。他失去了家人。你认识Mark吗？也许该谈谈。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "电力plex (Powerplex)",
+      "level": "common",
+      "text": "电力plex (Powerplex)。基地: 美国。状态: 个人仇杀者, 感情驱动, 混乱·复仇。经济来源: 无。核心资产: 能量吸收，纯物理攻击对他无效甚至反噬。领导者: 本人，家人死于Invincible战斗的附带伤害。Internal_Rot: \"他在为自己认为正确的事复仇，但杀他的人不是Invincible，只是一个擦伤\" External_Ally: \"无，他的战役是个人的\" External_Prey: \"Invincible / 任何看起来像Invincible的人\"被误伤 → 如果你看起来像Mark，或跟Mark一组，你会被卷入。 调解 → 他不是疯子。他失去了家人。你认识Mark吗？也许该谈谈。"
+    }
+  ]
+}

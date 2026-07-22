@@ -1,0 +1,42 @@
+{
+  "public_rooms": [
+    "芝加哥市中心街道", "GDA Pentagon - Main Atrium", "Reginald Vel Johnson高中 - 走廊"
+  ],
+  "traits": [
+    {
+      "name": "上班族",
+      "act": "匆匆赶路，手里拿着咖啡和公文包",
+      "height": "175cm"
+    },
+    {
+      "name": "学生",
+      "act": "背着书包，和朋友边走边聊",
+      "height": "170cm"
+    },
+    {
+      "name": "记者",
+      "act": "拿着相机四处张望，寻找新闻素材",
+      "height": "172cm"
+    },
+    {
+      "name": "GDA探员",
+      "act": "穿着黑色西装，戴着耳麦，目光警觉",
+      "height": "180cm"
+    },
+    {
+      "name": "超英粉丝",
+      "act": "穿着Invincible的周边T恤，手里拿着签名本",
+      "height": "168cm"
+    },
+    {
+      "name": "建筑工人",
+      "act": "在围起来的施工区域里工作",
+      "height": "178cm"
+    },
+    {
+      "name": "流浪汉",
+      "act": "蜷缩在街角的纸箱旁，面前放着空杯子",
+      "height": "170cm"
+    }
+  ]
+}

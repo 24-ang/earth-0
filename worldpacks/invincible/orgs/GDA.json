@@ -1,0 +1,24 @@
+{
+  "id": "gda",
+  "name": "全球防御局 (Global Defense Agency)",
+  "type": "政府机构",
+  "scale": "local",
+  "sector": "politics",
+  "coreLocation": "五角大楼地下",
+  "leader": "Cecil Stedman",
+  "members": [
+    "Donald Ferguson"
+  ],
+  "description": "加入 → Cecil知道你的名字。你有联络人、情报权限、和灰色任务的收件箱。晋升看你多有用。 合作 → 保留独立性。每次帮助都有代价，Cecil会在你通讯设备里留后门以防万一。 观察 → 不接触。但你开始注意到同一辆灰色轿车。只要你没构成威胁，只是名字在一张纸上。 敌对 → 不公开打击。你的盟友会被策反，行动越来越难，直到你来找Cecil谈判。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "全球防御局 (Global Defense Agency)",
+      "level": "common",
+      "text": "全球防御局 (Global Defense Agency)。基地: 五角大楼地下。状态: 影子机构, 名义隶属国防部实际高度自治, 秩序·实用主义。经济来源: 联邦机密预算，藏在国防拨款附件中。核心资产: 全球监控网络 + ReAnimen改造人军团。领导者: Cecil Stedman。Internal_Rot: \"国防部长期想吞并GDA预算和管辖权\" External_Ally: \"白宫（叛变前）→ 叛变后政治掩护动摇\" External_Prey: \"未注册超能力者，先评估能否吸纳\"加入 → Cecil知道你的名字。你有联络人、情报权限、和灰色任务的收件箱。晋升看你多有用。 合作 → 保留独立性。每次帮助都有代价，Cecil会在你通讯设备里留后门以防万一。 观察 → 不接触。但你开始注意到同一辆灰色轿车。只要你没构成威胁，只是名字在一张纸上。 敌对 → 不公开打击。你的盟友会被策反，行动越来越难，直到你来找Cecil谈判。"
+    }
+  ]
+}

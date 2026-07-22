@@ -1,0 +1,86 @@
+{
+  "name": "律茂真人",
+  "source": "鬼父 / Invincible (日本NPC)",
+  "base_age": 17,
+  "gender": "male",
+  "appearance_brief": "男生，身高 170cm。来自《鬼父》。",
+  "hair_color": "棕色",
+  "hair_style": "短发",
+  "outfits": {
+    "school": {
+      "top": "制服外套",
+      "shirt": "校服衬衫",
+      "bottom": "长裤",
+      "feet": "皮鞋"
+    }
+  },
+  "body": {
+    "height_cm": 170,
+    "weight_kg": 58,
+    "build": "普通",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    }
+  },
+  "attributes": {
+    "力量": 6,
+    "敏捷": 6,
+    "体质": 6,
+    "智力": 10,
+    "感知": 10,
+    "魅力": 11
+  },
+  "skills": {},
+  "personality_brief": "来自《鬼父》的角色。",
+  "personality_stages": {
+    "6": "普通的成长童年。"
+  },
+  "speech_style": "礼貌温和的平辈语气。",
+  "anchors": {
+    "emotional": "来自《鬼父》的登场人物。"
+  },
+  "likes": [
+    "日常"
+  ],
+  "dislikes": [
+    "麻烦"
+  ],
+  "default_location": "千叶县稻毛区",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生"
+  },
+  "schedule_group": "高中生",
+  "funds": 2000,
+  "social_class": "流氓无产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "6": "千葉駅前",
+    "12": "西千葉",
+    "15": "蘇我"
+  },
+  "grade": 3,
+  "homeroom": "B",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "name": "雪之下大志",
+  "source": "我的青春恋爱物语果然有问题。（魔改） / Invincible (日本NPC)",
+  "base_age": 17,
+  "gender": "male",
+  "appearance_brief": "小胖子，长得老实中带点猥琐。",
+  "tags": [
+    "au"
+  ],
+  "body": {
+    "height_cm": 125,
+    "weight_kg": 45,
+    "build": "偏胖",
+    "leg_type": "结实",
+    "skin": {
+      "base_tone": "普通",
+      "tan": 10,
+      "texture": "普通"
+    },
+    "diet": "正常",
+    "exercise": "久坐"
+  },
+  "attributes": {
+    "力量": 2,
+    "敏捷": 2,
+    "体质": 3,
+    "智力": 4,
+    "感知": 4,
+    "魅力": 3
+  },
+  "skills": {},
+  "hp": {
+    "current": 7,
+    "max": 7
+  },
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "千叶县稻毛区",
+  "schedule_group": "高中生",
+  "schedule_overrides": {},
+  "anchors": {
+    "private": "雪之下家的私生子弟弟。据说是绫乃流落在外的儿子，5年前被带回雪之下家。性格任性猥琐好色。魔改模式专属角色。"
+  },
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生"
+  },
+  "funds": 6000,
+  "social_class": "大资产阶级",
+  "personal_axes": {
+    "经济立场": 4,
+    "政治立场": 3
+  },
+  "grade": 3,
+  "homeroom": "G"
+}

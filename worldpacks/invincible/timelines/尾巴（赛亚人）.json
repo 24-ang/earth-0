@@ -1,0 +1,16 @@
+{
+  "id": "_______",
+  "title": "尾巴",
+  "source": "Invincible",
+  "trigger": "故事节奏合适时触发",
+  "expires_days": 365,
+  "repeatable": false,
+  "hook": {
+    "text": "",
+    "urgency": 5
+  },
+  "iconic_scenes": "",
+  "perception_levels": [],
+  "on_expire": "切除：战力锁定但安全。保留：每次满月风险。GDA获尾巴样本→逆向研究。",
+  "hooks_text": "巨猿在市区变身→Cecil以后看你的眼神不同。"
+}

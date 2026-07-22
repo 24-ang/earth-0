@@ -48,7 +48,39 @@ export default function (pi: ExtensionAPI) {
     // 先 reset，让后续选择决定是否 load
     resetState();
 
+    // 读取当前世界包
+    const activeWorldFile = path.resolve(process.cwd(), "data", ".active_world");
+    let currentWorld = "oregairu";
+    if (fs.existsSync(activeWorldFile)) {
+      currentWorld = fs.readFileSync(activeWorldFile, "utf-8").trim();
+    }
+    // 扫描可用世界包
+    const worldpackDir = path.resolve(process.cwd(), "worldpacks");
+    const availableWorlds: string[] = [];
+    if (fs.existsSync(worldpackDir)) {
+      for (const entry of fs.readdirSync(worldpackDir, { withFileTypes: true })) {
+        if (entry.isDirectory()) availableWorlds.push(entry.name);
+      }
+    }
+
     const items: any[] = [
+      {
+        label: `🌍 切换世界`,
+        detail: `当前: ${currentWorld} (${availableWorlds.length}个可用)`,
+        action: async (d: () => void) => {
+          const { showMenu } = await import("./tools/helpers.ts");
+          const worldItems = availableWorlds.map((w: string) => ({
+            label: w === currentWorld ? `● ${w}` : `  ${w}`,
+            detail: w === currentWorld ? "← 当前" : "",
+            action: w === currentWorld ? undefined : (() => {
+              fs.writeFileSync(activeWorldFile, w, "utf-8");
+            }),
+          }));
+          worldItems.push({ label: "◀ 返回", detail: "", action: undefined });
+          await showMenu(ctx, "🌍 选择世界包 (切换后请开新游戏)", worldItems);
+          d();
+        },
+      },
       {
         label: "🆕 新游戏",
         detail: "开始一段全新的旅程",

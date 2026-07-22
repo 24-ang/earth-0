@@ -1,0 +1,24 @@
+{
+  "id": "doc_seismic",
+  "name": "地震博士 (Doc Seismic)",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "美国地下",
+  "leader": "本人，地震拳套+地质学专业知识",
+  "members": [
+    "岩浆人，他自己造的军队"
+  ],
+  "description": "侧翼突袭 → 从地面攻击是无用的。找到地下入口。 陷阱 → 他经常挖洞。你的基地下面可能已经是隧道了。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "地震博士 (Doc Seismic)",
+      "level": "common",
+      "text": "地震博士 (Doc Seismic)。基地: 美国地下。状态: 反派, 科技+超能力组合, 混乱·恶。经济来源: 自研装备，无资金来源。核心资产: 地质改造能力，能让城市坍塌。领导者: 本人，地震拳套+地质学专业知识。Internal_Rot: \"岩浆人可能失控，他创造了自己的军队，但不一定能永远控制\" External_Ally: \"偶尔与其他反派共享地下隧道\" External_Prey: \"地面城市 / 护卫队\"侧翼突袭 → 从地面攻击是无用的。找到地下入口。 陷阱 → 他经常挖洞。你的基地下面可能已经是隧道了。"
+    }
+  ]
+}

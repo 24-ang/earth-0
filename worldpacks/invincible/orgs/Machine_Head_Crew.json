@@ -1,0 +1,24 @@
+{
+  "id": "machine_head_crew",
+  "name": "机器头 (Machine Head)",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "美国城市地下",
+  "leader": "Machine Head，犯罪老板，后期被篡位",
+  "members": [
+    "Isotope，传送者，替老板跑腿和处理麻烦"
+  ],
+  "description": "被雇佣 → 你需要钱或需要接入地下网络。Machine Head出价，你干活。这在超人类社区里很常见。 篡位 → Titan做到了。你也行。但记住：下个篡位者已经在看你。 敌对 → Invincible做过。打得过。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "机器头 (Machine Head)",
+      "level": "common",
+      "text": "机器头 (Machine Head)。基地: 美国城市地下。状态: 犯罪中介, 老板被推翻后二代接手, 混乱·恶。经济来源: 毒品、高利贷、超能力雇佣中介费。核心资产: 超能力雇佣兵网络，你能用可验证的暴力解决问题。领导者: Machine Head，犯罪老板，后期被篡位。Internal_Rot: \"篡位，Titan干掉了老板。这是组织传统，不是意外\" External_Ally: \"地下雇佣市场（最大客户）\" External_Prey: \"欠债的普通人、想洗钱的富人、需要超能力打手的客户\"被雇佣 → 你需要钱或需要接入地下网络。Machine Head出价，你干活。这在超人类社区里很常见。 篡位 → Titan做到了。你也行。但记住：下个篡位者已经在看你。 敌对 → Invincible做过。打得过。"
+    }
+  ]
+}

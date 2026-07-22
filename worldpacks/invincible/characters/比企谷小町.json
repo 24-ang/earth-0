@@ -1,0 +1,124 @@
+{
+  "name": "比企谷小町",
+  "drives_by_age": {
+    "6": {
+      "drives": [
+        "黏着哥哥转，什么都学他"
+      ],
+      "goal": "当哥哥最可爱的跟屁虫。"
+    },
+    "12": {
+      "drives": [
+        "嘴上嫌弃哥哥，暗地帮他张罗人际"
+      ],
+      "goal": "别让别扭的哥哥真变成孤家寡人。"
+    },
+    "15": {
+      "drives": [
+        "一边备考总武高，一边给哥哥和雪乃结衣创造机会",
+        "扮开朗妹妹替全家维持轻松气氛"
+      ],
+      "goal": "考进哥哥的高中，顺手推一把哥哥的终身大事。"
+    }
+  },
+  "source": "我的青春恋爱物语果然有问题。 / Invincible (日本NPC)",
+  "base_age": 15,
+  "gender": "female",
+  "appearance_brief": "和八幡相似的黑发，笑容明亮。比哥哥会来事。",
+  "hair_color": "黑色",
+  "body": {
+    "height_cm": 110,
+    "weight_kg": 18,
+    "build": "纤细",
+    "leg_type": "纤细",
+    "skin": {
+      "base_tone": "普通",
+      "tan": 10,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "attributes": {
+    "力量": 2,
+    "敏捷": 4,
+    "体质": 3,
+    "智力": 8,
+    "感知": 10,
+    "魅力": 12
+  },
+  "skills": {
+    "口才": 5
+  },
+  "hp": {
+    "current": 7,
+    "max": 7
+  },
+  "equipment": {
+    "top": {
+      "name": "小学校服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact"
+    },
+    "bottom": {
+      "name": "短裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "feet": {
+      "name": "运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "千叶县稻毛区",
+  "schedule_group": "高中生",
+  "grid_pos": null,
+  "anchors": {
+    "private": "八幡的妹妹。嘴甜但偶尔毒舌，跟哥哥一样看人很准。经常吐槽哥哥是废物。"
+  },
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生"
+  },
+  "funds": 1000,
+  "social_class": "无产阶级",
+  "personal_axes": {
+    "经济立场": -1,
+    "政治立场": -1
+  },
+  "grade": null,
+  "homeroom": "C",
+  "stages": {
+    "幼儿_小学": "嘴甜。比哥哥会来事。",
+    "中学": "越来越漂亮。经常吐槽八幡。",
+    "高中": "比八幡圆滑太多。",
+    "成年": "独立精明。偶尔嘲讽老哥。"
+  }
+}

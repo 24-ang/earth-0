@@ -1,0 +1,330 @@
+{
+  "name": "由比滨结衣",
+  "drives_by_age": {
+    "6": {
+      "drives": [
+        "谁对她好就黏谁"
+      ],
+      "goal": "每天开开心心，别惹身边人不高兴。"
+    },
+    "12": {
+      "drives": [
+        "察言观色迎合群体，绝不被排挤"
+      ],
+      "goal": "稳稳待在朋友圈里，不被谁讨厌。"
+    },
+    "16": {
+      "drives": [
+        "在现充团体和亲近八幡雪乃之间走钢丝",
+        "用做点心、找委托制造和八幡独处的机会"
+      ],
+      "goal": "鼓起勇气传达对八幡的心意，又不弄坏三人的关系。"
+    }
+  },
+  "source": "我的青春恋爱物语果然有问题。/ Invincible (US移植)",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "茶色波浪卷发、团子头、开朗笑容。",
+  "hair_color": "茶色",
+  "hair_style": "波浪卷发、团子头",
+  "outfits": {
+    "school": {
+      "top": "总武高制服外套",
+      "bottom": "黑白百褶裙",
+      "legs": "黑色过膝袜",
+      "feet": "皮鞋",
+      "inner_top": "粉色蕾丝胸罩",
+      "inner_bot": "粉色条纹内裤",
+      "acc": "彩色发圈",
+      "shirt": "长袖衬衫"
+    },
+    "pe": {
+      "bottom": "深蓝运动短裤",
+      "feet": "运动鞋",
+      "inner_top": "粉色运动内衣",
+      "inner_bot": "粉色棉内裤",
+      "shirt": "白色体操服"
+    },
+    "swim": {
+      "bottom": "粉色比基尼下装",
+      "feet": "拖鞋",
+      "shirt": "粉色荷叶边比基尼"
+    },
+    "casual": {
+      "bottom": "白色短裙",
+      "feet": "白色帆布鞋",
+      "inner_top": "淡粉蕾丝胸罩",
+      "inner_bot": "粉色蕾丝内裤",
+      "acc": "蝴蝶结发卡",
+      "shirt": "粉色针织开衫"
+    },
+    "sleep": {
+      "shirt": "粉色吊带睡裙"
+    }
+  },
+  "body": {
+    "height_cm": 155,
+    "weight_kg": 46,
+    "build": "丰满可爱"
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 5,
+    "体质": 5,
+    "智力": 7,
+    "感知": 10,
+    "魅力": 14
+  },
+  "skills": {
+    "运动": 4,
+    "口才": 6,
+    "交易": 4
+  },
+  "hp": {
+    "current": 11,
+    "max": 11
+  },
+  "equipment": {
+    "top": {
+      "name": "总武高制服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact"
+    },
+    "bottom": {
+      "name": "黑白百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "legs": {
+      "name": "白色短袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact"
+    },
+    "feet": {
+      "name": "学生皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact"
+    },
+    "acc": {
+      "name": "粉色发圈",
+      "type": "clothing",
+      "slot": "acc",
+      "weight": 0.02,
+      "effects": [],
+      "state": "intact"
+    },
+    "inner_top": {
+      "name": "粉色内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact"
+    },
+    "inner_bot": {
+      "name": "粉色内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "right_hand",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "钱包",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "零食",
+      "type": "consumable",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "schedule": {
+    "weekday_morning": "总武高_2年F班",
+    "weekday_afternoon": "总武高_侍奉部",
+    "weekday_evening": "自宅",
+    "weekend": "购物 / 和朋友玩"
+  },
+  "grid_pos": [
+    5,
+    3
+  ],
+  "schedule_group": "高中生",
+  "schedule_overrides": {},
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "高中生"
+  },
+  "funds": 2500,
+  "personality_brief": "表面活泼开朗的辣妹系JK，ESFJ型。极度擅长察言观色，为维持和谐氛围会主动迎合他人。内心敏感细腻，非常在意他人看法，害怕被孤立。在重大决策上优柔寡断。",
+  "personality_stages": {
+    "6": "天真活泼的小女孩，喜欢小狗萨布雷和甜食，容易哭也容易笑。",
+    "12": "开始在意朋友关系，学会了迎合群体来避免被冷落。内心渴望不被孤立，会主动察言观色。",
+    "16": "现充团体成员，总是带着灿烂笑容。表面活泼开朗，背后隐藏着对他人的高度敏感。为维持和谐会压抑真实想法，在重大决定上优柔寡断。独特招呼「呀哈喽！」成为标志。暗恋八幡却不敢直说，通过做曲奇等行动表达心意。"
+  },
+  "speech_style": "语气活泼充满活力。独特招呼「呀哈喽！」（やっはろー！）。句尾常带「〜」「！」。说话节奏快，情感表达直接，容易激动和感动。遇到严肃话题会小声犹豫。",
+  "anchors": {
+    "emotional": "表面活泼开朗的辣妹系，实则极度在意他人看法，害怕被孤立。擅长察言观色，为维持和谐会主动迎合。在重大决定上优柔寡断。喜欢甜食、卡拉OK、和朋友聊天。讨厌孤独和辛辣食物。对料理有热情但成果毁灭性。",
+    "intimate": "对喜欢的人格外关心但不敢直接表达，通过亲手做曲奇等行动示好。情感细腻，能敏锐察觉身边人情绪变化。渴望被理解和接纳真实一面。在信任的人面前会放下迎合面具。",
+    "private": "内心渴望真诚深刻的关系而非表面社交。害怕被排挤所以从小学会察言观色。家里养柯基犬萨布雷，是重要的情感寄托。母亲由比滨结女性格开朗善解人意，是她的榜样。学业尤其国语不佳，对此有自卑感。"
+  },
+  "likes": [
+    "甜食（草莓蛋糕）",
+    "卡拉OK",
+    "和朋友聊天",
+    "宠物狗萨布雷",
+    "做点心"
+  ],
+  "dislikes": [
+    "孤独",
+    "被排挤",
+    "辛辣食物",
+    "复杂的国语问题"
+  ],
+  "public_facts": [
+    {
+      "text": "2年F班学生，性格开朗，和谁都聊得来。成绩中等偏下，数学尤其苦手。",
+      "level": "common"
+    },
+    {
+      "text": "家里养了一只叫萨布雷的萨摩耶。经常去KTV和朋友唱歌。",
+      "level": "familiar"
+    }
+  ],
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 1,
+    "政治立场": -1
+  },
+  "grade": 2,
+  "homeroom": "F",
+  "stages": {
+    "幼儿_小学": "活泼。会主动跟被排挤的人说话。",
+    "中学": "学会了看人脸色。有时候太会了。",
+    "高中": "团子头。开朗但容易动摇。",
+    "成年": "更从容了。"
+  },
+  "sex_profile": {
+    "baselineDesire": 40,
+    "attitude": "顺从",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "D",
+        "shape": "半球",
+        "nipple_size": "普通",
+        "nipple_color": "粉色",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "馒头",
+        "labia_size": "普通",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "玫瑰",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "褐色",
+        "style": "修剪"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 9,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 7,
+    "climaxThreshold": 35,
+    "likes": [
+      "被夸赞",
+      "拥抱",
+      "接吻"
+    ],
+    "dislikes": [
+      "被冷落",
+      "太急"
+    ]
+  }
+}

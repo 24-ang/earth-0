@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "name": "Invincible Earth",
+    "keys": ["Invincible Earth", "2008", "超级英雄", "美国", "芝加哥"],
+    "location_hints": ["Chicago", "GDA Pentagon", "Guardians HQ", "Grayson Residence"],
+    "character_count": 50,
+    "characters": [
+      "Mark Grayson", "Nolan Grayson", "Debbie Grayson", "Eve Wilkins",
+      "Cecil Stedman", "Immortal", "Rex Splode", "Dupli-Kate",
+      "Monster Girl", "Robot", "Allen", "Battle Beast", "Conquest",
+      "William Clockwell", "Amber Bennett", "Art Rosenbaum",
+      "Oliver Grayson", "Machine Head", "Titan", "DA Sinclair"
+    ],
+    "fallback_room": "GDA Pentagon - Main Atrium"
+  }
+]

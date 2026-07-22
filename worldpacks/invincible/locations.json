@@ -1,0 +1,46 @@
+{
+  "invincible": {
+    "name": "Invincible Earth (2008)",
+    "regions": {
+      "chicago": {
+        "name": "芝加哥",
+        "prefectures": {
+          "downtown": { "name": "芝加哥市中心" },
+          "grayson_home": { "name": "Grayson住宅" },
+          "uptown": { "name": "上城区" },
+          "south_side": { "name": "南区" }
+        }
+      },
+      "gda": {
+        "name": "全球防御局",
+        "prefectures": {
+          "pentagon": { "name": "五角大楼地下总部" },
+          "bunker": { "name": "拉什莫尔山安全屋" }
+        }
+      },
+      "guardians": {
+        "name": "全球护卫队",
+        "prefectures": {
+          "hq": { "name": "护卫队总部" }
+        }
+      },
+      "education": {
+        "name": "教育机构",
+        "prefectures": {
+          "high_school": { "name": "Reginald Vel Johnson高中" },
+          "college": { "name": "Upstate大学" }
+        }
+      },
+      "offworld": {
+        "name": "外星领域",
+        "prefectures": {
+          "thraxa": { "name": "瑟拉克斯星" },
+          "viltrum": { "name": "维特鲁姆帝国" },
+          "coalition_station": { "name": "行星联盟空间站" },
+          "talescria": { "name": "Talescria联盟议会" },
+          "flaxan_dimension": { "name": "弗拉克森维度" }
+        }
+      }
+    }
+  }
+}

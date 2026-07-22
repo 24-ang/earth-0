@@ -1,0 +1,24 @@
+{
+  "id": "lizard_league",
+  "name": "蜥蜴联盟 (The Lizard League)",
+  "type": "星际联盟",
+  "scale": "national",
+  "sector": "military",
+  "coreLocation": "美国地下巢穴",
+  "leader": "King Lizard，戴着蜥蜴面具，真面目从未揭示",
+  "members": [
+    "Komodo Dragon/科莫多龙，联盟最强战力，吞噬过Shrinking Ray"
+  ],
+  "description": "正面冲突 → 经典英雄路线。注意Komodo Dragon嘴里的东西，不要被他咬到。 渗透 → 自认为是蜥蜴主题的超能力者？他们会试试你。你不会想穿那个制服。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "蜥蜴联盟 (The Lizard League)",
+      "level": "common",
+      "text": "蜥蜴联盟 (The Lizard League)。基地: 美国地下巢穴。状态: 二线反派, 屡败屡战, 混乱·恶。经济来源: 抢劫和勒索。核心资产: 地下巢穴网络。领导者: King Lizard，戴着蜥蜴面具，真面目从未揭示。Internal_Rot: \"成员经常被护卫队抓，需要不断补充新人\" External_Ally: \"偶尔与其他反派临时合作\" External_Prey: \"全球护卫队 / 美国城市\"正面冲突 → 经典英雄路线。注意Komodo Dragon嘴里的东西，不要被他咬到。 渗透 → 自认为是蜥蜴主题的超能力者？他们会试试你。你不会想穿那个制服。"
+    }
+  ]
+}

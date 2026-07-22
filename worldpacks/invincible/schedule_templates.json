@@ -1,0 +1,50 @@
+{
+  "全职英雄": {
+    "weekday_morning": "巡逻",
+    "weekday_lunch": "GDA总部",
+    "weekday_afternoon": "巡逻",
+    "weekday_evening": "自由",
+    "weekend": "巡逻",
+    "reputation_group": "英雄"
+  },
+  "高中生": {
+    "weekday_morning": "学校",
+    "weekday_lunch": "学校",
+    "weekday_afternoon": "学校",
+    "weekday_evening": "自由",
+    "weekend": "自由",
+    "reputation_group": "学生"
+  },
+  "GDA职员": {
+    "weekday_morning": "GDA总部",
+    "weekday_lunch": "GDA总部",
+    "weekday_afternoon": "GDA总部",
+    "weekday_evening": "自宅",
+    "weekend": "自由",
+    "reputation_group": "GDA"
+  },
+  "大学生": {
+    "weekday_morning": "大学",
+    "weekday_lunch": "大学",
+    "weekday_afternoon": "大学",
+    "weekday_evening": "自由",
+    "weekend": "自由",
+    "reputation_group": "学生"
+  },
+  "自由人": {
+    "weekday_morning": "自由",
+    "weekday_lunch": "自由",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "自由",
+    "weekend": "自由",
+    "reputation_group": "路人"
+  },
+  "罪犯": {
+    "weekday_morning": "地下据点",
+    "weekday_lunch": "地下据点",
+    "weekday_afternoon": "自由",
+    "weekday_evening": "地下据点",
+    "weekend": "自由",
+    "reputation_group": "犯罪者"
+  }
+}

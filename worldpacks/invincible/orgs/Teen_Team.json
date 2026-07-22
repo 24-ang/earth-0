@@ -1,0 +1,24 @@
+{
+  "id": "teen_team",
+  "name": "青少年战队 (Teen Team)",
+  "type": "英雄团队",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "美国城市",
+  "leader": "Robot/鲁迪，创始人，用遥控机器人身体活动",
+  "members": [
+    "Atom Eve/原子伊芙，物质重组能力，战队最强"
+  ],
+  "description": "加入 → 你是年轻超能力者？Robot会找你。这是入行的最自然入口，但也是他的数据收集对象。 毕业后 → 多数成员离开少年团加入护卫队或其他组织。你是前成员，各方都会给你机会。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "青少年战队 (Teen Team)",
+      "level": "common",
+      "text": "青少年战队 (Teen Team)。基地: 美国城市。状态: 训练组织, Robot的实验项目, 后期解散。经济来源: Robot的私人资金 + 成员兼职收入。核心资产: 年轻英雄的信任和成长潜力。领导者: Robot/鲁迪，创始人，用遥控机器人身体活动。Internal_Rot: \"Robot的目标从来不是做少年团的导师，他在收集数据和盟友\" External_Ally: \"初代护卫队协助组织，GDA给予有限关注\" External_Prey: \"无，不是战斗型组织\"加入 → 你是年轻超能力者？Robot会找你。这是入行的最自然入口，但也是他的数据收集对象。 毕业后 → 多数成员离开少年团加入护卫队或其他组织。你是前成员，各方都会给你机会。"
+    }
+  ]
+}

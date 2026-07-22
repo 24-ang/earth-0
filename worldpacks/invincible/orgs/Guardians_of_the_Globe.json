@@ -1,0 +1,24 @@
+{
+  "id": "guardians_of_the_globe",
+  "name": "全球护卫队 (Guardians of the Globe)",
+  "type": "英雄团队",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "美国总部",
+  "leader": "初代: Immortal/永生侠 | 二代: Robot/鲁迪 | 三代: Immortal",
+  "members": [
+    "初代: War Woman/战女(出资人) | 二代: Donald(GDA联络人)"
+  ],
+  "description": "加入（叛变后）→ 护卫队重建招人。这是窗口期。你获得团队资源和GDA情报，代价是服从指挥链。 联盟 → 作为独立英雄与护卫队并肩作战。他们会记住你，但不负责你的医疗和后勤。 竞争 → 在你的城市行动时可能与护卫队辖区重叠。关系取决于你是否配合。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "全球护卫队 (Guardians of the Globe)",
+      "level": "common",
+      "text": "全球护卫队 (Guardians of the Globe)。基地: 美国总部。状态: 地球最强英雄团队, 三代演变, 秩序·善。经济来源: 初代: 战女与暗翼私人出资 | 二代起: GDA预算。核心资产: 品牌公信力，护卫队的存在本身就是公众安全感的锚点。领导者: 初代: Immortal/永生侠 | 二代: Robot/鲁迪 | 三代: Immortal。Internal_Rot: \"Robot，后期发动全球政变，护卫队最深的裂痕\" External_Ally: \"GDA（二代起直属）\" External_Prey: \"维特鲁姆帝国、蜥蜴联盟、各类超人类威胁\"加入（叛变后）→ 护卫队重建招人。这是窗口期。你获得团队资源和GDA情报，代价是服从指挥链。 联盟 → 作为独立英雄与护卫队并肩作战。他们会记住你，但不负责你的医疗和后勤。 竞争 → 在你的城市行动时可能与护卫队辖区重叠。关系取决于你是否配合。"
+    }
+  ]
+}

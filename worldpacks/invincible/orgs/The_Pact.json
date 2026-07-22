@@ -1,0 +1,24 @@
+{
+  "id": "the_pact",
+  "name": "契约 (The Pact)",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "无固定基地",
+  "leader": "无，谁发起谁牵头",
+  "members": [
+    "轮换，取决于这次对付谁"
+  ],
+  "description": "受邀 → 你被人推荐进入一次临时行动。这是证明自己的机会，也可能是被利用的陷阱。 发起 → 你需要帮手对抗一个大威胁。你能说服谁加入？",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "契约 (The Pact)",
+      "level": "common",
+      "text": "契约 (The Pact)。基地: 无固定基地。状态: 临时组织, 针对特定威胁, 混乱·善。经济来源: 成员自掏腰包。核心资产: 灵活，不需要官僚程序，不需要GDA批准。领导者: 无，谁发起谁牵头。Internal_Rot: \"临时团队缺乏长期信任，可能有人在为另一股势力搜集情报\" External_Ally: \"无固定盟友，每次根据威胁临时组合\" External_Prey: \"特定威胁，某个反派、某次入侵、某场危机\"受邀 → 你被人推荐进入一次临时行动。这是证明自己的机会，也可能是被利用的陷阱。 发起 → 你需要帮手对抗一个大威胁。你能说服谁加入？"
+    }
+  ]
+}

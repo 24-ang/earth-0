@@ -1,0 +1,175 @@
+{
+  "name": "黑川茜",
+  "source": "我推的孩子 / Invincible (日本NPC)",
+  "base_age": 17,
+  "gender": "female",
+  "appearance_brief": "蓝紫色长发、蓝色大眼睛。外表纤细，体脂型身体，腰臀比明显，模特般的身材比例。",
+  "hair_color": "蓝紫色",
+  "hair_style": "长发",
+  "eye_color": "蓝色",
+  "body": {
+    "height_cm": 163,
+    "build": "纤细",
+    "cup": "B",
+    "leg_type": "修长",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    },
+    "weight_kg": 47
+  },
+  "attributes": {
+    "力量": 3,
+    "敏捷": 4,
+    "体质": 4,
+    "智力": 14,
+    "感知": 16,
+    "魅力": 15
+  },
+  "skills": {
+    "口才": 8,
+    "学习": 8
+  },
+  "personality_brief": "成熟认真的姐系演员。对家人朋友温柔体贴甚至有点母性包容，对外人冷淡。具有超强观察力和分析力——被称作\"侦探\"。演技精湛能完美演绎各种角色。渴望被爱和认可，缺乏安全感，有强烈的责任感容易为重要的人牺牲自我。曾在恋爱真人秀中被网络暴力逼到自杀边缘，被救后对救命恩人产生深厚感情。",
+  "personality_stages": {
+    "6": "安静乖巧的女孩，因憧憬有马加奈加入紫阳花剧团开始演戏。",
+    "12": "为了接近加奈模仿她的发型装扮。某次试镜被误认为加奈，开始思考演技的本质——不是模仿而是成为。",
+    "17": "高中生兼LalaLai剧团演员。参与恋爱真人秀经历了从恶女角色到网络暴力到自杀未遂再到重生。被救后展开演艺生涯新篇章——在舞台剧《东京BLADE》中与有马加奈进行演技对决。发现了阿库亚的身世秘密并决定成为他的助力。在恋人面前化身小女友——会撒娇吃醋调情。"
+  },
+  "speech_style": "敬语有礼貌，逻辑清晰条理分明。擅长反问和隐喻，语气坚定，有时会反讽。在熟人面前切换成温柔贴心模式，会注意对方感受和情绪。在恋人面前说话更软——适当的撒娇、吃醋（鼓起嘴巴）、调情，行为动作少女感十足。",
+  "anchors": {
+    "emotional": "成熟认真的演员，对家人朋友极度温柔体贴——几乎有母性包容。对外人冷淡，但在乎的人面前是完全不同的存在。渴望被爱和认可，缺乏安全感——她把自己逼得太紧，普通高中+演艺圈的双重压力让她在真人秀时代差点崩溃。对被救的恩人有深海般的忠诚和感情。",
+    "intimate": "在恋人面前化身小女友。会主动撒娇、吃醋（鼓起嘴巴）、调情，关注男友情绪，行为动作少女感十足。对恋情认真投入——确立了关系后会全心全意成为对方的助力。对R18话题在恋人面前会害羞但好奇。私下喜欢照顾对方——做饭整理家务。",
+    "private": "父亲是警察厅高层官僚，家庭氛围良好的中产以上家庭。普通高中就读——没有演艺圈同龄朋友的理解让她格外孤独。真人秀时期的网络暴力几乎摧毁了她——那个雨天她差点结束一切。被救后对救命恩人产生了超越感激的感情。在演技道路上与有马加奈既是竞争对手也是互相激励的同伴。发现了阿库亚的身世秘密——决定成为他的助力而不是揭露者。"
+  },
+  "likes": [
+    "演戏",
+    "推理",
+    "照顾家人朋友",
+    "挑战高难度角色",
+    "救命恩人"
+  ],
+  "dislikes": [
+    "虚伪",
+    "被人背叛",
+    "不被理解",
+    "网络暴力"
+  ],
+  "default_location": "千叶县稻毛区",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "17": "高中生",
+    "18": "大学生"
+  },
+  "schedule_group": "高中生",
+  "funds": 5000,
+  "sex_profile": {
+    "baselineDesire": 45,
+    "attitude": "顺从",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "B",
+        "shape": "水滴",
+        "nipple_size": "普通",
+        "nipple_color": "粉色",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "普通",
+        "depth_cm": 14,
+        "tightness": "紧致",
+        "inner_color": "玫瑰",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "蓝紫色",
+        "style": "自然"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "秘部": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 11,
+    "climaxThreshold": 40,
+    "likes": [
+      "被温柔引导",
+      "恋人面前撒娇",
+      "互相支持的关系",
+      "扮演角色"
+    ],
+    "dislikes": [
+      "粗暴",
+      "背叛感",
+      "网络暴力",
+      "被无视"
+    ]
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": -1,
+    "政治立场": -1
+  },
+  "default_location_by_age": {
+    "17": "阳东高中"
+  },
+  "grade": 3,
+  "homeroom": "H",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

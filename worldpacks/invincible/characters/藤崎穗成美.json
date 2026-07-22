@@ -1,0 +1,448 @@
+{
+  "name": "藤崎穗成美",
+  "source": "我的青春恋爱物语果然有问题。 / Invincible (日本NPC)",
+  "base_age": 24,
+  "gender": "female",
+  "appearance_brief": "棕发单马尾，身材极其丰满傲人，眼神温柔却带有一丝不苟的严厉。",
+  "hair_color": "棕色",
+  "hair_style": "单马尾",
+  "outfits": {
+    "work": {
+      "top": "白色短袖翻领运动衫",
+      "bottom": "深灰侧白条纹运动裤",
+      "legs": "无",
+      "feet": "白色室内运动鞋",
+      "inner_top": "浅色无痕运动内衣",
+      "inner_bot": "纯棉舒适三角内裤",
+      "desc": "作为保健体育老师与游泳部顾问的日常工作着装。上身是略显紧身的白色短袖POLO运动衫，版型紧凑，将丰满傲人的伟岸胸围紧紧包裹，领口微张流露出干练感。下身搭配深灰色高腰长款运动裤，侧边带有双道白条纹，完美勾勒出挺拔饱满的丰臀与修长丰腴的腿部线条。整套搭配面料透气吸汗，剪裁贴合身形，将成熟女性的丰腴肉感与体育教师的阳光活力完美融合。",
+      "hair": "棕色单马尾，利落束在脑后"
+    },
+    "swim": {
+      "top": "专业竞技连体泳衣",
+      "legs": "无",
+      "feet": "赤脚",
+      "desc": "在游泳部指导或亲自下水时穿着的极简搭配。身着一套深灰蓝色拼浅灰条纹的专业连体竞技泳衣，高弹力的紧身面料紧贴着熟透的性感躯体。由于胸部过于宏伟，泳衣前襟被顶起惊人的弧度，后背则是经典的U型大露背剪裁，露出大片白皙细腻的肌肤与优美的背肌线条。泳裤部分为高叉剪裁，将圆润硕大的巨臀与肉感十足的大腿毫无保留地展现出来。",
+      "hair": "单马尾扎得更紧更高，防止下水散开"
+    },
+    "casual": {
+      "top": "修身针织衫",
+      "bottom": "高腰牛仔裤",
+      "feet": "平底单鞋",
+      "inner_top": "蕾丝胸罩",
+      "inner_bot": "蕾丝内裤",
+      "desc": "私底下穿着相对低调但依然无法掩盖身材。贴身的浅色细针织衫搭配高腰修身牛仔裤，突显出纤细的腰肢与饱满的臀腿线条。整体感觉像是一位温柔的邻家大姐姐。",
+      "hair": "单马尾放松垂在肩侧，几缕碎发"
+    },
+    "sleep": {
+      "shirt": "宽松莫代尔大号T恤",
+      "desc": "褪去白天紧绷的运动装，换上一件质地极为柔软、垂坠感十足的莫代尔面料大号纯色短袖T恤。宽松的版型顺着丰满的胸口自然垂落，下摆刚好遮住大腿根部。面料轻薄透气，贴合着成熟丰腴的身躯，在灯光下隐约透出曼妙的肉体轮廓，散发着慵懒的居家成熟女人味。",
+      "hair": "放下马尾，棕发散在枕头上"
+    }
+  },
+  "body": {
+    "height_cm": 161,
+    "weight_kg": 56,
+    "build": "丰满",
+    "measurements": {
+      "bust": 98,
+      "waist": 60,
+      "hips": 96
+    },
+    "cup": "I",
+    "leg_type": "运动型",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "蜜桃",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 1,
+      "texture": "细腻"
+    },
+    "diet": "高蛋白正常饮食",
+    "exercise": "规律运动"
+  },
+  "attributes": {
+    "力量": 7,
+    "敏捷": 8,
+    "体质": 8,
+    "智力": 10,
+    "感知": 12,
+    "魅力": 16
+  },
+  "skills": {
+    "教学": 7,
+    "游泳": 9,
+    "演讲": 6,
+    "急救": 7,
+    "人际": 6
+  },
+  "hp": {
+    "current": 28,
+    "max": 28
+  },
+  "equipment": {
+    "top": {
+      "name": "白色短袖翻领运动衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.25,
+      "effects": [],
+      "state": "intact",
+      "flavor": "高透气性速干面料制成，洗涤多次显得略微有些薄。由于胸部尺码过于饱满，胸前纽扣处和腋下有明显的拉扯紧绷感。"
+    },
+    "bottom": {
+      "name": "深灰色侧白条纹长运动裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "flavor": "经典的双条纹高腰运动裤，松紧带弹性良好。臀腿部分因其丰腴丰满的身材而被撑得毫无褶皱，裤脚有轻微的塑胶跑道磨损痕迹。"
+    },
+    "feet": {
+      "name": "白色室内运动鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.6,
+      "effects": [],
+      "state": "intact",
+      "flavor": "体育馆专用的白底运动鞋，鞋头有经常走动摩擦留下的轻微黑色划痕，整体打理得非常干净，散发着淡淡的肥皂清香。"
+    },
+    "inner_top": {
+      "name": "浅色无痕运动内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "flavor": "宽肩带设计的专业高强度防震运动内衣。面料弹性极佳，牢牢束缚着沉重的胸部，但在剧烈运动时依然能感受到明显的紧绷与分量。"
+    },
+    "inner_bot": {
+      "name": "纯棉舒适三角内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.03,
+      "effects": [],
+      "state": "intact",
+      "flavor": "浅色系纯棉内裤，边缘采用无痕剪裁，完美贴合丰满圆润的丰臀，即使穿着紧身运动裤也不会透出明显的勒痕。"
+    },
+    "acc": {
+      "name": "橙绳不锈钢不鸣哨",
+      "type": "accessory",
+      "slot": "acc",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "体育老师与顾问标志性的金属哨子。挂在一条鲜艳的橙色挂绳上，经常随着走动垂在雄伟的乳沟之间，金属表面被擦拭得闪闪发亮。"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "口哨",
+      "type": "tool",
+      "slot": "acc",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "挂在脖子上的不锈钢口哨，橙绳。在泳池边和体育课上用来整队和警示学生。"
+    },
+    {
+      "name": "智能手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "高等保健体育课本",
+      "type": "tool",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "flavor": "高中的体育与健康教材，封面画着跑步的学生，里面夹着她手写的授课教案。"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "grid_pos": [
+    8,
+    2
+  ],
+  "schedule_group": "GDA职员",
+  "funds": 350000,
+  "personality_brief": "表面上指导严厉、一丝不苟，实际上极其富有温情。面对男学生目光的聚焦容易暗自害羞，却又要努力维持教师的威严。",
+  "speech_style": "严肃中带着关心，遇到学生偷懒会用凌厉的语气斥责，但对认真努力的学生非常温柔亲切。被开玩笑时会慌乱地用「听好，现在是上课时间！」来掩饰。",
+  "likes": [
+    "游泳",
+    "健康料理",
+    "看恋爱小说"
+  ],
+  "dislikes": [
+    "偷懒的学生",
+    "带有色心尾随的视线"
+  ],
+  "public_facts": [
+    {
+      "text": "24岁的年轻女教师，身兼保健体育课教学与游泳部顾问两职。",
+      "level": "common"
+    },
+    {
+      "text": "指导风格非常一丝不苟且十分严厉，但其实非常富有仁慈和人情味，很受勤奋学生爱戴。",
+      "level": "common"
+    }
+  ],
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "6": "稲毛海岸",
+    "12": "稲毛海岸",
+    "15": "稲毛海岸",
+    "24": "稲毛海岸"
+  },
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "24": "GDA职员"
+  },
+  "personality_stages": {
+    "6": "天真烂漫，热爱运动的小女孩。",
+    "12": "因身体开始发育而变得有些内向和不知所措的青春期少女。",
+    "15": "在游泳中找到自信，性格变得开朗坚定，但对异性依旧容易害羞。",
+    "24": "外冷内热的负责任教师。教学上严格认真，私下里却是一个会对恋爱八卦感到好奇、面对学生调侃会红脸的可爱大姐姐。"
+  },
+  "drives_by_age": {
+    "24": {
+      "drives": [
+        "引导学生建立健康的体魄与积极的心态",
+        "带领总武高游泳部打进全国大赛"
+      ],
+      "goal": "在认真工作的同时，能早日邂逅属于自己的真命天子"
+    }
+  },
+  "private_facts": [
+    {
+      "text": "实际上至今没有谈过恋爱，目前没有男朋友，非常渴望能有一段浪漫的邂逅。",
+      "level": "close"
+    },
+    {
+      "text": "在泳池边指导时，对男学生们炽热而直白的视线其实心知肚明，每次回到更衣室都会羞得满脸通红。",
+      "level": "close"
+    }
+  ],
+  "appearance_by_age": {
+    "6": {
+      "hair_style": "双马尾",
+      "hair_color": "棕色"
+    },
+    "12": {
+      "hair_style": "单马尾",
+      "hair_color": "棕色"
+    },
+    "15": {
+      "hair_style": "单马尾",
+      "hair_color": "棕色"
+    },
+    "24": {
+      "hair_style": "单马尾",
+      "hair_color": "棕色"
+    }
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 115,
+      "weight_kg": 20,
+      "build": "纤细",
+      "measurements": {
+        "bust": 55,
+        "waist": 50,
+        "hips": 57
+      },
+      "cup": null,
+      "leg_type": "纤细",
+      "body_shape": {
+        "chest": "扁平",
+        "hips": "扁平",
+        "waist": "直筒"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 0,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "日常活动"
+    },
+    "12": {
+      "height_cm": 145,
+      "weight_kg": 36,
+      "build": "标准",
+      "measurements": {
+        "bust": 73,
+        "waist": 56,
+        "hips": 75
+      },
+      "cup": "A",
+      "leg_type": "普通",
+      "body_shape": {
+        "chest": "圆盘",
+        "hips": "圆润",
+        "waist": "直筒"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "规律运动"
+    },
+    "15": {
+      "height_cm": 156,
+      "weight_kg": 48,
+      "build": "丰满",
+      "measurements": {
+        "bust": 88,
+        "waist": 58,
+        "hips": 89
+      },
+      "cup": "E",
+      "leg_type": "运动型",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "规律运动"
+    },
+    "24": {
+      "height_cm": 161,
+      "weight_kg": 56,
+      "build": "丰满",
+      "measurements": {
+        "bust": 98,
+        "waist": 60,
+        "hips": 96
+      },
+      "cup": "I",
+      "leg_type": "运动型",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 1,
+        "texture": "细腻"
+      },
+      "diet": "高蛋白正常饮食",
+      "exercise": "规律运动"
+    }
+  },
+  "ac": 11,
+  "sex_profile": {
+    "baselineDesire": 40,
+    "attitude": "从容",
+    "experience": "青涩——理论知识满分，实践经验零",
+    "female": {
+      "breast": {
+        "cup": "I",
+        "shape": "水滴",
+        "nipple_size": "稍大",
+        "nipple_color": "浅褐",
+        "areola_size": "稍大",
+        "feel": "丰满弹软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "普通",
+        "depth_cm": 16,
+        "tightness": "紧致——长期游泳锻炼的肌肉控制力",
+        "inner_color": "玫瑰",
+        "feel": "紧实且能自主收缩"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "棕色",
+        "style": "手入れ済み（泳衣会露所以定期打理）"
+      },
+      "clitoris": "普通"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 1,
+        "preference": "害羞——太大了，被注视就脸红"
+      },
+      "腰": {
+        "sensitivity": 6,
+        "development": 1,
+        "preference": "普通"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "紧张中带着期待"
+      },
+      "肛": {
+        "sensitivity": 3,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 12,
+    "climaxThreshold": 45,
+    "likes": [
+      "被看作女人而非老师",
+      "水边或泳池相关的暧昧",
+      "温柔的引导——她是好学生型"
+    ],
+    "dislikes": [
+      "粗鲁的视线",
+      "被评价身材",
+      "在训练时间被打扰"
+    ]
+  }
+}

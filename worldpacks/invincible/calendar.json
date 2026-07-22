@@ -1,0 +1,18 @@
+[
+  {
+    "year": 2008,
+    "month": 9,
+    "day": 1,
+    "name": "开学日",
+    "description": "新学期开始。",
+    "is_holiday": false
+  },
+  {
+    "year": 2008,
+    "month": 11,
+    "day": 4,
+    "name": "美国总统大选",
+    "description": "2008年美国总统选举日。奥巴马 vs 麦凯恩。",
+    "is_holiday": true
+  }
+]

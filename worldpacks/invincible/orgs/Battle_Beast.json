@@ -1,0 +1,24 @@
+{
+  "id": "battle_beast",
+  "name": "战斗野兽/索克 (Battle Beast/Thokk)",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "独行，宇宙各处",
+  "leader": "他自己，白狮外星人，整个种族最强的战士",
+  "members": [
+    "无，独行是选择，不是孤独"
+  ],
+  "description": "遇到 → 如果他看着你，你被评估了。如果他动了，祈祷你的战力在你以为的之上。 满足他 → 给他一场好战斗。他毕生寻找的，死在满足的微笑里，遗言\"谢谢你\"。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "战斗野兽/索克 (Battle Beast/Thokk)",
+      "level": "common",
+      "text": "战斗野兽/索克 (Battle Beast/Thokk)。基地: 独行，宇宙各处。状态: 独行战士, 不死不休, 混乱·荣誉。经济来源: 雇佣（极少），他只接能带来好战斗的活。核心资产: 接近维特鲁姆巅峰的个人战力。领导者: 他自己，白狮外星人，整个种族最强的战士。Internal_Rot: \"唯一的矛盾是他自己：想要死在一个值得的对手手里，但找不到\" External_Ally: \"曾受雇Machine Head，无聊\" External_Prey: \"任何被认为足够强大的人\"遇到 → 如果他看着你，你被评估了。如果他动了，祈祷你的战力在你以为的之上。 满足他 → 给他一场好战斗。他毕生寻找的，死在满足的微笑里，遗言\"谢谢你\"。"
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "name": "大和",
+  "source": "我的青春恋爱物语果然有问题。 / Invincible (日本NPC)",
+  "base_age": 16,
+  "gender": "male",
+  "appearance_brief": "身材粗壮高大、剃着短发。橄榄球社社员。",
+  "hair_color": "黑色",
+  "hair_style": "短发",
+  "outfits": {
+    "school": {
+      "top": "总武高制服外套",
+      "shirt": "白色校服衬衫",
+      "bottom": "深蓝色制服长裤",
+      "feet": "室内鞋"
+    }
+  },
+  "body": {
+    "height_cm": 182,
+    "weight_kg": 78,
+    "build": "粗壮",
+    "skin": {
+      "base_tone": "健康",
+      "tan": 5,
+      "texture": "粗糙"
+    }
+  },
+  "attributes": {
+    "力量": 8,
+    "敏捷": 6,
+    "体质": 8,
+    "智力": 7,
+    "感知": 7,
+    "魅力": 9
+  },
+  "skills": {
+    "运动": 6,
+    "格斗": 3
+  },
+  "personality_brief": "性格豪爽开朗的体育社团学生，叶山集团的外围随从。比较听话，做事踏实，但缺乏主见，容易跟风现充群体。",
+  "personality_stages": {
+    "6": "活泼好动的体育男孩，喜欢在外面乱跑。",
+    "12": "加入橄榄球社，热衷于力量训练和群体运动。",
+    "16": "总武高2年F班学生。橄榄球社成员，常和户部、大冈一起活动，甘当叶山的陪衬和跟班。"
+  },
+  "speech_style": "粗声粗气，说话耿直，经常大笑或者附和户部与叶山，句式直接，不加掩饰。",
+  "anchors": {
+    "emotional": "简单老实的跟班体育男——橄榄球是他的全部。性格耿直，做事没有坏心眼，只是有些盲从小团体核心的指令。"
+  },
+  "likes": [
+    "橄榄球与健身",
+    "叶山隼人的领导",
+    "和男生们聚餐大吃大喝",
+    "体育祭"
+  ],
+  "dislikes": [
+    "复杂的人脑力思考",
+    "被孤立",
+    "精细的技术工作",
+    "冷淡的氛围"
+  ],
+  "default_location": "千叶县稻毛区",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "16": "高中生"
+  },
+  "schedule_group": "高中生",
+  "funds": 1500,
+  "social_class": "无产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "16": "検見川浜"
+  },
+  "grade": 2,
+  "homeroom": "F",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

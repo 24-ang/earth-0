@@ -1,0 +1,273 @@
+{
+  "name": "平冢静",
+  "drives_by_age": {
+    "22": {
+      "drives": [
+        "刚当上老师，想真正帮到那些别扭、走偏的学生"
+      ],
+      "goal": "成为学生真正愿意来找的那种老师。"
+    },
+    "29": {
+      "drives": [
+        "把八幡这些嘴硬心软的学生推向更好的方向，哪怕方式粗暴一点",
+        "忙于教书之余，别彻底把自己的终身大事搁下"
+      ],
+      "goal": "看着自己带的学生找到出路；也……差不多该认真想想自己的人生大事了。"
+    }
+  },
+  "source": "我的青春恋爱物语果然有问题。/ Invincible (US移植)",
+  "base_age": 29,
+  "gender": "female",
+  "appearance_brief": "黑色长发，常穿白大褂和西装，身材丰满，透露着成熟大人的魅力与疲惫。",
+  "hair_color": "黑色",
+  "hair_style": "长发",
+  "body": {
+    "height_cm": 168,
+    "weight_kg": 52,
+    "build": "高挑"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 120,
+      "weight_kg": 22,
+      "build": "匀称",
+      "leg_type": "普通",
+      "diet": "正常",
+      "exercise": "正常",
+      "skin": {
+        "base_tone": "自然",
+        "tan": 10,
+        "texture": "娇嫩"
+      },
+      "measurements": {
+        "bust": 55,
+        "waist": 50,
+        "hips": 55
+      },
+      "cup": "AA"
+    },
+    "12": {
+      "height_cm": 148,
+      "weight_kg": 40,
+      "build": "匀称",
+      "leg_type": "结实",
+      "diet": "正常",
+      "exercise": "多动",
+      "skin": {
+        "base_tone": "自然",
+        "tan": 15,
+        "texture": "活力"
+      },
+      "measurements": {
+        "bust": 72,
+        "waist": 55,
+        "hips": 75
+      },
+      "cup": "B"
+    },
+    "16": {
+      "height_cm": 162,
+      "weight_kg": 50,
+      "build": "丰满",
+      "leg_type": "修长",
+      "diet": "正常",
+      "exercise": "正常",
+      "skin": {
+        "base_tone": "自然",
+        "tan": 5,
+        "texture": "细腻"
+      },
+      "measurements": {
+        "bust": 85,
+        "waist": 60,
+        "hips": 88
+      },
+      "cup": "D"
+    },
+    "29": {
+      "height_cm": 168,
+      "weight_kg": 54,
+      "build": "丰满",
+      "leg_type": "修长",
+      "diet": "随意",
+      "exercise": "偶尔锻炼",
+      "skin": {
+        "base_tone": "自然",
+        "tan": 5,
+        "texture": "成熟"
+      },
+      "measurements": {
+        "bust": 90,
+        "waist": 62,
+        "hips": 92
+      },
+      "cup": "E"
+    }
+  },
+  "attributes": {
+    "力量": 14,
+    "敏捷": 12,
+    "体质": 12,
+    "智力": 14,
+    "感知": 14,
+    "魅力": 16
+  },
+  "anchors": [
+    "总武高_职员室",
+    "千叶_餐厅"
+  ],
+  "schedule": [
+    {
+      "start": "08:00",
+      "end": "12:00",
+      "location": "总武高_职员室",
+      "activity": "办公/备课"
+    },
+    {
+      "start": "12:00",
+      "end": "13:00",
+      "location": "总武高_食堂",
+      "activity": "午餐"
+    },
+    {
+      "start": "13:00",
+      "end": "17:00",
+      "location": "总武高_职员室",
+      "activity": "办公/处理问题学生"
+    },
+    {
+      "start": "17:00",
+      "end": "18:00",
+      "location": "总武高_侍奉部",
+      "activity": "巡视侍奉部"
+    },
+    {
+      "start": "18:00",
+      "end": "20:00",
+      "location": "千叶_餐厅",
+      "activity": "吃拉面"
+    },
+    {
+      "start": "20:00",
+      "end": "24:00",
+      "location": "千葉駅前",
+      "activity": "喝啤酒、看漫画"
+    }
+  ],
+  "funds": 80000,
+  "appearance_by_age": {
+    "6": {
+      "hair_style": "短发"
+    },
+    "12": {
+      "hair_style": "中长发"
+    }
+  },
+  "schedule_group": "全职英雄",
+  "schedule_group_by_age": {
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "22": "全职英雄"
+  },
+  "default_location": "千叶县稻毛区",
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": -1,
+    "政治立场": -2
+  },
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "stages": [
+    {
+      "age": 6,
+      "appearance": "调皮的小女孩，有些男孩子气。",
+      "description": "还在上小学的平冢静，喜欢到处跑动。"
+    },
+    {
+      "age": 12,
+      "appearance": "初中生，留着黑色短发，充满活力。",
+      "description": "处于叛逆期，对格斗技和漫画充满兴趣。"
+    },
+    {
+      "age": 16,
+      "appearance": "高中生，头发变长，身材发育丰满。",
+      "description": "有些热血的高中女生，正义感强。"
+    },
+    {
+      "age": 29,
+      "appearance": "成熟的女性，常穿白大褂，眼神有些疲惫但充满成年人的魅力。",
+      "description": "总武高的国语教师兼生活指导老师，因为催婚压力很大。"
+    }
+  ],
+  "sex_profile": {
+    "name": "平冢静",
+    "attitude": "防御",
+    "experience": "青涩",
+    "baselineDesire": 45,
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 4,
+        "development": 1,
+        "preference": "喜欢"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 1,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 8,
+        "development": 2,
+        "preference": "敏感"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "反感"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "反感"
+      }
+    },
+    "cycleDay": 10,
+    "climaxThreshold": 65,
+    "likes": [
+      "被温柔对待",
+      "被需要",
+      "成熟的调情"
+    ],
+    "dislikes": [
+      "被当做大叔",
+      "催婚话题",
+      "粗暴对待"
+    ]
+  },
+  "personality_brief": ""
+}

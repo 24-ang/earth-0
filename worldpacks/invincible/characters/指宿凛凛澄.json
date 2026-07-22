@@ -1,0 +1,167 @@
+{
+  "name": "指宿凛凛澄",
+  "source": "初恋僵尸 / Invincible (日本NPC)",
+  "base_age": 15,
+  "gender": "female",
+  "appearance_brief": "紫色短发利落男性化造型、蓝紫色眼睛。清秀俊美兼具中性魅力与女性柔美，散发「美貌即诅咒」气质。A cup纤细身材。",
+  "hair_color": "紫色",
+  "hair_style": "短发（男性化造型）",
+  "eye_color": "蓝紫色",
+  "body": {
+    "height_cm": 165,
+    "build": "纤细",
+    "cup": "A",
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 3,
+      "texture": "细腻"
+    },
+    "weight_kg": 47
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 5,
+    "体质": 4,
+    "智力": 9,
+    "感知": 12,
+    "魅力": 17
+  },
+  "skills": {
+    "口才": 5
+  },
+  "personality_brief": "傲娇美人——初期冷淡甚至敌对，后逐渐流露好感。因家庭期望和诅咒双重压力以男装隐藏真实性别。对胸部话题极度敏感自卑。自我牺牲型——为喜欢的人的幸福撮合他与别人。内心矛盾：想解除诅咒却害怕失去与他唯一的联系。万人迷属性——吸引众多男女学生，但美貌对她来说是诅咒而非礼物。",
+  "personality_stages": {
+    "6": "幼儿园时和久留目太郎在英语班相识，成为他的初恋对象。因被太郎头槌获得特殊能力。",
+    "10": "因家庭原因离开日本。祖父视她为男性继承人，祖母希望她以女性身份成长——家庭期望让她不得不隐藏真实的自己。",
+    "15": "以男装身份返回日本转入太郎的学校。寻找解除诅咒的方法却在过程中重新爱上了他。最终以本名和真实性别转入白白女子学园——放弃男装是成长也是解放。"
+  },
+  "speech_style": "初期尖锐带傲娇的讽刺与防备。对太郎时语气复杂——冷淡中夹杂微妙关心。动情或害羞时流露柔和语气，带有「ね」「な」等语气词。",
+  "anchors": {
+    "emotional": "美貌是诅咒——吸引众人却无法做真实的自己。家庭期望（祖父母的对立）和诅咒（被太郎头槌的后遗症）让她在男装和女装之间撕裂了十年。傲娇是防护罩——冷淡是为了避免受伤。但内心深处渴望被看见真实的自己——不是リリト也不是リリス，就是指宿凛凛澄。",
+    "intimate": "对太郎的感情贯穿整个童年和青春期——从幼儿园的初恋到十年后的重逢。嫉妒他和别人的关系却拼命撮合——她的幸福方式不是得到他而是让他幸福。被摸头时会安静下来——那是她为数不多不用逞强的时刻。",
+    "private": "因太郎的头槌而获得看见初恋僵尸的能力——这份能力是诅咒也是她与太郎之间唯一的联系。祖父要她做男性继承人，祖母要她做乖孙女——没有人在问她想要什么。尾声以女装转学——不是放弃太郎而是终于敢做自己。"
+  },
+  "likes": [
+    "关心太郎的幸福",
+    "帮助他人",
+    "苦情电视剧和小说"
+  ],
+  "dislikes": [
+    "胸部话题",
+    "初恋僵尸的诅咒",
+    "家庭矛盾的期望",
+    "被问到真实性别"
+  ],
+  "default_location": "千叶县稻毛区",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "10": "自由人",
+    "15": "高中生"
+  },
+  "schedule_group": "高中生",
+  "funds": 5000,
+  "sex_profile": {
+    "baselineDesire": 25,
+    "attitude": "防御",
+    "experience": "未开发",
+    "female": {
+      "breast": {
+        "cup": "A",
+        "shape": "水滴",
+        "nipple_size": "小",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "柔软"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 13,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "紫色",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "害羞"
+      },
+      "颈": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "自卑"
+      },
+      "腰": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "防御"
+      },
+      "腿": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 4,
+        "development": 0,
+        "preference": "防御"
+      },
+      "肛": {
+        "sensitivity": 2,
+        "development": 0,
+        "preference": "排斥"
+      }
+    },
+    "cycleDay": 16,
+    "climaxThreshold": 48,
+    "likes": [
+      "被温柔对待",
+      "被摸头",
+      "确认被接纳"
+    ],
+    "dislikes": [
+      "胸部话题",
+      "被问真实性别",
+      "男性的轻浮"
+    ]
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "default_location_by_age": {
+    "15": "千叶"
+  },
+  "grade": 1,
+  "homeroom": "J",
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  }
+}

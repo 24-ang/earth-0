@@ -1,0 +1,377 @@
+{
+  "name": "本田朝阳",
+  "source": "ぼくだけがセックスできない家 / 紅村かる / Invincible (日本NPC)",
+  "base_age": 16,
+  "gender": "female",
+  "appearance_brief": "黑长直、戴眼镜（后改隐形）的清纯优等生，身材高挑，A-B杯。",
+  "hair_color": "黑色",
+  "hair_style": "长直发",
+  "eye_color": "深褐色",
+  "hair_accessories": "",
+  "grade": 2,
+  "homeroom": "C",
+  "outfits": {
+    "school": {
+      "hair": "整齐的黑色长直发，佩戴圆框眼镜",
+      "top": "米色V领毛衣背心",
+      "shirt": "白色圆领衬衫",
+      "acc": "红棕色格子蝴蝶结",
+      "bottom": "深蓝色百褶裙",
+      "legs": "黑色中筒袜",
+      "feet": "黑色皮鞋",
+      "inner_top": "白色棉质胸罩",
+      "inner_bot": "白色棉质内裤",
+      "desc": "传统且规整的校服样式。米色毛衣背心叠穿在白衬衫外，搭配精致的红格子蝴蝶结。深蓝色百褶裙剪裁大方，搭配黑色中筒袜与黑色皮鞋。整体给人认真且有些拘谨的优等生印象。"
+    },
+    "casual": {
+      "hair": "戴圆顶草帽，黑发自然垂在肩头",
+      "top": "荷叶边露肩连衣裙",
+      "feet": "草编底凉鞋",
+      "inner_top": "白色棉质胸罩",
+      "inner_bot": "白色棉质内裤",
+      "desc": "充满度假风情的休闲穿搭。白色荷叶边露肩连衣裙裁剪合身，裙摆随风飘动。头戴装饰有蓝色丝带的圆顶草帽，脚穿舒适的草编底凉鞋。整体装束轻松且富有少女感。"
+    },
+    "sleep": {
+      "hair": "黑发略显蓬松，圆框眼镜放在床头",
+      "shirt": "浅蓝色宽松棉质睡袍",
+      "desc": "纯棉面料，质感柔软透气。宽松的浅蓝色睡袍上印有淡雅的小花图案，穿着舒适。领口有精致的蕾丝边饰，整体给人放松且温柔的感觉。"
+    }
+  },
+  "body": {
+    "height_cm": 163,
+    "weight_kg": 49,
+    "build": "纤细",
+    "measurements": {
+      "bust": 79,
+      "waist": 57,
+      "hips": 82
+    },
+    "cup": "B",
+    "leg_type": "修长",
+    "body_shape": {
+      "chest": "扁平",
+      "hips": "圆润",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 2,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 114,
+      "weight_kg": 19,
+      "build": "纤细",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "普通"
+      }
+    },
+    "12": {
+      "height_cm": 150,
+      "weight_kg": 40,
+      "build": "标准",
+      "measurements": {
+        "bust": 70,
+        "waist": 55,
+        "hips": 74
+      },
+      "cup": "AA",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "扁平",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "普通"
+      }
+    },
+    "15": {
+      "height_cm": 159,
+      "weight_kg": 46,
+      "build": "纤细",
+      "measurements": {
+        "bust": 76,
+        "waist": 56,
+        "hips": 79
+      },
+      "cup": "A",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "扁平",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      }
+    },
+    "16": {
+      "height_cm": 163,
+      "weight_kg": 49,
+      "build": "纤细",
+      "measurements": {
+        "bust": 79,
+        "waist": 57,
+        "hips": 82
+      },
+      "cup": "B",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "扁平",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 7,
+    "敏捷": 9,
+    "体质": 8,
+    "智力": 14,
+    "感知": 12,
+    "魅力": 13
+  },
+  "skills": {
+    "学习": 11,
+    "演讲": 9,
+    "交际": 8
+  },
+  "hp": {
+    "current": 16,
+    "max": 16
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "米色V领毛衣背心",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "flavor": "纯棉针织面料，领口与袖口有细密的罗纹。质感柔软，保暖且不显厚重。"
+    },
+    "shirt": {
+      "name": "白色圆领衬衫",
+      "type": "clothing",
+      "slot": "shirt",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "flavor": "面料挺括，领口设计简洁。剪裁合身，穿着舒适。"
+    },
+    "bottom": {
+      "name": "深蓝色百褶裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "flavor": "裙身褶皱整齐清晰，不易变形。面料舒适透气，剪裁修饰身形。"
+    },
+    "legs": {
+      "name": "黑色中筒袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "面料柔软透气，弹性良好。筒高适中，修饰腿型。"
+    },
+    "feet": {
+      "name": "黑色皮鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "flavor": "优质牛皮材质，鞋面光洁。鞋底防滑耐磨，穿着舒适。"
+    },
+    "inner_top": {
+      "name": "白色棉质胸罩",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "flavor": "纯棉材质，亲肤透气。领口与下围有精致的蕾丝边饰，穿着无负担。"
+    },
+    "inner_bot": {
+      "name": "白色棉质内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "柔软棉质面料，腰间与裤脚有弹性蕾丝边。质感亲肤，无痕设计。"
+    },
+    "acc": {
+      "name": "红棕色格子蝴蝶结",
+      "type": "accessory",
+      "slot": "acc",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "丝滑缎面材质，红棕色与金色线条交织成经典格子图案。精致小巧。"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "眼镜",
+      "type": "tool",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "default_location_by_age": {
+    "6": "西千葉",
+    "12": "西千葉",
+    "15": "西千葉",
+    "16": "西千葉"
+  },
+  "schedule_group": "高中生",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "16": "高中生"
+  },
+  "funds": 5000,
+  "appearance_by_age": {
+    "6": {
+      "hair_style": "短发",
+      "hair_color": "黑色"
+    },
+    "12": {
+      "hair_style": "双马尾",
+      "hair_color": "黑色"
+    },
+    "15": {
+      "hair_style": "长直发",
+      "hair_color": "黑色"
+    },
+    "16": {
+      "hair_style": "长直发",
+      "hair_color": "黑色"
+    }
+  },
+  "personality_brief": "表面认真清纯，内心其实憧憬会长城户树。被会长开发后蜕变为自信的女性。",
+  "personality_stages": {
+    "6": "听话、内向乖巧的小女孩。",
+    "12": "认真的好学生，戴红框眼镜，比较拘谨。",
+    "15": "成绩优秀，做事规规矩矩的清纯学生，对异性充满憧憬但不敢表达。",
+    "16": "表面上是清纯认真的学习委员，内心却极度渴望会长的关爱。与会长交往后被彻底开发，改戴隐形眼镜，变得成熟且在性观念上极为开放。"
+  },
+  "speech_style": "说话严谨礼貌，经常使用敬语。对次男优斗保持着客气但疏离的同学态度。",
+  "likes": [
+    "城户树",
+    "阅读",
+    "整理笔记"
+  ],
+  "dislikes": [
+    "被粗暴对待",
+    "打破平稳的异质"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高二年级C班学习委员，非常清纯的优秀学生。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "疯狂迷恋上会长城户树，不仅改戴隐形，甚至不介意与他弟弟交换伴侣。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "16": {
+      "drives": [
+        "留在大哥身边",
+        "追求自己喜欢的快乐"
+      ],
+      "goal": "获得心仪的大哥的完全爱意。"
+    }
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 1
+  },
+  "sex_profile": {
+    "baselineDesire": 4,
+    "attitude": "抗拒",
+    "experience": "未开发",
+    "climaxThreshold": 30,
+    "cycleDay": 14,
+    "likes": [],
+    "dislikes": [
+      "粗暴"
+    ],
+    "female": {
+      "breast": {
+        "cup": "B",
+        "shape": "水滴",
+        "nipple_size": "普通",
+        "nipple_color": "淡粉",
+        "areola_size": "普通",
+        "feel": "紧实"
+      },
+      "vagina": {
+        "type": "闭合",
+        "labia_size": "小",
+        "depth_cm": 12,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "紧致"
+      },
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "自然"
+      },
+      "clitoris": "隐藏"
+    }
+  }
+}

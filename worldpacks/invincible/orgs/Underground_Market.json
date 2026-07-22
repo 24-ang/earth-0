@@ -1,0 +1,24 @@
+{
+  "id": "underground_market",
+  "name": "地下雇佣市场",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "无固定基地",
+  "leader": "无，市场是网络，不是组织",
+  "members": [
+    "Machine Head曾是最大中介"
+  ],
+  "description": "找活 → 你是底层超能力者，没有GDA邀请也没有英雄品牌。这里给钱。干活，拿钱，别问。 找人 → 你需要超能力打手。你能出多少？",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "地下雇佣市场",
+      "level": "common",
+      "text": "地下雇佣市场。基地: 无固定基地。状态: 非正式网络, 无领导, 混乱·中立。经济来源: 中介费 + 雇佣金。核心资产: 可获取的超能力暴力，比传统武器更难追踪。领导者: 无，市场是网络，不是组织。Internal_Rot: \"无，不稳定是系统的默认状态\" External_Ally: \"任何给钱的人，包括GDA（灰色渠道）和各国政府\" External_Prey: \"客户的敌人，雇佣兵不关心理由\"找活 → 你是底层超能力者，没有GDA邀请也没有英雄品牌。这里给钱。干活，拿钱，别问。 找人 → 你需要超能力打手。你能出多少？"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "thraxans",
+  "name": "瑟拉克斯人 (Thraxans)",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "Thraxa星球",
+  "leader": "Andressa，Oliver之母，与流放的Nolan短暂结合",
+  "members": [
+    "Nolan流放期间的实际领导者"
+  ],
+  "description": "遇到Oliver → 他可能是你在地球遇到的。幼年身体，成年心智。他经历过Thraxa的一切。 保护 → 如果你能阻止崔格对Thraxa的新一轮掠夺。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "瑟拉克斯人 (Thraxans)",
+      "level": "common",
+      "text": "瑟拉克斯人 (Thraxans)。基地: Thraxa星球。状态: 濒危种族, 寿命约1年, 被屠杀后挣扎。经济来源: 自然采集。核心资产: 快速的生育和成熟周期。领导者: Andressa，Oliver之母，与流放的Nolan短暂结合。Internal_Rot: \"无，濒危让内部高度团结\" External_Ally: \"Nolan（他曾保护他们）\" External_Prey: \"无，他们是被猎者\"遇到Oliver → 他可能是你在地球遇到的。幼年身体，成年心智。他经历过Thraxa的一切。 保护 → 如果你能阻止崔格对Thraxa的新一轮掠夺。"
+    }
+  ]
+}

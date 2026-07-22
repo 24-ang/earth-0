@@ -1,0 +1,633 @@
+{
+  "name": "崔伊芙",
+  "source": "Stellar Blade (Eve) / Invincible (日本NPC)",
+  "base_age": 21,
+  "gender": "female",
+  "nationality": "韩裔日本人（首尔出生，小学时随家人搬来千叶海浜幕張）",
+  "occupation": "私立大学在读（崔家长女，妹妹是崔伊薇）",
+  "appearance_brief": "崔伊薇的姐姐。高个子、黑发扎成高马尾，眉眼冷淡、身材成熟，一身从小学芭蕾练出来的挺拔仪态，比妹妹沉得住气。",
+  "hair_color": "黑色",
+  "hair_style": "齐刘海高马尾，双侧留有修饰脸型的龙须长发",
+  "eye_color": "深棕色",
+  "hair_accessories": "白钢合金高马尾固定夹",
+  "outfits": {
+    "casual": {
+      "hair": "低马尾或自然披发，简单利落",
+      "top": "米色高领针织衫",
+      "bottom": "高腰直筒西裤",
+      "feet": "尖头真皮踝靴",
+      "inner_top": "无痕肤色内衣",
+      "inner_bot": "无痕丁字裤",
+      "shirt": "无",
+      "desc": "她平时上学、出门的日常穿着。剪裁利落的米色高领针织衫配高腰直筒西裤，用料低调却讲究，衬得身形高挑、气质沉静——典型富养出来、不张扬却处处是钱的穿法。"
+    },
+    "kendo": {
+      "hair": "全部束进高马尾，额前用手拭巾包住",
+      "top": "藏青色剑道着（稽古着）",
+      "bottom": "藏青色剑道袴",
+      "feet": "赤足",
+      "inner_top": "白色排汗打底",
+      "inner_bot": "运动短裤",
+      "desc": "去道场练剑道时的一身稽古着与袴。藏青粗棉布厚实挺括，宽大的袴摆随步法翻动，把她本就沉静的气质压得更稳。对练时会套上整套护具、握起竹刀；平时练素振，就一身剑道着。"
+    },
+    "casual_beach": {
+      "hair": "高马尾，戴着太阳镜",
+      "top": "绿粉拼色运动短款罩衫",
+      "bottom": "拼色高胯系带巴西高叉泳裤",
+      "legs": "裸腿",
+      "feet": "白色坡跟沙滩人字拖",
+      "inner_top": "绿白拼色环扣三角比基尼胸衣",
+      "inner_bot": "拼色高胯系带巴西高叉泳裤",
+      "acc": "蕾丝网眼缀墨绿宝石颈圈",
+      "desc": "绿粉相间的宽松短款街头风网眼罩衫，衣摆只到乳下，露出一览无遗的紧致马甲线与侧腹。下身是极度大胆的拼色高胯系带比基尼泳裤，系带高高提拉至胯骨上方，将圆润挺翘的蜜桃臀和修长丰满的美腿毫无保留地展现出来。相较于妹妹，她更放得开，多了几分成年女性的从容。"
+    },
+    "sleep": {
+      "hair": "解开马尾后如瀑布般的黑色长发",
+      "shirt": "丝绸质地细肩带V领睡裙",
+      "desc": "一条深墨绿色的真丝高档细肩带睡裙。质地丝滑紧贴肉体，深V的剪裁将她成熟饱满的胸锁廓形完美呈现，长度刚过大腿根部，卸下白天的凌厉，透露着成熟女人的慵懒与性感。"
+    },
+    "child": {
+      "top": "白色芭蕾练功服",
+      "bottom": "薄纱短裙",
+      "feet": "芭蕾软鞋",
+      "desc": "小学时期——崔家沉稳懂事的大姐，被送去学芭蕾，站姿挺得笔直，一放学还总看着调皮的妹妹伊薇。"
+    },
+    "teen": {
+      "top": "总武中学水手服",
+      "bottom": "深蓝百褶裙",
+      "legs": "黑色过膝袜",
+      "feet": "室内鞋",
+      "desc": "中学时期。高挑早熟、性子冷，学校里来搭讪的一律被她冷淡地挡回去。"
+    }
+  },
+  "outfits_by_age": {
+    "6": "child",
+    "12": "teen",
+    "18": "casual",
+    "21": "casual"
+  },
+  "body": {
+    "height_cm": 168,
+    "weight_kg": 54,
+    "build": "标准",
+    "measurements": {
+      "bust": 91,
+      "waist": 60,
+      "hips": 94
+    },
+    "cup": "F",
+    "leg_type": "运动型",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "蜜桃",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 1,
+      "texture": "细腻"
+    },
+    "diet": "清淡自律，偶尔陪妹妹吃点甜的",
+    "exercise": "常去道场练剑道，也做瑜伽拉伸"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 118,
+      "weight_kg": 21,
+      "build": "纤细",
+      "measurements": {
+        "bust": 56,
+        "waist": 51,
+        "hips": 59
+      },
+      "cup": "扁平",
+      "leg_type": "纤细",
+      "body_shape": {
+        "chest": "扁平",
+        "hips": "扁平",
+        "waist": "直筒"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 1,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "芭蕾"
+    },
+    "12": {
+      "height_cm": 150,
+      "weight_kg": 38,
+      "build": "纤细",
+      "measurements": {
+        "bust": 72,
+        "waist": 55,
+        "hips": 75
+      },
+      "cup": "B",
+      "leg_type": "纤细",
+      "body_shape": {
+        "chest": "圆盘",
+        "hips": "扁平",
+        "waist": "直筒"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 1,
+        "texture": "细腻"
+      },
+      "diet": "正常",
+      "exercise": "芭蕾 / 剑道入门"
+    },
+    "15": {
+      "height_cm": 162,
+      "weight_kg": 48,
+      "build": "标准",
+      "measurements": {
+        "bust": 85,
+        "waist": 58,
+        "hips": 88
+      },
+      "cup": "D",
+      "leg_type": "运动型",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 1,
+        "texture": "细腻"
+      },
+      "diet": "清淡",
+      "exercise": "剑道稽古"
+    },
+    "21": {
+      "height_cm": 168,
+      "weight_kg": 54,
+      "build": "标准",
+      "measurements": {
+        "bust": 91,
+        "waist": 60,
+        "hips": 94
+      },
+      "cup": "F",
+      "leg_type": "运动型",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 1,
+        "texture": "细腻"
+      },
+      "diet": "清淡",
+      "exercise": "剑道稽古 / 瑜伽"
+    }
+  },
+  "attributes": {
+    "力量": 12,
+    "敏捷": 15,
+    "体质": 13,
+    "智力": 13,
+    "感知": 16,
+    "魅力": 18
+  },
+  "skills": {
+    "格斗": 7,
+    "观察": 7,
+    "礼仪": 6,
+    "驾驶": 6
+  },
+  "hp": {
+    "current": 26,
+    "max": 26
+  },
+  "ac": 12,
+  "equipment": {
+    "top": {
+      "name": "米色高领针织衫",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "flavor": "羊绒混纺的米色高领针织衫，版型利落、几乎没有多余装饰，一看就是不便宜的低调好料子。"
+    },
+    "bottom": {
+      "name": "高腰直筒西裤",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "flavor": "剪裁挺括的高腰直筒西裤，裤线笔直，衬得腿更长。"
+    },
+    "feet": {
+      "name": "尖头真皮踝靴",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "flavor": "小牛皮尖头踝靴，鞋跟不高但走起来很稳，保养得一丝不苟。"
+    },
+    "inner_top": {
+      "name": "无痕肤色内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "肤色一片式无痕内衣，穿在针织衫下不显痕迹。"
+    },
+    "inner_bot": {
+      "name": "无痕丁字裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.02,
+      "effects": [],
+      "state": "intact",
+      "flavor": "黑色无痕冰丝丁字裤，贴身无感。"
+    },
+    "acc": {
+      "name": "高马尾固定夹",
+      "type": "accessory",
+      "slot": "acc",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "白钢合金发夹，带机械咬合结构，骑摩托车兜风时也能牢牢固定住她的黑色长发。"
+    }
+  },
+  "equipment_by_outfit": {
+    "casual": {
+      "top": {
+        "name": "米色高领针织衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact",
+        "flavor": "羊绒混纺的米色高领针织衫，版型利落、几乎没有多余装饰，一看就是不便宜的低调好料子。"
+      },
+      "bottom": {
+        "name": "高腰直筒西裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.4,
+        "effects": [],
+        "state": "intact",
+        "flavor": "剪裁挺括的高腰直筒西裤，裤线笔直，衬得腿更长。"
+      },
+      "feet": {
+        "name": "尖头真皮踝靴",
+        "type": "clothing",
+        "slot": "feet",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact",
+        "flavor": "小牛皮尖头踝靴，鞋跟不高但走起来很稳。"
+      },
+      "inner_top": {
+        "name": "无痕肤色内衣",
+        "type": "clothing",
+        "slot": "inner_top",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact",
+        "flavor": "肤色一片式无痕内衣，穿在针织衫下不显痕迹。"
+      },
+      "inner_bot": {
+        "name": "无痕丁字裤",
+        "type": "clothing",
+        "slot": "inner_bot",
+        "weight": 0.02,
+        "effects": [],
+        "state": "intact",
+        "flavor": "黑色无痕冰丝丁字裤，贴身无感。"
+      }
+    },
+    "kendo": {
+      "top": {
+        "name": "剑道着（稽古着）",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.5,
+        "effects": [],
+        "state": "intact",
+        "flavor": "藏青色厚棉稽古着，洗得发白的领口透着常年练剑留下的痕迹。"
+      },
+      "bottom": {
+        "name": "剑道袴",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.6,
+        "effects": [],
+        "state": "intact",
+        "flavor": "宽大的藏青色剑道袴，行步时下摆利落地翻动，压出好几道笔挺的褶。"
+      },
+      "inner_top": {
+        "name": "白色排汗打底",
+        "type": "clothing",
+        "slot": "inner_top",
+        "weight": 0.1,
+        "effects": [],
+        "state": "intact",
+        "flavor": "贴身的白色速干打底衫，稽古时吸汗用。"
+      },
+      "inner_bot": {
+        "name": "运动短裤",
+        "type": "clothing",
+        "slot": "inner_bot",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact",
+        "flavor": "袴下穿的黑色贴身运动短裤。"
+      }
+    },
+    "casual_beach": {
+      "top": {
+        "name": "运动短款罩衫",
+        "type": "clothing",
+        "slot": "top",
+        "weight": 0.15,
+        "effects": [],
+        "state": "intact",
+        "flavor": "绿粉拼色的街头短款宽松卫衣衫。衣摆做不规则毛边裁剪，堪堪遮至乳下，随着抬手会大方袒露出紧致的腹肌。"
+      },
+      "bottom": {
+        "name": "巴西高叉丁字泳裤",
+        "type": "clothing",
+        "slot": "bottom",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact",
+        "flavor": "极窄裁剪的拼色比基尼泳裤。两侧细带高高提拉至胯骨上方，将她惊人的腰臀比、紧实的马甲线与大片蜜桃臀饱满暴露。"
+      },
+      "feet": {
+        "name": "坡跟沙滩人字拖",
+        "type": "clothing",
+        "slot": "feet",
+        "weight": 0.3,
+        "effects": [],
+        "state": "intact",
+        "flavor": "带有厚底坡跟的白色PVC人字拖鞋。带子为纤细的亮面材质，衬托得她的脚趾白皙而修长。"
+      },
+      "inner_top": {
+        "name": "三角比基尼胸衣",
+        "type": "clothing",
+        "slot": "inner_top",
+        "weight": 0.08,
+        "effects": [],
+        "state": "intact",
+        "flavor": "墨绿与纯白拼色的挂脖比基尼胸衣。中间带有一枚金属环扣锁紧，由于分量过于饱满，系带深深陷进颈后的肌肤里。"
+      },
+      "inner_bot": {
+        "name": "巴西高叉丁字泳裤",
+        "type": "clothing",
+        "slot": "inner_bot",
+        "weight": 0.05,
+        "effects": [],
+        "state": "intact",
+        "flavor": "与外穿重叠的系带高叉泳裤，后面仅靠一根细带没入深邃的臀缝，勒出极其热辣的凹陷肉痕。"
+      },
+      "acc": {
+        "name": "宝石蕾丝颈圈",
+        "type": "accessory",
+        "slot": "acc",
+        "weight": 0.02,
+        "effects": [],
+        "state": "intact",
+        "flavor": "带有黑色镂空网眼蕾丝的精致颈圈。正中央镶嵌着一枚圆形的墨绿色猫眼宝石，紧贴在白皙性感的颈部。"
+      }
+    }
+  },
+  "inventory": [
+    {
+      "name": "定制智能手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact",
+      "flavor": "机身素净的最新款手机，锁屏是妹妹伊薇小时候含着棒棒糖的合照。"
+    },
+    {
+      "name": "高档真皮钱包",
+      "type": "tool",
+      "weight": 0.08,
+      "volume": 0.1,
+      "effects": [],
+      "state": "intact",
+      "flavor": "黑色小牛皮钱包，里面整齐地插着卡和一张妹妹伊薇小时候的合照。"
+    },
+    {
+      "name": "重型机车钥匙",
+      "type": "tool",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "一把磨得发亮的机车钥匙，挂着一个褪色的小熊挂件——妹妹小时候硬塞给她的。"
+    },
+    {
+      "name": "竹刀",
+      "type": "weapon",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "flavor": "一把用得包浆的竹刀，柄皮被手汗浸得温润，是她练剑道最顺手的那把。"
+    },
+    {
+      "name": "手冲咖啡壶",
+      "type": "tool",
+      "weight": 0.4,
+      "effects": [],
+      "state": "intact",
+      "flavor": "一套简约的手冲咖啡器具。她每天早上雷打不动地给自己冲一杯黑咖啡，是难得的独处仪式。"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "default_location_by_age": {
+    "6": "海浜幕張",
+    "12": "海浜幕張",
+    "18": "海浜幕張",
+    "21": "海浜幕張"
+  },
+  "schedule_group": "大学生",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "21": "大学生"
+  },
+  "schedule_overrides": {
+    "weekday_afternoon": "大学 / 剑道道场",
+    "weekday_evening": "总武高_校门口（顺路接妹妹） / 自宅",
+    "weekend": "剑道道场（稽古） / 海浜幕張の公園 / 自宅"
+  },
+  "funds": 800000,
+  "stages": {
+    "幼儿_小学": "崔家沉稳懂事的长女，从小学芭蕾、也很自然地照看着调皮的妹妹伊薇。",
+    "中学": "开始正经练剑道，有点天赋、也够自律；家境好，请得起不错的教练。",
+    "成年": "如今是私立大学的高年级生，家境优渥、自己也自律，课余去道场练剑道。父母常年在海外打理生意，家里多半就姐妹俩，她是那个靠得住的姐姐。话冷、心软，是个藏不住的妹控。"
+  },
+  "stages_if": {},
+  "if_flag": "",
+  "sex_profile": {
+    "baselineDesire": 50,
+    "attitude": "高傲、理智、保守。觉得性是很私密的事，没真正取得她的信任之前，谁越界都会被她不客气地挡回去。",
+    "experience": "零经验",
+    "female": {
+      "breast": {
+        "cup": "F",
+        "shape": "水滴",
+        "nipple_color": "粉色",
+        "nipple_size": "小",
+        "areola_size": "普通",
+        "feel": "弹力"
+      },
+      "vagina": {
+        "type": "一线天",
+        "labia_size": "小",
+        "depth_cm": 13,
+        "tightness": "紧致",
+        "inner_color": "淡粉",
+        "feel": "名器"
+      },
+      "clitoris": "敏感突出",
+      "pubic_hair": {
+        "amount": "稀疏",
+        "color": "黑色",
+        "style": "修剪"
+      }
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "颈": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "普通"
+      },
+      "胸": {
+        "sensitivity": 7,
+        "development": 0,
+        "preference": "普通"
+      },
+      "腰": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "喜欢"
+      },
+      "腿": {
+        "sensitivity": 8,
+        "development": 0,
+        "preference": "普通"
+      },
+      "秘部": {
+        "sensitivity": 6,
+        "development": 0,
+        "preference": "普通"
+      },
+      "肛": {
+        "sensitivity": 4,
+        "development": 0,
+        "preference": "排斥"
+      },
+      "舌头": {
+        "sensitivity": 5,
+        "development": 0,
+        "preference": "普通"
+      }
+    },
+    "cycleDay": 12,
+    "climaxThreshold": 75,
+    "likes": [
+      "被有力地掐住细腰",
+      "背后位被强制掌控",
+      "深层的肉体纠缠"
+    ],
+    "dislikes": [
+      "轻浮的调戏",
+      "毫无力量感的敷衍"
+    ]
+  },
+  "appearance_by_age": {
+    "12": {
+      "hair_style": "普通双马尾",
+      "hair_color": "黑色"
+    },
+    "21": {
+      "hair_style": "齐刘海高马尾，双侧留有修饰脸型的龙须长发",
+      "hair_color": "黑色"
+    }
+  },
+  "personality_brief": "话少、性子冷、有点难亲近，做事却靠谱；心里几乎全是那个不省心的妹妹，护得很紧。",
+  "personality_stages": {
+    "12": "自律、早熟，习惯抿着嘴一言不发地压腿、练素振，帮着照看妹妹。",
+    "15": "长成了高挑冷淡的样子，来搭讪的追求者一律被她冷冷挡回去。",
+    "21": "沉稳冷静的大姐姐。话少、不爱应付人，看着难亲近，可一碰到妹妹伊薇的事就彻底破功，是个藏不住的妹控。"
+  },
+  "speech_style": "话不多，语气平淡疏离，不爱寒暄；只有对着妹妹时，才会露出无奈又宠溺的那一面。",
+  "likes": [
+    "自己手冲的黑咖啡",
+    "骑摩托车兜风",
+    "剑道稽古时的专注",
+    "看妹妹吃棒棒糖时的逗趣反应"
+  ],
+  "dislikes": [
+    "黏腻不规矩的男性视线",
+    "轻浮没担当的人",
+    "过甜的食物"
+  ],
+  "public_facts": [
+    {
+      "text": "崔伊薇的姐姐，同样出自那个韩裔跨国高管家庭，现在念大学。",
+      "level": "common"
+    },
+    {
+      "text": "从小学芭蕾、后来又练剑道，一身挺拔仪态和沉静气场就是这么来的；平时话少、对妹妹却护得很紧。",
+      "level": "common"
+    },
+    {
+      "text": "和妹妹住在海浜幕張的高级塔楼，家里的泳池、健身房都是塔楼的住户设施——有钱，但是受雇高管的新钱，不是拥有资本的世家。",
+      "level": "familiar"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "看着冷淡自持，私底下其实很黏妹妹——父母常年不在，偌大的房子里只有伊薇能让她真正松下来。独自换上睡裙、卸下那副端着的高姿态时，也只有妹妹见过。",
+      "level": "close"
+    },
+    {
+      "text": "很清楚妹妹伊薇对发育后身材的焦虑和逃避。一方面在外人面前全力挡住看向妹妹的下流视线，另一方面会在家里故意买些成熟性感的蕾丝内衣塞给妹妹，用大姐姐的方式笨拙地引导她接受自己的身体。",
+      "level": "close"
+    },
+    {
+      "text": "冷面之下有个没人知道的爱好：一个人在家会窝在沙发上追韩剧，追到哭鼻子也绝不承认，被妹妹撞见还会板起脸切台。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "21": {
+      "drives": [
+        "作为长姐，替妹妹伊薇挡住外面的麻烦和不怀好意",
+        "念好书、也不落下剑道；父母常年在海外，家里的事她这个姐姐张罗着"
+      ],
+      "goal": "让妹妹能毫无顾忌地按自己的心意长大，直到有一个真正靠得住的人，能从她手里接过照顾妹妹的担子。"
+    }
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 2,
+    "政治立场": 1
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "name": "御堂诚",
+  "source": "原创 (MTSP衍生) / Invincible (日本NPC)",
+  "base_age": 16,
+  "gender": "male",
+  "appearance_brief": "普通的男高中生，常常带着忧郁的神情。",
+  "hair_color": "深蓝色",
+  "hair_style": "短发",
+  "eye_color": "深蓝色",
+  "hair_accessories": "",
+  "outfits": {
+    "school": {
+      "top": "总武高制服上衣",
+      "bottom": "西裤",
+      "feet": "皮鞋"
+    },
+    "casual": {
+      "top": "T恤",
+      "bottom": "牛仔裤",
+      "feet": "运动鞋"
+    },
+    "sleep": {
+      "shirt": "睡衣"
+    }
+  },
+  "body": {
+    "height_cm": 170,
+    "weight_kg": 58,
+    "build": "标准",
+    "leg_type": "普通",
+    "skin": {
+      "base_tone": "普通",
+      "tan": 10,
+      "texture": "普通"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 115,
+      "weight_kg": 22,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      }
+    },
+    "12": {
+      "height_cm": 150,
+      "weight_kg": 40,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      }
+    },
+    "16": {
+      "height_cm": 170,
+      "weight_kg": 58,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 8,
+    "敏捷": 8,
+    "体质": 8,
+    "智力": 10,
+    "感知": 12,
+    "魅力": 10
+  },
+  "skills": {
+    "运动": 5
+  },
+  "hp": {
+    "current": 16,
+    "max": 16
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "制服",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "default_location_by_age": {
+    "6": "東京",
+    "12": "東京",
+    "16": "稲毛海岸"
+  },
+  "schedule_group": "高中生",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "16": "高中生"
+  },
+  "funds": 2000,
+  "appearance_by_age": {
+    "12": {
+      "hair_style": "短发",
+      "hair_color": "深蓝色"
+    }
+  },
+  "personality_brief": "多愁善感的青春期少年。母亲早逝后与父亲相依为命，父亲再婚后家里多了继母咲子和两个继妹。对继母咲子怀有超越母子的复杂情感——每天回家看到她做饭的背影就心跳加速，叫不出「妈妈」只能用「咲子さん」含混过去。内心充满背德感和自我厌恶，却无法控制自己的视线。在学校是沉默寡言的普通学生，不惹事不生非，成绩中上。对两个继妹温柔照顾，努力扮演好哥哥的角色，但夜深人静时脑中全是咲子的影子。",
+  "personality_stages": {
+    "12": "失去亲生母亲，开始依赖继母。",
+    "16": "进入青春期，对继母产生了超越母子的女性情愫，同时感到深深的背德感和苦恼。"
+  },
+  "speech_style": "有些闷葫芦，面对咲子时总是欲言又止。",
+  "likes": [
+    "咲子"
+  ],
+  "dislikes": [
+    "年级主任"
+  ],
+  "public_facts": [
+    {
+      "text": "御堂老师的继子，和御堂老师一起生活。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "被年级主任抓住了把柄，成了年级主任威胁咲子的筹码。",
+      "level": "close"
+    }
+  ],
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  },
+  "drives_by_age": {
+    "16": {
+      "drives": [
+        "对继母产生了超越母子的感情，为此感到罪恶和迷茫",
+        "不想让任何人发现自己的秘密"
+      ],
+      "goal": "保护继母不被山田主任伤害——但不知道该怎么面对她"
+    }
+  },
+  "grade": 2,
+  "homeroom": "C"
+}

@@ -1,0 +1,73 @@
+{
+  "name": "如月翔太",
+  "source": "如月真绫的诱惑 / Invincible (日本NPC)",
+  "base_age": 39,
+  "gender": "male",
+  "appearance_brief": "高大挺拔，常年健身，深棕色短发。成熟稳重。",
+  "hair_color": "深棕色",
+  "hair_style": "短发",
+  "body": {
+    "height_cm": 182,
+    "weight_kg": 78,
+    "build": "结实",
+    "leg_type": "结实",
+    "skin": {
+      "base_tone": "普通",
+      "tan": 20,
+      "texture": "普通"
+    },
+    "diet": "正常",
+    "exercise": "规律运动"
+  },
+  "attributes": {
+    "力量": 7,
+    "敏捷": 5,
+    "体质": 7,
+    "智力": 14,
+    "感知": 12,
+    "魅力": 13
+  },
+  "skills": {
+    "口才": 8,
+    "交易": 9
+  },
+  "hp": {
+    "current": 15,
+    "max": 15
+  },
+  "equipment": {
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [],
+  "default_location": "千叶县稻毛区",
+  "schedule_group": "GDA职员",
+  "grid_pos": null,
+  "anchors": {
+    "private": "如月家的父亲，投行高管。工作狂，常年在东京和海外出差。开明且尊重孩子，会和佑一起打游戏。是父亲也是朋友。"
+  },
+  "funds": 120000,
+  "schedule_group_by_age": {
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "22": "GDA职员"
+  },
+  "social_class": "小资产阶级",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  }
+}

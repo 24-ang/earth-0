@@ -1,0 +1,212 @@
+{
+  "name": "大森和彦",
+  "source": "原创 / Invincible (日本NPC)",
+  "base_age": 45,
+  "gender": "male",
+  "appearance_brief": "讲日本史能讲到热泪盈眶的中年男人。",
+  "hair_color": "黑色",
+  "hair_style": "短发",
+  "eye_color": "黑色",
+  "outfits": {
+    "work": {
+      "top": "西装外套",
+      "bottom": "西裤",
+      "feet": "皮鞋",
+      "shirt": "白衬衫"
+    },
+    "casual": {
+      "top": "休闲夹克",
+      "bottom": "休闲裤",
+      "feet": "休闲鞋"
+    },
+    "sleep": {
+      "shirt": "睡衣"
+    }
+  },
+  "body": {
+    "height_cm": 172,
+    "weight_kg": 78,
+    "build": "丰满",
+    "leg_type": "结实",
+    "skin": {
+      "base_tone": "普通",
+      "tan": 5,
+      "texture": "普通"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 115,
+      "weight_kg": 20,
+      "build": "纤细",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 148,
+      "weight_kg": 38,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      }
+    },
+    "15": {
+      "height_cm": 165,
+      "weight_kg": 55,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 8,
+        "texture": "普通"
+      }
+    },
+    "45": {
+      "height_cm": 172,
+      "weight_kg": 78,
+      "build": "丰满",
+      "leg_type": "结实",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 6,
+    "敏捷": 5,
+    "体质": 6,
+    "智力": 15,
+    "感知": 16,
+    "魅力": 12
+  },
+  "skills": {
+    "日本史": 10,
+    "教学": 10,
+    "人际": 9,
+    "写作": 7
+  },
+  "hp": {
+    "current": 12,
+    "max": 12
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "default_location_by_age": {
+    "6": "千葉駅前",
+    "12": "千葉駅前",
+    "15": "千葉駅前",
+    "45": "千葉駅前"
+  },
+  "schedule_group": "GDA职员",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "45": "GDA职员"
+  },
+  "funds": 350000,
+  "personality_brief": "讲日本史能讲到热泪盈眶的中年男人。对战国时代有近乎狂热的爱，讲到本能寺之变总会哽咽。学生评价「听大森的课像在看大河剧+落语混合体」。在教员室里是个老好人，从不参与派系斗争。担任2年A班班主任。",
+  "personality_stages": {
+    "12": "喜欢读历史漫画的安静少年，对三国志和战国武将如数家珍。",
+    "15": "加入了历史研究同好会，开始读正史而非演义。",
+    "18": "考取千叶大学教育学部，专攻日本近世史。",
+    "45": "教了二十年书的老教师。对每个学生的名字和性格都记得。对教育热情不减但体力开始跟不上了。"
+  },
+  "speech_style": "热情洋溢，带点说书人的腔调。对历史人物有明确的道德立场——「信长是天才但不是好人，光秀是叛徒但我理解他」。上课时偶尔会突然切换成战国武将的口气。",
+  "likes": [
+    "战国史",
+    "大河剧",
+    "落语",
+    "温泉",
+    "日本酒"
+  ],
+  "dislikes": [
+    "历史修正主义",
+    "派系斗争",
+    "智能手机（不太会用）"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高的日本史兼世界史教师，2年A班班主任。",
+      "level": "common"
+    },
+    {
+      "text": "上课旁征博引、妙趣横生，是学生投票'最想再听一节课'的教师第一名。",
+      "level": "common"
+    },
+    {
+      "text": "据说年轻时被邀请去NHK做历史节目的顾问，但拒绝了——因为'不想离开讲台'。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "妻子十年前病故，独自把女儿养大。女儿现在在东京上大学，每周回来一次。",
+      "level": "close"
+    },
+    {
+      "text": "办公桌最下面的抽屉里锁着一本未完成的战国小说手稿——写了二十年还没写完。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "45": {
+      "drives": [
+        "让学生理解历史不只是年号和人名",
+        "帮助每个学生找到自己的方向"
+      ],
+      "goal": "在退休前把写了二十年的战国小说写完。"
+    }
+  },
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": 0,
+    "政治立场": 0
+  }
+}

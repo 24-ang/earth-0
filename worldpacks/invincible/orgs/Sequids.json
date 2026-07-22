@@ -1,0 +1,24 @@
+{
+  "id": "sequids",
+  "name": "Sequids",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "火星(被隔离)",
+  "leader": "群体心智，无个体领袖，无谈判对象",
+  "members": [
+    "数量决定一切"
+  ],
+  "description": "遭遇 → 不让它们碰你。别逞英雄，一个擦伤就够了。 隔离 → 如果你在火星附近，别打开任何密封门。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "Sequids",
+      "level": "common",
+      "text": "Sequids。基地: 火星(被隔离)。状态: 寄生种族, 需宿主激活, 混乱·扩张。经济来源: 宿主掠夺。核心资产: 数量，一个宿主可以分裂出数百个Sequids。领导者: 群体心智，无个体领袖，无谈判对象。Internal_Rot: \"无，集体意识内部没有矛盾\" External_Ally: \"无\" External_Prey: \"任何能作为宿主的生物\"遭遇 → 不让它们碰你。别逞英雄，一个擦伤就够了。 隔离 → 如果你在火星附近，别打开任何密封门。"
+    }
+  ]
+}

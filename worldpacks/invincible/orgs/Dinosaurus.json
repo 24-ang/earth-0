@@ -1,0 +1,24 @@
+{
+  "id": "dinosaurus",
+  "name": "恐龙人 (Dinosaurus)",
+  "type": "势力",
+  "scale": "local",
+  "sector": "military",
+  "coreLocation": "美国",
+  "leader": "本人，恐龙变身形态，信念极端但逻辑自洽",
+  "members": [
+    "无，独行"
+  ],
+  "description": "临时合作 → 环境威胁（污染、生态灾难）时他是你唯一的盟友。他比你先到。 分歧 → 当你发现他下一步要炸掉整个工业区。他不是反派，他是你认为你有道理但他觉得你错的那种人。",
+  "wealth": 50,
+  "influence": 50,
+  "cohesion": 50,
+  "public_legitimacy": 50,
+  "entries": [
+    {
+      "tag": "恐龙人 (Dinosaurus)",
+      "level": "common",
+      "text": "恐龙人 (Dinosaurus)。基地: 美国。状态: 反派/反英雄, 毁灭文明以拯救生态, 混乱·善(?) Structure_Core: Head:。经济来源: 无，不需要。核心资产: 恐龙变身，接近维特鲁姆中端的战力。领导者: 本人，恐龙变身形态，信念极端但逻辑自洽。Internal_Rot: \"他信的东西是真的，生态学逻辑无懈可击。方法问题是另一回事\" External_Ally: \"曾与Invincible合作，当环保与英雄目标重合时\" External_Prey: \"污染企业 / 任何他认为会杀死地球的人类活动\"临时合作 → 环境威胁（污染、生态灾难）时他是你唯一的盟友。他比你先到。 分歧 → 当你发现他下一步要炸掉整个工业区。他不是反派，他是你认为你有道理但他觉得你错的那种人。"
+    }
+  ]
+}

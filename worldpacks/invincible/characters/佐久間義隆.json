@@ -1,0 +1,210 @@
+{
+  "name": "佐久間義隆",
+  "source": "原创 / Invincible (日本NPC)",
+  "base_age": 58,
+  "gender": "male",
+  "appearance_brief": "头发花白、戴老花镜的矮个子老人。总是穿着略旧的灰色西装，笑容和蔼。",
+  "hair_color": "灰白",
+  "hair_style": "短发",
+  "eye_color": "黑色",
+  "outfits": {
+    "work": {
+      "top": "灰色旧西装",
+      "bottom": "深灰西裤",
+      "feet": "旧皮鞋",
+      "shirt": "白衬衫",
+      "acc": "老花镜"
+    },
+    "casual": {
+      "top": "开衫毛衣",
+      "bottom": "宽松裤子",
+      "feet": "拖鞋"
+    }
+  },
+  "body": {
+    "height_cm": 170,
+    "weight_kg": 68,
+    "build": "标准",
+    "leg_type": "普通",
+    "skin": {
+      "base_tone": "普通",
+      "tan": 5,
+      "texture": "普通"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 115,
+      "weight_kg": 20,
+      "build": "纤细",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 148,
+      "weight_kg": 38,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      }
+    },
+    "15": {
+      "height_cm": 165,
+      "weight_kg": 55,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 8,
+        "texture": "普通"
+      }
+    },
+    "58": {
+      "height_cm": 170,
+      "weight_kg": 68,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 4,
+    "敏捷": 5,
+    "体质": 5,
+    "智力": 15,
+    "感知": 18,
+    "魅力": 13
+  },
+  "skills": {
+    "行政": 10,
+    "人际": 9,
+    "将棋": 7,
+    "忍耐": 10
+  },
+  "hp": {
+    "current": 10,
+    "max": 10
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "default_location_by_age": {
+    "6": "千葉みなと",
+    "12": "千葉みなと",
+    "15": "千葉みなと",
+    "58": "千葉みなと"
+  },
+  "schedule_group": "GDA职员",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "58": "GDA职员"
+  },
+  "funds": 600000,
+  "personality_brief": "温和的老绅士校长，即将退休。对学生永远笑眯眯，讲话永远是「要努力哦」的鼓励型。但没人知道他在想什么——能在教务主任和平冢静的激烈对立中保持中立二十年，绝不简单。真正关心的是「别出丑闻，让我安稳退休」。",
+  "personality_stages": {
+    "12": "普通的东京少年，喜欢读书和下将棋。",
+    "15": "成绩中上但人缘极好的高中生，被老师评价为'有领导才能但过于谨慎'。",
+    "18": "考入东京学艺大学，选择教育行政方向。",
+    "58": "千叶教育界的老面孔。三十年的行政生涯教会他一件事——学校不是靠理想运转的，是靠平衡。"
+  },
+  "speech_style": "缓慢、和蔼、不表态——「嗯嗯，我知道了。大家各有各的道理嘛。」偶尔在关键问题上轻描淡写一句话就让所有人闭嘴。",
+  "likes": [
+    "将棋",
+    "园艺",
+    "孙子兵法",
+    "安静"
+  ],
+  "dislikes": [
+    "丑闻",
+    "激进改革",
+    "麻烦事",
+    "开会太久"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高的校长，在任已有十五年。",
+      "level": "common"
+    },
+    {
+      "text": "每天早上会在校门口跟学生打招呼，记得大部分学生的名字。",
+      "level": "common"
+    },
+    {
+      "text": "说话永远是鼓励型的——但从没明确表过态。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "年轻时的理想主义被泡沫经济后的教育预算削减磨光了。",
+      "level": "close"
+    },
+    {
+      "text": "私下觉得平冢静说的有道理，但更需要教务主任把升学率稳住。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "58": {
+      "drives": [
+        "安稳退休",
+        "别让学校出丑闻"
+      ],
+      "goal": "在明年退休前，让总武高的偏差值排名再升一位。"
+    }
+  },
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": 1,
+    "政治立场": 1
+  }
+}

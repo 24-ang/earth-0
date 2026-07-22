@@ -1,0 +1,410 @@
+{
+  "name": "黑川纱月",
+  "source": "原创 / Invincible (日本NPC)",
+  "base_age": 28,
+  "gender": "female",
+  "appearance_brief": "黑色微卷中短发、戴红框眼镜、身材极度丰满。常穿白大褂或紧身衬衫，搭配黑色吊带袜。",
+  "hair_color": "黑色",
+  "hair_style": "微卷中短发",
+  "eye_color": "深蓝色",
+  "hair_accessories": "",
+  "outfits": {
+    "work": {
+      "top": "浅灰色职业西装外套",
+      "bottom": "深蓝紧身包臀裙",
+      "legs": "蕾丝黑吊带大腿袜",
+      "feet": "黑漆皮尖头细高跟",
+      "inner_top": "暗紫蕾丝半罩杯胸罩",
+      "inner_bot": "暗紫蕾丝低腰三角裤",
+      "shirt": "白色长袖职业衬衫",
+      "desc": "修身浅灰西装外套敞开，内搭白衬衫被巨乳撑得纽扣濒临崩开，领口两颗习惯性解开。深海军蓝高腰包臀裙紧裹臀部，侧边开叉。宽边蕾丝透肉黑大腿袜配吊带，蕾丝边勒出轻微陷痕。黑色漆皮7cm尖头细高跟。暗紫蕾丝刺绣半罩杯胸罩，领口间隐约可见。薄质纯黑全指紧身手套，微哑光。",
+      "hair": "黑色微卷中短发，红框眼镜——知性冷艳"
+    },
+    "casual": {
+      "top": "深酒红无袖高领针织衫",
+      "bottom": "深色紧身包臀裙",
+      "legs": "复古蕾丝黑丝吊带袜",
+      "feet": "深色正装高跟鞋",
+      "inner_top": "真丝深V吊带内衣",
+      "inner_bot": "无痕纯棉三角内裤",
+      "shirt": "宽松纯白大褂",
+      "desc": "深酒红无袖高领针织衫极紧身，勾勒全部胸腰曲线。外搭中长款宽松纯白大褂。同款深色高腰包臀裙，脱去西装外套后腰臀比惊人。复古宫廷蕾丝滚边半透明薄黑丝大腿袜配吊带。深色正装高跟鞋。内穿超薄真丝无痕深V吊带内衣。红框细边近视眼镜，瞬间切换知性气质。",
+      "hair": "摘下眼镜，中短发蓬松自然——女人味溢出"
+    },
+    "sleep": {
+      "shirt": "黑色吊带真丝睡裙",
+      "desc": "带吊带的黑色真丝睡裙，丝滑垂坠，领口极低，裙摆拼接半透明蕾丝。",
+      "hair": "中短发微乱散在枕边，眼镜已摘"
+    }
+  },
+  "body": {
+    "height_cm": 168,
+    "weight_kg": 62,
+    "build": "丰满",
+    "measurements": {
+      "bust": 102,
+      "waist": 62,
+      "hips": 98
+    },
+    "cup": "J",
+    "leg_type": "肉感",
+    "body_shape": {
+      "chest": "水滴",
+      "hips": "蜜桃",
+      "waist": "细腰"
+    },
+    "skin": {
+      "base_tone": "白皙",
+      "tan": 2,
+      "texture": "细腻"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 118,
+      "weight_kg": 20,
+      "build": "纤细",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 152,
+      "weight_kg": 42,
+      "build": "标准",
+      "measurements": {
+        "bust": 78,
+        "waist": 55,
+        "hips": 80
+      },
+      "cup": "B",
+      "leg_type": "修长",
+      "body_shape": {
+        "chest": "半球",
+        "hips": "圆润",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 5,
+        "texture": "细腻"
+      }
+    },
+    "15": {
+      "height_cm": 165,
+      "weight_kg": 53,
+      "build": "丰满",
+      "measurements": {
+        "bust": 92,
+        "waist": 59,
+        "hips": 90
+      },
+      "cup": "F",
+      "leg_type": "肉感",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 3,
+        "texture": "细腻"
+      }
+    },
+    "28": {
+      "height_cm": 168,
+      "weight_kg": 62,
+      "build": "丰满",
+      "measurements": {
+        "bust": 102,
+        "waist": 62,
+        "hips": 98
+      },
+      "cup": "J",
+      "leg_type": "肉感",
+      "body_shape": {
+        "chest": "水滴",
+        "hips": "蜜桃",
+        "waist": "细腰"
+      },
+      "skin": {
+        "base_tone": "白皙",
+        "tan": 2,
+        "texture": "细腻"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 7,
+    "敏捷": 8,
+    "体质": 9,
+    "智力": 16,
+    "感知": 15,
+    "魅力": 17
+  },
+  "skills": {
+    "医疗": 9,
+    "艺术": 10,
+    "心理学": 8,
+    "人际": 7
+  },
+  "hp": {
+    "current": 18,
+    "max": 18
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "白大褂",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact",
+      "flavor": "修身浅灰西装，敞开衣襟。面料顺滑但肩部微磨——常年靠在办公桌沿改报告磨出来的。"
+    },
+    "bottom": {
+      "name": "深蓝包臀裙",
+      "type": "clothing",
+      "slot": "bottom",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "flavor": "深海军蓝高腰包臀裙，侧边小开叉。紧裹臀部，坐下时裙摆会往上滑一截——她已经懒得调整了。"
+    },
+    "legs": {
+      "name": "黑色吊带网纱袜",
+      "type": "clothing",
+      "slot": "legs",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "宽边蕾丝花边透肉黑大腿袜，吊带扣藏在裙内。蕾丝边勒进大腿肉里留下微凹的痕迹——穿一天下来会痒。"
+    },
+    "feet": {
+      "name": "细跟高跟鞋",
+      "type": "clothing",
+      "slot": "feet",
+      "weight": 0.3,
+      "effects": [],
+      "state": "intact",
+      "flavor": "7cm黑色漆皮尖头细高跟，鞋底几乎没磨损——她很少走路，大部分时间坐在办公椅上翘着二郎腿。"
+    },
+    "inner_top": {
+      "name": "黑色蕾丝内衣",
+      "type": "clothing",
+      "slot": "inner_top",
+      "weight": 0.1,
+      "effects": [],
+      "state": "intact",
+      "flavor": "暗紫色蕾丝刺绣半罩杯，肩带极细。衬衫领口偶尔走光露出上沿——但她似乎不在意。"
+    },
+    "inner_bot": {
+      "name": "黑色蕾丝内裤",
+      "type": "clothing",
+      "slot": "inner_bot",
+      "weight": 0.05,
+      "effects": [],
+      "state": "intact",
+      "flavor": "与胸罩配套的暗紫薄蕾丝低腰三角裤，侧边有细小的蝴蝶结装饰。"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "智能手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    },
+    {
+      "name": "速写本",
+      "type": "tool",
+      "weight": 0.5,
+      "volume": 0.5,
+      "effects": [],
+      "state": "intact",
+      "flavor": "一本装订精美的黑色速写本，里面画满了人体素描和未完成的画作。"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "default_location_by_age": {
+    "6": "東京",
+    "12": "東京",
+    "15": "東京",
+    "18": "東京",
+    "28": "稲毛海岸"
+  },
+  "schedule_group": "GDA职员",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "24": "自由人",
+    "28": "GDA职员"
+  },
+  "funds": 200000,
+  "appearance_by_age": {
+    "12": {
+      "hair_style": "中长直发",
+      "hair_color": "黑色"
+    },
+    "15": {
+      "hair_style": "锁骨发",
+      "hair_color": "黑色"
+    },
+    "28": {
+      "hair_style": "微卷中短发",
+      "hair_color": "黑色"
+    }
+  },
+  "personality_brief": "慵懒知性的成熟女性。平时在保健室总是显得没睡醒，比起看病更喜欢在速写本上画画。穿着大胆性感却毫不在意男生的目光，充满神秘感。",
+  "personality_stages": {
+    "12": "内向安静的少女，喜欢独自待在画室里画画，不善交际。",
+    "15": "开始发育后因为身材过于丰满而感到困扰，有些自卑，习惯驼背掩饰身材。",
+    "28": "完全接纳了自己的身体，并将其视为一种美的展现。行事随性慵懒，对待学生有着大人的从容与包容。"
+  },
+  "speech_style": "语速较慢，语气慵懒且带着一点磁性。对学生的烦恼会给出理智又略带挑逗的成熟建议，偶尔会把男生逗得面红耳赤。",
+  "likes": [
+    "人体素描",
+    "红酒",
+    "在保健室睡午觉",
+    "收集各种款式的吊带袜"
+  ],
+  "dislikes": [
+    "早起",
+    "古板的教条",
+    "打扰她画画的人"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高的保健医兼美术老师，拥有极其夸张惹火的身材，是全校男生私下公认的性感女神。",
+      "level": "common"
+    },
+    {
+      "text": "因为胸部太大，穿紧身衬衫时偶尔会有扣子崩开的危险。经常能看到她穿着白大褂配吊带黑丝在走廊漫步。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "她其实是一位小有名气的隐藏天才画家，来学校当校医和美术老师纯粹是为了寻找创作灵感——以及享受宁静的午睡时间。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "28": {
+      "drives": [
+        "寻找完美的人体之美",
+        "过上不被打扰的慵懒生活"
+      ],
+      "goal": "完成自己心目中的终极画作，顺便开导迷茫的青春期学生。"
+    }
+  },
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": -1,
+    "政治立场": -3
+  },
+  "sex_profile": {
+    "baselineDesire": 55,
+    "attitude": "诱惑——享受把对方逗得面红耳赤的过程",
+    "experience": "有经验——但从不公开谈论",
+    "female": {
+      "breast": {
+        "cup": "J",
+        "shape": "吊钟",
+        "nipple_size": "普通",
+        "nipple_color": "浅褐",
+        "areola_size": "稍大",
+        "feel": "丰腴柔软，因大而下坠但型美"
+      },
+      "vagina": {
+        "type": "蝴蝶",
+        "labia_size": "稍大",
+        "depth_cm": 16,
+        "tightness": "普通——但内壁起伏极为明显",
+        "inner_color": "深玫瑰",
+        "feel": "层层叠叠，进去就出不来"
+      },
+      "pubic_hair": {
+        "amount": "普通",
+        "color": "黑色",
+        "style": "自然——懒得打理也是一种美学"
+      },
+      "clitoris": "敏感突出"
+    },
+    "bodyParts": {
+      "唇": {
+        "sensitivity": 7,
+        "development": 2,
+        "preference": "喜欢——尤其是俯视对方反应的时候"
+      },
+      "颈": {
+        "sensitivity": 8,
+        "development": 2,
+        "preference": "敏感——但不常暴露"
+      },
+      "胸": {
+        "sensitivity": 9,
+        "development": 2,
+        "preference": "喜欢被温柔对待——不要急，有的是时间"
+      },
+      "腰": {
+        "sensitivity": 7,
+        "development": 1,
+        "preference": "喜欢被搂住"
+      },
+      "腿": {
+        "sensitivity": 6,
+        "development": 2,
+        "preference": "普通——吊带袜是她的盔甲"
+      },
+      "秘部": {
+        "sensitivity": 8,
+        "development": 2,
+        "preference": "享受——从容的成年人"
+      },
+      "肛": {
+        "sensitivity": 5,
+        "development": 1,
+        "preference": "挑战——不会主动但不会拒绝"
+      }
+    },
+    "cycleDay": 20,
+    "climaxThreshold": 50,
+    "likes": [
+      "掌控节奏",
+      "欣赏对方的反应",
+      "在保健室——她主场",
+      "被叫'先生'而不是'紗月さん'"
+    ],
+    "dislikes": [
+      "猴急的人",
+      "假装有经验的人",
+      "打扰她睡午觉"
+    ]
+  }
+}

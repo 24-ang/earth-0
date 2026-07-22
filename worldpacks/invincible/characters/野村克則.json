@@ -1,0 +1,213 @@
+{
+  "name": "野村克則",
+  "source": "原创 / Invincible (日本NPC)",
+  "base_age": 49,
+  "gender": "male",
+  "appearance_brief": "瘦高身材、戴金丝眼镜的中年男人，头发一丝不苟。西装永远笔挺，办公桌永远整洁。",
+  "hair_color": "黑色（染的）",
+  "hair_style": "三七分",
+  "eye_color": "黑色",
+  "outfits": {
+    "work": {
+      "top": "深蓝色西装",
+      "bottom": "深灰西裤",
+      "feet": "黑皮鞋",
+      "shirt": "白衬衫",
+      "acc": "金丝眼镜"
+    },
+    "casual": {
+      "top": "衬衫",
+      "bottom": "西裤",
+      "feet": "皮鞋"
+    },
+    "sleep": {
+      "shirt": "睡衣"
+    }
+  },
+  "body": {
+    "height_cm": 178,
+    "weight_kg": 68,
+    "build": "瘦削",
+    "leg_type": "修长",
+    "skin": {
+      "base_tone": "普通",
+      "tan": 5,
+      "texture": "普通"
+    },
+    "diet": "正常",
+    "exercise": "日常活动"
+  },
+  "body_by_age": {
+    "6": {
+      "height_cm": 115,
+      "weight_kg": 20,
+      "build": "纤细",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "细腻"
+      }
+    },
+    "12": {
+      "height_cm": 148,
+      "weight_kg": 38,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 10,
+        "texture": "普通"
+      }
+    },
+    "15": {
+      "height_cm": 165,
+      "weight_kg": 55,
+      "build": "标准",
+      "leg_type": "普通",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 8,
+        "texture": "普通"
+      }
+    },
+    "49": {
+      "height_cm": 178,
+      "weight_kg": 68,
+      "build": "瘦削",
+      "leg_type": "修长",
+      "skin": {
+        "base_tone": "普通",
+        "tan": 5,
+        "texture": "普通"
+      }
+    }
+  },
+  "attributes": {
+    "力量": 5,
+    "敏捷": 6,
+    "体质": 6,
+    "智力": 16,
+    "感知": 14,
+    "魅力": 8
+  },
+  "skills": {
+    "行政": 10,
+    "数据分析": 9,
+    "教学管理": 9,
+    "辩论": 8
+  },
+  "hp": {
+    "current": 12,
+    "max": 12
+  },
+  "ac": 10,
+  "equipment": {
+    "top": {
+      "name": "西装",
+      "type": "clothing",
+      "slot": "top",
+      "weight": 0.5,
+      "effects": [],
+      "state": "intact"
+    },
+    "back": {
+      "name": "单肩通学包",
+      "type": "clothing",
+      "slot": "back",
+      "weight": 0.4,
+      "effects": [
+        {
+          "type": "pocket",
+          "value": 8
+        }
+      ],
+      "state": "intact",
+      "flavor": "深蓝色帆布单肩通学包，斜挎在身侧。皮质扣带已磨出光泽。"
+    }
+  },
+  "inventory": [
+    {
+      "name": "手机",
+      "type": "tool",
+      "slot": "back",
+      "weight": 0.2,
+      "effects": [],
+      "state": "intact"
+    }
+  ],
+  "default_location": "千叶县稻毛区",
+  "default_location_by_age": {
+    "6": "検見川浜",
+    "12": "検見川浜",
+    "15": "検見川浜",
+    "49": "検見川浜"
+  },
+  "schedule_group": "GDA职员",
+  "schedule_group_by_age": {
+    "6": "高中生",
+    "12": "高中生",
+    "15": "高中生",
+    "18": "大学生",
+    "49": "GDA职员"
+  },
+  "funds": 500000,
+  "personality_brief": "瘦削的总武高教务主任，戴金丝眼镜，永远在翻成绩数据。和平冢静在升学方针上势如水火——他推填鸭式备考，平冢坚持学生自主。真心相信「为了学生的未来，多做题没什么不好」。不是坏人——只是和静的理念南辕北辙。",
+  "personality_stages": {
+    "12": "家境贫寒但学习刻苦的少年。靠奖学金读完中学。",
+    "15": "以全校第一的成绩考进千叶最好的高中。相信努力和分数是改变命运的唯一途径。",
+    "18": "考入东京大学教育学部的寒门子弟。学生会干部，以严厉和效率著称。",
+    "49": "二十五年的教育行政生涯。相信数据不相信直觉。对平冢静的方法论——太理想化了，不适合公立学校。"
+  },
+  "speech_style": "公事公办，数据说话。「去年偏差值降了0.3，你打算怎么解释？」偶尔会在没人注意时叹气——他也知道学生不喜欢他，但他相信自己是正确的。",
+  "likes": [
+    "数据",
+    "效率",
+    "排名",
+    "历史书"
+  ],
+  "dislikes": [
+    "低效率",
+    "空谈理想",
+    "被顶撞",
+    "平冢静抽烟的样子"
+  ],
+  "public_facts": [
+    {
+      "text": "总武高教务主任，分管升学指导和成绩管理。",
+      "level": "common"
+    },
+    {
+      "text": "和平冢静的关系在教员室是公开的秘密——两人见面只有公事公办。",
+      "level": "common"
+    },
+    {
+      "text": "每年的偏差值分析报告长达两百页，被年轻教师私下称为'野村白皮书'。",
+      "level": "common"
+    }
+  ],
+  "private_facts": [
+    {
+      "text": "他的父亲是个一辈子在工厂做工的工人。他对教育的信念来自父亲的遗言：'你读书，比我有出路。'",
+      "level": "close"
+    },
+    {
+      "text": "其实并不讨厌平冢静——甚至暗中佩服她敢说敢做的性格。但他不允许自己承认这一点。",
+      "level": "close"
+    }
+  ],
+  "drives_by_age": {
+    "49": {
+      "drives": [
+        "提升升学率",
+        "维持学校的偏差值排名"
+      ],
+      "goal": "在任期内让总武高偏差值突破70，进入千叶公立校前三。"
+    }
+  },
+  "social_class": "知识分子",
+  "personal_axes": {
+    "经济立场": 2,
+    "政治立场": 3
+  }
+}
