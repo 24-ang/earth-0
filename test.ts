@@ -2254,8 +2254,8 @@ test("队友状态详情 prompt 收集器", async () => {
   p.party = ["雪之下雪乃"];
   getOrCreateNPC("雪之下雪乃");
   const prompt = await buildStatePrompt();
-  if (!prompt.includes("[队伍成员]")) {
-    throw new Error(`StatePrompt 应包含队伍成员信息，实际: ${prompt}`);
+  if (!prompt.includes("[同行者]")) {
+    throw new Error(`StatePrompt 应包含同行者信息，实际: ${prompt}`);
   }
   if (!prompt.includes("雪之下雪乃: HP")) {
     throw new Error(`StatePrompt 应包含队友详细状态，实际: ${prompt}`);
@@ -5998,8 +5998,8 @@ test("HUD: 情报摘要行（警报前置）+ 二级菜单 + 单段异步加载"
   const outStr = widget.render(80).join("\n");
   if (!outStr.includes("情报")) throw new Error("自身 Tab 底部应有情报行");
   if (!outStr.includes("👮通缉")) throw new Error("wanted 时情报行应前置通缉标记");
-  // 焦点序（layer1关/空背包/无载具）：identity0 titles1 rep2 body3 equip4 skills5 bag頭6 economy7 combat8 party9 infoline10
-  for (let i = 0; i < 10; i++) widget.handleInput("\x1b[B");
+  // 焦点序（layer1关/空背包/无载具）：identity0 titles1 rep2 body3 equip4 skills5 bag頭6 economy7 combat8 infoline9
+  for (let i = 0; i < 9; i++) widget.handleInput("\x1b[B");
   widget.handleInput("\r");     // 进 info-detail 二级菜单
   const menuStr = widget.render(80).join("\n");
   if (!menuStr.includes("警报") || !menuStr.includes("成就") || !menuStr.includes("日志")) throw new Error("info-detail 应渲染九项菜单（含成就+日志）");
@@ -6385,8 +6385,8 @@ test("Party System: physical follow and schedule bypass", async () => {
   if (gameState.npcs[companionName].currentRoom !== gameState.player.location) {
     throw new Error("Teammate did not follow player location change");
   }
-  if (gameState.npcs[companionName].action !== "跟随玩家") {
-    throw new Error("Teammate action is not 跟随玩家: " + gameState.npcs[companionName].action);
+  if (gameState.npcs[companionName].action !== "同行中") {
+    throw new Error("Teammate action is not 同行中: " + gameState.npcs[companionName].action);
   }
 
   // 2. updateNPCSchedules -> Companion schedule is bypassed

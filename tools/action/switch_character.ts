@@ -85,6 +85,7 @@ export default {
       p.reputation = {};
       p.properties = [];
       p.party = [];
+      p.following = [];
       p.fatigue = (npc as any).fatigue ?? 0;
       p.wounds = (npc as any).wounds || [];
       p.titles = src?.titles || [];

@@ -189,6 +189,7 @@ export default {
     gs.player.abilities = {};
     gs.player.wounds = [];
     gs.player.party = [];
+    gs.player.following = [];
     gs.player.titles = [];
     gs.player.funds = 0;
     gs.player.fatigue = 0;

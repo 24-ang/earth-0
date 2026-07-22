@@ -763,10 +763,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _lastEnterTime = 0; // 双击 Enter 进面板的时间戳
 
   // ── 三级状态机 ──
-  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "party-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | "bag-empty" | "bag-list" | null = null;
+  let _submenu: "npc-detail" | "npc-talk" | "npc-touch" | "npc-observe" | "npc-combat" | "npc-steal" | "npc-romance" | "npc-direct" | "item-detail" | "vehicle-detail" | "furniture-detail" | "equip-detail" | "body-detail" | "skills-detail" | "reputation-detail" | "titles-detail" | "sex-detail" | "settlement-detail" | "go-nav" | "info-detail" | "info-section" | "economy-detail" | "combat-detail" | "relations-detail" | "world-detail" | "container-pick" | "phone-main" | "phone-messages" | "identity-detail" | "turnlog-detail" | "bag-empty" | "bag-list" | null = null;
   let _subCursor = 0; // 子菜单内部光标
   let _selectedTarget: any = null; // 当前交互的目标实体 (如选中 NPC, 物品, 载具)
   let _pickSlot: string | null = null; // equip-detail 空槽 Enter → 选物品模式（slot id）, null=正常槽列表
+  let _pickGift: string | null = null; // 同行给物品模式 → NPC名, null=正常
 
   let _choicesCache: string[] = [];
   let _choiceTags: string[] = [];
@@ -1209,15 +1210,21 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
       ];
       return acts;
     }
+    const party = gs?.player?.party || [];
+    const following = gs?.player?.following || [];
+    const inParty = party.includes(name);
+    const inFollowing = following.includes(name);
+    const partyFull = party.length >= 3 && !inParty; // 同行上限 3 人
     const acts: { label: string; key: number; locked: boolean }[] = [
       { label: "①搭话", key: 0, locked: false },
       { label: aff < 10 ? "②接触≥10" : "②接触", key: 1, locked: aff < 10 },
       { label: hasInsight ? "③观察" : "③观察·洞察", key: 2, locked: false },
-      { label: (aff < 40 && !lover) ? "④组队≥40" : "④组队", key: 3, locked: aff < 40 && !lover },
-      { label: aff < 50 ? "⑤恋爱≥50" : "⑤恋爱", key: 4, locked: aff < 50 },
-      { label: "⑥战斗", key: 5, locked: false },
-      { label: hasStealth ? "⑦窃取" : "⑦窃取·潜行", key: 6, locked: !hasStealth },
-      { label: hasPsych ? "⑧暗示" : "⑧暗示·心理", key: 7, locked: !hasPsych },
+      { label: inFollowing ? "④取消跟随" : "④跟随", key: 9, locked: false },
+      { label: inParty ? "⑤取消同行" : (aff < 40 && !lover) ? "⑤同行≥40" : partyFull ? "⑤同行🈵" : "⑤同行", key: 3, locked: inParty ? false : (aff < 40 && !lover) || partyFull },
+      { label: aff < 50 ? "⑥恋爱≥50" : "⑥恋爱", key: 4, locked: aff < 50 },
+      { label: "⑦战斗", key: 5, locked: false },
+      { label: hasStealth ? "⑧窃取" : "⑧窃取·潜行", key: 6, locked: !hasStealth },
+      { label: hasPsych ? "⑨暗示" : "⑨暗示·心理", key: 7, locked: !hasPsych },
     ];
     if (lover && aff >= 80) {
       acts.push({ label: "⑨亲密", key: 8, locked: false });
@@ -1261,14 +1268,32 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
     // key===2 → 观察子面板（由 handleInput 路由，不经过这里）
     else if(key===3){
       if(aff<40&&!lover){ctx?.ui?.notify(`好感需≥40或恋人`,"warning");return;}
+      const partyFull = pty.length >= 3 && !pty.includes(name);
+      if(partyFull){ctx?.ui?.notify("同行已满（最多3人）","warning");return;}
       if(pty.includes(name)){
         gs.player.party=pty.filter((n:string)=>n!==name);
-        pushText(`${name}离开了队伍。`);
-        ctx?.ui?.notify(`${name}离队`, "info");
+        pushText(`${name}离开了同行。`);
+        ctx?.ui?.notify(`${name} 分开`, "info");
       } else {
         gs.player.party=[...pty,name];
-        pushText(`${name}加入了队伍。`);
-        ctx?.ui?.notify(`${name}入队`, "info");
+        // 加入同行时自动从跟随中移除
+        gs.player.following = (gs.player.following||[]).filter((n:string)=>n!==name);
+        pushText(`${name}加入了同行。`);
+        ctx?.ui?.notify(`${name} 同行`, "info");
+      }
+      require("./engine/state.ts").saveState();_panelMode=false;
+    }
+    else if(key===9){
+      // ④跟随 toggle（无门槛）
+      const fol: string[] = gs?.player?.following || [];
+      if(fol.includes(name)){
+        gs.player.following = fol.filter((n:string)=>n!==name);
+        pushText(`${name}不再跟随。`);
+        ctx?.ui?.notify(`${name} 取消跟随`, "info");
+      } else {
+        gs.player.following = [...fol, name];
+        pushText(`${name}跟上了我。`);
+        ctx?.ui?.notify(`${name} 跟随中`, "info");
       }
       require("./engine/state.ts").saveState();_panelMode=false;
     }
@@ -1628,7 +1653,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           if (p.vehicle) { _focusItems.push({ type: "vehicle", vehicle: p.vehicle }); }
           _focusItems.push({ type: "economy" });
           _focusItems.push({ type: "combat" });
-          _focusItems.push({ type: "party" });
           _focusItems.push({ type: "infoline" });
 
           // 子菜单渲染
@@ -1787,11 +1811,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 out.push(tr(kv(n, `Lv.${lv}  ${cdStr}`)));
               }
             }
-          } else if (_submenu === "party-detail") {
-            const pty = p.party || [];
-            out.push(tr(`── 队伍详情 ──`));
-            if (!pty.length) { out.push(tr(`  （无队友）`)); }
-            else { for (const nm of pty) { const rel = p.relationships?.[nm]; const npc = gs?.npcs?.[nm]; const aff = rel?.affection ?? 0; const rl = rel?.romance || rel?.stage || ""; const hpc = npc?.hp?.current ?? "?"; const hpm = npc?.hp?.max ?? "?"; out.push(tr(`  👤 ${nm}  💕${aff} ${rl}  ❤${hpc}/${hpm}`)); } }
           } else if (_submenu === "container-pick" && _selectedTarget) {
             const cpItems = (_selectedTarget as any)?._containerItems || [];
             const cname = (_selectedTarget as any)?._containerName || "容器";
@@ -1977,7 +1996,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const npc = gs?.npcs?.[nm];
                 const sameRoom = npc && s.isSameLocation(npc.currentRoom, loc);
                 const roomStr = sameRoom ? gray("同室") : gray("不在同室");
-                const inParty = (p.party || []).includes(nm) ? ` ${gray("队伍中")}` : "";
+                const inParty = (p.party || []).includes(nm) ? ` ${gray("同行中")}` : (p.following || []).includes(nm) ? ` ${gray("跟随中")}` : "";
                 out.push(tr(`  ${nm}  ${affStr} ${gray("·")} ${roomStr}${inParty}`, "gear"));
               }
             };
@@ -2300,9 +2319,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             const wpn = p.equipment?.right_hand || p.equipment?.left_hand;
             const wpnStr = wpn?.damage ? `${wpn.name}(${wpn.damage.dice||"?"})` : "徒手";
             out.push(tr(entry(focusCombat, '战斗', wpnStr, gray('›')), 'gear', focusCombat));
-            const pty = p.party || [];
-            const focusParty = sel("party");
-            out.push(tr(entry(focusParty, '队伍', pty.length ? pty.map(n => '👤'+n).join(gdot) : dim('（无队友）'), gray('›')), 'gear', focusParty));
 
             // 伤口 + 隐藏状态 + 情报摘要行
             if ((p.wounds || []).length > 0) {
@@ -2348,6 +2364,26 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           }
           // 二级状态：展示 NPC 操作列表
           else if (_submenu === "npc-detail" && _selectedTarget) {
+            // _pickGift 模式：列出背包物品供选择
+            if (_pickGift && _selectedTarget) {
+              const n2 = _selectedTarget;
+              const inv3: any[] = gs.player?.inventory || [];
+              out.push(tr(head(`给 ${n2.name} 物品`), "gear"));
+              if (!inv3.length) { out.push(tr(gray("  （背包空空如也）"), "gear")); }
+              else {
+                for (let i = 0; i < Math.min(inv3.length, 12); i++) {
+                  const it = inv3[i]!;
+                  const on = _subCursor === i;
+                  const meta = `  ${gray(`[${(it.type || "??").slice(0, 2)}]`)} ${it.name} ${gray(`${it.weight ?? 0}kg`)}`;
+                  out.push(tr(` ${on ? hi("▶") : " "} ${meta}`, "gear", on));
+                }
+              }
+              out.push(tr(gray("─".repeat(46)), "gear"));
+              out.push(tr(gray("↑↓ 选物品 · Enter 给出去 · Esc 取消"), "gear"));
+              // 跳过正常 npc-detail 渲染
+              _focusItems = [];
+              return out;
+            }
             const n = _selectedTarget;
             const mode = gs.mode || "rpg";
             const sx = (gs.sexStates || {})[n.name];
@@ -2425,6 +2461,14 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             } else {
               out.push(tr(`  ` + npcActions.map((ac, idx) => btn(ac, idx)).join(" ")));
             }
+            // 同行操作（仅当 NPC 在同行中显示）
+            if ((p.party || []).includes(n.name)) {
+              const opOff = npcActions.length;
+              const opBtns = [["①给物品", opOff], ["②指挥", opOff+1], ["③分开", opOff+2]] as [string, number][];
+              const opLine = opBtns.map(([lb, ix]) => _subCursor === ix ? `${C.O}${C.B}▶${lb}◀${C.r}` : ` ${lb} `).join(" ");
+              out.push(tr(""));
+              out.push(tr(gray("  同行操作:") + " " + opLine));
+            }
           }
           // 三级状态：搭话子菜单
           else if (_submenu === "npc-talk" && _selectedTarget) {
@@ -2451,181 +2495,232 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               out.push(tr(`  ${_subCursor === i ? "▶" : " "} ${String.fromCodePoint(0x2460+i)} ${levels[i].label}${suffix}`));
             }
           }
-          // 三级状态：观察子面板
+          // 三级状态：观察子面板（自身 tab kv/sq 风格）
           else if (_submenu === "npc-observe" && _selectedTarget) {
             const n = _selectedTarget;
             const il = _getNpcInsightLevel(gs);
-            out.push(tr(`🔍 观察: ${n.name}`));
-            // 基础：外观（始终可见）
+            const npcState = gs?.npcs?.[n.name];
             let charData: any = null;
-            try {
-              const s2 = require("./engine/state.ts");
-              charData = s2.findCharacter(n.name);
-            } catch {}
+            try { const s2 = require("./engine/state.ts"); charData = s2.findCharacter(n.name); } catch {}
             const body = charData?.body || {};
             const attrs = charData?.attributes || {};
-            // 基本信息
+
+            out.push(tr(head(`观察 · ${n.name}`)));
+
+            // ── Lv0: 基本信息（始终可见）──
             const gender = charData?.gender || "?";
             const ageLabel = charData?.base_age ? `${charData.base_age}岁` : "?";
+            const h = n.height && n.height !== "?" ? `${n.height}cm` : "";
+            const bd = body.build || "";
+            out.push(tr(kv("姓名", n.name)));
+            out.push(tr(kv("性别", gender)));
+            out.push(tr(kv("年龄", ageLabel)));
+            if (h) out.push(tr(kv("身高", h)));
+            if (bd) out.push(tr(kv("身材", bd)));
+            if (body.cup && (charData?.gender || "").includes("女")) out.push(tr(kv("罩杯", body.cup)));
             const src = charData?.source || "";
-            out.push(tr(`  ${n.name}  ${gender} · ${ageLabel}${src ? " · " + src : ""}`));
-            // 外观（Lv0）
-            if (charData?.appearance_brief) out.push(tr(`  ${charData.appearance_brief}`));
-            else {
-              const h = n.height && n.height !== "?" ? `${n.height}cm` : "";
-              const bd = body.build || "";
-              out.push(tr(`  ${[h, bd].filter(Boolean).join(" · ") || "—"}`));
-            }
-            // 关系（Lv1+）
+            if (src) out.push(tr(kv("来源", src)));
+            // 外观简述
+            if (charData?.appearance_brief) out.push(tr(kv("外观", charData.appearance_brief)));
+            out.push(tr(""));
+
+            // ── Lv1: 关系 ──
             if (il >= 1) {
               const aff = getNpcAffection(gs, n.name);
-              const stage = gs?.player?.relationships?.[n.name]?.stage || "陌生";
-              const statusLabel = getNPCStatusLabel(gs, n.name);
-              out.push(tr(`  ─ 关系 ─`));
-              out.push(tr(`  ${statusLabel} · ♥ ${aff}/100 · ${stage}`));
+              const rel = p.relationships?.[n.name];
+              const stage = rel?.stage || "陌生";
+              const romance = rel?.romance || "";
+              const stageStr = romance === "恋人" ? `${C.P}[恋人]${C.r}` : stageBadge(n.name, aff);
+              out.push(tr(kv("关系", stageStr)));
+              out.push(tr(kv("好感", sq(aff, 100, 5))));
             } else {
-              out.push(tr(`  ─ 关系不明（洞察Lv1+解锁）`));
+              out.push(tr(kv("关系", gray("（洞察Lv1解锁）"))));
             }
-            // 身体（Lv3+）
-            if (il >= 3 && (body.height_cm || body.weight_kg || body.cup)) {
-              const parts = [];
-              if (body.height_cm) parts.push(`${body.height_cm}cm`);
-              if (body.weight_kg) parts.push(`${body.weight_kg}kg`);
-              if (body.build) parts.push(body.build);
-              if (body.cup) parts.push(`${body.cup}-cup`);
+            out.push(tr(""));
+
+            // ── Lv2: 身份（阶级/立场/组织）──
+            if (il >= 2) {
+              const sc = charData?.social_class || npcState?.social_class;
+              const pi = npcState?.public_identity;
+              const axes = charData?.personal_axes || npcState?.personal_axes || {};
+              const mems = npcState?.memberships || [];
+
+              if (sc || pi || Object.keys(axes).length || mems.length) {
+                out.push(tr(gray("── 🏷️ 社会身份 ──"), "gear"));
+                if (sc) out.push(tr(kv("阶级", `${C.Y}${sc}${C.r}`)));
+                if (pi) out.push(tr(kv("公开身份", pi)));
+                else if (il >= 2) out.push(tr(kv("公开身份", dim("（无）"))));
+                // 立场坐标
+                if (Object.keys(axes).length) {
+                  for (const [axKey, axVal] of Object.entries(axes)) {
+                    const v = (axVal as number) ?? 0;
+                    const left = v < 0 ? Math.min(5, Math.abs(v) * 2) : 0;
+                    const right = v > 0 ? Math.min(5, v * 2) : 0;
+                    const bar5 = `${C.G}${"■".repeat(left)}${C.r}${gray("□".repeat(5 - left - right))}${v > 0 ? C.d : C.r}${"■".repeat(right)}${C.r}`;
+                    const label = axKey.includes("经济") ? "经济立场" : axKey.includes("政治") ? "政治立场" : axKey;
+                    const note = v < -2 ? `${C.d}偏左${C.r}` : v < 0 ? gray("略左") : v > 2 ? `${C.d}偏右${C.r}` : v > 0 ? gray("略右") : gray("中立");
+                    out.push(tr(kv(label, `${bar5}  ${note}`)));
+                  }
+                }
+                // 所属组织
+                if (mems.length) {
+                  for (const m of mems) {
+                    const oname = m.orgId || "?";
+                    const role = m.role || "成员";
+                    const rank = m.rank ?? 0;
+                    const active = !m.archived;
+                    out.push(tr(kv(`🏫 ${oname}`, `${role}  ${gray("│")}  rank ${rank}/10  ${gray("│")}  ${active ? "" : gray("已归档")}`)));
+                  }
+                }
+                out.push(tr(""));
+              }
+            }
+
+            // ── Lv2: 携带 ──
+            if (il >= 2 && npcState) {
+              const eq = npcState.equipment || {};
+              const lh = eq?.left_hand?.name || npcState.left_hand || "—";
+              const rh = eq?.right_hand?.name || npcState.right_hand || "—";
+              const cash = npcState.funds ?? 0;
+              const bagItems = (npcState.inventory || []).slice(0, 6).map((x: any) => x?.name || x).join(" · ") || "—";
+              out.push(tr(kv("右手", rh)));
+              out.push(tr(kv("左手", lh)));
+              out.push(tr(kv("现金", gold(`¥${cash.toLocaleString()}`))));
+              out.push(tr(kv("背包", bagItems)));
+
+              // 服装 + NPC→NPC 关系
+              const outfit = npcState.currentOutfit;
+              const npcRels = npcState.npcRelationships;
+              if (outfit) out.push(tr(kv("穿着", outfit)));
+              if (npcRels && Object.keys(npcRels).length > 0) {
+                for (const [n2, r2] of Object.entries(npcRels).slice(0, 5)) {
+                  const st = (r2 as any)?.stage || "?";
+                  const tone = (r2 as any)?.tone ? ` (${(r2 as any).tone})` : "";
+                  out.push(tr(kv(`对${n2}`, `${st}${tone}`)));
+                }
+              }
+              out.push(tr(""));
+            }
+
+            // ── Lv2: 内面+日程 ──
+            if (il >= 2 && npcState) {
+              const drives = npcState.current_drives || [];
+              const goal = npcState.current_goal;
+              const sched = npcState.scheduleGroup;
+              if (drives.length) out.push(tr(kv("驱动力", drives.join(" · "))));
+              if (goal) out.push(tr(kv("目标", goal)));
+              if (sched) out.push(tr(kv("日程", sched)));
+              const po = npcState.pendingOverride;
+              if (po) out.push(tr(kv("临时行动", `${po.action} @ ${po.location}（${po.reason}）`)));
+              if (drives.length || goal || sched || po) out.push(tr(""));
+            }
+
+            // ── Lv3: 身体 ──
+            if (il >= 3) {
+              const bParts: string[] = [];
+              if (body.height_cm) bParts.push(`${body.height_cm}cm`);
+              if (body.weight_kg) bParts.push(`${body.weight_kg}kg`);
+              if (body.build) bParts.push(body.build);
               if (body.measurements) {
                 const m = body.measurements;
-                parts.push(`${m.bust || "?"}-${m.waist || "?"}-${m.hips || "?"}`);
+                bParts.push(`${m.bust || "?"}-${m.waist || "?"}-${m.hips || "?"}`);
               }
-              out.push(tr(`  ─ 身体 ─`));
-              out.push(tr(`  ${parts.join(" · ")}`));
-            }
-            // 携带（Lv2+）
-            if (il >= 2) {
-              const npc = gs?.npcs?.[n.name];
-              const eq = npc?.equipment || {};
-              const lh = eq?.left_hand?.name || npc?.left_hand || "—";
-              const rh = eq?.right_hand?.name || npc?.right_hand || "—";
-              const cash = npc?.funds ?? "?";
-              const wealth = npc?.wealth ?? 0;
-              const bagItems = (npc?.inventory || []).slice(0, 5).map((x: any) => x?.name || x).join("·") || "—";
-              out.push(tr(`  ─ 携带 ─`));
-              out.push(tr(`  现金 ¥${cash} · 资产 ¥${wealth.toLocaleString()} · 右:${rh} 左:${lh}`));
-              out.push(tr(`  背包: ${bagItems}`));
-              // 服装 + NPC→NPC 关系（Lv2+）
-              const outfit = npc?.currentOutfit;
-              const npcRels = npc?.npcRelationships;
-              if (outfit || (npcRels && Object.keys(npcRels).length > 0)) {
-                out.push(tr(`  ─ 社交 ─`));
-                if (outfit) out.push(tr(`  穿着: ${outfit}`));
-                if (npcRels && Object.keys(npcRels).length > 0) {
-                  const relStrs = Object.entries(npcRels).slice(0, 4).map(([n2, r2]: any) => {
-                    const tone = r2?.tone ? ` (${r2.tone})` : "";
-                    return `${n2}:${r2?.stage||"?"}${tone}`;
-                  });
-                  out.push(tr(`  对他者: ${relStrs.join(gdot)}`));
-                }
-              }
-              // NPC 技能+能力（Lv3+）
-              if (il >= 3) {
-                const npcSk = npc?.skills || {};
-                const npcAb = npc?.abilities || {};
-                const skNames = Object.keys(npcSk).filter(k => (npcSk[k]?.level ?? npcSk[k] ?? 0) > 0);
-                const abNames = Object.keys(npcAb).filter(k => (npcAb[k]?.level ?? npcAb[k] ?? 0) > 0);
-                if (skNames.length || abNames.length) {
-                  out.push(tr(`  ─ 能力 ─`));
-                  if (skNames.length) out.push(tr(`  技能: ${skNames.map(k => `${k}Lv${npcSk[k]?.level ?? npcSk[k]}`).join(gdot)}`));
-                  if (abNames.length) {
-                    const abStrs = abNames.map(k => {
-                      const cd = npcAb[k]?.cooldownRemaining ?? 0;
-                      return `${k}Lv${npcAb[k]?.level ?? "?"}${cd > 0 ? ` ${C.d}CD${cd}${C.r}` : ""}`;
-                    });
-                    out.push(tr(`  能力: ${abStrs.join(gdot)}`));
-                  }
-                }
+              if (bParts.length) {
+                out.push(tr(kv("身体", bParts.join(" · "))));
+                out.push(tr(""));
               }
             }
-            // 属性（Lv3+）
+
+            // ── Lv3: 属性（和自身 tab 一致）──
             if (il >= 3 && Object.keys(attrs).length > 0) {
-              out.push(tr(`  ─ 属性 ─`));
-              out.push(tr(`  力${attrs.力量??"?"} 敏${attrs.敏捷??"?"} 体${attrs.体质??"?"} 智${attrs.智力??"?"} 感${attrs.感知??"?"} 魅${attrs.魅力??"?"}`));
+              for (const nm of ["力量","敏捷","体质","智力","感知","魅力"]) {
+                const v = attrs[nm] ?? 10;
+                out.push(tr(kv(nm, `${v}${attrNote(v)}`)));
+              }
+              out.push(tr(""));
             }
-            // 设定（Lv3+）
+
+            // ── Lv3: 能力 ──
+            if (il >= 3 && npcState) {
+              const npcSk = npcState.skills || {};
+              const npcAb = npcState.abilities || {};
+              const skNames = Object.keys(npcSk).filter(k => (npcSk[k]?.level ?? 0) > 0);
+              const abNames = Object.keys(npcAb).filter(k => (npcAb[k]?.level ?? 0) > 0);
+              if (skNames.length || abNames.length) {
+                for (const k of skNames) out.push(tr(kv(k, `Lv.${npcSk[k]?.level ?? "?"}`)));
+                for (const k of abNames) {
+                  const cd = npcAb[k]?.cooldownRemaining ?? 0;
+                  out.push(tr(kv(k, `Lv.${npcAb[k]?.level ?? "?"}${cd > 0 ? ` ${C.d}CD${cd}${C.r}` : ""}`)));
+                }
+                out.push(tr(""));
+              }
+            }
+
+            // ── Lv3: 设定 ──
             if (il >= 3 && charData?.anchors?.[0]) {
-              out.push(tr(`  ─ 设定 ─`));
-              out.push(tr(`  "${charData.anchors[0]}"`));
+              out.push(tr(kv("设定", `"${charData.anchors[0]}"`)));
+              out.push(tr(""));
             }
-            // 内心话
-            if (n.lastWords) out.push(tr(`  💭 "${n.lastWords}"`));
-            // Layer1 性状态（开启时显示）
+
+            // ── 心里话（始终可见）──
+            if (n.lastWords) {
+              out.push(tr(kv("心里话", dim(`「${String(n.lastWords).replace(/^\[.*?\]\s*/, "").slice(0, 40)}」`))));
+              out.push(tr(""));
+            }
+
+            // ── Layer1 性状态 ──
             if (gs.layer1Enabled) {
               try {
-                const sexStates = gs.sexStates || {};
-                const sx = sexStates[n.name];
+                const sx = (gs.sexStates || {})[n.name];
                 if (sx) {
-                  out.push(tr(`  ── 性状态（Layer1）──`));
-                  out.push(tr(`  💓欲望 ${sx.desire||0}/100  🔥兴奋 ${sx.arousal||0}/100`));
+                  out.push(tr(gray("── 性状态（Layer1）──"), "gear"));
+                  out.push(tr(kv("欲望", sq(sx.desire || 0, 100, 10))));
+                  out.push(tr(kv("兴奋", sq(sx.arousal || 0, 100, 10))));
                   const prof = sx.profile || {};
-                  if (prof.attitude) out.push(tr(`  态度: ${prof.attitude} · 经验: ${prof.experience||"?"}`));
-                  if (sx.thoughts?.length) {
-                    out.push(tr(`  💭 "${sx.thoughts[sx.thoughts.length-1].text}"`));
-                  }
+                  if (prof.attitude) out.push(tr(kv("态度", `${prof.attitude} · 经验: ${prof.experience || "?"}`)));
+                  if (sx.thoughts?.length) out.push(tr(kv("心里话", dim(`「${sx.thoughts[sx.thoughts.length-1].text.slice(0, 40)}」`))));
+                  out.push(tr(""));
                 }
               } catch {}
             }
-            // 妊娠状态（从 NPC lifeEvents 读取）
-            const npcState = gs?.npcs?.[n.name];
+
+            // ── 妊娠/疾病/冲突（生命事件）──
             if (npcState?.lifeEvents) {
               const preg = npcState.lifeEvents.find((e: any) => e.type === "pregnancy");
               if (preg) {
                 const pd = preg.data || {};
-                const stageLabel: Record<string,string> = { "early":"初期（0-90天）· 尚无可见变化", "visible":"可见期（90-180天）· 身体变化瞒不住了", "due":"临产（180-270天）· 已住院待产" };
-                out.push(tr(`  ── 🤰 妊娠状态 ──`));
-                out.push(tr(`  父亲: ${pd.father||"?"} · 受孕日: 第${pd.day_conceived||"?"}天`));
-                out.push(tr(`  阶段: ${stageLabel[pd.stage] || pd.stage || "?"}`));
+                const stageLabel: Record<string,string> = { "early":"初期", "visible":"可见期", "due":"临产" };
+                out.push(tr(gray("── 🤰 妊娠状态 ──"), "gear"));
+                out.push(tr(kv("父亲", pd.father || "?")));
+                out.push(tr(kv("受孕日", pd.day_conceived ? `第${pd.day_conceived}天` : "?")));
+                out.push(tr(kv("阶段", stageLabel[pd.stage] || pd.stage || "?")));
+                out.push(tr(""));
               }
-              // illness / injury
               const ill = npcState.lifeEvents.find((e: any) => e.type === "illness" || e.type === "injury");
               if (ill) {
                 const d = ill.data || {};
-                out.push(tr(`  ── 🤒 疾病/受伤 ──`));
-                out.push(tr(`  类型: ${d.illness||d.name||"?"} · 严重度: ${d.severity||"?"} (${d.severityValue||"?"}/10)`));
-                if (d.startedAt) out.push(tr(`  起始: 第${d.startedAt}天`));
-                if (d.symptoms) out.push(tr(`  症状: ${d.symptoms}`));
+                out.push(tr(gray("── 🤒 疾病/受伤 ──"), "gear"));
+                out.push(tr(kv("类型", d.illness || d.name || "?")));
+                out.push(tr(kv("严重度", `${d.severity || "?"} (${d.severityValue || "?"}/10)`)));
+                if (d.startedAt) out.push(tr(kv("起始", `第${d.startedAt}天`)));
+                if (d.symptoms) out.push(tr(kv("症状", d.symptoms)));
+                out.push(tr(""));
               }
-              // conflict
               const cnf = npcState.lifeEvents.find((e: any) => e.type === "conflict" || e.type === "feud");
               if (cnf) {
                 const d = cnf.data || {};
-                out.push(tr(`  ── ⚔️ 冲突/纠纷 ──`));
-                out.push(tr(`  对象: ${d.target||"?"} · 原因: ${d.cause||"?"}`));
-                out.push(tr(`  状态: ${d.phase||d.status||"?"} · 开始: ${cnf.startedAt ? "第"+cnf.startedAt+"天" : "?"}`));
-                if (d.escalationRisk) out.push(tr(`  升级风险: ${d.escalationRisk}`));
+                out.push(tr(gray("── ⚔️ 冲突/纠纷 ──"), "gear"));
+                out.push(tr(kv("对象", d.target || "?")));
+                out.push(tr(kv("原因", d.cause || "?")));
+                out.push(tr(kv("状态", `${d.phase || d.status || "?"} · 开始: ${cnf.startedAt ? "第"+cnf.startedAt+"天" : "?"}`)));
+                if (d.escalationRisk) out.push(tr(kv("升级风险", d.escalationRisk)));
+                out.push(tr(""));
               }
             }
-            // 驱动力 + 当前目标（Lv2+）
-            if (il >= 2 && npcState) {
-              const drives = npcState.current_drives || [];
-              const goal = npcState.current_goal;
-              if (drives.length || goal) {
-                out.push(tr(`  ─ 内面 ─`));
-                if (drives.length) out.push(tr(`  驱动力: ${drives.join(" · ")}`));
-                if (goal) out.push(tr(`  当前目标: ${goal}`));
-              }
-            }
-            // 组织+日程（Lv2+）
-            if (il >= 2) {
-              const sched = npcState?.scheduleGroup;
-              if (sched) out.push(tr(`  日程: ${sched}`));
-              const npcMems = npcState?.memberships || [];
-              if (npcMems.length) {
-                const memStrs = npcMems.map((m:any) => `${m.orgId||"?"}:${m.role||"?"} R${m.rank??"?"}`);
-                out.push(tr(`  组织: ${memStrs.join(gdot)}`));
-              }
-              // pending override
-              const po = npcState?.pendingOverride;
-              if (po) out.push(tr(`  ⚡ 临时行动: ${po.action} @ ${po.location}（${po.reason}）`));
-            }
+
+            // 底部页脚
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 滚动 · Enter 无动作（只读）· Esc 返回"), "gear"));
           }
           // 三级状态：性状态详情（从 npc-detail ⑥状态 进入）
           else if (_submenu === "sex-detail" && _selectedTarget) {
@@ -2686,6 +2781,24 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             out.push(tr(`  ${_subCursor === 1 ? "▶" : " "} ② 📅 邀请约会${canDate ? "" : " (需好感50+)"}`));
           }
           // 三级状态：战斗子菜单
+          // 三级状态：指挥同行者
+          else if (_submenu === "npc-direct" && _selectedTarget) {
+            const n3 = _selectedTarget;
+            out.push(tr(head(`指挥 · ${n3.name}`)));
+            out.push(tr(""));
+            const directs = [
+              { label: "① 攻击", action: "attack", desc: "使用武器或徒手攻击目标" },
+              { label: "② 防御", action: "defend", desc: "掩护玩家或自身防御" },
+              { label: "③ 侦察", action: "scout", desc: "侦察警戒周围环境" },
+              { label: "④ 支援", action: "support", desc: "辅助/治疗/鼓舞我方" },
+            ];
+            for (let i = 0; i < directs.length; i++) {
+              const on = _subCursor === i;
+              out.push(tr(` ${on ? hi("▶") : " "} ${directs[i].label}  ${gray("—")}  ${gray(directs[i].desc)}`, "gear", on));
+            }
+            out.push(tr(gray("─".repeat(46)), "gear"));
+            out.push(tr(gray("↑↓ 选动作 · Enter 执行 · Esc 返回"), "gear"));
+          }
           else if (_submenu === "npc-combat" && _selectedTarget) {
             const n = _selectedTarget;
             out.push(tr(`⚔️ 战斗: ${n.name}`));
@@ -3152,7 +3265,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           if (d === "\x1b" || d === "q") {
             // 装备选物品模式的 Esc 只退出选物品模式，回正常槽列表
             if (_submenu === "equip-detail" && _pickSlot) { _pickSlot = null; _subCursor = 0; return true; }
-            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance" || (_submenu === "sex-detail" && _selectedTarget)) {
+            if (_submenu === "npc-talk" || _submenu === "npc-touch" || _submenu === "npc-observe" || _submenu === "npc-direct" || _submenu === "npc-combat" || _submenu === "npc-steal" || _submenu === "npc-romance" || (_submenu === "sex-detail" && _selectedTarget)) {
               _submenu = "npc-detail";
               _subCursor = 0;
             } else if (_submenu === "npc-detail") {
@@ -3174,7 +3287,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               _submenu = "info-detail";
               _subCursor = _infoSecIdx;
             } else if (_submenu === "vehicle-detail" || _submenu === "furniture-detail" || _submenu === "equip-detail" ||
-                       _submenu === "body-detail" || _submenu === "skills-detail" || _submenu === "party-detail" ||
+                       _submenu === "body-detail" || _submenu === "skills-detail" ||
                        _submenu === "reputation-detail" || _submenu === "relations-detail" || _submenu === "titles-detail" || _submenu === "sex-detail" ||
                        _submenu === "identity-detail" ||
                        _submenu === "go-nav" || _submenu === "info-detail" || _submenu === "economy-detail" || _submenu === "combat-detail" ||
@@ -3194,20 +3307,74 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
           // NPC 二级详情菜单控制 (快捷键一横排)
           if (_submenu === "npc-detail") {
+            // _pickGift 模式输入处理
+            if (_pickGift && _selectedTarget) {
+              const inv4: any[] = gs.player?.inventory || [];
+              if (d === "\x1b" || d === "q") { _pickGift = null; _subCursor = 0; return true; }
+              if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + Math.max(1, inv4.length) - 1) % Math.max(1, inv4.length); return true; }
+              if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % Math.max(1, inv4.length); return true; }
+              if (d === "\r" || d === "\n") {
+                const it = inv4[_subCursor];
+                if (!it) { getCtx()?.ui?.notify("没有选中物品", "info"); return true; }
+                const targetName = _selectedTarget.name;
+                const p3 = gs.player;
+                const idx = p3.inventory.findIndex((x: any) => x.name === it.name);
+                if (idx < 0) { getCtx()?.ui?.notify(`背包里找不到 ${it.name}`, "warning"); return true; }
+                // transfer_item 引擎调用
+                const targetNpc = gs.npcs[targetName];
+                if (!targetNpc) { getCtx()?.ui?.notify(`未找到 ${targetName}`, "warning"); return true; }
+                targetNpc.inventory ??= [];
+                targetNpc.inventory.push(p3.inventory.splice(idx, 1)[0]);
+                try { require("./engine/state.ts").saveState(); } catch {}
+                getCtx()?.ui?.notify(`已把 ${it.name} 交给 ${targetName}`, "info");
+                _pickGift = null;
+                _subCursor = 0;
+                return true;
+              }
+              return false;
+            }
             const npcActs = _buildNpcActions(gs, _selectedTarget.name);
             const actionCount = npcActs.length;
             const actionKeys = npcActs.map(a => a.key);
+            const inParty2 = (gs.player?.party || []).includes(_selectedTarget.name);
+            const totalSlots = inParty2 ? actionCount + 3 : actionCount; // +3 同行操作
             if (d === "\x1b[C" || d === "\x1bOC" || d === "l") {
-              _subCursor = (_subCursor + 1) % actionCount;
+              _subCursor = (_subCursor + 1) % totalSlots;
               return true;
             }
             if (d === "\x1b[D" || d === "\x1bOD" || d === "h") {
-              _subCursor = (_subCursor + actionCount - 1) % actionCount;
+              _subCursor = (_subCursor + totalSlots - 1) % totalSlots;
               return true;
             }
             // 键盘 1-9 直选或者 Enter 触发
             if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "9")) {
               const isEnter = d === "\r" || d === "\n";
+              // 同行操作按钮处理（subCursor >= actionCount）
+              if (inParty2 && _subCursor >= actionCount) {
+                const opIdx = _subCursor - actionCount;
+                if (opIdx === 0) {
+                  // ①给物品 → _pickGift 模式
+                  _pickGift = _selectedTarget.name;
+                  _subCursor = 0;
+                  return true;
+                } else if (opIdx === 1) {
+                  // ②指挥 → npc-direct 子菜单
+                  _submenu = "npc-direct";
+                  _subCursor = 0;
+                  return true;
+                } else if (opIdx === 2) {
+                  // ③分开 → 确认弹窗
+                  _confirmMode = { action: "part_ways", item: _selectedTarget.name, cb: () => {
+                    const pt = gs.player?.party || [];
+                    gs.player.party = pt.filter((n2: string) => n2 !== _selectedTarget.name);
+                    pushText(`${_selectedTarget.name}离开了同行。`);
+                    getCtx()?.ui?.notify(`${_selectedTarget.name} 分开`, "info");
+                    try { const st = require("./engine/state.ts"); st.saveState(); } catch {}
+                  }};
+                  _subCursor = 0;
+                  return true;
+                }
+              }
               const key = isEnter ? (actionKeys[_subCursor] ?? _subCursor) : parseInt(d) - 1;
 
               if (key === 0) {
@@ -3319,7 +3486,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
 
           // 观察/身体/技能/队伍/声望/称号/Sex/情报单段 子面板（只读，仅 Esc 退出）
           if (_submenu === "npc-observe" || _submenu === "body-detail" || _submenu === "skills-detail" ||
-              _submenu === "party-detail" || _submenu === "reputation-detail" || _submenu === "relations-detail" || _submenu === "titles-detail" ||
+              _submenu === "reputation-detail" || _submenu === "relations-detail" || _submenu === "titles-detail" ||
               _submenu === "identity-detail" ||
               _submenu === "sex-detail" || _submenu === "settlement-detail" || _submenu === "info-section" ||
               _submenu === "economy-detail" || _submenu === "combat-detail" || _submenu === "world-detail" ||
@@ -3366,6 +3533,35 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               }
               _submenu = null;
               _panelMode = false;
+              return true;
+            }
+            return false;
+          }
+
+          // 指挥子菜单控制
+          if (_submenu === "npc-direct") {
+            const dirActs = ["attack", "defend", "scout", "support"];
+            const dirLabels = ["攻击", "防御", "侦察", "支援"];
+            if (d === "\x1b[A" || d === "\x1bOA") { _subCursor = (_subCursor + 3) % 4; return true; }
+            if (d === "\x1b[B" || d === "\x1bOB") { _subCursor = (_subCursor + 1) % 4; return true; }
+            if (d === "\r" || d === "\n" || (d.length === 1 && d >= "1" && d <= "4")) {
+              const idx = (d === "\r" || d === "\n") ? _subCursor : parseInt(d) - 1;
+              const act = dirActs[idx];
+              if (!act) return false;
+              const n2 = _selectedTarget?.name;
+              try {
+                const dm = require("./tools/action/direct_party_member.ts").default;
+                dm.execute("hud_direct", { npcName: n2, action: act, difficulty: "moderate" }).then((r: any) => {
+                  let msg = r?.content?.[0]?.text || `${n2} 执行${dirLabels[idx]}完毕`;
+                  getCtx()?.ui?.notify(msg.slice(0, 60), r?.details?.success ? "info" : "warning");
+                }).catch(() => {
+                  getCtx()?.ui?.notify(`${n2} 执行${dirLabels[idx]}时出错`, "error");
+                });
+              } catch (e: any) {
+                getCtx()?.ui?.notify(`指挥异常: ${e.message}`, "error");
+              }
+              _submenu = "npc-detail";
+              _subCursor = 0;
               return true;
             }
             return false;
@@ -4016,7 +4212,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
           if (currentItem.type === "economy") { _submenu = "economy-detail"; _subCursor = 0; if (!_econLines) void _loadEconCombat(); return true; }
           if (currentItem.type === "combat") { _submenu = "combat-detail"; _subCursor = 0; if (!_combatLines) void _loadEconCombat(); return true; }
           if (currentItem.type === "world") { _submenu = "world-detail"; _subCursor = 0; if (!_worldLines) void _loadWorld(); return true; }
-          if (currentItem.type === "party") { _submenu = "party-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "reputation") { _submenu = "reputation-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "relations") { _submenu = "relations-detail"; _subCursor = 0; return true; }
           if (currentItem.type === "titles") { _submenu = "titles-detail"; _subCursor = 0; return true; }

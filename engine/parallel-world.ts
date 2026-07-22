@@ -57,6 +57,7 @@ export async function startParallelWorld(scriptWorld: string): Promise<void> {
   gameState.player.location = startRoom;
   gameState.player.gridPos = null;
   gameState.player.party = [];
+  gameState.player.following = [];
 
   // 初始化网格位置
   initPlayerGrid();

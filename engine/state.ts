@@ -444,6 +444,7 @@ function createDefaultPlayer(): PlayerState {
     alive: true,
     fatigue: 0,
     party: [],
+    following: [],
     gridPos: null,
     reputation: {},
     known_locations: ["千葉駅前"],
@@ -1098,14 +1099,15 @@ export function setPlayerLocation(loc: string): void {
     initPlayerGrid();
   }
 
-  // 队友跟随移动
-  if (gameState.player.party && gameState.player.party.length > 0) {
-    for (const name of gameState.player.party) {
+  // 队友/跟随者跟随移动
+  const followers = [...(gameState.player.party || []), ...(gameState.player.following || [])];
+  if (followers.length > 0) {
+    for (const name of followers) {
       const npc = gameState.npcs[name];
       if (npc && npc.alive !== false) {
         npc.currentRoom = key;
         npc.gridPos = null; // 重新进入场景时分配坐标
-        npc.action = "跟随玩家";
+        npc.action = (gameState.player.party || []).includes(name) ? "同行中" : "跟随中";
       }
     }
   }
@@ -1378,28 +1380,57 @@ function ensureCollectors(): void {
     }
   });
 
-  // L1-stable: 队友状态详情
+  // L1-stable: 同行者状态详情 + NPC间关系 + 互动提示
   promptCollectors.register({
     name: "party-details", priority: 15, layer: "stable", degradeStrategy: "keep",
     async collect(_gs) {
       const p = s().player;
-      if (!p.party || p.party.length === 0) return null;
+      const party = p.party || [];
+      const following = p.following || [];
+      if (party.length === 0 && following.length === 0) return null;
+      const gs = s();
       const lines: string[] = [];
-      for (const name of p.party) {
-        const npc = s().npcs[name];
+
+      // 同行者（完整信息）
+      for (const name of party) {
+        const npc = gs.npcs[name];
         if (!npc) continue;
-        const attrStr = Object.entries(npc.attributes)
+        const attrStr = Object.entries(npc.attributes || {})
           .map(([k, v]) => `${k}:${v}`)
           .join(", ");
-        const skillsStr = Object.entries(npc.skills)
+        const skillsStr = Object.entries(npc.skills || {})
           .filter(([_, sk]) => (sk as any).level > 0)
           .map(([k, sk]) => `${k}:Lv${(sk as any).level}`)
           .join(", ") || "无";
-        lines.push(`  • ${name}: HP ${npc.hp.current}/${npc.hp.max} | 属性: ${attrStr} | 技能: ${skillsStr} | 当前行动: ${npc.action || "跟随玩家"}`);
+        lines.push(`  • ${name}: HP ${npc.hp.current}/${npc.hp.max} | 属性: ${attrStr} | 技能: ${skillsStr} | ${npc.action || "同行中"}`);
       }
-      if (lines.length === 0) return null;
+
+      // 跟随者（轻量信息）
+      for (const name of following) {
+        if (party.includes(name)) continue;
+        lines.push(`  • ${name}（跟随中）`);
+      }
+
+      // NPC 间关系（同行者之间）
+      if (party.length >= 2) {
+        const relPairs: string[] = [];
+        for (let i = 0; i < party.length; i++) {
+          for (let j = i + 1; j < party.length; j++) {
+            const npcI = gs.npcs[party[i]];
+            const npcJ = gs.npcs[party[j]];
+            const relIJ = npcI?.npcRelationships?.[party[j]];
+            const relJI = npcJ?.npcRelationships?.[party[i]];
+            const stage = relIJ?.stage || relJI?.stage || "相识";
+            const aff = relIJ?.affection ?? relJI?.affection ?? 0;
+            relPairs.push(`${party[i]}↔${party[j]} ${stage}(${aff})`);
+          }
+        }
+        if (relPairs.length) lines.push(`  ⚡ ${relPairs.join("；")}`);
+      }
+
+      lines.push(`  ⚡ 场景切换、气氛变化时，同行者会自然插话、吐槽、互相有反应。`);
       return {
-        text: `[队伍成员]\n${lines.join("\n")}`,
+        text: `[同行者]\n${lines.join("\n")}`,
         priority: 15,
         layer: "stable",
         degradeStrategy: "keep",
@@ -3953,11 +3984,13 @@ export async function updateNPCSchedules(): Promise<string[]> {
   const activeOverrides = await getActiveScheduleOverrides();
 
   for (const [name, npc] of Object.entries(gameState.npcs)) {
-    // 队友跟随移动，屏蔽日程计算
-    if (gameState.player.party && gameState.player.party.includes(name)) {
+    // 同行/跟随 屏蔽日程计算
+    const following = gameState.player.following || [];
+    const party = gameState.player.party || [];
+    if (party.includes(name) || following.includes(name)) {
       npc.currentRoom = gameState.player.location;
       npc.gridPos = null;
-      npc.action = "跟随玩家";
+      npc.action = party.includes(name) ? "同行中" : "跟随中";
       continue;
     }
 

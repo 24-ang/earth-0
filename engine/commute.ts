@@ -167,7 +167,8 @@ export async function detectCommuteEncounter(
   const candidates: { name: string; affection: number; sameLine: boolean }[] = [];
   for (const [name, npc] of Object.entries(gs.npcs)) {
     if (!npc.alive) continue;
-    if (gs.player?.party?.includes(name)) continue;
+    const following = (gs.player?.following || []);
+    if (gs.player?.party?.includes(name) || following.includes(name)) continue;
 
     const group = npc.scheduleGroup || "";
     const isStudent = group.includes("学生") || group.includes("高校生") || group.includes("部员") || group.includes("大学");
