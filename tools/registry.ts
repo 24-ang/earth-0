@@ -114,6 +114,7 @@ import presetCommand from "./tui/preset.ts";
 import rerollCommand from "./tui/reroll.ts";
 import worldCommand from "./tui/world.ts";
 import sandboxCommand from "./tui/sandbox.ts";
+import tokenMonitorCommand from "./tui/token-monitor.ts";
 
 function withToolTracking(tool: any) {
   const origExec = tool.execute;
@@ -205,4 +206,5 @@ export function registerAll(pi: ExtensionAPI) {
   pi.registerCommand("reroll", rerollCommand);
   pi.registerCommand("world", worldCommand);
   pi.registerCommand("sandbox", sandboxCommand);
+  pi.registerCommand("tokens", tokenMonitorCommand);
 }

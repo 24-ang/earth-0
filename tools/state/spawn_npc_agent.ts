@@ -336,6 +336,8 @@ export default {
       try {
         const finalPrompt = todayContext ? charPrompt + "\n\n" + todayContext : charPrompt;
         const narrativeModel = await getNpcAgentModel();
+        const { setProfileLabel } = await import("../helpers.ts");
+        setProfileLabel(`P2·${params.npcName}`);
         const response = await generateCompletion(finalPrompt, 512, _ctx, narrativeModel);
         if (!response) {
           return { content: [{ type: "text", text: `${params.npcName}（沉默）` }], details: {} };
