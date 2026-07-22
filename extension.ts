@@ -2155,27 +2155,6 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               out.push(tr(`${C.M}|-[${C.r}${t.day_of_week || "?"}曜日${C.M}-${C.r}${gy}年${gm}月${gd}日${C.M}]${C.r}`));
             }
 
-            // 资金/声望/负重摘要行（常驻可见，三种状态）
-            const currWt = s.calcCurrentWeight(p.inventory || [], p.equipment || {});
-            const maxWt = s.calcMaxCarry(attrs.力量 ?? 10);
-            const over = s.isOverburdened(currWt, maxWt);
-            const wanted = p.reputation ? Object.entries(p.reputation as Record<string,number>).filter(([k]) => /警|通缉|wanted|cop/i.test(k)) : [];
-            const repKeys0 = Object.keys(p.reputation || {});
-            const topReps = repKeys0.filter(k => Math.abs(p.reputation?.[k] ?? 0) >= 3 || (p.reputation?.[k] ?? 0) < 0).slice(0, 3);
-            const repStr = wanted.length > 0 && (p.reputation as any)?.[wanted[0]![0]] > 0
-              ? `${C.d}通缉[${wanted[0]![0]}]${C.r}`
-              : topReps.length > 0
-                ? topReps.map(k => `${(p.reputation?.[k] ?? 0) >= 0 ? C.G : C.d}${k}${(p.reputation?.[k] ?? 0) >= 0 ? "+" : ""}${p.reputation?.[k]}${C.r}`).join(gdot)
-                : "";
-            const wtStr = over.overloaded ? `${C.d}⚠ 超重 ${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg${C.r}`
-              : over.encumbered ? `${C.Y}${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg${C.r}`
-              : gray(`${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg`);
-            const fundStr = `${C.Y}💰 ${C.r}¥${(p.funds ?? 0).toLocaleString()}`;
-            const parts: string[] = [fundStr];
-            if (repStr) parts.push(repStr);
-            parts.push(wtStr);
-            out.push(tr(parts.join(`  ${gdot}  `)));
-            out.push(tr(""));
 
             // 角色信息竖排
             out.push(tr(kv("姓名", p.name || "?")));
@@ -2235,10 +2214,15 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
             const focusSkills = sel("skills");
             out.push(tr(entry(focusSkills, '技能', skSum, gray('›')), 'gear'));
 
-            // 背包——只显示件数，Enter 打开背包列表
+            // 背包——件数+负重，Enter 打开背包列表
             const bagCount = (p.inventory || []).length;
+            const currWt = s.calcCurrentWeight(p.inventory || [], p.equipment || {});
+            const maxWt = s.calcMaxCarry(attrs.力量 ?? 10);
+            const over = s.isOverburdened(currWt, maxWt);
+            const wtStr = over.overloaded ? `${C.d}⚠超重${C.r} `
+              : over.encumbered ? `${C.Y}${C.r} ` : "";
             const catSum = bagCount ? `${bagCount}件` : "0件";
-            out.push(tr(entry(_panelMode && _cursor === _focusItems.findIndex(f => f.type === "bag"), '背包', catSum, gray('›')), 'gear'));
+            out.push(tr(entry(_panelMode && _cursor === _focusItems.findIndex(f => f.type === "bag"), '背包', `${catSum}  ${wtStr}${gray(`${currWt.toFixed(1)}/${maxWt.toFixed(0)}kg`)}`, gray('›')), 'gear'));
 
             // 载具 / 经济 / 战斗 / 队伍
             const focusVehicle = sel("vehicle");
