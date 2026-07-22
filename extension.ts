@@ -768,6 +768,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   let _selectedTarget: any = null; // 当前交互的目标实体 (如选中 NPC, 物品, 载具)
   let _pickSlot: string | null = null; // equip-detail 空槽 Enter → 选物品模式（slot id）, null=正常槽列表
   let _pickGift: string | null = null; // 同行给物品模式 → NPC名, null=正常
+  let _lastInputMs = 0;               // 上次 handleInput 处理时间(ms)，防快速连点
+  let _processing = false;            // 标记正在处理耗时操作，渲染时显示加载提示
 
   let _choicesCache: string[] = [];
   let _choiceTags: string[] = [];
@@ -1129,6 +1131,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
   const pushText = (text: string) => {
     const t = (text ?? "").trim();
     if (!t) return; // 亲密失败分支等会传空串
+    _processing = true; setTimeout(() => { _processing = false; }, 1000);
     try {
       _pi.sendUserMessage(t, { deliverAs: "followUp" });
       const ctx = getCtx();
@@ -3227,7 +3230,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         } else {
           tip = "双击 Enter 展开";
         }
-        out.push(tr(gray(tip)));
+        out.push(tr(_processing ? gray("⏳ 处理中...") : gray(tip)));
         return out;
       } catch (e: any) {
         console.error("[game-hud] render error:", e.message || e);
@@ -3240,6 +3243,16 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         const s = require("./engine/state.ts");
         const gs = s.gameState;
         if (!gs?.player) return false;
+
+        // 防抖：300ms 内忽略重复输入（防止快速连点导致多次工具执行/UI崩溃）
+        const isNavKey = d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB"
+          || d === "\x1b[C" || d === "\x1bOC" || d === "\x1b[D" || d === "\x1bOD"
+          || d === "h" || d === "l" || d === "j" || d === "k";
+        const now2 = Date.now();
+        // 防抖：正在处理中时忽略非导航键（防止快速连点多次触发工具执行）
+        if (_processing && !isNavKey && d !== "\x1b") return false;
+        _lastInputMs = now2;
+
         // 列表可能在动作后变短（使用/丢弃/装备），光标越界一律夹回
         if (_cursor >= _focusItems.length) _cursor = Math.max(0, _focusItems.length - 1);
 

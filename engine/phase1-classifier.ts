@@ -112,16 +112,20 @@ export async function runPhase1(
     ? [...ACTION_WHITELIST, "init_game", "init_profile", "grant_skill_exp", "set_flags", "instantiate_residence", "settle_scene", "create_location", "create_room", "world_interact", "add_memory_tag", "create_character", "set_npc_relation", "open_quest", "create_story_hook", "add_calendar_event"]
     : [...ACTION_WHITELIST, "init_game"]; // 非 startup 也允许 init_game——否则有存档时无法开新档
 
-  for (const action of result.actions) {
+  // 防刷屏：action 数上限 + 批量无效时直接回退
+  const actions = result.actions.slice(0, 12);
+  if (actions.length === 0) return keywordFallback(playerInput, ctx);
+
+  const validCount = actions.filter(a => a.confidence >= 0.7 && typeof a.tool === "string" && a.tool && allowedTools.includes(a.tool)).length;
+  // 超过半数无效 → 分类器在叙事而非分类，直接回退
+  if (validCount === 0 || (actions.length >= 6 && validCount < actions.length * 0.3)) {
+    return keywordFallback(playerInput, ctx);
+  }
+
+  for (const action of actions) {
     if (action.confidence < 0.7) continue;
-    if (typeof action.tool !== "string" || !action.tool) {
-      console.warn(`Phase1: action has invalid/missing tool, skipping`, { tool: action.tool, params: action.params });
-      continue;
-    }
-    if (!allowedTools.includes(action.tool)) {
-      console.warn(`Phase1: tool "${action.tool}" not in whitelist, skipping`);
-      continue;
-    }
+    if (typeof action.tool !== "string" || !action.tool) continue;
+    if (!allowedTools.includes(action.tool)) continue;
     try {
       const detail = await executeSingleTool(action.tool, action.params, ctx);
       if (detail) {
