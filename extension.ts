@@ -3007,7 +3007,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 const on5 = _panelMode && fi === _cursor;
                 const sel3 = on5 ? hi("▶") : " ";
                 const num3 = on5 ? `${C.O}${idx3}${C.r}` : gray(idx3);
-                out.push(tr(`${sel3} ${num3} ${co.text} ${hi(`[${co.tag}]`)}`, null, on5));
+                const t3 = on5 ? `${C.O}${C.B}${co.text}${C.r}` : co.text;
+                out.push(tr(`${sel3} ${num3} ${t3} ${hi(`[${co.tag}]`)}`, null, on5));
               }
               // 常驻动作：等待/睡觉/吃东西（引擎直改不推正文），编号继续顺延
               if (standing.length) {
@@ -3020,7 +3021,8 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                   const on6 = _panelMode && fi === _cursor;
                   const sel4 = on6 ? hi("▶") : " ";
                   const num4 = on6 ? `${C.O}${idx4}${C.r}` : gray(idx4);
-                  const lbl = sa.hot ? hi(`${sa.icon} ${sa.label}`) : `${sa.icon} ${sa.label}`;
+                  const rawLbl = `${sa.icon} ${sa.label}`;
+                  const lbl = on6 ? `${C.O}${C.B}${rawLbl}${C.r}` : (sa.hot ? hi(rawLbl) : rawLbl);
                   out.push(tr(`${sel4} ${num4} ${lbl} ${dim(`(${sa.hint})`)}`, null, on6));
                 }
               }
