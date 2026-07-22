@@ -3244,14 +3244,11 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
         const gs = s.gameState;
         if (!gs?.player) return false;
 
-        // 防抖：300ms 内忽略重复输入（防止快速连点导致多次工具执行/UI崩溃）
+        // 防抖：处理中时拦截非导航键（Esc 永远放行），防止连点多次执行
         const isNavKey = d === "\x1b[A" || d === "\x1bOA" || d === "\x1b[B" || d === "\x1bOB"
           || d === "\x1b[C" || d === "\x1bOC" || d === "\x1b[D" || d === "\x1bOD"
           || d === "h" || d === "l" || d === "j" || d === "k";
-        const now2 = Date.now();
-        // 防抖：正在处理中时忽略非导航键（防止快速连点多次触发工具执行）
         if (_processing && !isNavKey && d !== "\x1b") return false;
-        _lastInputMs = now2;
 
         // 列表可能在动作后变短（使用/丢弃/装备），光标越界一律夹回
         if (_cursor >= _focusItems.length) _cursor = Math.max(0, _focusItems.length - 1);
@@ -3336,6 +3333,7 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
                 // transfer_item 引擎调用
                 const targetNpc = gs.npcs[targetName];
                 if (!targetNpc) { getCtx()?.ui?.notify(`未找到 ${targetName}`, "warning"); return true; }
+                _processing = true; setTimeout(() => { _processing = false; }, 800);
                 targetNpc.inventory ??= [];
                 targetNpc.inventory.push(p3.inventory.splice(idx, 1)[0]);
                 try { require("./engine/state.ts").saveState(); } catch {}
@@ -3563,15 +3561,19 @@ export function initGamePanel(_pi: any, sessionCtx: any) {
               if (!act) return false;
               const n2 = _selectedTarget?.name;
               try {
+                _processing = true;
                 const dm = require("./tools/action/direct_party_member.ts").default;
                 dm.execute("hud_direct", { npcName: n2, action: act, difficulty: "moderate" }).then((r: any) => {
                   let msg = r?.content?.[0]?.text || `${n2} 执行${dirLabels[idx]}完毕`;
                   getCtx()?.ui?.notify(msg.slice(0, 60), r?.details?.success ? "info" : "warning");
                 }).catch(() => {
                   getCtx()?.ui?.notify(`${n2} 执行${dirLabels[idx]}时出错`, "error");
+                }).finally(() => {
+                  _processing = false;
                 });
               } catch (e: any) {
                 getCtx()?.ui?.notify(`指挥异常: ${e.message}`, "error");
+                _processing = false;
               }
               _submenu = "npc-detail";
               _subCursor = 0;

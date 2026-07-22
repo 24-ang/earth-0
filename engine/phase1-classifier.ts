@@ -122,6 +122,7 @@ export async function runPhase1(
     return keywordFallback(playerInput, ctx);
   }
 
+  let failCount = 0;
   for (const action of actions) {
     if (action.confidence < 0.7) continue;
     if (typeof action.tool !== "string" || !action.tool) continue;
@@ -131,9 +132,17 @@ export async function runPhase1(
       if (detail) {
         toolsExecuted.push(action.tool);
         executedDetails.push(detail);
+        failCount = 0; // 成功则重置失败计数
+      } else {
+        failCount++;
       }
     } catch (e) {
-      console.error(`Phase1: execute "${action.tool}" failed:`, e);
+      console.error(`Phase1: execute "${action.tool}" failed:`, (e as Error).message);
+      failCount++;
+    }
+    // 连续 3 次失败 + 尚未成功任何 → 分类器在乱输出，回退
+    if (failCount >= 3 && toolsExecuted.length === 0) {
+      return keywordFallback(playerInput, ctx);
     }
   }
 
