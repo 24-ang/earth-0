@@ -11,6 +11,24 @@ LLMs handle narrative — but the engine won't let them cheat.
 
 ---
 
+<p align="center">
+  <img src="docs/images/menu.png" width="480" alt="earth-0 主菜单" />
+</p>
+
+<h3 align="center">🎮 TUI 游戏界面与 TRPG 机制展示</h3>
+
+<p align="center">
+  <img src="docs/images/status.png" width="48%" alt="角色属性面板 [自身]" />
+  &nbsp;
+  <img src="docs/images/nearby.png" width="48%" alt="感知与周边 NPC [周边]" />
+</p>
+
+<p align="center">
+  <img src="docs/images/actions.png" width="85%" alt="动态行动选单与 TRPG 属性检定 [行动]" />
+</p>
+
+---
+
 ## 这是什么 / What
 
 A modular interactive fiction runtime built on [pi-coding-agent](https://github.com/mariozechner/pi-coding-agent).
