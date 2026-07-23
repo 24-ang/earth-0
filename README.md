@@ -12,19 +12,30 @@ LLMs handle narrative — but the engine won't let them cheat.
 ---
 
 <p align="center">
-  <img src="docs/images/menu.png" width="480" alt="earth-0 主菜单" />
-</p>
-
-<h3 align="center">🎮 TUI 游戏界面与 TRPG 机制展示</h3>
-
-<p align="center">
-  <img src="docs/images/status.png" width="48%" alt="角色属性面板 [自身]" />
-  &nbsp;
-  <img src="docs/images/nearby.png" width="48%" alt="感知与周边 NPC [周边]" />
+  <img src="docs/images/menu.png" width="460" alt="earth-0 主菜单" />
 </p>
 
 <p align="center">
-  <img src="docs/images/actions.png" width="85%" alt="动态行动选单与 TRPG 属性检定 [行动]" />
+  <b>极简 TUI 界面 · 确定性规则引擎 · LLM 驱动多 Agent 叙事沙盒</b>
+</p>
+
+---
+
+### 🎮 游戏界面展示 / Showcase
+
+#### 1. 动态剧情与 TRPG 检定选单 (`[行动]` 面板)
+<p align="center">
+  <img src="docs/images/actions.png" width="780" alt="动态行动选单与属性检定" />
+</p>
+
+#### 2. TRPG 角色属性与装备 (`[自身]` 面板)
+<p align="center">
+  <img src="docs/images/status.png" width="780" alt="角色属性与物品状态" />
+</p>
+
+#### 3. 环境与周边 NPC 空间感知 (`[周边]` 面板)
+<p align="center">
+  <img src="docs/images/nearby.png" width="780" alt="周边 NPC 与物理距离感知" />
 </p>
 
 ---
